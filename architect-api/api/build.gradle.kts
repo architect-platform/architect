@@ -25,7 +25,7 @@ publishing {
       pom {
         name.set("Architect API")
         description.set("API for the Architect engine")
-        url.set("https://github.com/architect-platform/architect-api")
+        url.set("https://github.com/architect-platform/architect")
         licenses {
           license {
             name.set("Apache-2.0")
@@ -44,7 +44,7 @@ publishing {
   repositories {
     maven {
       name = "GitHubPackages"
-      url = uri("https://maven.pkg.github.com/architect-platform/architect-api")
+      url = uri("https://maven.pkg.github.com/architect-platform/architect")
       credentials {
         username =
             System.getenv("GITHUB_USER")

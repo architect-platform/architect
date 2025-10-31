@@ -17,7 +17,7 @@ repositories {
   mavenCentral()
   maven {
     name = "GitHubPackages"
-    url = uri("https://maven.pkg.github.com/architect-platform/architect-api")
+    url = uri("https://maven.pkg.github.com/architect-platform/architect")
     credentials {
       username =
           System.getenv("GITHUB_USER")
