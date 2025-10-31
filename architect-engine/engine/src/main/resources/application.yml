@@ -1,0 +1,13 @@
+micronaut:
+  application:
+    name: architect-engine
+  server:
+    port: 9292
+
+  engine:
+    project:
+      cache:
+        enabled: false
+    plugin:
+      cache:
+        enabled: false

@@ -1,0 +1,6 @@
+installers:
+  enabled: true
+  repo: architect-platform/architect-engine
+  name: architect-engine
+  assetType: jar
+  applicationName: architect-engine
