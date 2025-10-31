@@ -21,7 +21,7 @@ publishing {
   publications {
     create<MavenPublication>("gpr") {
       from(components["java"])
-      artifactId = "architect-api"
+      artifactId = "api"
       pom {
         name.set("Architect API")
         description.set("API for the Architect engine")
