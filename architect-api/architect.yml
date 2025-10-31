@@ -1,0 +1,7 @@
+project:
+  name: architect-api
+  description: "The Architect engine API"
+
+plugins:
+  - name: gradle-architected
+  - name: github-architected

@@ -1,0 +1,64 @@
+{
+  "extends": [
+    "config:recommended"
+  ],
+  "automergeType": "branch",
+  "automergeStrategy": "auto",
+  "packageRules": [
+    {
+      "matchUpdateTypes": [
+        "patch",
+        "minor"
+      ],
+      "automerge": true,
+      "groupName": "all-patch-and-minor"
+    },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false,
+      "groupName": "major-upgrades"
+    },
+    {
+      "groupName": "kotlin-libs",
+      "rangeStrategy": "bump",
+      "matchPackageNames": [
+        "/^org\\.jetbrains\\.kotlin:/"
+      ]
+    },
+    {
+      "groupName": "spring-boot-bom",
+      "matchPackageNames": [
+        "/spring-boot-dependencies/"
+      ]
+    },
+    {
+      "matchManagers": [
+        "npm"
+      ],
+      "groupName": "npm-dependencies"
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github-actions"
+    },
+    {
+      "matchManagers": [
+        "helm-values"
+      ],
+      "groupName": "helm-charts",
+      "matchFileNames": [
+        "Chart.yaml"
+      ]
+    },
+    {
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "groupName": "docker-images"
+    }
+  ]
+}
