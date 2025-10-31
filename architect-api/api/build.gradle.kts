@@ -5,7 +5,7 @@ plugins {
 
 group = "io.github.architectplatform"
 
-version = "1.1.1"
+version = "1.1.2"
 
 java {
   withSourcesJar()
