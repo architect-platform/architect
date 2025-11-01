@@ -143,7 +143,7 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
     // Build display message
     val displayMessage = buildString {
       append(objectMapper.writeValueAsString(event.event))
-      if (message != null && message.isNotEmpty()) {
+      if (!message.isNullOrEmpty()) {
         append(" | Msg: $message")
       }
       if (subProject != null) {
@@ -154,7 +154,7 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
     icon?.let { eventsLog.add(EventLog(event.id, it, displayMessage)) }
     
     // Store error details for display in the failure section
-    if (errorDetails != null && errorDetails.isNotEmpty()) {
+    if (!errorDetails.isNullOrEmpty()) {
       failureReasons.add(errorDetails)
     }
     

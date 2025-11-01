@@ -147,8 +147,10 @@ class TaskExecutor(
       val success = results.all { it.success }
       if (!success) {
         val failedTasks = results.filter { !it.success }
+        val failedMessages = failedTasks.mapNotNull { it.message }.joinToString(", ")
         val errorMessage =
-            "Execution failed. ${failedTasks.size} task(s) failed: ${failedTasks.map { it.message }.joinToString(", ")}"
+            "Execution failed. ${failedTasks.size} task(s) failed" +
+                if (failedMessages.isNotEmpty()) ": $failedMessages" else ""
         eventPublisher.publishEvent(
             executionFailedEvent(
                 projectName, executionId, message = errorMessage, subProject = parentProject))
