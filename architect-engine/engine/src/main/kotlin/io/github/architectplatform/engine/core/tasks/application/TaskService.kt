@@ -142,7 +142,7 @@ class TaskService(
             return TaskResult.failure("Some subprojects failed", subResults)
         }
 
-        // Execute task in the current project
+        // Execute task in the current project only if present
         val task = project.taskRegistry.all().firstOrNull { it.id == taskId }
         if (task == null) {
             return TaskResult.success("Task $taskId not found in project ${project.name}, skipping execution.")
