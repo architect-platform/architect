@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     concurrency:
-      group: release-architect-api
+      group: release-architect-api-pipeline
       cancel-in-progress: false
     permissions:
       contents: write

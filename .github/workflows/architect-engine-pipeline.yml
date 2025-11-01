@@ -39,11 +39,11 @@ jobs:
 
       - name: Set up Architect
         run: |
-          curl -sSL https://raw.githubusercontent.com/architect-platform/architect-cli/main/.installers/bash-ci | bash
+          curl -sSL https://raw.githubusercontent.com/architect-platform/architect/main/architect-cli/.installers/bash-ci | bash
 
       - name: Set up Architect Engine
         run: |
-          curl -sSL https://raw.githubusercontent.com/architect-platform/architect-engine/main/.installers/bash-ci | bash
+          curl -sSL https://raw.githubusercontent.com/architect-platform/architect/main/architect-engine/.installers/bash-ci | bash
           architect engine start
 
       - name: Init
@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     concurrency:
-      group: release-architect-engine
+      group: release-architect-engine-pipeline
       cancel-in-progress: false
     permissions:
       contents: write
