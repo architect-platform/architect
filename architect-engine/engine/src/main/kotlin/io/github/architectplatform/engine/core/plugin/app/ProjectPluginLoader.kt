@@ -5,8 +5,10 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.project.getKey
+import io.github.architectplatform.engine.core.config.EngineConfiguration
 import io.github.architectplatform.engine.core.plugin.domain.events.PluginEvents.pluginLoaded
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
+import io.micronaut.context.annotation.Property
 import io.micronaut.context.event.ApplicationEventPublisher
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.MutableHttpRequest
@@ -26,6 +28,9 @@ class ProjectPluginLoader(
     private val internalPlugins: List<CommonPlugin>,
     private val httpClient: HttpClient,
     private val eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>,
+    
+    @Property(name = EngineConfiguration.PluginLoader.USER_AGENT, defaultValue = EngineConfiguration.PluginLoader.DEFAULT_USER_AGENT)
+    private val userAgent: String = EngineConfiguration.PluginLoader.DEFAULT_USER_AGENT
 ) : PluginLoader {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
@@ -90,7 +95,7 @@ class ProjectPluginLoader(
         val token = System.getenv("GITHUB_TOKEN") ?: System.getProperty("GITHUB_TOKEN")
 
         var req: MutableHttpRequest<*> = HttpRequest.GET<Any>(apiUrl)
-            .header("User-Agent", "ArchitectPlatform/1.0")
+            .header("User-Agent", userAgent)
 
         if (!token.isNullOrBlank()) {
             req = req.header("Authorization", "Bearer $token")
@@ -99,6 +104,7 @@ class ProjectPluginLoader(
         val response = httpClient.toBlocking().retrieve(req, String::class.java)
             ?: error("Failed to fetch tags from $apiUrl")
 
+        @Suppress("UNCHECKED_CAST")
         val tags: List<Map<String, Any>> =
             objectMapper.readValue(response, List::class.java) as List<Map<String, Any>>
 

@@ -71,7 +71,6 @@ class TaskExecutor(
       parentProject: String? = null,
   ): TaskResult {
     val projectName = projectContext.config.getKey<String>("project.name") ?: "unknown"
-    val subProjectInfo = if (parentProject != null) " (subproject of $parentProject)" else ""
 
     try {
 

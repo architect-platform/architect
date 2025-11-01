@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PRO
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.architectplatform.api.core.project.ProjectContext
+import io.github.architectplatform.engine.core.config.EngineConfiguration
 import io.github.architectplatform.engine.core.plugin.app.PluginLoader
 import io.github.architectplatform.engine.core.project.app.repositories.ProjectRepository
 import io.github.architectplatform.engine.core.project.domain.Project
@@ -37,7 +38,7 @@ class ProjectService(
 
   private val logger = LoggerFactory.getLogger(this::class.java)
 
-  @Property(name = "architect.engine.core.project.cache.enabled", defaultValue = "true")
+  @Property(name = EngineConfiguration.Project.CACHE_ENABLED, defaultValue = "${EngineConfiguration.Project.DEFAULT_CACHE_ENABLED}")
   var cacheEnabled: Boolean = true
 
   private val objectMapper =

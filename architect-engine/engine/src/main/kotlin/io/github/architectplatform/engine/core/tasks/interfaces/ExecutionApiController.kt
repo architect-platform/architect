@@ -35,11 +35,10 @@ class ExecutionApiController(private val taskService: TaskService) {
             return@collect
           }
           emit(eventWrapper)
-          val event = eventWrapper.event as ExecutionEvent
-          logger.info("Collected event for execution $executionId: ${event}")
-          if (event.parentProject == null) {
-            val event = eventWrapper.event as ExecutionEvent
-            when (eventWrapper.event?.executionEventType) {
+          val executionEvent = eventWrapper.event as ExecutionEvent
+          logger.info("Collected event for execution $executionId: $executionEvent")
+          if (executionEvent.parentProject == null) {
+            when (executionEvent.executionEventType) {
               ExecutionEventType.COMPLETED,
               ExecutionEventType.FAILED -> {
                 error("Execution completed with event: $eventWrapper")
