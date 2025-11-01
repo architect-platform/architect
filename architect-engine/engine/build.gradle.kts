@@ -7,7 +7,7 @@ plugins {
   id("io.micronaut.aot") version "4.6.1"
 }
 
-version = "1.0.3"
+version = "1.1.0"
 
 group = "io.github.architectplatform"
 
