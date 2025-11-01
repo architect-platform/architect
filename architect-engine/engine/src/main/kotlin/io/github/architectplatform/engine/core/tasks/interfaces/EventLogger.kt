@@ -49,6 +49,7 @@ class EventLogger {
               "COMPLETED" -> "✅"
               "FAILED" -> "❌"
               "SKIPPED" -> "⏭️"
+              "OUTPUT" -> "📝"
               else -> "ℹ️"
             }
           }

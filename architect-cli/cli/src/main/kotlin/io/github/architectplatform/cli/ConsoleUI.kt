@@ -180,6 +180,7 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
           "❌"
         }
         "SKIPPED" -> "⏭️"
+        "OUTPUT" -> "📝"
         else -> "ℹ️"
       }
     }

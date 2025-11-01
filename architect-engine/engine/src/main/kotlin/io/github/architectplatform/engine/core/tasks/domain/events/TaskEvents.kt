@@ -109,4 +109,24 @@ object TaskEvents {
                 message = message,
                 subProject = subProject))
   }
+
+  fun taskOutputEvent(
+      project: String,
+      executionId: ExecutionId,
+      taskId: String,
+      output: String,
+      subProject: String? = null,
+  ): ArchitectEvent<TaskEventDTO> {
+    return ArchitectEventDTO(
+        id = "task.output",
+        event =
+            TaskEventDTO(
+                project = project,
+                executionId = executionId,
+                taskId = taskId,
+                success = true,
+                executionEventType = ExecutionEventType.OUTPUT,
+                message = output,
+                subProject = subProject))
+  }
 }

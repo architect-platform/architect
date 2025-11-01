@@ -23,5 +23,6 @@ enum class ExecutionEventType {
   UPDATED,
   COMPLETED,
   FAILED,
-  SKIPPED
+  SKIPPED,
+  OUTPUT
 }
