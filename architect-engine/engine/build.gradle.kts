@@ -2,7 +2,7 @@ plugins {
   id("org.jetbrains.kotlin.jvm") version "1.9.25"
   id("org.jetbrains.kotlin.plugin.allopen") version "1.9.25"
   id("com.google.devtools.ksp") version "1.9.25-1.0.20"
-  id("com.github.johnrengelman.shadow") version "8.1.1"
+  id("com.gradleup.shadow") version "8.3.5"
   id("io.micronaut.application") version "4.6.1"
   id("io.micronaut.aot") version "4.6.1"
 }
@@ -14,6 +14,7 @@ group = "io.github.architectplatform"
 val kotlinVersion = project.properties.get("kotlinVersion")
 
 repositories {
+  mavenLocal()
   mavenCentral()
   maven {
     name = "GitHubPackages"
@@ -32,7 +33,7 @@ repositories {
 }
 
 dependencies {
-  implementation("io.github.architectplatform:architect-api:2.0.1")
+  implementation("io.github.architectplatform:api:1.1.2")
   ksp("io.micronaut:micronaut-http-validation")
   ksp("io.micronaut.serde:micronaut-serde-processor")
   implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
@@ -51,6 +52,8 @@ dependencies {
   runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
   runtimeOnly("org.yaml:snakeyaml")
   testImplementation("io.micronaut:micronaut-http-client")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+  testImplementation("org.mockito:mockito-core:5.7.0")
 }
 
 application { mainClass.set("io.github.architectplatform.engine.ApplicationKt") }

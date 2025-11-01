@@ -14,6 +14,20 @@ import java.io.File
 import kotlin.io.path.Path
 import org.slf4j.LoggerFactory
 
+/**
+ * Service responsible for managing project lifecycle including registration,
+ * loading, and plugin initialization.
+ *
+ * This service handles:
+ * - Loading project configurations from the filesystem
+ * - Discovering and loading plugins for each project
+ * - Managing project cache when enabled
+ * - Supporting nested subproject structures
+ *
+ * @property projectRepository Repository for storing and retrieving projects
+ * @property configLoader Loader for parsing project configuration files
+ * @property pluginLoader Loader for discovering and instantiating plugins
+ */
 @Singleton
 class ProjectService(
     private val projectRepository: ProjectRepository,
@@ -108,6 +122,16 @@ class ProjectService(
     return Project(name, path, projectContext, plugins, subProjects, taskRegistry)
   }
 
+  /**
+   * Registers a new project in the engine.
+   *
+   * If the project is already registered, this operation is idempotent and will not
+   * re-register the project.
+   *
+   * @param name The unique name identifier for the project
+   * @param path The filesystem path to the project root directory
+   * @throws IllegalArgumentException if the project cannot be loaded from the given path
+   */
   fun registerProject(name: String, path: String) {
     val project = projectRepository.get(name)
     if (project != null) {
@@ -120,6 +144,15 @@ class ProjectService(
     projectRepository.save(name, newProject)
   }
 
+  /**
+   * Retrieves a project by name.
+   *
+   * When caching is disabled, the project will be reloaded from the filesystem
+   * on each call to ensure the latest configuration.
+   *
+   * @param name The unique name identifier of the project
+   * @return The project instance, or null if not found
+   */
   fun getProject(name: String): Project? {
     val project = projectRepository.get(name)
     if (project != null) {
@@ -133,6 +166,11 @@ class ProjectService(
     return null
   }
 
+  /**
+   * Returns all registered projects.
+   *
+   * @return List of all projects currently registered in the engine
+   */
   fun getAllProjects(): List<Project> {
     return projectRepository.getAll()
   }

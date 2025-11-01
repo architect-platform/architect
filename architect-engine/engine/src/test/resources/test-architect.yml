@@ -1,0 +1,6 @@
+project:
+  name: test-project
+  description: "A test project for unit tests"
+
+plugins:
+  - name: test-plugin
