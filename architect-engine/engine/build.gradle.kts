@@ -14,6 +14,7 @@ group = "io.github.architectplatform"
 val kotlinVersion = project.properties.get("kotlinVersion")
 
 repositories {
+  mavenLocal()
   mavenCentral()
   maven {
     name = "GitHubPackages"
