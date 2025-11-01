@@ -40,14 +40,12 @@ class TaskExecutor(
       task: Task,
       context: ProjectContext,
       args: List<String>,
-      parentProject: String? = null
+      parentProject: String? = null,
+      executionId: ExecutionId? = null
   ): ExecutionId {
-    val executionId = generateExecutionId()
-    val success = syncExecuteTask(executionId, task, context, args, project.taskRegistry, parentProject)
-    if (!success) {
-      throw RuntimeException("Task execution failed in project ${project.name}")
-    }
-    return executionId
+    val actualExecutionId = executionId ?: generateExecutionId()
+    syncExecuteTask(actualExecutionId, task, context, args, project.taskRegistry, parentProject)
+    return actualExecutionId
   }
 
   private fun syncExecuteTask(
@@ -57,7 +55,7 @@ class TaskExecutor(
       args: List<String>,
       taskRegistry: TaskRegistry,
       parentProject: String? = null,
-  ): Boolean {
+  ) {
     val projectName = projectContext.config.getKey<String>("project.name") ?: "unknown"
     val subProjectInfo = if (parentProject != null) " (subproject of $parentProject)" else ""
 
@@ -157,7 +155,6 @@ class TaskExecutor(
         eventPublisher.publishEvent(
             executionFailedEvent(
                 projectName, executionId, message = errorMessage, subProject = parentProject))
-        return false
       } else {
         eventPublisher.publishEvent(
             executionCompletedEvent(
@@ -165,7 +162,6 @@ class TaskExecutor(
                 executionId,
                 message = "All tasks completed successfully",
                 subProject = parentProject))
-        return true
       }
     } catch (e: Exception) {
       val errorMessage = e.message ?: "Unknown error"
@@ -178,7 +174,6 @@ class TaskExecutor(
               errorDetails = "Exception: $errorMessage\n\nStack Trace:\n$stackTrace",
               subProject = parentProject,
           ))
-      return false
     }
   }
 

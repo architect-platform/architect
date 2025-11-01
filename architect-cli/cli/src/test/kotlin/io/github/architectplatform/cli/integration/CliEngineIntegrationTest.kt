@@ -488,4 +488,121 @@ class CliEngineIntegrationTest {
         assertTrue(output.contains("▶️STARTED"), "Should not have space between emoji and event type")
         assertFalse(output.contains("▶️ STARTED"), "Should not have extra space after emoji")
     }
+
+    @Test
+    fun `should track all events with same executionId for subprojects`() {
+        // Given
+        val ui = ConsoleUI("unified-execution-test", plain = true)
+        val sharedExecutionId = "unified-exec-123"
+        
+        // Parent project event
+        val parentEvent = mapOf(
+            "id" to "execution.started",
+            "event" to mapOf(
+                "executionId" to sharedExecutionId,
+                "executionEventType" to "STARTED",
+                "project" to "parent-app",
+                "message" to "Starting parent execution"
+            )
+        )
+        
+        // Subproject event - same executionId
+        val subEvent = mapOf(
+            "id" to "task.started",
+            "event" to mapOf(
+                "executionId" to sharedExecutionId,
+                "executionEventType" to "STARTED",
+                "project" to "sub-module",
+                "subProject" to "parent-app",
+                "taskId" to "compile",
+                "message" to "Compiling subproject"
+            )
+        )
+        
+        // Another subproject event - same executionId
+        val subEventComplete = mapOf(
+            "id" to "task.completed",
+            "event" to mapOf(
+                "executionId" to sharedExecutionId,
+                "executionEventType" to "COMPLETED",
+                "project" to "sub-module",
+                "subProject" to "parent-app",
+                "taskId" to "compile",
+                "message" to "Compilation complete"
+            )
+        )
+        
+        // Parent completion - same executionId
+        val parentComplete = mapOf(
+            "id" to "execution.completed",
+            "event" to mapOf(
+                "executionId" to sharedExecutionId,
+                "executionEventType" to "COMPLETED",
+                "project" to "parent-app",
+                "message" to "All tasks completed"
+            )
+        )
+
+        // When
+        ui.process(parentEvent)
+        ui.process(subEvent)
+        ui.process(subEventComplete)
+        ui.process(parentComplete)
+
+        // Then
+        val output = outputStream.toString()
+        // All events should be displayed
+        assertTrue(output.contains("parent-app"), "Should show parent events")
+        assertTrue(output.contains("sub-module"), "Should show subproject events")
+        assertTrue(output.contains("compile"), "Should show subproject tasks")
+        assertTrue(output.contains("COMPLETED"), "Should show completion")
+        assertFalse(ui.hasFailed, "Should not be marked as failed")
+        
+        // Count the number of lines - should have all 4 events
+        val lines = output.lines().filter { it.isNotEmpty() }
+        assertTrue(lines.size >= 4, "Should have at least 4 event lines")
+    }
+
+    @Test
+    fun `should fail overall execution when subproject fails with shared executionId`() {
+        // Given
+        val ui = ConsoleUI("unified-failure-test", plain = true)
+        val sharedExecutionId = "unified-fail-456"
+        
+        // Subproject failure event with shared executionId
+        val subFailure = mapOf(
+            "id" to "task.failed",
+            "event" to mapOf(
+                "executionId" to sharedExecutionId,
+                "executionEventType" to "FAILED",
+                "project" to "failing-submodule",
+                "subProject" to "main-app",
+                "taskId" to "test",
+                "message" to "Tests failed in submodule",
+                "errorDetails" to "5 tests failed"
+            )
+        )
+        
+        // Execution failure event with same executionId
+        val execFailure = mapOf(
+            "id" to "execution.failed",
+            "event" to mapOf(
+                "executionId" to sharedExecutionId,
+                "executionEventType" to "FAILED",
+                "project" to "main-app",
+                "message" to "Execution failed due to subproject errors"
+            )
+        )
+
+        // When
+        ui.process(subFailure)
+        ui.process(execFailure)
+
+        // Then
+        assertTrue(ui.hasFailed, "Should mark execution as failed")
+        val output = outputStream.toString()
+        assertTrue(output.contains("failing-submodule"), "Should show failing subproject")
+        assertTrue(output.contains("main-app"), "Should show main project")
+        assertTrue(output.contains("ERROR DETAILS"), "Should show error details")
+    }
 }

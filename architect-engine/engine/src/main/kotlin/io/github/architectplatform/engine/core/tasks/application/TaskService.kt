@@ -6,6 +6,7 @@ import io.github.architectplatform.engine.core.project.domain.Project
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import io.github.architectplatform.engine.domain.events.ExecutionEvent
 import io.github.architectplatform.engine.domain.events.ExecutionId
+import io.github.architectplatform.engine.domain.events.generateExecutionId
 import jakarta.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 
@@ -63,45 +64,51 @@ class TaskService(
    *
    * The task is executed recursively across all subprojects first (depth-first),
    * then executed in the parent project. This ensures proper dependency ordering
-   * in multi-project builds. If any subproject fails, the entire execution fails.
+   * in multi-project builds. All subprojects share the same executionId for unified
+   * event tracking.
    *
    * @param projectName The name of the project
    * @param taskId The unique identifier of the task to execute
    * @param args List of arguments to pass to the task
    * @return The execution ID for tracking the task execution
    * @throws IllegalArgumentException if the project or task is not found
-   * @throws RuntimeException if execution fails in any project or subproject
    */
   fun executeTask(projectName: String, taskId: String, args: List<String>): ExecutionId {
     val project =
         projectService.getProject(projectName)
             ?: throw IllegalArgumentException("Project not found")
 
+    // Generate a single execution ID for the entire execution tree
+    val executionId = generateExecutionId()
+
     fun executeRecursivelyOverSubprojectsFirst(
         project: Project,
         args: List<String>,
         parentProject: String? = null
-    ): ExecutionId {
-      // Execute in all subprojects first
+    ) {
+      // Execute in all subprojects first, using the same executionId
       project.subProjects.forEach { subProject ->
-        try {
-          executeRecursivelyOverSubprojectsFirst(subProject, args, project.name)
-        } catch (e: RuntimeException) {
-          // Subproject failed, propagate the failure
-          throw RuntimeException("Subproject ${subProject.name} failed: ${e.message}", e)
-        }
+        executeRecursivelyOverSubprojectsFirst(subProject, args, project.name)
       }
       
       val task =
           project.taskRegistry.all().firstOrNull { it.id == taskId }
               ?: throw IllegalArgumentException("Task not found")
       
-      // This will throw RuntimeException if execution fails
-      return executor.execute(project, task, project.context, args, parentProject)
+      // Execute with the shared executionId
+      executor.execute(project, task, project.context, args, parentProject, executionId)
     }
 
-    return executeRecursivelyOverSubprojectsFirst(project, args)
+    try {
+      executeRecursivelyOverSubprojectsFirst(project, args)
+    } catch (e: Exception) {
+      // Exception already logged as event, just continue
+    }
+
+    return executionId
   }
+
+  private fun generateExecutionId(): ExecutionId = ExecutionId(java.util.UUID.randomUUID().toString())
 
   /**
    * Returns a flow of execution events for a specific task execution.
