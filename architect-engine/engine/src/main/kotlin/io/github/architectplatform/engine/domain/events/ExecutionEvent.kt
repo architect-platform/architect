@@ -10,6 +10,9 @@ interface ExecutionEvent {
   val executionId: ExecutionId
   val executionEventType: ExecutionEventType
   val success: Boolean
+  val message: String?
+  val errorDetails: String?
+  val parentProject: String?
 }
 
 enum class ExecutionEventType {
@@ -17,5 +20,6 @@ enum class ExecutionEventType {
   UPDATED,
   COMPLETED,
   FAILED,
-  SKIPPED
+  SKIPPED,
+  OUTPUT
 }

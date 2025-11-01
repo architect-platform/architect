@@ -21,6 +21,10 @@ import io.micronaut.context.event.ApplicationEventPublisher
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
 import jakarta.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import java.io.OutputStream
 import java.io.PrintStream
 import org.slf4j.LoggerFactory
@@ -39,11 +43,23 @@ class TaskExecutor(
       project: Project,
       task: Task,
       context: ProjectContext,
-      args: List<String>
-  ): ExecutionId {
-    val executionId = generateExecutionId()
-    syncExecuteTask(executionId, task, context, args, project.taskRegistry)
-    return executionId
+      args: List<String>,
+      parentProject: String? = null,
+      executionId: ExecutionId? = null
+  ): Pair<ExecutionId, Deferred<TaskResult>> {
+    val actualExecutionId = executionId ?: generateExecutionId()
+      val deferred = CoroutineScope(Dispatchers.IO).async {
+              syncExecuteTask(
+                  actualExecutionId,
+                  task,
+                  context,
+                  args,
+                  project.taskRegistry,
+                  parentProject,
+              )
+      }
+
+      return actualExecutionId to deferred
   }
 
   private fun syncExecuteTask(
@@ -52,11 +68,13 @@ class TaskExecutor(
       projectContext: ProjectContext,
       args: List<String>,
       taskRegistry: TaskRegistry,
-  ) {
+      parentProject: String? = null,
+  ): TaskResult {
     val projectName = projectContext.config.getKey<String>("project.name") ?: "unknown"
+    val subProjectInfo = if (parentProject != null) " (subproject of $parentProject)" else ""
 
     try {
-      eventPublisher.publishEvent(executionStartedEvent(projectName, executionId))
+
       val allTasks = resolveAllTasks(task, taskRegistry)
       val executionOrder = topologicalSort(allTasks)
       val results =
@@ -68,57 +86,89 @@ class TaskExecutor(
                           projectName,
                           executionId,
                           it.id,
+                          message = "Task ${it.id} skipped (cached)",
+                          subProject = parentProject,
                       ))
                   val cachedResult = taskCache.get(it.id)
                   if (cachedResult != null) {
-                    eventPublisher.publishEvent(taskCompletedEvent(projectName, executionId, it.id))
+                    eventPublisher.publishEvent(
+                        taskCompletedEvent(
+                            projectName,
+                            executionId,
+                            it.id,
+                            message = "Task ${it.id} completed (from cache)",
+                            subProject = parentProject))
                     return@map cachedResult
                   }
                 }
 
-                eventPublisher.publishEvent(taskStartedEvent(projectName, executionId, it.id))
+                eventPublisher.publishEvent(
+                    taskStartedEvent(
+                        projectName,
+                        executionId,
+                        it.id,
+                        message = "Starting task: ${it.id}",
+                        subProject = parentProject))
                 try {
                   val result = it.execute(environment, projectContext, args)
-                    logger.debug("Executed task '${it.id}' with result: $result")
+                  logger.debug("Executed task '${it.id}' with result: $result")
                   if (!result.success) {
+                    val errorMessage = result.message ?: "Task failed without message"
                     logger.error(
-                        "Exception during execution of task '${it.id}' in project '$projectName': ${result.message}")
+                        "Exception during execution of task '${it.id}' in project '$projectName': $errorMessage")
                     eventPublisher.publishEvent(
                         taskFailedEvent(
                             projectName,
                             executionId,
                             it.id,
+                            message = errorMessage,
+                            errorDetails = errorMessage,
+                            parentProject = parentProject,
                         ))
                   } else {
-                    eventPublisher.publishEvent(taskCompletedEvent(projectName, executionId, it.id))
+                    eventPublisher.publishEvent(
+                        taskCompletedEvent(
+                            projectName,
+                            executionId,
+                            it.id,
+                            message = result.message ?: "Task ${it.id} completed successfully",
+                            subProject = parentProject))
                   }
                   taskCache.store(it.id, result)
                   return@map result
                 } catch (e: Exception) {
+                  val errorMessage = e.message ?: "Unknown error"
+                  val stackTrace = e.stackTraceToString()
                   eventPublisher.publishEvent(
                       taskFailedEvent(
                           projectName,
                           executionId,
                           it.id,
+                          message = "Task '${it.id}' failed with exception: $errorMessage",
+                          errorDetails = "Exception: $errorMessage\n\nStack Trace:\n$stackTrace",
+                          parentProject = parentProject,
                       ))
                   logger.error("Exception during execution of task '${it.id}'", e)
                   return@map TaskResult.failure(
-                      "Task '${it.id}' failed with exception: ${e.message ?: "Unknown error"}")
+                      "Task '${it.id}' failed with exception: $errorMessage")
                 }
               }
               .map { it }
       val success = results.all { it.success }
       if (!success) {
-        eventPublisher.publishEvent(executionFailedEvent(projectName, executionId))
+        val failedTasks = results.filter { !it.success }
+        val failedMessages = failedTasks.mapNotNull { it.message }.joinToString(", ")
+        val errorMessage =
+            "Execution failed. ${failedTasks.size} task(s) failed" +
+                if (failedMessages.isNotEmpty()) ": $failedMessages" else ""
+          return TaskResult.failure(errorMessage)
       } else {
-        eventPublisher.publishEvent(executionCompletedEvent(projectName, executionId))
+        return TaskResult.success("All tasks completed successfully")
       }
     } catch (e: Exception) {
-      eventPublisher.publishEvent(
-          executionFailedEvent(
-              projectName,
-              executionId,
-          ))
+      val errorMessage = e.message ?: "Unknown error"
+      val stackTrace = e.stackTraceToString()
+        return TaskResult.failure("Execution failed with exception: $errorMessage\n\nStack Trace:\n$stackTrace")
     }
   }
 

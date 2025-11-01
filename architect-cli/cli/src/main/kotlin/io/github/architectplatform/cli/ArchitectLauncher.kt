@@ -1,6 +1,5 @@
 package io.github.architectplatform.cli
 
-import ConsoleUI
 import io.github.architectplatform.cli.client.EngineCommandClient
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.micronaut.context.ApplicationContext
@@ -96,7 +95,7 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
     }
 
     // Drop first arg as it's the command itself (included by PicoCLI)
-    val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
+    val taskArgs = args.ifEmpty { emptyList() }
     executeTask(projectName, command!!, taskArgs)
   }
 
@@ -120,7 +119,13 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
   private fun executeTask(projectName: String, taskName: String, taskArgs: List<String>) {
     val ui = ConsoleUI(taskName, plain)
 
-    println("🛠️Executing task: $taskName")
+    println()
+    println("━".repeat(80))
+    println("▶️  Executing task: $taskName")
+    println("📦 Project: $projectName")
+    println("━".repeat(80))
+    println()
+    
     runBlocking {
       val startTime = System.currentTimeMillis()
       try {
@@ -130,14 +135,22 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
 
         val duration = (System.currentTimeMillis() - startTime) / 1000.0
         if (ui.hasFailed) {
-          ui.completeWithError("Task failed")
+          ui.completeWithError("Task failed (duration: ${"%.1f".format(duration)}s)")
           exitProcess(1)
         } else {
-          ui.complete("Task completed in ${"%.1f".format(duration)}s")
+          ui.complete("Task completed successfully (duration: ${"%.1f".format(duration)}s)")
           exitProcess(0)
         }
       } catch (e: Exception) {
-        ui.completeWithError("Task aborted: ${e.message}")
+        val duration = (System.currentTimeMillis() - startTime) / 1000.0
+        println()
+        println("❌ Task execution aborted")
+        println("Error: ${e.message}")
+        println()
+        println("Stack Trace:")
+        println(e.stackTraceToString())
+        println()
+        println("Duration: ${"%.1f".format(duration)}s")
         exitProcess(1)
       }
     }

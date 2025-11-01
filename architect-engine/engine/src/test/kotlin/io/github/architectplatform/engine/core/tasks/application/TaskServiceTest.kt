@@ -7,6 +7,8 @@ import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.engine.core.project.app.ProjectService
 import io.github.architectplatform.engine.core.project.domain.Project
 import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTaskRegistry
+import io.github.architectplatform.engine.domain.events.ArchitectEvent
+import io.micronaut.context.event.ApplicationEventPublisher
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -24,6 +26,7 @@ class TaskServiceTest {
     private lateinit var projectService: ProjectService
     private lateinit var taskExecutor: TaskExecutor
     private lateinit var eventCollector: ExecutionEventCollector
+    private lateinit var eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>
     private lateinit var taskService: TaskService
 
     @BeforeEach
@@ -31,7 +34,8 @@ class TaskServiceTest {
         projectService = mock()
         taskExecutor = mock()
         eventCollector = mock()
-        taskService = TaskService(projectService, taskExecutor, eventCollector)
+        eventPublisher = mock()
+        taskService = TaskService(projectService, taskExecutor, eventCollector, eventPublisher)
     }
 
     @Test
