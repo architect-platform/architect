@@ -1,7 +1,6 @@
 package io.github.architectplatform.engine.core.project.app
 
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
-import io.github.architectplatform.api.core.project.Config
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.engine.core.plugin.app.PluginLoader
 import io.github.architectplatform.engine.core.project.app.repositories.ProjectRepository
