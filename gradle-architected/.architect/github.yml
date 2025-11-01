@@ -1,0 +1,13 @@
+github:
+  deps:
+    type: renovate
+
+  pipelines:
+    - name: gradle-architected-pipeline
+      type: github/classic-java-17
+      path: gradle-architected/**
+
+  release:
+    assets:
+      - name: gradle-architected.jar
+        path: "app/build/libs/gradle-architected-*.jar"

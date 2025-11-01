@@ -1,0 +1,7 @@
+project:
+  name: gradle-architected
+  description: "The Architect plugin for Gradle"
+
+plugins:
+  - name: gradle-architected
+  - name: github-architected
