@@ -82,13 +82,14 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
     }
 
     val projectPath = System.getProperty("user.dir")
-    val projectName = projectPath.substringAfterLast("/").substringBeforeLast(".")
+    val projectName = extractProjectName(projectPath)
 
     println("📦 Registering project: $projectName")
     val request = RegisterProjectRequest(name = projectName, path = projectPath)
     engineCommandClient.registerProject(request)
 
-    args = args.drop(1)
+    // Drop first arg as it's the command itself
+    val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
 
     if (command == null) {
       val commands = engineCommandClient.getAllTasks(projectName)
@@ -97,17 +98,37 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
       return
     }
 
-    val ui = ConsoleUI(command!!, plain)
+    executeTask(projectName, command!!, taskArgs)
+  }
 
-    println("🛠️Executing task: $command")
+  /**
+   * Extracts project name from the project path.
+   *
+   * @param projectPath The full path to the project
+   * @return The project name
+   */
+  private fun extractProjectName(projectPath: String): String {
+    return projectPath.substringAfterLast("/").substringBeforeLast(".")
+  }
+
+  /**
+   * Executes a task and displays progress.
+   *
+   * @param projectName The name of the project
+   * @param taskName The name of the task to execute
+   * @param taskArgs Arguments to pass to the task
+   */
+  private fun executeTask(projectName: String, taskName: String, taskArgs: List<String>) {
+    val ui = ConsoleUI(taskName, plain)
+
+    println("🛠️Executing task: $taskName")
     runBlocking {
       val startTime = System.currentTimeMillis()
       try {
-        val executionId = engineCommandClient.execute(projectName, command!!, args)
+        val executionId = engineCommandClient.execute(projectName, taskName, taskArgs)
         val flow = engineCommandClient.getExecutionFlow(executionId)
-        flow.collect {
-            ui.process(it)
-        }
+        flow.collect { ui.process(it) }
+        
         val duration = (System.currentTimeMillis() - startTime) / 1000.0
         if (ui.hasFailed) {
           ui.completeWithError("Task failed")
@@ -185,8 +206,12 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
     try {
       val process = Runtime.getRuntime().exec(command)
       if (wait) {
-        process.waitFor()
-        println("Command: $command executed successfully.")
+        val exitCode = process.waitFor()
+        if (exitCode == 0) {
+          println("Command: $command executed successfully.")
+        } else {
+          println("Command: $command exited with code $exitCode.")
+        }
       } else {
         println("Command: $command is running in the background.")
       }

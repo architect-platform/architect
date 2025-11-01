@@ -133,25 +133,34 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
   fun process(eventMap: Map<String, Any>) {
     val event = objectMapper.convertValue<ArchitectEvent>(eventMap)
     val executionEventType = event.event["executionEventType"] as? String
-    val icon =
-        executionEventType?.let { type ->
-          when (type) {
-            "STARTED" -> "▶️"
-            "COMPLETED" -> "✅"
-            "FAILED" -> {
-              if (event.event["taskId"] == null) {
-                failed = true
-              }
-              "❌"
-            }
-
-            "SKIPPED" -> "⏭️"
-            else -> "ℹ️"
-          }
-        }
+    val icon = getIconForEventType(executionEventType, event)
     val message = objectMapper.writeValueAsString(event.event)
-    icon?.run { eventsLog.add(EventLog(event.id, icon, message)) }
+    icon?.let { eventsLog.add(EventLog(event.id, it, message)) }
     redraw()
+  }
+
+  /**
+   * Determines the appropriate icon for an event type.
+   *
+   * @param eventType The type of event as a string
+   * @param event The full event object
+   * @return The emoji icon for this event type, or null if unknown
+   */
+  private fun getIconForEventType(eventType: String?, event: ArchitectEvent): String? {
+    return eventType?.let { type ->
+      when (type) {
+        "STARTED" -> "▶️"
+        "COMPLETED" -> "✅"
+        "FAILED" -> {
+          if (event.event["taskId"] == null) {
+            failed = true
+          }
+          "❌"
+        }
+        "SKIPPED" -> "⏭️"
+        else -> "ℹ️"
+      }
+    }
   }
 
   /**
