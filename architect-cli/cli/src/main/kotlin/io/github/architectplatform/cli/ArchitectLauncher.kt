@@ -88,9 +88,6 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
     val request = RegisterProjectRequest(name = projectName, path = projectPath)
     engineCommandClient.registerProject(request)
 
-    // Drop first arg as it's the command itself
-    val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
-
     if (command == null) {
       val commands = engineCommandClient.getAllTasks(projectName)
       println("🧭 Available tasks:")
@@ -98,6 +95,8 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
       return
     }
 
+    // Drop first arg as it's the command itself (included by PicoCLI)
+    val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
     executeTask(projectName, command!!, taskArgs)
   }
 
@@ -128,7 +127,7 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
         val executionId = engineCommandClient.execute(projectName, taskName, taskArgs)
         val flow = engineCommandClient.getExecutionFlow(executionId)
         flow.collect { ui.process(it) }
-        
+
         val duration = (System.currentTimeMillis() - startTime) / 1000.0
         if (ui.hasFailed) {
           ui.completeWithError("Task failed")
