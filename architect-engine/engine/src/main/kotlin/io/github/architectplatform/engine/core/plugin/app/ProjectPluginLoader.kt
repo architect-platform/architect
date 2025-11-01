@@ -9,6 +9,7 @@ import io.github.architectplatform.engine.core.plugin.domain.events.PluginEvents
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import io.micronaut.context.event.ApplicationEventPublisher
 import io.micronaut.http.HttpRequest
+import io.micronaut.http.MutableHttpRequest
 import io.micronaut.http.client.HttpClient
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
@@ -31,67 +32,101 @@ class ProjectPluginLoader(
 
   private val objectMapper = ObjectMapper().registerKotlinModule()
 
-  override fun load(context: ProjectContext): List<ArchitectPlugin<*>> {
-    val enabled = mutableListOf<ArchitectPlugin<*>>()
-    // 1) Always include internal plugins
-    enabled += internalPlugins.map { it.getPlugin() }
+    override fun load(context: ProjectContext): List<ArchitectPlugin<*>> {
+        val enabled = mutableListOf<ArchitectPlugin<*>>()
+        // 1) Always include internal plugins
+        enabled += internalPlugins.map { it.getPlugin() }
 
-    val rawContext = context.config.getKey<Any>("plugins") ?: emptyList<PluginConfig>()
-    val plugins: List<PluginConfig> =
-        when (rawContext) {
-          is List<*> -> {
-            // Config contains a list, so we deserialize as List<ctxClass>
-            rawContext.map { item -> objectMapper.convertValue(item, PluginConfig::class.java) }
-          }
-          else -> {
-            throw IllegalArgumentException(
-                "Invalid plugins context format: expected list, got ${rawContext::class.qualifiedName}")
-          }
+        val rawContext = context.config.getKey<Any>("plugins") ?: emptyList<PluginConfig>()
+        val plugins: List<PluginConfig> =
+            when (rawContext) {
+                is List<*> -> {
+                    // Config contains a list, so we deserialize as List<ctxClass>
+                    rawContext.map { item -> objectMapper.convertValue(item, PluginConfig::class.java) }
+                }
+                else -> {
+                    throw IllegalArgumentException(
+                        "Invalid plugins context format: expected list, got ${rawContext::class.qualifiedName}")
+                }
+            }
+        // 2) Download & load each project-declared plugin JAR
+        plugins.forEach { plugin ->
+            val jar =
+                when (plugin.type) {
+                    "github" -> {
+                        val tag =
+                            if (plugin.version == "latest") {
+                                resolveLatestTag(plugin.repo, plugin.pattern)
+                            } else {
+                                "${plugin.name}-${plugin.version}"
+                            }
+                        val url =
+                            "https://github.com/${plugin.repo}/releases/download/$tag/${plugin.asset}"
+                        downloader.download(url)
+                    }
+                    "local" -> {
+                        // Local plugin, assume the asset is a local path
+                        val localPath = context.dir.resolve(plugin.path)
+                        if (!localPath.exists()) {
+                            throw IllegalArgumentException(
+                                "Local plugin asset not found: ${localPath.toAbsolutePath()}")
+                        }
+                        localPath.toFile()
+                    }
+                    else -> throw IllegalArgumentException("Unsupported plugin type: ${plugin.type}")
+                }
+            val loader = URLClassLoader(arrayOf(jar.toURI().toURL()), this::class.java.classLoader)
+            val loaded = spiLoader.loadFrom(loader)
+            eventPublisher.publishEvent(pluginLoaded(plugin.name))
+            enabled += loaded
         }
-    // 2) Download & load each project-declared plugin JAR
-    plugins.forEach { plugin ->
-      val jar =
-          when (plugin.type) {
-            "github" -> {
-              val tag =
-                  if (plugin.version == "latest") {
-                    resolveLatestTag(plugin.owner, plugin.name)
-                  } else {
-                    "v${plugin.version}"
-                  }
-              val url =
-                  "https://github.com/${plugin.owner}/${plugin.name}/releases/download/$tag/${plugin.asset}"
-              downloader.download(url)
-            }
-            "local" -> {
-              // Local plugin, assume the asset is a local path
-              val localPath = context.dir.resolve(plugin.path)
-              if (!localPath.exists()) {
-                throw IllegalArgumentException(
-                    "Local plugin asset not found: ${localPath.toAbsolutePath()}")
-              }
-              localPath.toFile()
-            }
-            else -> throw IllegalArgumentException("Unsupported plugin type: ${plugin.type}")
-          }
-      val loader = URLClassLoader(arrayOf(jar.toURI().toURL()), this::class.java.classLoader)
-      val loaded = spiLoader.loadFrom(loader)
-      eventPublisher.publishEvent(pluginLoaded(plugin.name))
-      enabled += loaded
+
+        return enabled
     }
 
-    return enabled
-  }
+    private fun resolveLatestTag(repo: String, prefix: String): String {
+        val apiUrl = "https://api.github.com/repos/$repo/releases"
 
-  private fun resolveLatestTag(owner: String, repo: String): String {
-    val url = "https://github.com/$owner/$repo/releases/latest"
-    val req: HttpRequest<*> = HttpRequest.GET<Any>(url)
-    val response =
-        httpClient.toBlocking().retrieve(req, String::class.java)
-            ?: error("Failed to fetch latest tag from $url")
-    val tagRegex = Regex("href=\"/[^/]+/$repo/releases/tag/([^\"]+)\"")
-    val matchResult =
-        tagRegex.find(response) ?: error("Failed to parse latest tag from response: $response")
-    return matchResult.groupValues[1]
-  }
+        val token = System.getenv("GITHUB_TOKEN") ?: System.getProperty("GITHUB_TOKEN")
+
+        var req: MutableHttpRequest<*> = HttpRequest.GET<Any>(apiUrl)
+            .header("User-Agent", "ArchitectPlatform/1.0")
+
+        if (!token.isNullOrBlank()) {
+            req = req.header("Authorization", "Bearer $token")
+        }
+
+        val response = httpClient.toBlocking().retrieve(req, String::class.java)
+            ?: error("Failed to fetch tags from $apiUrl")
+
+        val tags: List<Map<String, Any>> =
+            objectMapper.readValue(response, List::class.java) as List<Map<String, Any>>
+
+        println("Fetched ${tags.size} tags from $repo: $tags")
+
+        val matchingTags = tags.mapNotNull { it["name"] as? String }.filter { it.startsWith(prefix) }
+
+        if (matchingTags.isEmpty()) {
+            error("No tags starting with '$prefix' found in $repo")
+        }
+
+        val latestTag = matchingTags.maxWithOrNull { a, b ->
+            runCatching { compareVersions(a, b) }.getOrDefault(0)
+        } ?: matchingTags.last()
+
+        return latestTag
+    }
+
+
+    // Simple semver comparator
+    private fun compareVersions(a: String, b: String): Int {
+        val partsA = a.removePrefix("v").split(".")
+        val partsB = b.removePrefix("v").split(".")
+        for (i in 0 until maxOf(partsA.size, partsB.size)) {
+            val nA = partsA.getOrNull(i)?.toIntOrNull() ?: 0
+            val nB = partsB.getOrNull(i)?.toIntOrNull() ?: 0
+            if (nA != nB) return nA - nB
+        }
+        return 0
+    }
 }
