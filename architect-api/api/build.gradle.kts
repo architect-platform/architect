@@ -1,6 +1,7 @@
 plugins {
   kotlin("jvm") version "1.9.25"
   `maven-publish`
+  id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
 }
 
 group = "io.github.architectplatform"
@@ -17,6 +18,24 @@ kotlin { jvmToolchain { languageVersion.set(JavaLanguageVersion.of(17)) } }
 
 repositories { mavenCentral() }
 
+dependencies {
+  // Test dependencies
+  testImplementation("org.jetbrains.kotlin:kotlin-test")
+  testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+}
+
+tasks.test {
+  useJUnitPlatform()
+}
+
+ktlint {
+  version.set("1.0.1")
+  verbose.set(true)
+  android.set(false)
+}
+
 publishing {
   publications {
     create<MavenPublication>("gpr") {
@@ -29,7 +48,7 @@ publishing {
         licenses {
           license {
             name.set("Apache-2.0")
-            url.set("https://www.apache.org/licenses/MIT-2.0")
+            url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
           }
         }
         developers {
@@ -47,9 +66,9 @@ publishing {
       url = uri("https://maven.pkg.github.com/architect-platform/architect")
       credentials {
         username =
-            System.getenv("GITHUB_USER")
-                ?: project.findProperty("githubUser") as String?
-                ?: "github-actions"
+          System.getenv("GITHUB_USER")
+            ?: project.findProperty("githubUser") as String?
+            ?: "github-actions"
         password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("githubToken") as String?
       }
     }
