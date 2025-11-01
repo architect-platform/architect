@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     concurrency:
-      group: global # Only one release at a time because it will push and change tags
+      group: release-architect-cli
       cancel-in-progress: false
     permissions:
       contents: write
