@@ -17,45 +17,62 @@ ASSET_NAME="${NAME}.${ASSET_TYPE}"
 ASSET_PATH="${BIN_DIR}/${ASSET_NAME}"
 EXECUTABLE_PATH="${BIN_DIR}/${APPLICATION_NAME}"
 
+# Header di base richiesto da GitHub
+HEADERS=(-H "User-Agent: Architect-CI")
+
+# Aggiungi Authorization se presente
+if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+  HEADERS+=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
+fi
+
 echo "🔍 Searching release for prefix '${PREFIX}' in ${REPO}..."
 
-RELEASE_URL=$(curl -s "https://api.github.com/repos/${REPO}/releases" \
-  | jq -r "[.[] | select(.tag_name | startswith(\"${PREFIX}\"))][0].url")
+# 1️⃣ Ottieni la lista dei release
+RELEASES_JSON=$(curl -sSL "${HEADERS[@]}" "https://api.github.com/repos/${REPO}/releases")
 
-if [[ -z "${RELEASE_URL}" || "${RELEASE_URL}" == "null" ]]; then
-  echo "❌ No release found for ${APPLICATION_NAME} in ${REPO}"
+# Verifica che sia JSON valido
+if ! echo "$RELEASES_JSON" | jq empty >/dev/null 2>&1; then
+  echo "❌ Invalid JSON received from GitHub. Maybe missing User-Agent or token?"
+  echo "$RELEASES_JSON"
   exit 1
 fi
 
-# Fetch matching release metadata
-ASSET_URL=$(curl -s "${RELEASE_URL}" \
+# 2️⃣ Trova il primo release che inizia col prefix
+RELEASE_URL=$(echo "$RELEASES_JSON" | jq -r "[.[] | select(.tag_name | startswith(\"${PREFIX}\"))][0].url")
+
+if [[ -z "${RELEASE_URL}" || "${RELEASE_URL}" == "null" ]]; then
+  echo "❌ No release found for prefix '${PREFIX}' in ${REPO}"
+  exit 1
+fi
+
+# 3️⃣ Ottieni URL dell’asset giusto
+ASSET_URL=$(curl -sSL "${HEADERS[@]}" "${RELEASE_URL}" \
   | jq -r ".assets[] | select(.name == \"${ASSET_NAME}\") | .browser_download_url")
 
 if [[ -z "${ASSET_URL}" || "${ASSET_URL}" == "null" ]]; then
-  echo "❌ Asset '${ASSET_NAME}' not found in release ${RELEASE_URL}"
+  echo "❌ Asset '${ASSET_NAME}' not found in release."
   exit 1
 fi
 
-echo "⬇️ Downloading ${ASSET_NAME} from ${ASSET_URL}..."
-curl -fsSL -o "${ASSET_PATH}" "${ASSET_URL}"
+# 4️⃣ Scarica l’asset
+echo "⬇️  Downloading ${ASSET_NAME} from ${ASSET_URL}..."
+curl -fsSL "${HEADERS[@]}" -o "${ASSET_PATH}" "${ASSET_URL}"
 
 if [[ ! -s "${ASSET_PATH}" ]]; then
   echo "❌ Download failed or empty file: ${ASSET_PATH}"
   exit 1
 fi
 
-echo "⚙️ Creating executable wrapper for ${APPLICATION_NAME} in ${EXECUTABLE_PATH}..."
-
+# 5️⃣ Wrapper eseguibile
+echo "⚙️ Creating executable wrapper for ${APPLICATION_NAME}..."
 cat > "${EXECUTABLE_PATH}" <<'EOF'
 #!/usr/bin/env bash
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 EOF
-
 echo "exec java -jar \"\${DIR}/${ASSET_NAME}\" \"\$@\"" >> "${EXECUTABLE_PATH}"
-
 chmod +x "${ASSET_PATH}" "${EXECUTABLE_PATH}"
 
-# Add to PATH for GitHub Actions
+# 6️⃣ Aggiorna PATH in ambiente CI (es. GitHub Actions)
 if [[ -n "${GITHUB_PATH:-}" ]]; then
   echo "${BIN_DIR}" >> "${GITHUB_PATH}"
 fi
@@ -63,4 +80,3 @@ fi
 echo "✅ ${APPLICATION_NAME} installed successfully!"
 echo "   Binary: ${EXECUTABLE_PATH}"
 echo "   Asset:  ${ASSET_PATH}"
-echo "   Release tag: $(basename "${RELEASE_URL}")"

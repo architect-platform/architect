@@ -25,39 +25,51 @@ EOF
 echo "exec java -jar $FINAL_ASSET \"\$@\"" >> "$BIN_PATH"
 chmod +x "$BIN_PATH"
 
+# --- 1️⃣ Handle local build ---
 if [ "$2" == "local" ]; then
-  echo "Building $APPLICATION_NAME"
+  echo "Building $APPLICATION_NAME locally..."
   ./gradlew ":$NAME:build"
   cp "$NAME/build/libs/$ASSET_NAME" "$FINAL_ASSET"
+  echo "✅ Local build complete"
   exit 0
-else
-  # --- 1️⃣ Get the latest tag matching the subproject prefix ---
-  echo "Fetching latest releases for prefix '$PREFIX'..."
-  TAG=$(curl -s "https://api.github.com/repos/$REPO/releases" | \
-        jq -r ".[].name" | grep "^${PREFIX}" | sort -Vr | head -n 1)
-
-  if [ -z "$TAG" ]; then
-      echo "❌ No release tag found for prefix '$PREFIX'."
-      exit 1
-  fi
-  echo "Found latest releases: $TAG"
-
-  # --- 2️⃣ Get the release info for that tag ---
-  RELEASE_URL="https://api.github.com/repos/$REPO/releases/tags/$TAG"
-  ASSET_URL=$(curl -s "$RELEASE_URL" | jq -r ".assets[] | select(.name == \"$ASSET_NAME\") | .browser_download_url")
-
-  if [[ -z "$ASSET_URL" || "$ASSET_URL" == "null" ]]; then
-      echo "❌ Asset '$ASSET_NAME' not found for tag '$TAG'."
-      exit 1
-  fi
-
-  # --- 3️⃣ Download the correct asset ---
-  echo "⬇️  Downloading $ASSET_NAME from $ASSET_URL..."
-  curl -sL "$ASSET_URL" -o "$FINAL_ASSET"
-  echo "✅ Download complete"
 fi
 
-# --- 4️⃣ Add to PATH if needed ---
+# --- 2️⃣ Prepare GitHub API headers ---
+USER_AGENT="ArchitectInstaller/1.0"
+AUTH_HEADER=""
+if [[ -n "$GITHUB_TOKEN" ]]; then
+  AUTH_HEADER="Authorization: Bearer $GITHUB_TOKEN"
+fi
+
+# --- 3️⃣ Get latest release tag for prefix ---
+echo "Fetching latest releases for prefix '$PREFIX'..."
+TAG=$(curl -s -H "User-Agent: $USER_AGENT" ${AUTH_HEADER:+-H "$AUTH_HEADER"} \
+      "https://api.github.com/repos/$REPO/releases" | \
+      jq -r ".[].name" | grep "^${PREFIX}" | sort -Vr | head -n 1)
+
+if [ -z "$TAG" ]; then
+  echo "❌ No release tag found for prefix '$PREFIX'."
+  exit 1
+fi
+echo "Found latest release: $TAG"
+
+# --- 4️⃣ Get asset download URL ---
+RELEASE_URL="https://api.github.com/repos/$REPO/releases/tags/$TAG"
+ASSET_URL=$(curl -s -H "User-Agent: $USER_AGENT" ${AUTH_HEADER:+-H "$AUTH_HEADER"} \
+  "$RELEASE_URL" | jq -r ".assets[] | select(.name == \"$ASSET_NAME\") | .browser_download_url")
+
+if [[ -z "$ASSET_URL" || "$ASSET_URL" == "null" ]]; then
+  echo "❌ Asset '$ASSET_NAME' not found for tag '$TAG'."
+  exit 1
+fi
+
+# --- 5️⃣ Download the asset ---
+echo "⬇️  Downloading $ASSET_NAME from $ASSET_URL..."
+curl -sL -H "User-Agent: $USER_AGENT" ${AUTH_HEADER:+-H "$AUTH_HEADER"} \
+  -o "$FINAL_ASSET" "$ASSET_URL"
+echo "✅ Download complete"
+
+# --- 6️⃣ Add to PATH if missing ---
 SHELL_NAME=$(basename "$SHELL")
 PROFILE="$HOME/.profile"
 [[ "$SHELL_NAME" == "bash" ]] && PROFILE="$HOME/.bashrc"
@@ -66,7 +78,10 @@ PROFILE="$HOME/.profile"
 if ! grep -qs "export PATH=\"$HOME/.$NAME:\$PATH\"" "$PROFILE"; then
   echo "export PATH=\"$HOME/.$NAME:\$PATH\"" >> "$PROFILE"
   echo "✅ Added $INSTALL_DIR to PATH in $PROFILE"
-  source "$PROFILE"
+  # non eseguire "source" in CI per evitare side-effects
+  if [ -t 1 ]; then
+    source "$PROFILE"
+  fi
 fi
 
 echo "🚀 Installed $NAME successfully — run with: $APPLICATION_NAME"

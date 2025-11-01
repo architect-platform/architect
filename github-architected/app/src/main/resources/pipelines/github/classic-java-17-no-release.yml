@@ -7,12 +7,12 @@ on:
     branches:
       - {{branch}}
     paths:
-      - '{{path}}'
+      - '{{path}}**'
   pull_request:
     branches:
       - {{branch}}
     paths:
-      - '{{path}}'
+      - '{{path}}**'
 
 jobs:
   build:
@@ -51,12 +51,16 @@ jobs:
 
       - name: Init
         run: architect init --plain
+        working-directory: {{path}}
 
       - name: Verify
         run: architect verify --plain
+        working-directory: {{path}}
 
       - name: Build
         run: architect build --plain
+        working-directory: {{path}}
 
       - name: Test
         run: architect test --plain
+        working-directory: {{path}}

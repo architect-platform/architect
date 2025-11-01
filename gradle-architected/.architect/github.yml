@@ -5,7 +5,7 @@ github:
   pipelines:
     - name: gradle-architected-pipeline
       type: github/classic-java-17
-      path: gradle-architected/**
+      path: gradle-architected
 
   release:
     assets:

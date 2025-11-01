@@ -2,7 +2,7 @@ github:
   pipelines:
     - name: architect-api-pipeline
       type: github/classic-java-17
-      path: architect-api/**
+      path: architect-api
 
   release:
     assets:
