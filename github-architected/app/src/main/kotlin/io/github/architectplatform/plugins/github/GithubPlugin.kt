@@ -18,6 +18,18 @@ import java.io.File
 import java.nio.file.Files
 import kotlin.io.path.Path
 
+/**
+ * Architect plugin providing GitHub-specific automation capabilities.
+ *
+ * This plugin integrates with GitHub to provide:
+ * - Automated release management using semantic-release
+ * - GitHub Actions workflow initialization from templates
+ * - Dependency management tool configuration (e.g., Renovate)
+ *
+ * The plugin registers tasks in the following phases:
+ * - INIT: Pipeline and dependency configuration
+ * - RELEASE: Automated release creation and publishing
+ */
 class GithubPlugin : ArchitectPlugin<GithubContext> {
   override val id = "github-plugin"
   override val contextKey: String = "github"
@@ -25,6 +37,16 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
   override val ctxClass = GithubContext::class.java
   override var context: GithubContext = GithubContext()
 
+  /**
+   * Registers GitHub-related tasks with the task registry.
+   *
+   * Registered tasks:
+   * - github-release-task: Executes semantic-release for automated releases
+   * - github-init-pipelines: Creates GitHub Actions workflow files
+   * - github-init-dependencies: Sets up dependency management configuration
+   *
+   * @param registry The task registry to add tasks to
+   */
   override fun register(registry: TaskRegistry) {
     registry.add(
         GithubTask(
@@ -48,6 +70,16 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
         ))
   }
 
+  /**
+   * Task wrapper for GitHub-specific operations.
+   *
+   * Executes a GitHub task function and handles exceptions, converting them
+   * to appropriate TaskResult objects.
+   *
+   * @property id Unique identifier for the task
+   * @property phase The workflow phase this task belongs to
+   * @property task The actual task implementation function
+   */
   class GithubTask(
       override val id: String,
       private val phase: Phase,
@@ -56,6 +88,14 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
 
     override fun phase(): Phase = phase
 
+    /**
+     * Executes the GitHub task with error handling.
+     *
+     * @param environment Execution environment providing services
+     * @param projectContext The project context
+     * @param args Additional arguments for the task
+     * @return TaskResult indicating success or failure
+     */
     override fun execute(
         environment: Environment,
         projectContext: ProjectContext,
@@ -70,6 +110,15 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
     }
   }
 
+  /**
+   * Finds the root directory of the Git repository.
+   *
+   * Traverses up the directory tree from the starting directory until
+   * a .git directory is found.
+   *
+   * @param startDir The directory to start searching from
+   * @return The repository root directory, or null if not found
+   */
   private fun findRepoRoot(startDir: File): File? {
     var currentDir: File? = startDir
     while (currentDir != null) {
@@ -82,6 +131,16 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
     return null
   }
 
+  /**
+   * Initializes dependency management configuration in the repository.
+   *
+   * Extracts dependency management tool configuration (e.g., Renovate)
+   * from embedded resources and places it in the .github directory.
+   *
+   * @param environment Execution environment providing ResourceExtractor service
+   * @param projectContext The project context
+   * @return TaskResult indicating success or failure
+   */
   private fun initDependencies(
       environment: Environment,
       projectContext: ProjectContext
@@ -100,6 +159,19 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
     return TaskResult.success("Dependencies initialized successfully.")
   }
 
+  /**
+   * Executes the automated release process using semantic-release.
+   *
+   * This task:
+   * 1. Extracts release scripts and configuration from resources
+   * 2. Configures semantic-release with project-specific settings
+   * 3. Executes the release process
+   * 4. Cleans up temporary files
+   *
+   * @param environment Execution environment providing services
+   * @param projectContext The project context
+   * @return TaskResult indicating success or failure
+   */
   private fun releaseTask(environment: Environment, projectContext: ProjectContext): TaskResult {
     if (context.release.enabled.not()) {
       return TaskResult.success("Release skipped as it is not enabled.")
@@ -140,6 +212,16 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
     return TaskResult.success("Release completed successfully")
   }
 
+  /**
+   * Initializes all configured GitHub Actions pipelines.
+   *
+   * Iterates through all pipeline configurations and creates the
+   * corresponding workflow files.
+   *
+   * @param environment Execution environment
+   * @param projectContext The project context
+   * @return TaskResult with aggregated results from all pipeline initializations
+   */
   private fun initPipelines(environment: Environment, projectContext: ProjectContext): TaskResult {
     val results =
         this.context.pipelines.map { pipeline ->
@@ -148,6 +230,17 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
     return TaskResult.success("All pipelines initialized successfully.", results)
   }
 
+  /**
+   * Initializes a single GitHub Actions pipeline.
+   *
+   * Creates a workflow file in .github/workflows based on a template,
+   * replacing placeholders with pipeline-specific values.
+   *
+   * @param pipeline The pipeline configuration
+   * @param environment Execution environment providing ResourceExtractor service
+   * @param projectContext The project context
+   * @return TaskResult indicating success or failure
+   */
   private fun initSinglePipeline(
       pipeline: PipelineContext,
       environment: Environment,

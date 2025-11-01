@@ -30,4 +30,11 @@ dependencies {
   implementation("io.github.architectplatform:api:1.1.2")
   implementation("com.fasterxml.jackson.core:jackson-databind:2.20.0") // core Jackson
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.0") // Kotlin support
+
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+}
+
+tasks.test {
+  useJUnitPlatform()
 }

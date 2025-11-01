@@ -5,8 +5,28 @@ import io.github.architectplatform.cli.TerminalUI
 import io.github.architectplatform.cli.client.ExecutionId
 import kotlin.system.exitProcess
 
+/**
+ * Rich console user interface for task execution visualization.
+ *
+ * Provides a sophisticated terminal UI with:
+ * - Real-time task execution tracking
+ * - Event logging with colored output
+ * - Progress visualization
+ * - Summary statistics
+ * - Error reporting
+ *
+ * Supports two modes:
+ * - Interactive: Full terminal UI with colors and formatting
+ * - Plain: Simple text output for CI environments
+ *
+ * @property taskName The name of the task being executed
+ * @property plain If true, uses plain text output instead of rich terminal UI
+ */
 class ConsoleUI(private val taskName: String, private val plain: Boolean = false) {
 
+  /**
+   * ANSI color codes for terminal output formatting.
+   */
   object AnsiColors {
     const val RESET = "\u001B[0m"
     const val RED = "\u001B[31m"
@@ -22,6 +42,9 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
 
   private val ansiRegex = Regex("\u001B\\[[0-9;]*m")
 
+  /**
+   * Calculates the visible length of a string, excluding ANSI color codes.
+   */
   private fun String.visibleLength(): Int = this.replace(ansiRegex, "").length
 
   companion object {
@@ -39,6 +62,13 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
 
   private val ui = TerminalUI(TOTAL_WIDTH)
 
+  /**
+   * Represents a logged event in the execution timeline.
+   *
+   * @property id Unique identifier for the event
+   * @property icon Emoji icon representing the event type
+   * @property message Detailed message describing the event
+   */
   data class EventLog(val id: ArchitectEventId, val icon: String, val message: String)
 
   private val eventsLog = mutableListOf<EventLog>()
@@ -47,9 +77,20 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
   private var lastMessage: String? = null
   private var failed = false
 
+  /**
+   * Indicates whether the task execution has failed.
+   */
   val hasFailed: Boolean
     get() = failed
 
+  /**
+   * Represents an execution event received from the engine.
+   *
+   * @property executionId Unique identifier for the execution
+   * @property executionEventType Type of event (STARTED, UPDATED, COMPLETED, FAILED, SKIPPED)
+   * @property success Indicates if the event represents a successful operation
+   * @property message Optional message providing additional context
+   */
   data class ExecutionEvent(
       val executionId: ExecutionId,
       val executionEventType: ExecutionEventType,
@@ -57,6 +98,9 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
       val message: String? = null,
   )
 
+  /**
+   * Types of execution events that can occur during task execution.
+   */
   enum class ExecutionEventType {
     STARTED,
     UPDATED,
@@ -65,6 +109,12 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
     SKIPPED
   }
 
+  /**
+   * Represents an event from the Architect system.
+   *
+   * @property id Unique identifier for the event
+   * @property event Map containing event data
+   */
   data class ArchitectEvent(
       val id: ArchitectEventId,
       val event: Map<String, Any> = emptyMap(),
@@ -72,41 +122,78 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
 
   private val objectMapper = ObjectMapper().registerKotlinModule()
 
+  /**
+   * Processes an execution event and updates the UI.
+   *
+   * Converts the raw event map to an ArchitectEvent, determines the appropriate
+   * icon based on event type, and triggers a UI redraw.
+   *
+   * @param eventMap Raw event data from the engine
+   */
   fun process(eventMap: Map<String, Any>) {
     val event = objectMapper.convertValue<ArchitectEvent>(eventMap)
     val executionEventType = event.event["executionEventType"] as? String
-    val icon =
-        executionEventType?.let { type ->
-          when (type) {
-            "STARTED" -> "▶️"
-            "COMPLETED" -> "✅"
-            "FAILED" -> {
-              if (event.event["taskId"] == null) {
-                failed = true
-              }
-              "❌"
-            }
-
-            "SKIPPED" -> "⏭️"
-            else -> "ℹ️"
-          }
-        }
+    val icon = getIconForEventType(executionEventType, event)
     val message = objectMapper.writeValueAsString(event.event)
-    icon?.run { eventsLog.add(EventLog(event.id, icon, message)) }
+    icon?.let { eventsLog.add(EventLog(event.id, it, message)) }
     redraw()
   }
 
+  /**
+   * Determines the appropriate icon for an event type.
+   *
+   * @param eventType The type of event as a string
+   * @param event The full event object
+   * @return The emoji icon for this event type, or null if unknown
+   */
+  private fun getIconForEventType(eventType: String?, event: ArchitectEvent): String? {
+    return eventType?.let { type ->
+      when (type) {
+        "STARTED" -> "▶️"
+        "COMPLETED" -> "✅"
+        "FAILED" -> {
+          if (event.event["taskId"] == null) {
+            failed = true
+          }
+          "❌"
+        }
+        "SKIPPED" -> "⏭️"
+        else -> "ℹ️"
+      }
+    }
+  }
+
+  /**
+   * Marks the execution as complete with a success message.
+   *
+   * @param finalMessage Success message to display
+   */
   fun complete(finalMessage: String) {
     lastMessage = "✅  $finalMessage"
     redraw()
   }
 
+  /**
+   * Marks the execution as failed with an error message.
+   *
+   * @param errorMessage Error message to display
+   */
   fun completeWithError(errorMessage: String) {
     lastMessage = "❌  Error: $errorMessage"
     failed = true
     redraw()
   }
 
+  /**
+   * Redraws the entire UI with current state.
+   *
+   * In plain mode, only prints the latest event. In interactive mode,
+   * clears the screen and renders a full UI with:
+   * - Header with project and task info
+   * - Summary statistics
+   * - Event log table
+   * - Failure details (if any)
+   */
   private fun redraw() {
     if (plain) {
       if (eventsLog.isNotEmpty()) println(eventsLog.last())
@@ -186,6 +273,13 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
     println(ui.render())
   }
 
+  /**
+   * Wraps text to fit within a specified width, preserving ANSI color codes.
+   *
+   * @param text Text to wrap
+   * @param width Maximum line width
+   * @return List of wrapped lines
+   */
   private fun wrapText(text: String, width: Int): List<String> {
     val ansiRegex = Regex("\u001B\\[[0-9;]*m")
     val words = text.split(" ")
