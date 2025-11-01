@@ -13,7 +13,7 @@ import java.nio.file.Path
  * ```kotlin
  * val extractor = environment.service(ResourceExtractor::class.java)
  * val classLoader = MyPlugin::class.java.classLoader
- * 
+ *
  * // Copy a single file from resources
  * extractor.copyFileFromResources(
  *   classLoader,
@@ -21,17 +21,17 @@ import java.nio.file.Path
  *   projectDir.resolve("config"),
  *   "config.yml"
  * )
- * 
+ *
  * // Copy an entire directory
  * extractor.copyDirectoryFromResources(
  *   classLoader,
  *   "templates/project",
  *   projectDir
  * )
- * 
+ *
  * // Read a resource file's content
  * val content = extractor.getResourceFileContent(classLoader, "templates/readme.md")
- * 
+ *
  * // List all files in a resource directory
  * val files = extractor.listResourceFiles(classLoader, "templates")
  * ```
@@ -47,10 +47,10 @@ interface ResourceExtractor {
    *                       If null, uses the original filename from resourcePath.
    */
   fun copyFileFromResources(
-      classLoader: ClassLoader,
-      resourcePath: String,
-      targetDir: Path,
-      targetFileName: String? = null,
+    classLoader: ClassLoader,
+    resourcePath: String,
+    targetDir: Path,
+    targetFileName: String? = null,
   )
 
   /**
@@ -64,9 +64,9 @@ interface ResourceExtractor {
    * @param targetDirectory Directory where the resources should be copied
    */
   fun copyDirectoryFromResources(
-      classLoader: ClassLoader,
-      resourceRoot: String,
-      targetDirectory: Path
+    classLoader: ClassLoader,
+    resourceRoot: String,
+    targetDirectory: Path,
   )
 
   /**
@@ -76,7 +76,10 @@ interface ResourceExtractor {
    * @param resourcePath Path to the resource file within the classpath
    * @return The content of the file as a string
    */
-  fun getResourceFileContent(classLoader: ClassLoader, resourcePath: String): String
+  fun getResourceFileContent(
+    classLoader: ClassLoader,
+    resourcePath: String,
+  ): String
 
   /**
    * Lists all files in a resource directory.
@@ -85,5 +88,8 @@ interface ResourceExtractor {
    * @param resourceRoot Root path of the resource directory within the classpath
    * @return List of relative paths to all files in the directory and its subdirectories
    */
-  fun listResourceFiles(classLoader: ClassLoader, resourceRoot: String): List<String>
+  fun listResourceFiles(
+    classLoader: ClassLoader,
+    resourceRoot: String,
+  ): List<String>
 }

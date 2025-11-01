@@ -23,7 +23,7 @@ typealias Config = Map<String, Any>
  *   ),
  *   "servers" to listOf("server1", "server2")
  * )
- * 
+ *
  * val host = config.getKey<String>("database.host") // Returns "localhost"
  * val port = config.getKey<Int>("database.port")    // Returns 5432
  * val server = config.getKey<String>("servers.0")   // Returns "server1"

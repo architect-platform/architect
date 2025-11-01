@@ -33,34 +33,34 @@ import io.github.architectplatform.api.core.tasks.phase.PhaseId
  * ```
  */
 enum class CoreWorkflow(
-    override val id: String,
-    private val description: String,
-    private val dependsOn: List<PhaseId> = emptyList(),
+  override val id: String,
+  private val description: String,
+  private val dependsOn: List<PhaseId> = emptyList(),
 ) : Phase {
-
   /** Initialize the project - setup, install dependencies, prepare environment */
   INIT("init", "Initialize the project"),
-  
+
   /** Lint the project - check code style and formatting */
   LINT("lint", "Lint the project", listOf("init")),
-  
+
   /** Verify the project - type checking, validation, static analysis */
   VERIFY("verify", "Verify the project", listOf("lint")),
-  
+
   /** Build the project - compile, package, create artifacts */
   BUILD("build", "Build the project", listOf("verify")),
-  
+
   /** Run the project - execute the application */
   RUN("run", "Run the project", listOf("build")),
-  
+
   /** Test the project - run test suites */
   TEST("test", "Test the project", listOf("build")),
-  
+
   /** Release the project - create release artifacts, tag versions */
   RELEASE("release", "Release the project", listOf("test")),
-  
+
   /** Publish the project - deploy to repositories, registries */
-  PUBLISH("publish", "Publish the project", listOf("release"));
+  PUBLISH("publish", "Publish the project", listOf("release")),
+  ;
 
   override fun description(): String = description
 

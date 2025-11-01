@@ -15,7 +15,7 @@ import io.github.architectplatform.api.core.tasks.TaskRegistry
  *   override val contextKey = "myContext"
  *   override val ctxClass = MyContext::class.java
  *   override lateinit var context: MyContext
- *   
+ *
  *   override fun register(registry: TaskRegistry) {
  *     registry.add(MyTask())
  *   }
@@ -29,17 +29,17 @@ interface ArchitectPlugin<C> {
    * Unique identifier for this plugin.
    */
   val id: String
-  
+
   /**
    * Key used to look up the plugin's context in the configuration.
    */
   val contextKey: String
-  
+
   /**
    * The class type of the plugin's context.
    */
   val ctxClass: Class<C>
-  
+
   /**
    * The plugin's context instance, initialized during plugin setup.
    */

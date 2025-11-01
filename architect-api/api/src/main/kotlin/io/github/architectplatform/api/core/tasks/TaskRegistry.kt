@@ -9,13 +9,13 @@ package io.github.architectplatform.api.core.tasks
  * Example usage:
  * ```kotlin
  * val registry: TaskRegistry = ...
- * 
+ *
  * // Register a task
  * registry.add(MyTask())
- * 
+ *
  * // Retrieve a task by ID
  * val task = registry.get("my-task")
- * 
+ *
  * // Get all tasks
  * val allTasks = registry.all()
  * ```

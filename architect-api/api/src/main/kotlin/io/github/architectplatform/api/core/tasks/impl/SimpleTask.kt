@@ -31,19 +31,19 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
  * @param task Lambda function containing the task logic
  */
 class SimpleTask(
-    override val id: String,
-    private val description: String,
-    private val phase: Phase,
-    private val task: (Environment, ProjectContext) -> TaskResult,
+  override val id: String,
+  private val description: String,
+  private val phase: Phase,
+  private val task: (Environment, ProjectContext) -> TaskResult,
 ) : Task {
   override fun phase(): Phase = phase
 
   override fun description(): String = description
 
   override fun execute(
-      environment: Environment,
-      projectContext: ProjectContext,
-      args: List<String>
+    environment: Environment,
+    projectContext: ProjectContext,
+    args: List<String>,
   ): TaskResult {
     return task(environment, projectContext)
   }

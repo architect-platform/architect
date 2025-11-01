@@ -29,12 +29,13 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
 enum class HooksWorkflow(override val id: String) : Phase {
   /** Pre-commit hook - runs before a commit is created */
   PRE_COMMIT("pre-commit"),
-  
+
   /** Pre-push hook - runs before changes are pushed to remote */
   PRE_PUSH("pre-push"),
-  
+
   /** Commit message hook - runs to validate or modify commit messages */
-  COMMIT_MSG("commit-msg");
+  COMMIT_MSG("commit-msg"),
+  ;
 
   override fun parent(): Phase? {
     return null // HooksWorkflow does not have a parent phase

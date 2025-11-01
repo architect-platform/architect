@@ -26,33 +26,33 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
  * ```
  */
 enum class CodeWorkflow(
-    private val parent: CoreWorkflow,
-    override val id: String = "CODE-" + parent.id,
+  private val parent: CoreWorkflow,
+  override val id: String = "CODE-" + parent.id,
 ) : Phase {
-
   /** Code initialization phase - maps to CoreWorkflow.INIT */
   INIT(CoreWorkflow.INIT),
-  
+
   /** Code linting phase - maps to CoreWorkflow.LINT */
   LINT(CoreWorkflow.LINT),
-  
+
   /** Code verification phase - maps to CoreWorkflow.VERIFY */
   VERIFY(CoreWorkflow.VERIFY),
-  
+
   /** Code build phase - maps to CoreWorkflow.BUILD */
   BUILD(CoreWorkflow.BUILD),
-  
+
   /** Code test phase - maps to CoreWorkflow.TEST */
   TEST(CoreWorkflow.TEST),
-  
+
   /** Code run phase - maps to CoreWorkflow.RUN */
   RUN(CoreWorkflow.RUN),
-  
+
   /** Code release phase - maps to CoreWorkflow.RELEASE */
   RELEASE(CoreWorkflow.RELEASE),
-  
+
   /** Code publish phase - maps to CoreWorkflow.PUBLISH */
-  PUBLISH(CoreWorkflow.PUBLISH);
+  PUBLISH(CoreWorkflow.PUBLISH),
+  ;
 
   override fun description(): String {
     return "Code workflow phase for ${parent.id} - $id"

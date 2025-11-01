@@ -10,10 +10,10 @@ package io.github.architectplatform.api.core.tasks
  * ```kotlin
  * // Success result
  * TaskResult.success("Build completed successfully")
- * 
+ *
  * // Failure result
  * TaskResult.failure("Build failed: compilation error")
- * 
+ *
  * // Result with sub-results
  * TaskResult.success("All tests passed", listOf(
  *   TaskResult.success("Unit tests: 10 passed"),
@@ -26,12 +26,12 @@ interface TaskResult {
    * Indicates whether the task execution was successful.
    */
   val success: Boolean
-  
+
   /**
    * Optional message providing additional information about the execution result.
    */
   val message: String?
-  
+
   /**
    * List of sub-results from nested task executions or subtasks.
    */
@@ -42,9 +42,9 @@ interface TaskResult {
      * Internal implementation of TaskResult.
      */
     data class TaskResultImpl(
-        override val success: Boolean,
-        override val message: String? = null,
-        override val results: List<TaskResult> = emptyList(),
+      override val success: Boolean,
+      override val message: String? = null,
+      override val results: List<TaskResult> = emptyList(),
     ) : TaskResult
 
     /**
@@ -54,8 +54,10 @@ interface TaskResult {
      * @param results Optional list of sub-results
      * @return A successful TaskResult
      */
-    fun success(message: String? = null, results: List<TaskResult> = emptyList()): TaskResult =
-        TaskResultImpl(success = true, message = message, results = results)
+    fun success(
+      message: String? = null,
+      results: List<TaskResult> = emptyList(),
+    ): TaskResult = TaskResultImpl(success = true, message = message, results = results)
 
     /**
      * Creates a failed task result.
@@ -64,7 +66,9 @@ interface TaskResult {
      * @param results Optional list of sub-results
      * @return A failed TaskResult
      */
-    fun failure(message: String? = null, results: List<TaskResult> = emptyList()): TaskResult =
-        TaskResultImpl(success = false, message = message, results = results)
+    fun failure(
+      message: String? = null,
+      results: List<TaskResult> = emptyList(),
+    ): TaskResult = TaskResultImpl(success = false, message = message, results = results)
   }
 }

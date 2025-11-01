@@ -12,10 +12,10 @@ package io.github.architectplatform.api.core.tasks
  *   // Access a service
  *   val executor = environment.service(CommandExecutor::class.java)
  *   executor.execute("npm install")
- *   
+ *
  *   // Publish an event
  *   environment.publish(BuildCompletedEvent())
- *   
+ *
  *   return TaskResult.success()
  * }
  * ```
