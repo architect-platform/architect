@@ -11,6 +11,20 @@ import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
 
+/**
+ * Main entry point for the Architect CLI application.
+ *
+ * This class provides a command-line interface for interacting with the Architect Engine,
+ * enabling users to:
+ * - Register projects with the engine
+ * - Execute tasks within projects
+ * - Manage the Architect Engine lifecycle (install, start, stop, clean)
+ * - View available tasks for a project
+ *
+ * The launcher uses PicoCLI for command-line parsing and Micronaut for dependency injection.
+ *
+ * @property engineCommandClient HTTP client for communicating with the Architect Engine API
+ */
 @Singleton
 @Command(
     name = "architect",
@@ -18,6 +32,10 @@ import picocli.CommandLine.Parameters
 )
 class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : Runnable {
 
+  /**
+   * The command to execute (e.g., "build", "test", "engine").
+   * If null, lists available tasks for the current project.
+   */
   @Parameters(
       description = ["Command to execute"],
       arity = "0..*",
@@ -25,6 +43,9 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
   )
   var command: String? = null
 
+  /**
+   * Additional arguments to pass to the command.
+   */
   @Parameters(
       description = ["Arguments for the command"],
       arity = "0..*",
@@ -32,6 +53,10 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
   )
   var args: List<String> = emptyList()
 
+  /**
+   * Enable plain output mode for CI environments.
+   * When true, disables rich terminal UI and outputs simple text.
+   */
   @CommandLine.Option(
       names = ["-p", "--plain"],
       description = ["Enable plain output (CI Environments)"],
@@ -39,6 +64,17 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
   )
   var plain: Boolean = false
 
+  /**
+   * Main execution logic for the CLI.
+   *
+   * Flow:
+   * 1. Check if command is "engine" and delegate to [handleEngineCommand]
+   * 2. Register the current project with the engine
+   * 3. If no command specified, list available tasks
+   * 4. Otherwise, execute the specified task and display results
+   *
+   * @throws Exception if task execution fails
+   */
   override fun run() {
     if (command == "engine") {
       handleEngineCommand()
@@ -87,6 +123,16 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
     }
   }
 
+  /**
+   * Handles engine-specific commands like install, start, stop, and clean.
+   *
+   * Supported commands:
+   * - install: Downloads and installs the Architect Engine
+   * - install-ci: Installs the engine optimized for CI environments
+   * - start: Starts the Architect Engine as a background process
+   * - stop: Stops any running Architect Engine processes
+   * - clean: Removes all Architect Engine data
+   */
   private fun handleEngineCommand() {
     val arg = args.getOrNull(1)
     if (arg == null) {
@@ -129,6 +175,12 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
     }
   }
 
+  /**
+   * Executes a shell command using the system's runtime.
+   *
+   * @param command The shell command to execute
+   * @param wait If true, waits for the command to complete before returning
+   */
   private fun execute(command: String, wait: Boolean = true) {
     try {
       val process = Runtime.getRuntime().exec(command)
@@ -144,6 +196,14 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
   }
 
   companion object {
+    /**
+     * Application entry point.
+     *
+     * Initializes the Micronaut application context, retrieves the launcher bean,
+     * executes the command-line arguments, and terminates with the appropriate exit code.
+     *
+     * @param args Command-line arguments passed to the application
+     */
     @JvmStatic
     fun main(args: Array<String>) {
       val context = ApplicationContext.run()

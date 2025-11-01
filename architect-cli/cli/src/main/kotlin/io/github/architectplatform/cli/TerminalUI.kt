@@ -1,20 +1,48 @@
 package io.github.architectplatform.cli
 
+/**
+ * Low-level terminal rendering utilities for creating formatted text-based UIs.
+ *
+ * Provides building blocks for terminal output including:
+ * - Bordered boxes and lines
+ * - Split-panel layouts
+ * - Centered text
+ * - Table rendering
+ * - ANSI color code handling
+ *
+ * @property totalWidth The total width of the terminal output in characters
+ */
 class TerminalUI(private val totalWidth: Int) {
 
   private val lines = mutableListOf<String>()
   private val ansiRegex = Regex("\u001B\\[[0-9;]*m")
 
+  /**
+   * Clears all accumulated lines.
+   */
   fun clear() {
     lines.clear()
   }
 
+  /**
+   * Adds a line of text to the output.
+   *
+   * @param text The text to add (empty strings are ignored)
+   */
   fun addLine(text: String) {
     if (text.isNotEmpty()) {
       lines.add(text)
     }
   }
 
+  /**
+   * Draws a horizontal line with specified border characters.
+   *
+   * @param left Left border character
+   * @param middle Optional middle character (if null, line spans full width)
+   * @param right Right border character
+   * @param fill Character to fill the line with
+   */
   fun drawLine(left: Char, middle: Char?, right: Char, fill: Char) {
     val line = buildString {
       append(left)
@@ -29,10 +57,22 @@ class TerminalUI(private val totalWidth: Int) {
     lines.add(line)
   }
 
+  /**
+   * Draws a full line of repeated characters.
+   *
+   * @param char Character to repeat across the full width
+   */
   fun drawFullLine(char: Char) {
     lines.add(char.toString().repeat(totalWidth))
   }
 
+  /**
+   * Adds a centered line of text with borders.
+   *
+   * @param text Text to center (may contain ANSI color codes)
+   * @param leftBorder Left border character
+   * @param rightBorder Right border character
+   */
   fun addCenteredLine(text: String, leftBorder: Char = '║', rightBorder: Char = '║') {
     val visibleLength = text.visibleLength()
     val padded = text.center(totalWidth - 2, visibleLength)
