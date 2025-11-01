@@ -1,0 +1,13 @@
+github:
+  pipelines:
+    - name: architect-cli-pipeline
+      type: github/classic-java-17
+      path: architect-cli/**
+
+  release:
+    assets:
+      - name: architect-cli.jar
+        path: "cli/build/libs/architect-cli-*-all.jar"
+
+  deps:
+    type: renovate

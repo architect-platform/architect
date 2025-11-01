@@ -1,0 +1,7 @@
+project:
+  name: architect-cli
+  description: "A command-line architect for your projects."
+
+plugins:
+  - name: gradle-architected
+  - name: github-architected

@@ -1,0 +1,11 @@
+micronaut:
+  application:
+    name: architect-cli
+
+  http:
+    services:
+      engine:
+        url: http://localhost:9292
+        read-timeout: 300s
+        connect-timeout: 300s
+        exception-on-error-status: false
