@@ -1,3 +1,5 @@
+package io.github.architectplatform.cli
+
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -101,7 +103,7 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
       "STARTED" -> "▶️"
       "COMPLETED" -> "✅"
       "FAILED" -> {
-        if (taskId == null) failed = true
+        failed = true
         "❌"
       }
       "SKIPPED" -> "⏭️"

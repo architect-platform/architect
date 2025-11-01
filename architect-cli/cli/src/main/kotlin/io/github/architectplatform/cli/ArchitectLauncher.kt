@@ -1,6 +1,5 @@
 package io.github.architectplatform.cli
 
-import ConsoleUI
 import io.github.architectplatform.cli.client.EngineCommandClient
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.micronaut.context.ApplicationContext
