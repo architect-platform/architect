@@ -19,6 +19,18 @@ class VerifyCommitMessageTask(
 
   override fun phase(): HooksWorkflow = HooksWorkflow.COMMIT_MSG
 
+    private fun findRootDir(projectContext: ProjectContext): String {
+        var currentDir = projectContext.dir.toString()
+        while (true) {
+            if (Files.exists(Paths.get(currentDir, ".git"))) {
+                return currentDir
+            }
+            val parentDir = Paths.get(currentDir).parent ?: break
+            currentDir = parentDir.toString()
+        }
+        return projectContext.dir.toString()
+    }
+
   override fun execute(
       environment: Environment,
       projectContext: ProjectContext,
@@ -29,9 +41,11 @@ class VerifyCommitMessageTask(
     val commitFilePath =
         args.getOrNull(0) ?: return TaskResult.failure("No commit message file path provided")
 
+      val rootDir = findRootDir(projectContext)
+        val commitFileFullPath = Paths.get(rootDir, commitFilePath)
     val commitMessage: String =
         try {
-          Files.readString(Paths.get(projectContext.dir.toString(), commitFilePath), Charsets.UTF_8)
+          Files.readString(commitFileFullPath)
               .trim()
         } catch (e: Exception) {
           return TaskResult.failure("Failed to read commit message: ${e.message}")

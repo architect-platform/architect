@@ -95,7 +95,7 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
     }
 
     // Drop first arg as it's the command itself (included by PicoCLI)
-    val taskArgs = args.ifEmpty { emptyList() }
+    val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
     executeTask(projectName, command!!, taskArgs)
   }
 
