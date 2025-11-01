@@ -10,9 +10,9 @@ interface ExecutionEvent {
   val executionId: ExecutionId
   val executionEventType: ExecutionEventType
   val success: Boolean
-  val message: String? = null
-  val errorDetails: String? = null
-  val subProject: String? = null
+  val message: String?
+  val errorDetails: String?
+  val subProject: String?
 }
 
 enum class ExecutionEventType {
