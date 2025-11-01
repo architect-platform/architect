@@ -27,4 +27,13 @@ repositories {
   }
 }
 
-dependencies { implementation("io.github.architectplatform:api:1.1.2") }
+dependencies {
+  implementation("io.github.architectplatform:api:1.1.2")
+
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+}
+
+tasks.test {
+  useJUnitPlatform()
+}
