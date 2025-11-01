@@ -52,6 +52,8 @@ dependencies {
   runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
   runtimeOnly("org.yaml:snakeyaml")
   testImplementation("io.micronaut:micronaut-http-client")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+  testImplementation("org.mockito:mockito-core:5.7.0")
 }
 
 application { mainClass.set("io.github.architectplatform.engine.ApplicationKt") }
