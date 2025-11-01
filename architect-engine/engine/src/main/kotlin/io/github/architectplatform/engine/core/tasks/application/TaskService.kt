@@ -1,14 +1,26 @@
 package io.github.architectplatform.engine.core.tasks.application
 
 import io.github.architectplatform.api.core.tasks.Task
+import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.engine.core.project.app.ProjectService
 import io.github.architectplatform.engine.core.project.domain.Project
+import io.github.architectplatform.engine.core.tasks.domain.events.ExecutionEvents.executionCompletedEvent
+import io.github.architectplatform.engine.core.tasks.domain.events.ExecutionEvents.executionFailedEvent
+import io.github.architectplatform.engine.core.tasks.domain.events.ExecutionEvents.executionStartedEvent
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import io.github.architectplatform.engine.domain.events.ExecutionEvent
 import io.github.architectplatform.engine.domain.events.ExecutionId
 import io.github.architectplatform.engine.domain.events.generateExecutionId
+import io.micronaut.context.event.ApplicationEventPublisher
 import jakarta.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
+import java.util.*
 
 /**
  * Service responsible for task management and execution within projects.
@@ -27,7 +39,8 @@ import kotlinx.coroutines.flow.Flow
 class TaskService(
     private val projectService: ProjectService,
     private val executor: TaskExecutor,
-    private val eventCollector: ExecutionEventCollector
+    private val eventCollector: ExecutionEventCollector,
+    private val eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>
 ) {
 
   /**
@@ -80,35 +93,69 @@ class TaskService(
 
     // Generate a single execution ID for the entire execution tree
     val executionId = generateExecutionId()
-
-    fun executeRecursivelyOverSubprojectsFirst(
-        project: Project,
-        args: List<String>,
-        parentProject: String? = null
-    ) {
-      // Execute in all subprojects first, using the same executionId
-      project.subProjects.forEach { subProject ->
-        executeRecursivelyOverSubprojectsFirst(subProject, args, project.name)
+      CoroutineScope(IO).launch {
+          eventPublisher.publishEvent(
+              executionStartedEvent(
+                  projectName,
+                  executionId,
+                  message = "Starting execution of task: $taskId in project: $projectName")
+          )
+        val result = executeRecursivelyOverSubprojectsFirst(project, taskId, args, executionId = executionId)
+        if (!result.success) {
+            eventPublisher.publishEvent(
+                executionFailedEvent(
+                    projectName,
+                    executionId,
+                    message = "Execution failed: $result.",
+                    errorDetails = "${result.message}",
+                )
+            )
+        } else {
+            eventPublisher.publishEvent(
+                executionCompletedEvent(
+                    projectName,
+                    executionId,
+                    message = "All tasks completed successfully")
+            )
+        }
       }
-      
-      val task =
-          project.taskRegistry.all().firstOrNull { it.id == taskId }
-              ?: throw IllegalArgumentException("Task not found")
-      
-      // Execute with the shared executionId
-      executor.execute(project, task, project.context, args, parentProject, executionId)
-    }
-
-    try {
-      executeRecursivelyOverSubprojectsFirst(project, args)
-    } catch (e: Exception) {
-      // Exception already logged as event, just continue
-    }
 
     return executionId
   }
 
-  private fun generateExecutionId(): ExecutionId = ExecutionId(java.util.UUID.randomUUID().toString())
+    private suspend fun executeRecursivelyOverSubprojectsFirst(
+        project: Project,
+        taskId: String,
+        args: List<String>,
+        parentProject: String? = null,
+        executionId: ExecutionId = generateExecutionId(),
+    ): TaskResult {
+        // Execute all subprojects concurrently and wait for results
+        val subResults = project.subProjects.map { subProject ->
+            CoroutineScope(IO).async {
+                executeRecursivelyOverSubprojectsFirst(subProject, taskId, args, project.name, executionId)
+            }
+        }.awaitAll()
+
+        // If any subproject failed, propagate failure
+        if (subResults.any { !it.success }) {
+            return TaskResult.failure("Some subprojects failed", subResults)
+        }
+
+        // Execute task in the current project
+        val task = project.taskRegistry.all().firstOrNull { it.id == taskId }
+        if (task == null) {
+            return TaskResult.success("Task $taskId not found in project ${project.name}, skipping execution.")
+        }
+
+        // Execute using shared executionId
+        val (_, deferredResult) =
+            executor.execute(project, task, project.context, args, parentProject, executionId)
+
+        return deferredResult.await()
+    }
+
+  private fun generateExecutionId(): ExecutionId = UUID.randomUUID().toString()
 
   /**
    * Returns a flow of execution events for a specific task execution.

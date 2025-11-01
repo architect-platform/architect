@@ -21,7 +21,7 @@ object TaskEvents {
       override val executionEventType: ExecutionEventType,
       override val message: String? = null,
       override val errorDetails: String? = null,
-      override val subProject: String? = null,
+      override val parentProject: String? = null,
   ) : ExecutionTaskEvent
 
   fun taskCompletedEvent(
@@ -42,7 +42,7 @@ object TaskEvents {
                 success = success,
                 executionEventType = ExecutionEventType.COMPLETED,
                 message = message,
-                subProject = subProject))
+                parentProject = subProject))
   }
 
   fun taskFailedEvent(
@@ -52,7 +52,7 @@ object TaskEvents {
       success: Boolean = false,
       message: String? = null,
       errorDetails: String? = null,
-      subProject: String? = null,
+      parentProject: String? = null,
   ): ArchitectEvent<TaskEventDTO> {
     return ArchitectEventDTO(
         id = "task.failed",
@@ -65,7 +65,7 @@ object TaskEvents {
                 executionEventType = ExecutionEventType.FAILED,
                 message = message,
                 errorDetails = errorDetails,
-                subProject = subProject))
+                parentProject = parentProject))
   }
 
   fun taskSkippedEvent(
@@ -86,7 +86,7 @@ object TaskEvents {
                 success = success,
                 executionEventType = ExecutionEventType.SKIPPED,
                 message = message,
-                subProject = subProject))
+                parentProject = subProject))
   }
 
   fun taskStartedEvent(
@@ -107,7 +107,7 @@ object TaskEvents {
                 success = success,
                 executionEventType = ExecutionEventType.STARTED,
                 message = message,
-                subProject = subProject))
+                parentProject = subProject))
   }
 
   fun taskOutputEvent(
@@ -127,6 +127,6 @@ object TaskEvents {
                 success = true,
                 executionEventType = ExecutionEventType.OUTPUT,
                 message = output,
-                subProject = subProject))
+                parentProject = subProject))
   }
 }

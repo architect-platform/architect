@@ -10,13 +10,13 @@ object ExecutionEvents {
 
   @Serdeable
   data class ExecutionEventDTO(
-      override val project: String,
-      override val executionId: String,
-      override val success: Boolean,
-      override val executionEventType: ExecutionEventType,
-      override val message: String? = null,
-      override val errorDetails: String? = null,
-      override val subProject: String? = null,
+	  override val project: String,
+	  override val executionId: String,
+	  override val success: Boolean,
+	  override val executionEventType: ExecutionEventType,
+	  override val message: String? = null,
+	  override val errorDetails: String? = null,
+	  override val parentProject: String? = null,
   ) : ExecutionEvent
 
   fun executionStartedEvent(
@@ -35,7 +35,7 @@ object ExecutionEvents {
                 success = success,
                 executionEventType = ExecutionEventType.STARTED,
                 message = message,
-                subProject = subProject,
+                parentProject = subProject,
             ))
   }
 
@@ -55,7 +55,7 @@ object ExecutionEvents {
                 success = success,
                 executionEventType = ExecutionEventType.COMPLETED,
                 message = message,
-                subProject = subProject,
+                parentProject = subProject,
             ))
   }
 
@@ -77,7 +77,7 @@ object ExecutionEvents {
                 executionEventType = ExecutionEventType.FAILED,
                 message = message,
                 errorDetails = errorDetails,
-                subProject = subProject,
+                parentProject = subProject,
             ))
   }
 }

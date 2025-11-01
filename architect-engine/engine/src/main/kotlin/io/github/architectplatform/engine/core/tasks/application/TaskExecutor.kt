@@ -21,6 +21,10 @@ import io.micronaut.context.event.ApplicationEventPublisher
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
 import jakarta.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import java.io.OutputStream
 import java.io.PrintStream
 import org.slf4j.LoggerFactory
@@ -42,10 +46,20 @@ class TaskExecutor(
       args: List<String>,
       parentProject: String? = null,
       executionId: ExecutionId? = null
-  ): ExecutionId {
+  ): Pair<ExecutionId, Deferred<TaskResult>> {
     val actualExecutionId = executionId ?: generateExecutionId()
-    syncExecuteTask(actualExecutionId, task, context, args, project.taskRegistry, parentProject)
-    return actualExecutionId
+      val deferred = CoroutineScope(Dispatchers.IO).async {
+              syncExecuteTask(
+                  actualExecutionId,
+                  task,
+                  context,
+                  args,
+                  project.taskRegistry,
+                  parentProject,
+              )
+      }
+
+      return actualExecutionId to deferred
   }
 
   private fun syncExecuteTask(
@@ -55,17 +69,12 @@ class TaskExecutor(
       args: List<String>,
       taskRegistry: TaskRegistry,
       parentProject: String? = null,
-  ) {
+  ): TaskResult {
     val projectName = projectContext.config.getKey<String>("project.name") ?: "unknown"
     val subProjectInfo = if (parentProject != null) " (subproject of $parentProject)" else ""
 
     try {
-      eventPublisher.publishEvent(
-          executionStartedEvent(
-              projectName,
-              executionId,
-              message = "Starting execution of task: ${task.id}$subProjectInfo",
-              subProject = parentProject))
+
       val allTasks = resolveAllTasks(task, taskRegistry)
       val executionOrder = topologicalSort(allTasks)
       val results =
@@ -114,7 +123,7 @@ class TaskExecutor(
                             it.id,
                             message = errorMessage,
                             errorDetails = errorMessage,
-                            subProject = parentProject,
+                            parentProject = parentProject,
                         ))
                   } else {
                     eventPublisher.publishEvent(
@@ -137,7 +146,7 @@ class TaskExecutor(
                           it.id,
                           message = "Task '${it.id}' failed with exception: $errorMessage",
                           errorDetails = "Exception: $errorMessage\n\nStack Trace:\n$stackTrace",
-                          subProject = parentProject,
+                          parentProject = parentProject,
                       ))
                   logger.error("Exception during execution of task '${it.id}'", e)
                   return@map TaskResult.failure(
@@ -152,28 +161,14 @@ class TaskExecutor(
         val errorMessage =
             "Execution failed. ${failedTasks.size} task(s) failed" +
                 if (failedMessages.isNotEmpty()) ": $failedMessages" else ""
-        eventPublisher.publishEvent(
-            executionFailedEvent(
-                projectName, executionId, message = errorMessage, subProject = parentProject))
+          return TaskResult.failure(errorMessage)
       } else {
-        eventPublisher.publishEvent(
-            executionCompletedEvent(
-                projectName,
-                executionId,
-                message = "All tasks completed successfully",
-                subProject = parentProject))
+        return TaskResult.success("All tasks completed successfully")
       }
     } catch (e: Exception) {
       val errorMessage = e.message ?: "Unknown error"
       val stackTrace = e.stackTraceToString()
-      eventPublisher.publishEvent(
-          executionFailedEvent(
-              projectName,
-              executionId,
-              message = "Execution failed: $errorMessage",
-              errorDetails = "Exception: $errorMessage\n\nStack Trace:\n$stackTrace",
-              subProject = parentProject,
-          ))
+        return TaskResult.failure("Execution failed with exception: $errorMessage\n\nStack Trace:\n$stackTrace")
     }
   }
 

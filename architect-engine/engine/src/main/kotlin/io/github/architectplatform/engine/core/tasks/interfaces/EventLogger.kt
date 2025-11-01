@@ -40,7 +40,7 @@ class EventLogger {
       val parts = mutableListOf<String>()
       parts.add("$icon ${event.executionEventType}")
       parts.add("[${event.project}]")
-      event.subProject?.let { parts.add("(subproject: $it)") }
+      event.parentProject?.let { parts.add("(subproject: $it)") }
       event.message?.let { parts.add("- $it") }
 
       val logMessage = parts.joinToString(" ")

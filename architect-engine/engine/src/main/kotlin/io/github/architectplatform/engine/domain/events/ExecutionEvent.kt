@@ -12,7 +12,7 @@ interface ExecutionEvent {
   val success: Boolean
   val message: String?
   val errorDetails: String?
-  val subProject: String?
+  val parentProject: String?
 }
 
 enum class ExecutionEventType {
