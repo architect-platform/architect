@@ -98,13 +98,13 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
       "install" -> {
         println("Installing Architect Engine...")
         val command =
-            "curl -sSL https://raw.githubusercontent.com/architect-platform/architect-engine/main/.installers/bash | bash"
+            "curl -sSL https://raw.githubusercontent.com/architect-platform/architect/main/architect-cli/.installers/bash | bash"
         execute(command)
       }
       "install-ci" -> {
         println("Installing Architect Engine for CI...")
         val command =
-            "curl -sSL https://raw.githubusercontent.com/architect-platform/architect-engine/main/.installers/bash-ci | bash"
+            "curl -sSL https://raw.githubusercontent.com/architect-platform/architect/main/architect-engine/.installers/bash-ci | bash"
         execute(command)
       }
       "start" -> {

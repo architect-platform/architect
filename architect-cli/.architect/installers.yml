@@ -1,6 +1,6 @@
 installers:
   enabled: true
-  repo: architect-platform/architect-cli
+  repo: architect-platform/architect
   name: architect-cli
   assetType: jar
   applicationName: architect
