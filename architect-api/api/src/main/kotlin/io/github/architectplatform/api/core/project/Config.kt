@@ -33,6 +33,7 @@ typealias Config = Map<String, Any>
  * @return The value at the specified path, or null if not found
  * @throws IllegalArgumentException if a path segment cannot be parsed as an index for a list
  * @throws IllegalStateException if the path traverses through an unexpected type
+ * @throws IndexOutOfBoundsException if a list index is out of bounds
  */
 fun <T> Config.getKey(key: String): T? {
   val keys = key.split('.')
@@ -41,7 +42,11 @@ fun <T> Config.getKey(key: String): T? {
     if (current is Map<*, *>) {
       current = current[k]
     } else if (current is List<*>) {
-      current = current[k.toIntOrNull() ?: throw IllegalArgumentException("Invalid index: $k")]
+      val index = k.toIntOrNull() ?: throw IllegalArgumentException("Invalid index: $k")
+      if (index < 0 || index >= current.size) {
+        throw IndexOutOfBoundsException("Index $index is out of bounds for list of size ${current.size}")
+      }
+      current = current[index]
     } else {
       throw IllegalStateException("Invalid config type: ${current?.javaClass}")
     }

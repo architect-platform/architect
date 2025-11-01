@@ -121,6 +121,30 @@ class ConfigTest {
   }
 
   @Test
+  fun `getKey throws IndexOutOfBoundsException for out of range list index`() {
+    val config: Config =
+      mapOf(
+        "servers" to listOf("server1", "server2"),
+      )
+
+    assertThrows(IndexOutOfBoundsException::class.java) {
+      config.getKey<String>("servers.5")
+    }
+  }
+
+  @Test
+  fun `getKey throws IndexOutOfBoundsException for negative list index`() {
+    val config: Config =
+      mapOf(
+        "servers" to listOf("server1", "server2"),
+      )
+
+    assertThrows(IndexOutOfBoundsException::class.java) {
+      config.getKey<String>("servers.-1")
+    }
+  }
+
+  @Test
   fun `getKey throws IllegalStateException for invalid path through primitive value`() {
     val config: Config =
       mapOf(
