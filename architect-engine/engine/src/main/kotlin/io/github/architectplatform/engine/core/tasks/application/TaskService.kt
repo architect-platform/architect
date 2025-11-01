@@ -63,13 +63,14 @@ class TaskService(
    *
    * The task is executed recursively across all subprojects first (depth-first),
    * then executed in the parent project. This ensures proper dependency ordering
-   * in multi-project builds.
+   * in multi-project builds. If any subproject fails, the entire execution fails.
    *
    * @param projectName The name of the project
    * @param taskId The unique identifier of the task to execute
    * @param args List of arguments to pass to the task
    * @return The execution ID for tracking the task execution
    * @throws IllegalArgumentException if the project or task is not found
+   * @throws RuntimeException if execution fails in any project or subproject
    */
   fun executeTask(projectName: String, taskId: String, args: List<String>): ExecutionId {
     val project =
@@ -81,12 +82,21 @@ class TaskService(
         args: List<String>,
         parentProject: String? = null
     ): ExecutionId {
+      // Execute in all subprojects first
       project.subProjects.forEach { subProject ->
-        executeRecursivelyOverSubprojectsFirst(subProject, args, project.name)
+        try {
+          executeRecursivelyOverSubprojectsFirst(subProject, args, project.name)
+        } catch (e: RuntimeException) {
+          // Subproject failed, propagate the failure
+          throw RuntimeException("Subproject ${subProject.name} failed: ${e.message}", e)
+        }
       }
+      
       val task =
           project.taskRegistry.all().firstOrNull { it.id == taskId }
               ?: throw IllegalArgumentException("Task not found")
+      
+      // This will throw RuntimeException if execution fails
       return executor.execute(project, task, project.context, args, parentProject)
     }
 

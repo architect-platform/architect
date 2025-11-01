@@ -393,4 +393,99 @@ class CliEngineIntegrationTest {
         assertTrue(output.contains("HttpException"), "Should show caused by exception")
         assertTrue(ui.hasFailed, "Should be marked as failed")
     }
+
+    @Test
+    fun `should display subproject events with correct context`() {
+        // Given
+        val ui = ConsoleUI("subproject-test", plain = true)
+        
+        // Main project start
+        val mainStart = mapOf(
+            "id" to "execution.started",
+            "event" to mapOf(
+                "executionId" to "exec-001",
+                "executionEventType" to "STARTED",
+                "project" to "main-project",
+                "message" to "Starting main project"
+            )
+        )
+        
+        // Subproject task event
+        val subProjectTask = mapOf(
+            "id" to "task.started",
+            "event" to mapOf(
+                "executionId" to "exec-001",
+                "executionEventType" to "STARTED",
+                "project" to "sub-project",
+                "subProject" to "main-project",
+                "taskId" to "compile",
+                "message" to "Compiling subproject"
+            )
+        )
+        
+        // When
+        ui.process(mainStart)
+        ui.process(subProjectTask)
+
+        // Then
+        val output = outputStream.toString()
+        assertTrue(output.contains("main-project"), "Should show main project")
+        assertTrue(output.contains("sub-project"), "Should show subproject")
+        assertTrue(output.contains("→"), "Should show arrow between parent and subproject")
+    }
+
+    @Test
+    fun `should mark execution as failed when subproject task fails`() {
+        // Given
+        val ui = ConsoleUI("subproject-failure", plain = true)
+        
+        val subProjectFailure = mapOf(
+            "id" to "task.failed",
+            "event" to mapOf(
+                "executionId" to "exec-002",
+                "executionEventType" to "FAILED",
+                "project" to "sub-module",
+                "subProject" to "parent-app",
+                "taskId" to "test",
+                "message" to "Tests failed in subproject",
+                "errorDetails" to "Test execution failed: 5 tests failed"
+            )
+        )
+
+        // When
+        ui.process(subProjectFailure)
+
+        // Then
+        assertTrue(ui.hasFailed, "Should mark execution as failed when subproject fails")
+        val output = outputStream.toString()
+        assertTrue(output.contains("FAILED"), "Output should contain FAILED")
+        assertTrue(output.contains("parent-app"), "Output should show parent project")
+        assertTrue(output.contains("sub-module"), "Output should show subproject")
+    }
+
+    @Test
+    fun `should not add extra space after emoji in output`() {
+        // Given
+        val ui = ConsoleUI("spacing-test", plain = true)
+        
+        val event = mapOf(
+            "id" to "task.started",
+            "event" to mapOf(
+                "executionId" to "exec-003",
+                "executionEventType" to "STARTED",
+                "project" to "test-project",
+                "taskId" to "build",
+                "message" to "Building"
+            )
+        )
+
+        // When
+        ui.process(event)
+
+        // Then
+        val output = outputStream.toString().trim()
+        // Check that emoji is directly followed by event type (no double space)
+        assertTrue(output.contains("▶️STARTED"), "Should not have space between emoji and event type")
+        assertFalse(output.contains("▶️ STARTED"), "Should not have extra space after emoji")
+    }
 }

@@ -93,9 +93,17 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
     val errorDetails = event.event["errorDetails"] as? String
     val subProject = event.event["subProject"] as? String
 
-    // Update current state
-    if (project != null) currentProject = project
-    if (subProject != null) currentSubProject = subProject
+    // Update current state - preserve parent project when we have subproject
+    if (subProject != null) {
+      // This is a subproject event, use subProject as the parent context
+      currentSubProject = project
+      // Keep currentProject as is (it should be the main project)
+    } else if (project != null) {
+      // This is a main project event
+      currentProject = project
+      currentSubProject = null
+    }
+    
     if (taskId != null) currentTask = taskId
 
     // Determine icon and handle failures
@@ -114,13 +122,19 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
     // Build the output line
     val parts = mutableListOf<String>()
     
-    // Event type
-    parts.add("$icon $executionEventType")
+    // Event type with icon (no extra space after emoji)
+    parts.add("$icon$executionEventType")
     
-    // Project context
+    // Project context - show parent → subproject if we have both
     val projectContext = buildString {
-      currentProject?.let { append(colorize(it, AnsiColors.CYAN)) }
-      currentSubProject?.let { append(" → ${colorize(it, AnsiColors.YELLOW)}") }
+      if (subProject != null) {
+        // Subproject event: show parent → subproject
+        append(colorize(subProject, AnsiColors.CYAN))
+        project?.let { append(" → ${colorize(it, AnsiColors.YELLOW)}") }
+      } else {
+        // Main project event
+        currentProject?.let { append(colorize(it, AnsiColors.CYAN)) }
+      }
     }
     if (projectContext.isNotEmpty()) {
       parts.add("[${projectContext}]")
@@ -133,7 +147,7 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
     
     // Message
     message?.let {
-      parts.add(it)
+      parts.add("- $it")
     }
     
     println(parts.joinToString(" "))
