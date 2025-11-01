@@ -59,6 +59,8 @@ open class BashCommandExecutor(
     if (!completed) {
       process.destroyForcibly()
       outputThread.interrupt()
+      // Wait for thread to finish with timeout
+      outputThread.join(1000)
       throw IllegalStateException(
         "Command timed out after $timeoutSeconds seconds: $command"
       )

@@ -30,7 +30,7 @@ class GitHubPluginSource(
     private val logger = LoggerFactory.getLogger(this::class.java)
     private val objectMapper = ObjectMapper().registerKotlinModule()
     
-    override fun canHandle(type: String): Boolean = type == "github"
+    override fun getType(): String = "github"
     
     override fun resolve(config: PluginSourceConfig): Result<File> {
         val repo = config.repo

@@ -46,14 +46,7 @@ class PluginSourceRegistry(
      * Returns a list of supported plugin types.
      */
     fun getSupportedTypes(): List<String> {
-        return sources.map { source ->
-            // Try to determine the type this source handles
-            when {
-                source.canHandle("local") -> "local"
-                source.canHandle("github") -> "github"
-                else -> "unknown"
-            }
-        }.distinct()
+        return sources.map { it.getType() }
     }
     
     /**

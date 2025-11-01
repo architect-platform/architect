@@ -89,7 +89,7 @@ class BashCommandExecutorTest {
     fun `should execute command with environment variables`() {
         // When & Then - should not throw exception
         assertDoesNotThrow {
-            executor.execute("TEST_VAR=value && echo \$TEST_VAR")
+            executor.execute("export TEST_VAR=value; echo \$TEST_VAR")
         }
     }
 

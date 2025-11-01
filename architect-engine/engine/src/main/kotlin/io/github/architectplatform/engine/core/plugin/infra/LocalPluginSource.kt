@@ -17,7 +17,7 @@ class LocalPluginSource : PluginSource {
     
     private val logger = LoggerFactory.getLogger(this::class.java)
     
-    override fun canHandle(type: String): Boolean = type == "local"
+    override fun getType(): String = "local"
     
     override fun resolve(config: PluginSourceConfig): Result<File> {
         val path = config.path
