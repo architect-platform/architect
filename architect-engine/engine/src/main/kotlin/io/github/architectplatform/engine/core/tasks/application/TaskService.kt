@@ -76,14 +76,18 @@ class TaskService(
         projectService.getProject(projectName)
             ?: throw IllegalArgumentException("Project not found")
 
-    fun executeRecursivelyOverSubprojectsFirst(project: Project, args: List<String>): ExecutionId {
+    fun executeRecursivelyOverSubprojectsFirst(
+        project: Project,
+        args: List<String>,
+        parentProject: String? = null
+    ): ExecutionId {
       project.subProjects.forEach { subProject ->
-        executeRecursivelyOverSubprojectsFirst(subProject, args)
+        executeRecursivelyOverSubprojectsFirst(subProject, args, project.name)
       }
       val task =
           project.taskRegistry.all().firstOrNull { it.id == taskId }
               ?: throw IllegalArgumentException("Task not found")
-      return executor.execute(project, task, project.context, args)
+      return executor.execute(project, task, project.context, args, parentProject)
     }
 
     return executeRecursivelyOverSubprojectsFirst(project, args)

@@ -19,6 +19,9 @@ object TaskEvents {
       override val taskId: String,
       override val success: Boolean = true,
       override val executionEventType: ExecutionEventType,
+      override val message: String? = null,
+      override val errorDetails: String? = null,
+      override val subProject: String? = null,
   ) : ExecutionTaskEvent
 
   fun taskCompletedEvent(
@@ -26,6 +29,8 @@ object TaskEvents {
       executionId: ExecutionId,
       taskId: String,
       success: Boolean = true,
+      message: String? = null,
+      subProject: String? = null,
   ): ArchitectEvent<TaskEventDTO> {
     return ArchitectEventDTO(
         id = "task.completed",
@@ -35,7 +40,9 @@ object TaskEvents {
                 executionId = executionId,
                 taskId = taskId,
                 success = success,
-                executionEventType = ExecutionEventType.COMPLETED))
+                executionEventType = ExecutionEventType.COMPLETED,
+                message = message,
+                subProject = subProject))
   }
 
   fun taskFailedEvent(
@@ -43,6 +50,9 @@ object TaskEvents {
       executionId: ExecutionId,
       taskId: String,
       success: Boolean = false,
+      message: String? = null,
+      errorDetails: String? = null,
+      subProject: String? = null,
   ): ArchitectEvent<TaskEventDTO> {
     return ArchitectEventDTO(
         id = "task.failed",
@@ -52,7 +62,10 @@ object TaskEvents {
                 executionId = executionId,
                 taskId = taskId,
                 success = success,
-                executionEventType = ExecutionEventType.FAILED))
+                executionEventType = ExecutionEventType.FAILED,
+                message = message,
+                errorDetails = errorDetails,
+                subProject = subProject))
   }
 
   fun taskSkippedEvent(
@@ -60,6 +73,8 @@ object TaskEvents {
       executionId: ExecutionId,
       taskId: String,
       success: Boolean = true,
+      message: String? = null,
+      subProject: String? = null,
   ): ArchitectEvent<TaskEventDTO> {
     return ArchitectEventDTO(
         id = "task.skipped",
@@ -69,7 +84,9 @@ object TaskEvents {
                 executionId = executionId,
                 taskId = taskId,
                 success = success,
-                executionEventType = ExecutionEventType.SKIPPED))
+                executionEventType = ExecutionEventType.SKIPPED,
+                message = message,
+                subProject = subProject))
   }
 
   fun taskStartedEvent(
@@ -77,6 +94,8 @@ object TaskEvents {
       executionId: ExecutionId,
       taskId: String,
       success: Boolean = true,
+      message: String? = null,
+      subProject: String? = null,
   ): ArchitectEvent<TaskEventDTO> {
     return ArchitectEventDTO(
         id = "task.started",
@@ -86,6 +105,8 @@ object TaskEvents {
                 executionId = executionId,
                 taskId = taskId,
                 success = success,
-                executionEventType = ExecutionEventType.STARTED))
+                executionEventType = ExecutionEventType.STARTED,
+                message = message,
+                subProject = subProject))
   }
 }

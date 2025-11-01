@@ -130,14 +130,30 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
 
         val duration = (System.currentTimeMillis() - startTime) / 1000.0
         if (ui.hasFailed) {
-          ui.completeWithError("Task failed")
+          ui.completeWithError("Task failed - see error details above")
+          if (plain) {
+            println("\n❌ Task execution failed")
+            println("Duration: ${"%.1f".format(duration)}s")
+          }
           exitProcess(1)
         } else {
           ui.complete("Task completed in ${"%.1f".format(duration)}s")
+          if (plain) {
+            println("\n✅ Task execution completed successfully")
+            println("Duration: ${"%.1f".format(duration)}s")
+          }
           exitProcess(0)
         }
       } catch (e: Exception) {
-        ui.completeWithError("Task aborted: ${e.message}")
+        val errorMessage = "Task aborted: ${e.message}"
+        val stackTrace = e.stackTraceToString()
+        ui.completeWithError(errorMessage)
+        if (plain) {
+          println("\n❌ Task execution aborted")
+          println("Error: ${e.message}")
+          println("\nStack Trace:")
+          println(stackTrace)
+        }
         exitProcess(1)
       }
     }

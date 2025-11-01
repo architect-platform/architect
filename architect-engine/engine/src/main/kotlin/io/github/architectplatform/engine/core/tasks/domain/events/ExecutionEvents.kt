@@ -14,12 +14,17 @@ object ExecutionEvents {
       override val executionId: String,
       override val success: Boolean,
       override val executionEventType: ExecutionEventType,
+      override val message: String? = null,
+      override val errorDetails: String? = null,
+      override val subProject: String? = null,
   ) : ExecutionEvent
 
   fun executionStartedEvent(
       project: String,
       executionId: String,
       success: Boolean = true,
+      message: String? = null,
+      subProject: String? = null,
   ): ArchitectEvent<ExecutionEvent> {
     return ArchitectEventDTO(
         id = "execution.started",
@@ -29,6 +34,8 @@ object ExecutionEvents {
                 executionId = executionId,
                 success = success,
                 executionEventType = ExecutionEventType.STARTED,
+                message = message,
+                subProject = subProject,
             ))
   }
 
@@ -36,6 +43,8 @@ object ExecutionEvents {
       project: String,
       executionId: String,
       success: Boolean = true,
+      message: String? = null,
+      subProject: String? = null,
   ): ArchitectEvent<ExecutionEvent> {
     return ArchitectEventDTO(
         id = "execution.completed",
@@ -45,6 +54,8 @@ object ExecutionEvents {
                 executionId = executionId,
                 success = success,
                 executionEventType = ExecutionEventType.COMPLETED,
+                message = message,
+                subProject = subProject,
             ))
   }
 
@@ -52,6 +63,9 @@ object ExecutionEvents {
       project: String,
       executionId: String,
       success: Boolean = false,
+      message: String? = null,
+      errorDetails: String? = null,
+      subProject: String? = null,
   ): ArchitectEvent<ExecutionEvent> {
     return ArchitectEventDTO(
         id = "execution.failed",
@@ -61,6 +75,9 @@ object ExecutionEvents {
                 executionId = executionId,
                 success = success,
                 executionEventType = ExecutionEventType.FAILED,
+                message = message,
+                errorDetails = errorDetails,
+                subProject = subProject,
             ))
   }
 }

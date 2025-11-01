@@ -134,8 +134,30 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
     val event = objectMapper.convertValue<ArchitectEvent>(eventMap)
     val executionEventType = event.event["executionEventType"] as? String
     val icon = getIconForEventType(executionEventType, event)
-    val message = objectMapper.writeValueAsString(event.event)
-    icon?.let { eventsLog.add(EventLog(event.id, it, message)) }
+    
+    // Extract message and error details
+    val message = event.event["message"] as? String
+    val errorDetails = event.event["errorDetails"] as? String
+    val subProject = event.event["subProject"] as? String
+    
+    // Build display message
+    val displayMessage = buildString {
+      append(objectMapper.writeValueAsString(event.event))
+      if (message != null && message.isNotEmpty()) {
+        append(" | Msg: $message")
+      }
+      if (subProject != null) {
+        append(" | SubProject: $subProject")
+      }
+    }
+    
+    icon?.let { eventsLog.add(EventLog(event.id, it, displayMessage)) }
+    
+    // Store error details for display in the failure section
+    if (errorDetails != null && errorDetails.isNotEmpty()) {
+      failureReasons.add(errorDetails)
+    }
+    
     redraw()
   }
 
@@ -196,7 +218,11 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
    */
   private fun redraw() {
     if (plain) {
-      if (eventsLog.isNotEmpty()) println(eventsLog.last())
+      // In plain mode, show structured output for CI environments
+      if (eventsLog.isNotEmpty()) {
+        val lastEvent = eventsLog.last()
+        println("[${lastEvent.id}] ${lastEvent.icon} ${lastEvent.message}")
+      }
       return
     }
     print("\u001B[2J\u001B[H") // Clear screen

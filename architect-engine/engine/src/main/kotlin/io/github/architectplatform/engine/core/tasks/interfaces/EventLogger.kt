@@ -14,8 +14,23 @@ class EventLogger {
 
   private fun createLogMessage(eventWrapper: ArchitectEvent<*>, icon: String? = null): String {
     val iconPrefix = icon ?: "ℹ️"
-    val serializedEvent = getSerializedFields(eventWrapper.event)
-    return String.format("%s ID: %-24s | Event: %s", iconPrefix, eventWrapper.id, serializedEvent)
+    val event = eventWrapper.event
+    val serializedEvent = getSerializedFields(event)
+    
+    // Extract additional details if the event is an ExecutionEvent
+    val additionalInfo = if (event is ExecutionEvent) {
+      buildString {
+        event.subProject?.let { append(" | SubProject: $it") }
+        event.message?.let { append(" | Message: $it") }
+      }
+    } else ""
+    
+    return String.format(
+        "%s ID: %-24s | Event: %s%s",
+        iconPrefix,
+        eventWrapper.id,
+        serializedEvent,
+        additionalInfo)
   }
 
   private fun logEvent(eventWrapper: ArchitectEvent<*>) {
