@@ -39,16 +39,25 @@ fun <T> Config.getKey(key: String): T? {
   val keys = key.split('.')
   var current: Any? = this
   for (k in keys) {
-    if (current is Map<*, *>) {
-      current = current[k]
-    } else if (current is List<*>) {
-      val index = k.toIntOrNull() ?: throw IllegalArgumentException("Invalid index: $k")
-      if (index < 0 || index >= current.size) {
-        throw IndexOutOfBoundsException("Index $index is out of bounds for list of size ${current.size}")
+    when (current) {
+      is Map<*, *> -> {
+        current = current[k]
       }
-      current = current[index]
-    } else {
-      throw IllegalStateException("Invalid config type: ${current?.javaClass}")
+      is List<*> -> {
+        val index = k.toIntOrNull() ?: throw IllegalArgumentException("Invalid index: $k")
+        if (index < 0 || index >= current.size) {
+          throw IndexOutOfBoundsException("Index $index is out of bounds for list of size ${current.size}")
+        }
+        current = current[index]
+      }
+      null -> {
+        // Key path doesn't exist, return null
+        return null
+      }
+      else -> {
+        // Trying to traverse through a primitive value
+        throw IllegalStateException("Cannot traverse through primitive value of type ${current.javaClass}")
+      }
     }
   }
   @Suppress("UNCHECKED_CAST")

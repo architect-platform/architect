@@ -109,6 +109,19 @@ class ConfigTest {
   }
 
   @Test
+  fun `getKey returns null when middle key does not exist`() {
+    val config: Config =
+      mapOf(
+        "server" to mapOf("host" to "localhost"),
+      )
+
+    // Trying to access a nested key when the parent doesn't exist
+    val result = config.getKey<String>("database.host")
+
+    assertNull(result)
+  }
+
+  @Test
   fun `getKey throws IllegalArgumentException for invalid list index`() {
     val config: Config =
       mapOf(
