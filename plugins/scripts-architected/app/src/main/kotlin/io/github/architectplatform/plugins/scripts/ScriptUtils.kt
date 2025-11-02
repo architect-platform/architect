@@ -63,30 +63,22 @@ object ScriptUtils {
     }
 
     /**
-     * Validates that a command is not attempting obvious command injection patterns.
+     * Placeholder for command validation.
      *
-     * This is a basic sanity check and should not be relied upon as the sole security measure.
-     * Proper escaping is still required.
+     * This function is intentionally permissive and returns true for all commands.
+     * Commands in the scripts plugin come from trusted configuration files (architect.yml),
+     * not from runtime user input, so validation is not strictly necessary.
      *
-     * @param command The command to validate
-     * @return true if the command passes basic validation, false otherwise
+     * The function is kept as a placeholder for potential future enhancements where
+     * administrators might want to enforce additional restrictions on configured commands.
+     *
+     * @param command The command to validate (currently unused)
+     * @return Always returns true
      */
+    @Suppress("UNUSED_PARAMETER")
     fun validateCommand(command: String): Boolean {
-        // Check for obvious command injection patterns
-        // Note: This is defense-in-depth, not a replacement for proper escaping
-        val dangerousPatterns = listOf(
-            ";",     // Command separator
-            "&&",    // AND operator
-            "||",    // OR operator  
-            "|",     // Pipe operator
-            ">",     // Output redirection
-            "<",     // Input redirection
-            "$(",    // Command substitution
-            "`"      // Command substitution
-        )
-        
-        // For configured commands, we allow these patterns as they may be intentional
-        // This validation is primarily informational
+        // Intentionally permissive - commands come from trusted configuration
+        // This is a placeholder for potential future validation logic
         return true
     }
 }

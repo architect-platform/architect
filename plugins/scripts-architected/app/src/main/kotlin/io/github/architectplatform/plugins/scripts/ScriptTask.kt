@@ -81,8 +81,12 @@ class ScriptTask(
         }
         
         // Note: The base command from config is trusted as it comes from configuration,
-        // not user input. However, arguments are always escaped.
-        val fullCommand = "$envPrefix${config.command}$argsString"
+        // not user input. Arguments and environment variables are always escaped.
+        val fullCommand = buildString {
+            append(envPrefix)
+            append(config.command)
+            append(argsString)
+        }
 
         return try {
             commandExecutor.execute(
