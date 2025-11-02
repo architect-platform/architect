@@ -110,8 +110,19 @@ class GitPlugin : ArchitectPlugin<GitContext> {
 
       for ((key, value) in context.config) {
         try {
+          // Validate config key to prevent command injection
+          if (!isValidGitConfigKey(key)) {
+            results.add(TaskResult.failure("Invalid Git config key: $key"))
+            continue
+          }
+          
+          // Escape value to prevent command injection
+          val escapedValue = escapeShellArg(value)
+          val escapedKey = escapeShellArg(key)
+          
           commandExecutor.execute(
-              "git config --local \"$key\" \"$value\"", workingDir = projectContext.dir.toString())
+              "git config --local $escapedKey $escapedValue",
+              workingDir = projectContext.dir.toString())
           results.add(TaskResult.success("Git config $key set to $value"))
         } catch (e: Exception) {
           results.add(
@@ -125,6 +136,36 @@ class GitPlugin : ArchitectPlugin<GitContext> {
         TaskResult.success("Git configuration completed successfully", results = results)
       } else {
         TaskResult.failure("Git configuration failed for some settings", results = results)
+      }
+    }
+
+    /**
+     * Validates that a Git config key follows expected format.
+     *
+     * @param key The config key to validate
+     * @return true if the key is valid, false otherwise
+     */
+    private fun isValidGitConfigKey(key: String): Boolean {
+      // Git config keys should match pattern: section.subsection.key or section.key
+      return key.matches(Regex("^[a-zA-Z][a-zA-Z0-9]*([.-][a-zA-Z][a-zA-Z0-9]*)*$"))
+    }
+
+    /**
+     * Escapes a shell argument to prevent command injection.
+     *
+     * @param arg The argument to escape
+     * @return The escaped argument safe for shell execution
+     */
+    private fun escapeShellArg(arg: String): String {
+      // If the argument contains special characters, wrap it in single quotes
+      // and escape any single quotes within it
+      return if (arg.matches(Regex("^[a-zA-Z0-9._/:-]+$"))) {
+        // Safe characters, no escaping needed
+        arg
+      } else {
+        // Escape single quotes by replacing ' with '\''
+        // and wrap the whole thing in single quotes
+        "'" + arg.replace("'", "'\\''") + "'"
       }
     }
   }

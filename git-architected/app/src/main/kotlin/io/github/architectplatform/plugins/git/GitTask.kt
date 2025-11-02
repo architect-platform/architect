@@ -46,12 +46,33 @@ class GitTask(
     val commandExecutor = environment.service(CommandExecutor::class.java)
 
     return try {
-      val fullCommand = "git $command ${args.joinToString(" ")}"
+      // Escape arguments to prevent command injection
+      val escapedArgs = args.map { escapeShellArg(it) }.joinToString(" ")
+      val fullCommand = "git $command $escapedArgs"
       commandExecutor.execute(fullCommand, workingDir = projectContext.dir.toString())
       TaskResult.success("Git task: $id completed successfully")
     } catch (e: Exception) {
       TaskResult.failure(
           "Git task: $id failed with exception: ${e.message ?: "Unknown error"}")
+    }
+  }
+
+  /**
+   * Escapes a shell argument to prevent command injection.
+   * 
+   * @param arg The argument to escape
+   * @return The escaped argument safe for shell execution
+   */
+  private fun escapeShellArg(arg: String): String {
+    // If the argument contains special characters, wrap it in single quotes
+    // and escape any single quotes within it
+    return if (arg.matches(Regex("^[a-zA-Z0-9._/:-]+$"))) {
+      // Safe characters, no escaping needed
+      arg
+    } else {
+      // Escape single quotes by replacing ' with '\''
+      // and wrap the whole thing in single quotes
+      "'" + arg.replace("'", "'\\''") + "'"
     }
   }
 }
