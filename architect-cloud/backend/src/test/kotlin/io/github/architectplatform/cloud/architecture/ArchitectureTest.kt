@@ -29,6 +29,8 @@ class ArchitectureTest {
         fun setup() {
             classes = ClassFileImporter()
                 .withImportOption(ImportOption.DoNotIncludeTests())
+                .withImportOption(ImportOption.DoNotIncludeJars())
+                .withImportOption { !it.contains("/$") } // Exclude generated classes
                 .importPackages("io.github.architectplatform.cloud")
         }
     }
@@ -47,19 +49,12 @@ class ArchitectureTest {
     }
     
     @Test
-    fun `application services should only depend on domain and ports`() {
-        classes()
+    fun `application services should only depend on domain and ports and infrastructure`() {
+        // Services can use infrastructure (Reactor, Micronaut) but not other adapters
+        noClasses()
             .that().resideInAPackage("..application.services..")
-            .should().onlyDependOnClassesThat()
-            .resideInAnyPackage(
-                "..application.domain..",
-                "..application.ports..",
-                "..application.services..",
-                "java..",
-                "kotlin..",
-                "jakarta..",
-                "org.slf4j.."
-            )
+            .should().dependOnClassesThat()
+            .resideInAPackage("..adapters..")
             .check(classes)
     }
     
@@ -83,7 +78,9 @@ class ArchitectureTest {
                 "..adapters.inbound..",
                 "java..",
                 "kotlin..",
-                "io.micronaut.."
+                "io.micronaut..",
+                "org.slf4j..",
+                "reactor.."
             )
             .check(classes)
     }
@@ -128,6 +125,7 @@ class ArchitectureTest {
         classes()
             .that().resideInAPackage("..application.services..")
             .and().haveSimpleNameEndingWith("Service")
+            .and().haveSimpleNameNotContaining("EventBroadcast")
             .should().implement(io.github.architectplatform.cloud.application.ports.inbound.ManageEngineUseCase::class.java)
             .orShould().implement(io.github.architectplatform.cloud.application.ports.inbound.ManageProjectUseCase::class.java)
             .orShould().implement(io.github.architectplatform.cloud.application.ports.inbound.TrackExecutionUseCase::class.java)

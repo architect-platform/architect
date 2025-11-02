@@ -8,8 +8,6 @@ import io.micronaut.websocket.annotation.OnClose
 import io.micronaut.websocket.annotation.OnMessage
 import io.micronaut.websocket.annotation.OnOpen
 import io.micronaut.websocket.annotation.ServerWebSocket
-import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import reactor.core.Disposable
 
@@ -34,26 +32,22 @@ class EventsWebSocketServer(
         // Subscribe to event stream for this session
         val subscription = eventBroadcastService.getEventStream()
             .subscribe { event ->
-                runBlocking {
-                    try {
-                        broadcaster.broadcastAsync(event, { it.id == sessionId }).awaitFirstOrNull()
-                    } catch (e: Exception) {
-                        logger.error("Error broadcasting to session $sessionId: ${e.message}")
-                    }
+                try {
+                    broadcaster.broadcastSync(event) { it.id == sessionId }
+                } catch (e: Exception) {
+                    logger.error("Error broadcasting to session $sessionId: ${e.message}")
                 }
             }
         
         subscriptions[sessionId] = subscription
         
         // Send welcome message
-        runBlocking {
-            session.sendAsync(CloudEvent(
-                type = "CONNECTED",
-                entityId = sessionId,
-                entityType = "SESSION",
-                data = mapOf("message" to "Connected to Architect Cloud event stream")
-            )).awaitFirstOrNull()
-        }
+        session.sendSync(CloudEvent(
+            type = "CONNECTED",
+            entityId = sessionId,
+            entityType = "SESSION",
+            data = mapOf("message" to "Connected to Architect Cloud event stream")
+        ))
     }
     
     @OnMessage
@@ -61,14 +55,12 @@ class EventsWebSocketServer(
         logger.debug("Received message from ${session.id}: $message")
         // Can handle ping/pong or other client messages here
         if (message == "ping") {
-            runBlocking {
-                session.sendAsync(CloudEvent(
-                    type = "PONG",
-                    entityId = session.id,
-                    entityType = "PING",
-                    data = mapOf("message" to "pong")
-                )).awaitFirstOrNull()
-            }
+            session.sendSync(CloudEvent(
+                type = "PONG",
+                entityId = session.id,
+                entityType = "PING",
+                data = mapOf("message" to "pong")
+            ))
         }
     }
     
