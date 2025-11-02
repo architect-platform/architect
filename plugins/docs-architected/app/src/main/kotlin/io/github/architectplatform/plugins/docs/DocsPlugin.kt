@@ -267,7 +267,7 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
       try {
         when (context.build.framework) {
           "mkdocs" -> {
-            commandExecutor.execute("pip3 install mkdocs mkdocs-material", gitDir.toString())
+            commandExecutor.execute("pip3 install mkdocs==1.5.3 mkdocs-material==9.5.3", gitDir.toString())
             results.add(TaskResult.success("Installed MkDocs dependencies"))
           }
           "docusaurus" -> {
@@ -295,8 +295,14 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
     try {
       when (context.build.framework) {
         "mkdocs" -> {
-          val outputArg = if (context.build.outputDir.isNotEmpty()) "-d ${context.build.outputDir}" else ""
-          commandExecutor.execute("mkdocs build $outputArg", gitDir.toString())
+          // Sanitize output directory to prevent command injection
+          val sanitizedOutputDir = context.build.outputDir.replace(Regex("[^a-zA-Z0-9/_-]"), "")
+          val command = if (sanitizedOutputDir.isNotEmpty()) {
+            "mkdocs build -d $sanitizedOutputDir"
+          } else {
+            "mkdocs build"
+          }
+          commandExecutor.execute(command, gitDir.toString())
           results.add(TaskResult.success("Built documentation with MkDocs"))
         }
         "docusaurus" -> {
@@ -362,9 +368,15 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
     // Create CNAME file if custom domain is specified
     if (context.publish.cname && context.publish.domain.isNotEmpty()) {
       try {
-        val cnameFile = File(outputDir, "CNAME")
-        cnameFile.writeText(context.publish.domain)
-        results.add(TaskResult.success("Created CNAME file for domain: ${context.publish.domain}"))
+        // Validate domain format (basic validation)
+        val domainRegex = Regex("^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?)*$")
+        if (!domainRegex.matches(context.publish.domain)) {
+          results.add(TaskResult.failure("Invalid domain format: ${context.publish.domain}"))
+        } else {
+          val cnameFile = File(outputDir, "CNAME")
+          cnameFile.writeText(context.publish.domain)
+          results.add(TaskResult.success("Created CNAME file for domain: ${context.publish.domain}"))
+        }
       } catch (e: Exception) {
         results.add(
             TaskResult.failure("Failed to create CNAME file: ${e.message ?: "Unknown error"}"))
@@ -379,8 +391,12 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
 
       commandExecutor.execute("chmod +x publish-ghpages.sh", gitDir.toString())
 
+      // Sanitize inputs to prevent command injection
+      val sanitizedOutputDir = context.build.outputDir.replace(Regex("[^a-zA-Z0-9/_.-]"), "")
+      val sanitizedBranch = context.publish.branch.replace(Regex("[^a-zA-Z0-9/_-]"), "")
+      
       val publishCommand =
-          "./publish-ghpages.sh ${context.build.outputDir} ${context.publish.branch}"
+          "./publish-ghpages.sh $sanitizedOutputDir $sanitizedBranch"
       commandExecutor.execute(publishCommand, gitDir.toString())
 
       commandExecutor.execute("rm publish-ghpages.sh", gitDir.toString())

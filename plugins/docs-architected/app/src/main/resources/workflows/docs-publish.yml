@@ -32,30 +32,33 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-        if: contains('docusaurus,vuepress', '{{framework}}')
+        if: ${{ contains(fromJSON('["docusaurus", "vuepress"]'), '{{framework}}') }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-        if: contains('mkdocs', '{{framework}}')
+        if: ${{ '{{framework}}' == 'mkdocs' }}
 
       - name: Install MkDocs dependencies
         run: |
-          pip install mkdocs mkdocs-material
-        if: contains('mkdocs', '{{framework}}')
+          pip install mkdocs==1.5.3 mkdocs-material==9.5.3
+        if: ${{ '{{framework}}' == 'mkdocs' }}
 
       - name: Install Node dependencies
         run: npm ci
-        if: contains('docusaurus,vuepress', '{{framework}}')
+        if: ${{ contains(fromJSON('["docusaurus", "vuepress"]'), '{{framework}}') }}
 
       - name: Build documentation
+        env:
+          FRAMEWORK: '{{framework}}'
+          OUTPUT_DIR: '{{outputDir}}'
         run: |
-          if [ "{{framework}}" = "mkdocs" ]; then
-            mkdocs build -d {{outputDir}}
-          elif [ "{{framework}}" = "docusaurus" ]; then
+          if [ "$FRAMEWORK" = "mkdocs" ]; then
+            mkdocs build -d "$OUTPUT_DIR"
+          elif [ "$FRAMEWORK" = "docusaurus" ]; then
             npm run build
-          elif [ "{{framework}}" = "vuepress" ]; then
+          elif [ "$FRAMEWORK" = "vuepress" ]; then
             npm run docs:build
           fi
 
