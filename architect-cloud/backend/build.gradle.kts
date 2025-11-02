@@ -40,9 +40,12 @@ dependencies {
   implementation("io.micronaut.serde:micronaut-serde-jackson")
   implementation("io.micronaut.data:micronaut-data-jdbc")
   implementation("io.micronaut.sql:micronaut-jdbc-hikari")
+  implementation("io.micronaut.reactor:micronaut-reactor")
+  implementation("io.micronaut:micronaut-websocket")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.10.2")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.2")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.10.2")
   implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
@@ -55,6 +58,7 @@ dependencies {
   testImplementation("io.micronaut:micronaut-http-client")
   testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
   testImplementation("org.mockito:mockito-core:5.7.0")
+  testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 }
 
 application { mainClass.set("io.github.architectplatform.cloud.ApplicationKt") }
