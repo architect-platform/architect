@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.nio.file.Path
+import java.util.Optional
 
 /**
  * Unit tests for ProjectService.
@@ -35,7 +36,7 @@ class ProjectServiceTest {
 
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = TestPluginLoader()
-        val projectService = ProjectService(projectRepository, configLoader, pluginLoader)
+        val projectService = ProjectService(projectRepository, configLoader, pluginLoader, Optional.empty())
 
         // When
         projectService.registerProject(projectName, projectPath)
@@ -56,7 +57,7 @@ class ProjectServiceTest {
 
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = TestPluginLoader()
-        val projectService = ProjectService(projectRepository, configLoader, pluginLoader)
+        val projectService = ProjectService(projectRepository, configLoader, pluginLoader, Optional.empty())
 
         // When
         projectService.registerProject(projectName, projectPath)
@@ -75,7 +76,7 @@ class ProjectServiceTest {
 
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = TestPluginLoader()
-        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader)
+        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty())
 
         // When
         projectService.registerProject("project1", projectPath1)
@@ -93,7 +94,7 @@ class ProjectServiceTest {
         // Given
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = TestPluginLoader()
-        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader)
+        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty())
 
         // When
         val project = projectService.getProject("non-existent")
@@ -110,7 +111,7 @@ class ProjectServiceTest {
 
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = TestPluginLoader()
-        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader)
+        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty())
 
         // When & Then
         assertThrows(IllegalArgumentException::class.java) {
