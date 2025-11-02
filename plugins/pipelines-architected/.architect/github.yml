@@ -1,0 +1,13 @@
+github:
+  deps:
+    type: renovate
+
+  pipelines:
+    - name: pipelines-architected
+      type: github/classic-java-17
+      path: plugins/pipelines-architected
+
+  release:
+    assets:
+      - name: pipelines-architected.jar
+        path: "app/build/libs/pipelines-architected-*.jar"
