@@ -177,7 +177,22 @@ Integrates Gradle build automation with Architect workflows.
 - Task execution and lifecycle management
 - Build configuration through Architect
 
-#### [docs-architected](plugins/docs-architected/) ⭐ NEW
+#### [javascript-architected](plugins/javascript-architected/)
+Integrates JavaScript/Node.js package managers with Architect workflows.
+
+**Features:**
+- Support for npm, yarn, and pnpm
+- Standard JavaScript workflows (install, build, test, lint)
+- Custom working directory configuration
+
+**Example:**
+```yaml
+javascript:
+  packageManager: "npm"
+  workingDirectory: "."
+```
+
+#### [docs-architected](plugins/docs-architected/)
 Comprehensive documentation management with multi-framework support.
 
 **Features:**
@@ -201,6 +216,37 @@ docs:
     enabled: true
     githubPages: true
     domain: "docs.myproject.com"
+```
+
+#### [scripts-architected](plugins/scripts-architected/) ⭐ NEW
+Execute custom shell scripts with full workflow integration.
+
+**Features:**
+- Define custom scripts in configuration
+- Attach scripts to workflow phases (INIT, BUILD, TEST, etc.)
+- Standalone script execution
+- Environment variable support
+- Custom working directory configuration
+- Command-line argument passing
+
+**Example:**
+```yaml
+scripts:
+  scripts:
+    build:
+      command: "npm run build"
+      description: "Build the application"
+      phase: "BUILD"
+    deploy:
+      command: "./deploy.sh"
+      description: "Deploy to production"
+      phase: "PUBLISH"
+      environment:
+        ENV: "production"
+        REGION: "us-east-1"
+    custom:
+      command: "echo 'Custom task'"
+      description: "Standalone custom script"
 ```
 
 ## Use Cases

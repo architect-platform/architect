@@ -1,0 +1,9 @@
+project:
+  name: scripts-architected
+  description: "The Architect plugin for custom script execution"
+
+plugins:
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
