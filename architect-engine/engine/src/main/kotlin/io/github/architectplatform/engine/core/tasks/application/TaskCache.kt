@@ -1,6 +1,7 @@
 package io.github.architectplatform.engine.core.tasks.application
 
 import io.github.architectplatform.api.core.tasks.TaskResult
+import io.github.architectplatform.engine.core.config.EngineConfiguration
 import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
 import java.util.concurrent.ConcurrentHashMap
@@ -8,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
 @Singleton
 class TaskCache {
 
-  @Property(name = "architect.cache.enabled", defaultValue = "false")
+  @Property(name = EngineConfiguration.Cache.ENABLED, defaultValue = "${EngineConfiguration.Cache.DEFAULT_ENABLED}")
   private val cacheEnabled: Boolean = false
 
   private val cache = ConcurrentHashMap<String, TaskResult>()

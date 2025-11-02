@@ -7,6 +7,7 @@ import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.engine.core.project.domain.Project
+import io.github.architectplatform.engine.core.tasks.domain.TaskDependencyResolver
 import io.github.architectplatform.engine.core.tasks.domain.events.ExecutionEvents.executionCompletedEvent
 import io.github.architectplatform.engine.core.tasks.domain.events.ExecutionEvents.executionFailedEvent
 import io.github.architectplatform.engine.core.tasks.domain.events.ExecutionEvents.executionStartedEvent
@@ -25,16 +26,24 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import java.io.OutputStream
-import java.io.PrintStream
 import org.slf4j.LoggerFactory
 
+/**
+ * Executes tasks with dependency resolution and caching support.
+ * 
+ * This executor is responsible for:
+ * - Executing individual tasks within their project context
+ * - Resolving and respecting task dependencies
+ * - Managing task result caching
+ * - Publishing execution events
+ */
 @Singleton
 @ExecuteOn(TaskExecutors.BLOCKING)
 class TaskExecutor(
     private val environment: Environment,
     private val taskCache: TaskCache,
-    private val eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>
+    private val eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>,
+    private val dependencyResolver: TaskDependencyResolver = TaskDependencyResolver()
 ) {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
@@ -71,32 +80,31 @@ class TaskExecutor(
       parentProject: String? = null,
   ): TaskResult {
     val projectName = projectContext.config.getKey<String>("project.name") ?: "unknown"
-    val subProjectInfo = if (parentProject != null) " (subproject of $parentProject)" else ""
 
     try {
 
-      val allTasks = resolveAllTasks(task, taskRegistry)
-      val executionOrder = topologicalSort(allTasks)
+      val allTasks = dependencyResolver.resolveAllDependencies(task, taskRegistry)
+      val executionOrder = dependencyResolver.topologicalSort(allTasks)
       val results =
           executionOrder
-              .map {
-                if (taskCache.isCached(it.id)) {
+              .map { currentTask ->
+                if (taskCache.isCached(currentTask.id)) {
                   eventPublisher.publishEvent(
                       taskSkippedEvent(
                           projectName,
                           executionId,
-                          it.id,
-                          message = "Task ${it.id} skipped (cached)",
+                          currentTask.id,
+                          message = "Task ${currentTask.id} skipped (cached)",
                           subProject = parentProject,
                       ))
-                  val cachedResult = taskCache.get(it.id)
+                  val cachedResult = taskCache.get(currentTask.id)
                   if (cachedResult != null) {
                     eventPublisher.publishEvent(
                         taskCompletedEvent(
                             projectName,
                             executionId,
-                            it.id,
-                            message = "Task ${it.id} completed (from cache)",
+                            currentTask.id,
+                            message = "Task ${currentTask.id} completed (from cache)",
                             subProject = parentProject))
                     return@map cachedResult
                   }
@@ -106,21 +114,21 @@ class TaskExecutor(
                     taskStartedEvent(
                         projectName,
                         executionId,
-                        it.id,
-                        message = "Starting task: ${it.id}",
+                        currentTask.id,
+                        message = "Starting task: ${currentTask.id}",
                         subProject = parentProject))
                 try {
-                  val result = it.execute(environment, projectContext, args)
-                  logger.debug("Executed task '${it.id}' with result: $result")
+                  val result = currentTask.execute(environment, projectContext, args)
+                  logger.debug("Executed task '${currentTask.id}' with result: $result")
                   if (!result.success) {
                     val errorMessage = result.message ?: "Task failed without message"
                     logger.error(
-                        "Exception during execution of task '${it.id}' in project '$projectName': $errorMessage")
+                        "Exception during execution of task '${currentTask.id}' in project '$projectName': $errorMessage")
                     eventPublisher.publishEvent(
                         taskFailedEvent(
                             projectName,
                             executionId,
-                            it.id,
+                            currentTask.id,
                             message = errorMessage,
                             errorDetails = errorMessage,
                             parentProject = parentProject,
@@ -130,11 +138,11 @@ class TaskExecutor(
                         taskCompletedEvent(
                             projectName,
                             executionId,
-                            it.id,
-                            message = result.message ?: "Task ${it.id} completed successfully",
+                            currentTask.id,
+                            message = result.message ?: "Task ${currentTask.id} completed successfully",
                             subProject = parentProject))
                   }
-                  taskCache.store(it.id, result)
+                  taskCache.store(currentTask.id, result)
                   return@map result
                 } catch (e: Exception) {
                   val errorMessage = e.message ?: "Unknown error"
@@ -143,14 +151,14 @@ class TaskExecutor(
                       taskFailedEvent(
                           projectName,
                           executionId,
-                          it.id,
-                          message = "Task '${it.id}' failed with exception: $errorMessage",
+                          currentTask.id,
+                          message = "Task '${currentTask.id}' failed with exception: $errorMessage",
                           errorDetails = "Exception: $errorMessage\n\nStack Trace:\n$stackTrace",
                           parentProject = parentProject,
                       ))
-                  logger.error("Exception during execution of task '${it.id}'", e)
+                  logger.error("Exception during execution of task '${currentTask.id}'", e)
                   return@map TaskResult.failure(
-                      "Task '${it.id}' failed with exception: $errorMessage")
+                      "Task '${currentTask.id}' failed with exception: $errorMessage")
                 }
               }
               .map { it }
@@ -169,60 +177,6 @@ class TaskExecutor(
       val errorMessage = e.message ?: "Unknown error"
       val stackTrace = e.stackTraceToString()
         return TaskResult.failure("Execution failed with exception: $errorMessage\n\nStack Trace:\n$stackTrace")
-    }
-  }
-
-  private fun resolveAllTasks(root: Task, taskRegistry: TaskRegistry): Map<String, Task> {
-    val all = mutableMapOf<String, Task>()
-    val visited = mutableSetOf<String>()
-
-    fun visit(t: Task) {
-      if (!visited.add(t.id)) return
-      for (depId in t.depends()) {
-        val depTask =
-            taskRegistry.get(depId)
-                ?: throw IllegalArgumentException("Task dependency '$depId' not found")
-        visit(depTask)
-        all[depId] = depTask
-      }
-      all[t.id] = t
-    }
-
-    visit(root)
-    return all
-  }
-
-  private fun topologicalSort(tasks: Map<String, Task>): List<Task> {
-    val visited = mutableSetOf<String>()
-    val result = mutableListOf<Task>()
-
-    fun dfs(current: Task) {
-      if (!visited.add(current.id)) return
-      for (depId in current.depends()) {
-        val dep = tasks[depId] ?: throw IllegalStateException("Missing task for id $depId")
-        dfs(dep)
-      }
-      result.add(current)
-    }
-
-    tasks.values.forEach { dfs(it) }
-
-    return result
-  }
-
-  private inline fun <T> withSuppressedStdout(block: () -> T): T {
-    val originalOut = System.out
-    try {
-      System.setOut(
-          PrintStream(
-              object : OutputStream() {
-                override fun write(b: Int) {
-                  // do nothing
-                }
-              }))
-      return block()
-    } finally {
-      System.setOut(originalOut)
     }
   }
 }
