@@ -1,0 +1,7 @@
+project:
+  name: architect-cloud
+  description: "Centralized cloud backend for monitoring Architect Engine instances"
+
+plugins:
+  - name: github-architected
+    repo: architect-platform/architect

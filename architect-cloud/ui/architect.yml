@@ -1,0 +1,12 @@
+project:
+  name: architect-cloud-ui
+  description: "Cloud dashboard UI with React and Vite"
+
+plugins:
+  - name: javascript-architected
+    repo: architect-platform/architect
+    context:
+      packageManager: "npm"
+      workingDirectory: "."
+  - name: github-architected
+    repo: architect-platform/architect

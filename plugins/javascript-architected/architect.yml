@@ -1,0 +1,9 @@
+project:
+  name: javascript-architected
+  description: "The Architect plugin for JavaScript/Node.js projects"
+
+plugins:
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect

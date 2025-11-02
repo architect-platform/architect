@@ -1,0 +1,14 @@
+project:
+  name: architect-cloud-backend
+  description: "Cloud backend REST API and WebSocket server"
+
+plugins:
+  - name: gradle-architected
+    repo: architect-platform/architect
+    context:
+      projects:
+        - path: "."
+          gradlePath: "./gradlew"
+          githubPackageRelease: false
+  - name: github-architected
+    repo: architect-platform/architect
