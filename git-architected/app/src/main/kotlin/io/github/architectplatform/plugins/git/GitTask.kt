@@ -42,6 +42,11 @@ class GitTask(
     if (!context.enabled) {
       return TaskResult.success("Git task: $id disabled. Skipping...")
     }
+    
+    // Validate command against whitelist
+    if (!GitUtils.isValidGitCommand(command)) {
+      return TaskResult.failure("Git task: $id - Invalid or disallowed Git command: $command")
+    }
 
     val commandExecutor = environment.service(CommandExecutor::class.java)
 

@@ -75,7 +75,9 @@ class GitUtilsTest {
         "123.name",
         "user.123name",
         "user.name;rm -rf",
-        "user.name\$var"
+        "user.name\$var",
+        "user-name.email",  // hyphens not allowed
+        "section-name.key"  // hyphens not allowed
     )
     
     for (key in invalidKeys) {
@@ -88,6 +90,39 @@ class GitUtilsTest {
     assertTrue(GitUtils.isValidGitConfigKey("a.b"))
     assertTrue(GitUtils.isValidGitConfigKey("a.b.c"))
     assertTrue(GitUtils.isValidGitConfigKey("a.b.c.d"))
-    assertTrue(GitUtils.isValidGitConfigKey("section-name.key"))
+  }
+
+  @Test
+  fun `isValidGitCommand should accept allowed commands`() {
+    val allowedCommands = listOf(
+        "status", "add", "commit", "push", "pull", "fetch",
+        "checkout", "branch", "log", "diff", "merge", "reset",
+        "stash", "tag", "remote", "clone", "init"
+    )
+    
+    for (cmd in allowedCommands) {
+      assertTrue(GitUtils.isValidGitCommand(cmd), "Command '$cmd' should be allowed")
+    }
+  }
+
+  @Test
+  fun `isValidGitCommand should reject disallowed commands`() {
+    val disallowedCommands = listOf(
+        "",
+        "rm",
+        "cat",
+        "ls",
+        "echo",
+        "bash",
+        "sh",
+        "git",
+        "unknown",
+        "status; rm -rf",
+        "status && ls"
+    )
+    
+    for (cmd in disallowedCommands) {
+      assertFalse(GitUtils.isValidGitCommand(cmd), "Command '$cmd' should be rejected")
+    }
   }
 }

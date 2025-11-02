@@ -116,12 +116,11 @@ class GitPlugin : ArchitectPlugin<GitContext> {
             continue
           }
           
-          // Escape value to prevent command injection
+          // Only escape value, key is already validated to contain only safe characters
           val escapedValue = GitUtils.escapeShellArg(value)
-          val escapedKey = GitUtils.escapeShellArg(key)
           
           commandExecutor.execute(
-              "git config --local $escapedKey $escapedValue",
+              "git config --local $key $escapedValue",
               workingDir = projectContext.dir.toString())
           results.add(TaskResult.success("Git config $key set to $value"))
         } catch (e: Exception) {

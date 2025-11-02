@@ -31,6 +31,22 @@ object GitUtils {
    */
   fun isValidGitConfigKey(key: String): Boolean {
     // Git config keys should match pattern: section.subsection.key or section.key
-    return key.matches(Regex("^[a-zA-Z][a-zA-Z0-9]*([.-][a-zA-Z][a-zA-Z0-9]*)*$"))
+    // Only allow dots as separators and alphanumeric characters
+    return key.matches(Regex("^[a-zA-Z][a-zA-Z0-9]*(\\.[a-zA-Z][a-zA-Z0-9]*)*$"))
+  }
+  
+  /**
+   * Validates that a Git command is in the allowed whitelist.
+   *
+   * @param command The Git command to validate
+   * @return true if the command is allowed, false otherwise
+   */
+  fun isValidGitCommand(command: String): Boolean {
+    val allowedCommands = setOf(
+        "status", "add", "commit", "push", "pull", "fetch",
+        "checkout", "branch", "log", "diff", "merge", "reset",
+        "stash", "tag", "remote", "clone", "init"
+    )
+    return allowedCommands.contains(command)
   }
 }
