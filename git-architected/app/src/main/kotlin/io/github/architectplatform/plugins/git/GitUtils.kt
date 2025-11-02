@@ -18,8 +18,9 @@ object GitUtils {
     
     // If the argument contains special characters, wrap it in single quotes
     // and escape any single quotes within it
-    return if (arg.matches(Regex("^[a-zA-Z0-9._/:]+$"))) {
-      // Safe characters, no escaping needed (removed hyphen from safe set)
+    // Note: Colon excluded from safe set due to potential URL/network address parsing issues
+    return if (arg.matches(Regex("^[a-zA-Z0-9._/]+$"))) {
+      // Safe characters, no escaping needed
       arg
     } else {
       // Escape single quotes by replacing ' with '\''

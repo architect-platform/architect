@@ -14,13 +14,19 @@ class GitUtilsTest {
         "simple",
         "path/to/file",
         "file.txt",
-        "tag_v1.0.0",
-        "192.168.1.1:8080"
+        "tag_v1.0.0"
     )
     
     for (arg in safeArgs) {
       assertEquals(arg, GitUtils.escapeShellArg(arg), "Safe argument '$arg' should not be escaped")
     }
+  }
+
+  @Test
+  fun `escapeShellArg should escape arguments with colons`() {
+    // Colons should be escaped to prevent URL/network parsing issues
+    assertEquals("'192.168.1.1:8080'", GitUtils.escapeShellArg("192.168.1.1:8080"))
+    assertEquals("'https://github.com'", GitUtils.escapeShellArg("https://github.com"))
   }
 
   @Test

@@ -54,12 +54,12 @@ class GitPlugin : ArchitectPlugin<GitContext> {
   override fun register(registry: TaskRegistry) {
     // Configuration task (INIT phase)
     registry.add(GitConfigTask(CodeWorkflow.INIT, context))
+    registry.add(GitTask("remote", CodeWorkflow.INIT, context))
 
-    // Common Git commands - these can be invoked by users as needed
+    // Common Git commands - these can be invoked by users as needed (BUILD phase)
     registry.add(GitTask("status", CodeWorkflow.BUILD, context))
     registry.add(GitTask("add", CodeWorkflow.BUILD, context))
     registry.add(GitTask("commit", CodeWorkflow.BUILD, context))
-    registry.add(GitTask("push", CodeWorkflow.PUBLISH, context))
     registry.add(GitTask("pull", CodeWorkflow.BUILD, context))
     registry.add(GitTask("fetch", CodeWorkflow.BUILD, context))
     registry.add(GitTask("checkout", CodeWorkflow.BUILD, context))
@@ -69,8 +69,10 @@ class GitPlugin : ArchitectPlugin<GitContext> {
     registry.add(GitTask("merge", CodeWorkflow.BUILD, context))
     registry.add(GitTask("reset", CodeWorkflow.BUILD, context))
     registry.add(GitTask("stash", CodeWorkflow.BUILD, context))
-    registry.add(GitTask("tag", CodeWorkflow.BUILD, context))
-    registry.add(GitTask("remote", CodeWorkflow.BUILD, context))
+    
+    // Publish phase tasks
+    registry.add(GitTask("push", CodeWorkflow.PUBLISH, context))
+    registry.add(GitTask("tag", CodeWorkflow.PUBLISH, context))
   }
 
   /**
@@ -119,12 +121,13 @@ class GitPlugin : ArchitectPlugin<GitContext> {
           // Note: CommandExecutor API only accepts a single command string.
           // We mitigate security risks through:
           // 1. Strict config key validation (isValidGitConfigKey)
-          // 2. Shell argument escaping for values (escapeShellArg)
-          // Since key is validated to contain only safe alphanumeric + dots, no escaping needed
+          // 2. Shell argument escaping for both key and value (defense-in-depth)
+          // Even though key is validated, we escape it for additional safety
+          val escapedKey = GitUtils.escapeShellArg(key)
           val escapedValue = GitUtils.escapeShellArg(value)
           
           commandExecutor.execute(
-              "git config --local $key $escapedValue",
+              "git config --local $escapedKey $escapedValue",
               workingDir = projectContext.dir.toString())
           results.add(TaskResult.success("Git config $key set to $value"))
         } catch (e: Exception) {
