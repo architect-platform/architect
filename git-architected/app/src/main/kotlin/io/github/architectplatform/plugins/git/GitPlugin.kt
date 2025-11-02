@@ -116,7 +116,11 @@ class GitPlugin : ArchitectPlugin<GitContext> {
             continue
           }
           
-          // Only escape value, key is already validated to contain only safe characters
+          // Note: CommandExecutor API only accepts a single command string.
+          // We mitigate security risks through:
+          // 1. Strict config key validation (isValidGitConfigKey)
+          // 2. Shell argument escaping for values (escapeShellArg)
+          // Since key is validated to contain only safe alphanumeric + dots, no escaping needed
           val escapedValue = GitUtils.escapeShellArg(value)
           
           commandExecutor.execute(

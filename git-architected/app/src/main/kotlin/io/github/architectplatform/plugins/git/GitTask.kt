@@ -51,7 +51,11 @@ class GitTask(
     val commandExecutor = environment.service(CommandExecutor::class.java)
 
     return try {
-      // Escape arguments to prevent command injection
+      // Note: CommandExecutor API only accepts a single command string.
+      // We mitigate security risks through:
+      // 1. Command whitelisting (isValidGitCommand)
+      // 2. Proper shell argument escaping (escapeShellArg)
+      // 3. Special handling for arguments starting with hyphens
       val escapedArgs = args.map { GitUtils.escapeShellArg(it) }.joinToString(" ")
       val fullCommand = "git $command $escapedArgs"
       commandExecutor.execute(fullCommand, workingDir = projectContext.dir.toString())

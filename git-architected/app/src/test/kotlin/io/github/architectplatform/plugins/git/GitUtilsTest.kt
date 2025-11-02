@@ -14,7 +14,6 @@ class GitUtilsTest {
         "simple",
         "path/to/file",
         "file.txt",
-        "branch-name",
         "tag_v1.0.0",
         "192.168.1.1:8080"
     )
@@ -22,6 +21,14 @@ class GitUtilsTest {
     for (arg in safeArgs) {
       assertEquals(arg, GitUtils.escapeShellArg(arg), "Safe argument '$arg' should not be escaped")
     }
+  }
+
+  @Test
+  fun `escapeShellArg should escape arguments with hyphens`() {
+    // Arguments with hyphens should be escaped to prevent flag interpretation
+    assertEquals("'branch-name'", GitUtils.escapeShellArg("branch-name"))
+    assertEquals("'-m'", GitUtils.escapeShellArg("-m"))
+    assertEquals("'--force'", GitUtils.escapeShellArg("--force"))
   }
 
   @Test

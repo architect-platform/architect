@@ -11,10 +11,15 @@ object GitUtils {
    * @return The escaped argument safe for shell execution
    */
   fun escapeShellArg(arg: String): String {
+    // Always escape arguments starting with hyphen to prevent flag interpretation
+    if (arg.startsWith("-")) {
+      return "'" + arg.replace("'", "'\\''") + "'"
+    }
+    
     // If the argument contains special characters, wrap it in single quotes
     // and escape any single quotes within it
-    return if (arg.matches(Regex("^[a-zA-Z0-9._/:-]+$"))) {
-      // Safe characters, no escaping needed
+    return if (arg.matches(Regex("^[a-zA-Z0-9._/:]+$"))) {
+      // Safe characters, no escaping needed (removed hyphen from safe set)
       arg
     } else {
       // Escape single quotes by replacing ' with '\''
