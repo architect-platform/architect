@@ -48,7 +48,6 @@ class CompositeTask(
   private val beforeChildren: ((Environment, ProjectContext) -> TaskResult)? = null,
   private val afterChildren: ((Environment, ProjectContext, List<TaskResult>) -> TaskResult)? = null,
 ) : Task {
-
   override fun description(): String = description
 
   override fun phase(): Phase? = phase

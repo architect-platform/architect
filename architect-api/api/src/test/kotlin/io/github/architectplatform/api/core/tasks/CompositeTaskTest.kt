@@ -230,8 +230,10 @@ class CompositeTaskTest {
       CompositeTask(
         id = "dedupe-test",
         description = "Test dependency deduplication",
-        phase = CoreWorkflow.BUILD, // depends on "verify"
-        customDependencies = listOf("verify", "custom"), // "verify" is duplicate
+        // depends on "verify"
+        phase = CoreWorkflow.BUILD,
+        // "verify" is duplicate
+        customDependencies = listOf("verify", "custom"),
       )
 
     val dependencies = task.depends()

@@ -128,9 +128,10 @@ class ConfigurableTaskTest {
         config = mapOf("env" to "production"),
       ) { _, _, _, _ -> TaskResult.success() }
 
-    val exception = assertThrows(IllegalArgumentException::class.java) {
-      task.getRequiredConfig("missing")
-    }
+    val exception =
+      assertThrows(IllegalArgumentException::class.java) {
+        task.getRequiredConfig("missing")
+      }
 
     assertTrue(exception.message!!.contains("missing"))
     assertTrue(exception.message!!.contains("deploy"))
@@ -257,8 +258,10 @@ class ConfigurableTaskTest {
       ConfigurableTask(
         id = "task",
         description = "Test deduplication",
-        phase = CoreWorkflow.PUBLISH, // depends on "release"
-        customDependencies = listOf("release", "custom"), // "release" is duplicate
+        // depends on "release"
+        phase = CoreWorkflow.PUBLISH,
+        // "release" is duplicate
+        customDependencies = listOf("release", "custom"),
       ) { _, _, _, _ -> TaskResult.success() }
 
     val dependencies = task.depends()

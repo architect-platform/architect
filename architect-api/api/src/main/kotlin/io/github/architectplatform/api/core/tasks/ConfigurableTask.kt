@@ -52,7 +52,6 @@ class ConfigurableTask(
   private val customDependencies: List<String> = emptyList(),
   private val task: (Environment, ProjectContext, Map<String, String>, List<String>) -> TaskResult,
 ) : Task {
-
   override fun description(): String = description
 
   override fun phase(): Phase? = phase
