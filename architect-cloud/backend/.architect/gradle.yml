@@ -1,0 +1,4 @@
+gradle:
+  projects:
+    - name: architect-cloud-backend
+      path: .

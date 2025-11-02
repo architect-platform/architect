@@ -5,8 +5,5 @@ project:
 plugins:
   - name: javascript-architected
     repo: architect-platform/architect
-    context:
-      packageManager: "npm"
-      workingDirectory: "."
   - name: github-architected
     repo: architect-platform/architect

@@ -1,0 +1,9 @@
+github:
+  pipelines:
+    - name: architect-cloud-backend
+      type: github/classic-java-17-no-release
+      path: architect-cloud/backend
+
+
+  deps:
+    type: renovate
