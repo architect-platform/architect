@@ -1,0 +1,13 @@
+github:
+  pipelines:
+    - name: docs-architected-pipeline
+      type: github/classic-java-17
+      path: plugins/docs-architected
+
+  deps:
+    type: renovate
+
+  release:
+    assets:
+      - name: docs-architected.jar
+        path: "app/build/libs/docs-architected-*.jar"
