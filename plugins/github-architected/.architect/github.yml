@@ -2,7 +2,7 @@ github:
   pipelines:
     - name: github-architected-pipeline
       type: github/classic-java-17
-      path: github-architected
+      path: plugins/github-architected
 
   deps:
     type: renovate

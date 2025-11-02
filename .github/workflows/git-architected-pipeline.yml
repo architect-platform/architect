@@ -7,12 +7,12 @@ on:
     branches:
       - main
     paths:
-      - 'git-architected**'
+      - 'plugins/git-architected**'
   pull_request:
     branches:
       - main
     paths:
-      - 'git-architected**'
+      - 'plugins/git-architected**'
 
 env:
   REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
@@ -48,19 +48,19 @@ jobs:
 
       - name: Init
         run: architect init --plain
-        working-directory: git-architected
+        working-directory: plugins/git-architected
 
       - name: Verify
         run: architect verify --plain
-        working-directory: git-architected
+        working-directory: plugins/git-architected
 
       - name: Build
         run: architect build --plain
-        working-directory: git-architected
+        working-directory: plugins/git-architected
 
       - name: Test
         run: architect test --plain
-        working-directory: git-architected
+        working-directory: plugins/git-architected
 
   release:
     name: Release
@@ -101,9 +101,9 @@ jobs:
       - name: Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: architect release --plain
-        working-directory: git-architected
+        working-directory: plugins/git-architected
 
       - name: Publish
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: architect publish --plain
-        working-directory: git-architected
+        working-directory: plugins/git-architected
