@@ -1,31 +1,85 @@
+# Temporary files
 tmp
 temp
+tmp/
+.tmp
+.tmp/
+.architect/tmp
+
+# Build directories
 .gradle/
+.gradle
 build
 target
-architect-cli/build
-.idea/
-node_modules/
-.kotlin/
-Thumbs.db
-.DS_Store
-.gradle
 target/
 out/
-.micronaut/
+architect-cli/build
+
+# IDE files
+.idea/
 .idea
-*.iml
-*.ipr
-*.iws
+.vscode/
 .project
 .settings
 .classpath
 .factorypath
+*.iml
+*.ipr
+*.iws
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Kotlin
+.kotlin/
+
+# Micronaut
+.micronaut/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# JAR files (except Gradle wrapper)
 *.jar
 !*gradle*wrapper*.jar
+
+# Environment files
 *.env
-.vscode/
-tmp/
-.architect/tmp
-.tmp
-.tmp/
+.env
+.env.local
+
+# Documentation build artifacts
+site/
+.vuepress/dist/
+build/
+docs/.vuepress/dist/
+
+# Python (for MkDocs)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+.coverage
+htmlcov/
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+*.cache
