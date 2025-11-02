@@ -1,0 +1,4 @@
+gradle:
+  projects:
+    - name: javascript-architected
+      path: app
