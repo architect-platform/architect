@@ -279,14 +279,15 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
             .getResourceFileContent(this.javaClass.classLoader, "workflows/docs-publish.yml")
             .let { content ->
               val workflowFile = File(workflowsDir, "docs-publish.yml")
+              // Sanitize all template values before inserting into workflow
               workflowFile.writeText(
                   content
-                      .replace("{{framework}}", context.build.framework)
-                      .replace("{{sourceDir}}", context.build.sourceDir)
-                      .replace("{{outputDir}}", context.build.outputDir)
-                      .replace("{{branch}}", context.publish.branch)
-                      .replace("{{mkdocsVersion}}", context.build.mkdocsVersion)
-                      .replace("{{mkdocsMaterialVersion}}", context.build.mkdocsMaterialVersion))
+                      .replace("{{framework}}", context.build.framework.replace(Regex("[^a-zA-Z0-9_-]"), ""))
+                      .replace("{{sourceDir}}", sanitizePath(context.build.sourceDir))
+                      .replace("{{outputDir}}", sanitizePath(context.build.outputDir))
+                      .replace("{{branch}}", sanitizeBranch(context.publish.branch))
+                      .replace("{{mkdocsVersion}}", sanitizeVersion(context.build.mkdocsVersion))
+                      .replace("{{mkdocsMaterialVersion}}", sanitizeVersion(context.build.mkdocsMaterialVersion)))
               results.add(TaskResult.success("Created GitHub Actions workflow for documentation"))
             }
       } catch (e: Exception) {
