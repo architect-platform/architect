@@ -7,11 +7,20 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
  * Core abstraction for a unit of work in the Architect platform.
  *
  * Tasks are the fundamental building blocks of the Architect execution model. Each task represents
- * a discrete unit of work that can be executed as part of a project's lifecycle. Tasks can be
- * organized into phases, can depend on other tasks, and can be registered by plugins.
+ * a discrete unit of work that can be executed as part of a project's lifecycle. Tasks can be:
+ * - **Standalone**: Independent tasks without phase or parent
+ * - **Phase tasks**: Tasks organized into lifecycle phases (INIT, BUILD, TEST, etc.)
+ * - **Composite tasks**: Tasks that contain and orchestrate child tasks
+ * - **Configurable tasks**: Tasks with customizable configuration options
+ *
+ * Tasks support flexible relationships:
+ * - **Dependencies**: Tasks that must complete before this task starts
+ * - **Children**: Subtasks that execute as part of this task
+ * - **Phase membership**: Automatic dependency inheritance from phases
  *
  * Example usage:
  * ```kotlin
+ * // Simple standalone task
  * class MyTask : Task {
  *   override val id = "my-task"
  *
@@ -22,6 +31,13 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
  *     return TaskResult.success("Task completed successfully")
  *   }
  * }
+ *
+ * // Composite task with children
+ * val buildTask = CompositeTask(
+ *   id = "build-all",
+ *   description = "Build all components",
+ *   children = listOf("compile", "package", "verify")
+ * )
  * ```
  */
 interface Task {
@@ -61,6 +77,20 @@ interface Task {
    * @return List of task IDs that must be executed before this task
    */
   fun depends(): List<String> = phase()?.depends() ?: emptyList()
+
+  /**
+   * Returns a list of child task IDs that belong to this task.
+   *
+   * Child tasks are subtasks that are part of this task's execution. When this task
+   * is executed, its children will be executed in order as part of the parent task.
+   * This enables hierarchical task organization where a task can be composed of multiple subtasks.
+   *
+   * Unlike dependencies (which must complete before this task), children are executed
+   * as part of this task's execution.
+   *
+   * @return List of child task IDs, or empty list if this task has no children
+   */
+  fun children(): List<String> = emptyList()
 
   /**
    * Executes the task's work.

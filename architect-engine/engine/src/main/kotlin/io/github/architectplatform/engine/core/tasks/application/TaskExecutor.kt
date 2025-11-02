@@ -118,10 +118,73 @@ class TaskExecutor(
                         message = "Starting task: ${currentTask.id}",
                         subProject = parentProject))
                 try {
+                  // Execute the task itself
                   val result = currentTask.execute(environment, projectContext, args)
-                  logger.debug("Executed task '${currentTask.id}' with result: $result")
-                  if (!result.success) {
-                    val errorMessage = result.message ?: "Task failed without message"
+                  
+                  // If task has children, execute them after the task
+                  val childResults = if (currentTask.children().isNotEmpty()) {
+                    val children = dependencyResolver.resolveChildren(currentTask, taskRegistry)
+                    children.map { child ->
+                      eventPublisher.publishEvent(
+                          taskStartedEvent(
+                              projectName,
+                              executionId,
+                              child.id,
+                              message = "Starting child task: ${child.id} (parent: ${currentTask.id})",
+                              subProject = parentProject))
+                      val childResult = child.execute(environment, projectContext, args)
+                      if (childResult.success) {
+                        eventPublisher.publishEvent(
+                            taskCompletedEvent(
+                                projectName,
+                                executionId,
+                                child.id,
+                                message = childResult.message ?: "Child task ${child.id} completed",
+                                subProject = parentProject))
+                      } else {
+                        eventPublisher.publishEvent(
+                            taskFailedEvent(
+                                projectName,
+                                executionId,
+                                child.id,
+                                message = childResult.message ?: "Child task ${child.id} failed",
+                                errorDetails = childResult.message ?: "",
+                                parentProject = parentProject))
+                      }
+                      taskCache.store(child.id, childResult)
+                      childResult
+                    }
+                  } else {
+                    emptyList()
+                  }
+                  
+                  // Combine parent result with child results
+                  val finalResult = if (childResults.isNotEmpty()) {
+                    val allSuccess = result.success && childResults.all { it.success }
+                    val combinedResults = listOf(result) + childResults
+                    val failedCount = combinedResults.count { !it.success }
+                    if (allSuccess) {
+                      TaskResult.success(
+                        result.message ?: "Task ${currentTask.id} and ${childResults.size} children completed",
+                        combinedResults
+                      )
+                    } else {
+                      val failureMsg = if (!result.success && childResults.any { !it.success }) {
+                        "Task ${currentTask.id} failed and $failedCount children failed"
+                      } else if (!result.success) {
+                        "Task ${currentTask.id} failed (children: ${childResults.size})"
+                      } else {
+                        "$failedCount of ${childResults.size} children failed for task ${currentTask.id}"
+                      }
+                      TaskResult.failure(failureMsg, combinedResults)
+                    }
+                  } else {
+                    result
+                  }
+                  
+                  logger.debug("Executed task '${currentTask.id}' with result: $finalResult")
+                  if (!finalResult.success) {
+                    val errorMessage = finalResult.message ?: "Task failed without message"
                     logger.error(
                         "Exception during execution of task '${currentTask.id}' in project '$projectName': $errorMessage")
                     eventPublisher.publishEvent(
@@ -139,11 +202,11 @@ class TaskExecutor(
                             projectName,
                             executionId,
                             currentTask.id,
-                            message = result.message ?: "Task ${currentTask.id} completed successfully",
+                            message = finalResult.message ?: "Task ${currentTask.id} completed successfully",
                             subProject = parentProject))
                   }
-                  taskCache.store(currentTask.id, result)
-                  return@map result
+                  taskCache.store(currentTask.id, finalResult)
+                  return@map finalResult
                 } catch (e: Exception) {
                   val errorMessage = e.message ?: "Unknown error"
                   val stackTrace = e.stackTraceToString()
