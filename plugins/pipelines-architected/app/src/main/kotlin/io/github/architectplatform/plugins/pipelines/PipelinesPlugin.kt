@@ -249,29 +249,40 @@ class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
 
     /**
      * Resolves a workflow, merging with template if specified.
+     * Logs warnings when template loading fails.
      */
     private fun resolveWorkflow(workflow: WorkflowDefinition, projectContext: ProjectContext): WorkflowDefinition {
         val extendsTemplate = workflow.extends ?: return workflow
 
         // Try to load template from .architect/pipelines
         val templateFile = File(projectContext.dir.toFile(), ".architect/pipelines/$extendsTemplate.yml")
-        if (!templateFile.exists()) {
-            // Try to load from embedded resources
+        if (templateFile.exists()) {
             try {
-                val content = this.javaClass.classLoader.getResourceAsStream(
-                    "workflows/templates/$extendsTemplate.yml"
-                )?.bufferedReader()?.use { it.readText() }
-                    ?: return workflow
-
-                val template = yamlMapper.readValue(content, WorkflowDefinition::class.java)
+                val template = yamlMapper.readValue(templateFile, WorkflowDefinition::class.java)
                 return mergeWorkflows(template, workflow)
             } catch (e: Exception) {
+                System.err.println("Warning: Failed to parse template file '$extendsTemplate.yml': ${e.message}")
                 return workflow
             }
         }
 
-        val template = yamlMapper.readValue(templateFile, WorkflowDefinition::class.java)
-        return mergeWorkflows(template, workflow)
+        // Try to load from embedded resources
+        try {
+            val content = this.javaClass.classLoader.getResourceAsStream(
+                "workflows/templates/$extendsTemplate.yml"
+            )?.bufferedReader()?.use { it.readText() }
+
+            if (content == null) {
+                System.err.println("Warning: Template '$extendsTemplate' not found in .architect/pipelines/ or embedded resources")
+                return workflow
+            }
+
+            val template = yamlMapper.readValue(content, WorkflowDefinition::class.java)
+            return mergeWorkflows(template, workflow)
+        } catch (e: Exception) {
+            System.err.println("Warning: Failed to load template '$extendsTemplate': ${e.message}")
+            return workflow
+        }
     }
 
     /**
@@ -287,29 +298,36 @@ class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
 
     /**
      * Executes workflow steps in dependency order.
+     * Uses topological sorting to ensure dependencies are met.
      */
     private fun executeWorkflowSteps(
         workflow: WorkflowDefinition,
         environment: Environment,
         projectContext: ProjectContext
     ): WorkflowExecutionResult {
+        // Sort steps by dependencies using topological sort
+        val sortedSteps = try {
+            topologicalSort(workflow.steps)
+        } catch (e: IllegalArgumentException) {
+            return WorkflowExecutionResult(
+                workflowName = workflow.name,
+                success = false,
+                stepResults = listOf(
+                    StepExecutionResult(
+                        stepName = "workflow",
+                        success = false,
+                        message = "Dependency cycle detected: ${e.message}"
+                    )
+                ),
+                message = "Failed to resolve step dependencies"
+            )
+        }
+
         val stepResults = mutableListOf<StepExecutionResult>()
         val executedSteps = mutableSetOf<String>()
         val failedSteps = mutableSetOf<String>()
 
-        for (step in workflow.steps) {
-            // Check dependencies
-            val missingDeps = step.dependsOn.filter { it !in executedSteps }
-            if (missingDeps.isNotEmpty()) {
-                stepResults.add(StepExecutionResult(
-                    stepName = step.name,
-                    success = false,
-                    message = "Dependencies not met: ${missingDeps.joinToString(", ")}",
-                    skipped = true
-                ))
-                continue
-            }
-
+        for (step in sortedSteps) {
             // Check if dependencies failed
             val failedDeps = step.dependsOn.filter { it in failedSteps }
             if (failedDeps.isNotEmpty() && !step.continueOnError) {
@@ -351,6 +369,45 @@ class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
             message = if (overallSuccess) "All steps completed successfully" 
                      else "Some steps failed: ${failedSteps.joinToString(", ")}"
         )
+    }
+
+    /**
+     * Performs topological sort on workflow steps based on dependencies.
+     * Throws IllegalArgumentException if a cycle is detected.
+     */
+    private fun topologicalSort(steps: List<WorkflowStep>): List<WorkflowStep> {
+        val stepMap = steps.associateBy { it.name }
+        val visited = mutableSetOf<String>()
+        val visiting = mutableSetOf<String>()
+        val sorted = mutableListOf<WorkflowStep>()
+
+        fun visit(stepName: String) {
+            if (stepName in visited) return
+            if (stepName in visiting) {
+                throw IllegalArgumentException("Cycle detected at step '$stepName'")
+            }
+
+            val step = stepMap[stepName] ?: throw IllegalArgumentException("Unknown step dependency: $stepName")
+            visiting.add(stepName)
+
+            // Visit dependencies first
+            for (dep in step.dependsOn) {
+                visit(dep)
+            }
+
+            visiting.remove(stepName)
+            visited.add(stepName)
+            sorted.add(step)
+        }
+
+        // Visit all steps
+        for (step in steps) {
+            if (step.name !in visited) {
+                visit(step.name)
+            }
+        }
+
+        return sorted
     }
 
     /**
@@ -403,29 +460,45 @@ class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
     /**
      * Evaluates a simple condition expression.
      * Supports basic environment variable checks.
+     * Returns false if condition cannot be parsed to ensure safety.
+     * 
+     * Supported formats:
+     * - "VAR == value": Check if variable equals value
+     * - "VAR != value": Check if variable doesn't equal value
+     * - "VAR": Check if variable exists
      */
     private fun evaluateCondition(condition: String, env: Map<String, String>): Boolean {
-        // Simple implementation: check if environment variable exists and equals value
-        // Format: "ENV_VAR == value" or "ENV_VAR != value" or just "ENV_VAR" (exists check)
         val trimmed = condition.trim()
         
+        // Check for equality comparison
         if (trimmed.contains("==")) {
-            val parts = trimmed.split("==").map { it.trim() }
-            if (parts.size == 2) {
-                val envValue = env[parts[0]] ?: System.getenv(parts[0])
-                return envValue == parts[1]
+            val parts = trimmed.split("==", limit = 2).map { it.trim() }
+            if (parts.size != 2) {
+                System.err.println("Warning: Invalid condition format '$condition', expected 'VAR == value'")
+                return false
             }
-        } else if (trimmed.contains("!=")) {
-            val parts = trimmed.split("!=").map { it.trim() }
-            if (parts.size == 2) {
-                val envValue = env[parts[0]] ?: System.getenv(parts[0])
-                return envValue != parts[1]
+            val envValue = env[parts[0]] ?: System.getenv(parts[0])
+            return envValue == parts[1]
+        }
+        
+        // Check for inequality comparison
+        if (trimmed.contains("!=")) {
+            val parts = trimmed.split("!=", limit = 2).map { it.trim() }
+            if (parts.size != 2) {
+                System.err.println("Warning: Invalid condition format '$condition', expected 'VAR != value'")
+                return false
             }
-        } else {
-            // Just check if variable exists
+            val envValue = env[parts[0]] ?: System.getenv(parts[0])
+            return envValue != parts[1]
+        }
+        
+        // Check if variable exists (no operator)
+        if (trimmed.matches(Regex("[A-Z_][A-Z0-9_]*"))) {
             return env.containsKey(trimmed) || System.getenv(trimmed) != null
         }
         
-        return true // Default to true if condition can't be parsed
+        // Invalid condition format
+        System.err.println("Warning: Invalid condition format '$condition'. Supported formats: 'VAR == value', 'VAR != value', or 'VAR' (existence check)")
+        return false
     }
 }
