@@ -1,9 +1,5 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import Header from './components/Header'
-import StatsCards from './components/StatsCards'
-import EnginesTable from './components/EnginesTable'
-import ExecutionsTable from './components/ExecutionsTable'
 
 const API_BASE_URL = 'http://localhost:8080/api'
 const REFRESH_INTERVAL = 5000
@@ -73,8 +69,7 @@ function App() {
 
   return (
     <div className="app">
-      <Header />
-      
+
       <div className="container">
         {error && (
           <div className="error-banner">
@@ -83,9 +78,6 @@ function App() {
           </div>
         )}
 
-        <StatsCards stats={stats} loading={loading} />
-        <EnginesTable engines={engines} loading={loading} />
-        <ExecutionsTable executions={executions.slice(0, 20)} loading={loading} />
       </div>
     </div>
   )

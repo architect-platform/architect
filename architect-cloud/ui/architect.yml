@@ -5,5 +5,5 @@ project:
 plugins:
   - name: github-architected
     repo: architect-platform/architect
-#  - name: javascript-architected
-#    repo: architect-platform/architect
+  - name: javascript-architected
+    repo: architect-platform/architect
