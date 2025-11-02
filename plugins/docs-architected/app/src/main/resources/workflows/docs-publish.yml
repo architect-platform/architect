@@ -42,7 +42,7 @@ jobs:
 
       - name: Install MkDocs dependencies
         run: |
-          pip install mkdocs==1.5.3 mkdocs-material==9.5.3
+          pip install mkdocs=={{mkdocsVersion}} mkdocs-material=={{mkdocsMaterialVersion}}
         if: ${{ '{{framework}}' == 'mkdocs' }}
 
       - name: Install Node dependencies

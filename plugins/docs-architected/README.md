@@ -34,6 +34,8 @@ docs:
     outputDir: "site"
     configFile: ""  # Optional custom config file
     installDeps: true
+    mkdocsVersion: "1.5.3"  # MkDocs version (configurable for security updates)
+    mkdocsMaterialVersion: "9.5.3"  # Material theme version
 ```
 
 ### 2. GitHub Pages Publishing

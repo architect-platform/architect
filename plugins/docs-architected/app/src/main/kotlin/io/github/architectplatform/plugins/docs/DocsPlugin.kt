@@ -185,7 +185,9 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
                       .replace("{{framework}}", context.build.framework)
                       .replace("{{sourceDir}}", context.build.sourceDir)
                       .replace("{{outputDir}}", context.build.outputDir)
-                      .replace("{{branch}}", context.publish.branch))
+                      .replace("{{branch}}", context.publish.branch)
+                      .replace("{{mkdocsVersion}}", context.build.mkdocsVersion)
+                      .replace("{{mkdocsMaterialVersion}}", context.build.mkdocsMaterialVersion))
               results.add(TaskResult.success("Created GitHub Actions workflow for documentation"))
             }
       } catch (e: Exception) {
@@ -267,7 +269,9 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
       try {
         when (context.build.framework) {
           "mkdocs" -> {
-            commandExecutor.execute("pip3 install mkdocs==1.5.3 mkdocs-material==9.5.3", gitDir.toString())
+            val mkdocsVer = context.build.mkdocsVersion
+            val materialVer = context.build.mkdocsMaterialVersion
+            commandExecutor.execute("pip3 install mkdocs==$mkdocsVer mkdocs-material==$materialVer", gitDir.toString())
             results.add(TaskResult.success("Installed MkDocs dependencies"))
           }
           "docusaurus" -> {
@@ -296,7 +300,7 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
       when (context.build.framework) {
         "mkdocs" -> {
           // Sanitize output directory to prevent command injection
-          val sanitizedOutputDir = context.build.outputDir.replace(Regex("[^a-zA-Z0-9/_-]"), "")
+          val sanitizedOutputDir = context.build.outputDir.replace(Regex("[^a-zA-Z0-9/_.-]"), "")
           val command = if (sanitizedOutputDir.isNotEmpty()) {
             "mkdocs build -d $sanitizedOutputDir"
           } else {

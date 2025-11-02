@@ -17,6 +17,8 @@ class BuildContextTest {
     assertEquals("site", context.outputDir)
     assertEquals("", context.configFile)
     assertTrue(context.installDeps)
+    assertEquals("1.5.3", context.mkdocsVersion)
+    assertEquals("9.5.3", context.mkdocsMaterialVersion)
   }
 
   @Test
@@ -28,7 +30,9 @@ class BuildContextTest {
             sourceDir = "documentation",
             outputDir = "build",
             configFile = "custom.yml",
-            installDeps = false)
+            installDeps = false,
+            mkdocsVersion = "1.6.0",
+            mkdocsMaterialVersion = "9.6.0")
 
     assertFalse(context.enabled)
     assertEquals("docusaurus", context.framework)
@@ -36,6 +40,8 @@ class BuildContextTest {
     assertEquals("build", context.outputDir)
     assertEquals("custom.yml", context.configFile)
     assertFalse(context.installDeps)
+    assertEquals("1.6.0", context.mkdocsVersion)
+    assertEquals("9.6.0", context.mkdocsMaterialVersion)
   }
 
   @Test
@@ -57,5 +63,16 @@ class BuildContextTest {
     assertEquals("docusaurus", docusaurus.framework)
     assertEquals("vuepress", vuepress.framework)
     assertEquals("manual", manual.framework)
+  }
+
+  @Test
+  fun `BuildContext should allow version customization`() {
+    val context = BuildContext(
+        mkdocsVersion = "1.6.0",
+        mkdocsMaterialVersion = "10.0.0"
+    )
+
+    assertEquals("1.6.0", context.mkdocsVersion)
+    assertEquals("10.0.0", context.mkdocsMaterialVersion)
   }
 }
