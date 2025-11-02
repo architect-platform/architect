@@ -1,0 +1,4 @@
+github:
+  publish:
+    enabled: true
+    registry: true

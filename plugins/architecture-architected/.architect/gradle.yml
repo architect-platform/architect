@@ -1,0 +1,3 @@
+gradle:
+  test: true
+  build: true
