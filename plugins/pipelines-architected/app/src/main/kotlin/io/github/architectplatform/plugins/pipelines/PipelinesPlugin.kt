@@ -13,8 +13,6 @@ import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Path
 
 /**
  * Architect plugin for managing and executing pipelines of Architect tasks.
@@ -493,7 +491,8 @@ class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
         }
         
         // Check if variable exists (no operator)
-        if (trimmed.matches(Regex("[A-Z_][A-Z0-9_]*"))) {
+        // Allow alphanumeric names and underscores (both uppercase and lowercase)
+        if (trimmed.matches(Regex("[A-Za-z_][A-Za-z0-9_]*"))) {
             return env.containsKey(trimmed) || System.getenv(trimmed) != null
         }
         
