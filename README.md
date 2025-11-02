@@ -1,4 +1,4 @@
-# Architect Platform
+# Architect
 
 A powerful, plugin-based task execution framework for automating project workflows, CI/CD pipelines, and development operations.
 
