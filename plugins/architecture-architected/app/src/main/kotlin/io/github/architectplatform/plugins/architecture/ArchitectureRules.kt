@@ -150,9 +150,7 @@ class ArchitectureRules(private val context: ArchitectureContext) {
             "dist/",
             "out/",
             ".gradle/",
-            "bin/",
-            "test/",
-            "tests/"
+            "bin/"
         )
         
         return excludePatterns.any { relativePath.contains(it) }
@@ -357,20 +355,31 @@ class ArchitectureRules(private val context: ArchitectureContext) {
      * Validates a custom rule.
      *
      * Delegates to a custom validator if specified.
+     * Note: Custom rule validation requires implementing a custom validator class
+     * and is currently not supported. Users should use built-in rule types instead.
      *
      * @param rule The custom rule to validate
      * @param sourceFiles List of source files to check
      * @param projectDir The project root directory
-     * @return List of violations found
+     * @return List of violations found (currently always empty as custom validators are not yet implemented)
      */
     private fun validateCustomRule(
         rule: ArchitectureRule,
         sourceFiles: List<Path>,
         projectDir: Path
     ): List<Violation> {
-        // Custom rules require a validator class
-        // This is a placeholder for extensibility
-        // In a real implementation, we would load and execute the validator class
+        // Custom rules require a validator class implementation
+        // This functionality is planned for future releases
+        // For now, return a warning that custom rules are not yet supported
+        if (rule.validator != null) {
+            return listOf(
+                Violation(
+                    rule = rule,
+                    file = projectDir,
+                    message = "Custom rule validators are not yet implemented. Rule '${rule.id}' will be skipped."
+                )
+            )
+        }
         return emptyList()
     }
 
@@ -478,6 +487,22 @@ class ArchitectureRules(private val context: ArchitectureContext) {
     }
 
     /**
+     * Escapes a string for safe inclusion in JSON.
+     * Handles quotes, backslashes, and control characters.
+     *
+     * @param str The string to escape
+     * @return JSON-safe escaped string
+     */
+    private fun escapeJsonString(str: String): String {
+        return str
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t")
+    }
+
+    /**
      * Formats the validation result as a JSON report.
      *
      * @param result The validation result
@@ -486,15 +511,16 @@ class ArchitectureRules(private val context: ArchitectureContext) {
     fun formatJsonReport(result: ValidationResult): String {
         val violations = result.violations.map { v ->
             mapOf(
-                "rule" to v.rule.id,
-                "severity" to v.rule.severity,
-                "file" to v.file.toString(),
+                "rule" to escapeJsonString(v.rule.id),
+                "severity" to escapeJsonString(v.rule.severity),
+                "file" to escapeJsonString(v.file.toString()),
                 "line" to v.line,
-                "message" to v.message
+                "message" to escapeJsonString(v.message)
             )
         }
         
-        // Simple JSON formatting (in production, use a JSON library)
+        // Simple JSON formatting with proper escaping
+        // Note: In production, consider using a JSON library like Jackson or kotlinx.serialization
         val json = StringBuilder()
         json.appendLine("{")
         json.appendLine("  \"summary\": {")
