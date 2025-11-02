@@ -36,7 +36,22 @@ docs:
     installDeps: true
     mkdocsVersion: "1.5.3"  # MkDocs version (configurable for security updates)
     mkdocsMaterialVersion: "9.5.3"  # Material theme version
+    # Template configuration - all fields are configurable
+    siteName: "My Project Documentation"
+    siteDescription: "Project documentation"
+    siteAuthor: "Your Name"
+    repoUrl: "https://github.com/username/repo"  # Optional
+    repoName: "username/repo"  # Optional (used for links)
+    primaryColor: "indigo"  # Theme primary color
+    accentColor: "indigo"  # Theme accent color
 ```
+
+**Template Placeholders:**
+All configuration files (mkdocs.yml, docusaurus.config.js, vuepress config.js) support template placeholders that are automatically replaced with your configuration values:
+- Site information: `siteName`, `siteDescription`, `siteAuthor`
+- Repository: `repoUrl`, `repoName`, `organizationName`, `projectName`
+- Theme: `primaryColor`, `accentColor`
+- Conditional sections for optional fields (e.g., `{{#repoUrl}}...{{/repoUrl}}`)
 
 ### 2. GitHub Pages Publishing
 
@@ -257,6 +272,60 @@ docs:
     githubPages: true
 ```
 
+### Complete Configuration Example
+
+```yaml
+project:
+  name: awesome-project
+  description: "An awesome open-source project"
+
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    sourceDir: "docs"
+    outputDir: "site"
+    installDeps: true
+    # Version configuration
+    mkdocsVersion: "1.5.3"
+    mkdocsMaterialVersion: "9.5.3"
+    # Site configuration (used in templates)
+    siteName: "Awesome Project Documentation"
+    siteDescription: "Complete guide for the awesome project"
+    siteAuthor: "Awesome Team"
+    repoUrl: "https://github.com/awesome/project"
+    repoName: "awesome/project"
+    primaryColor: "blue"
+    accentColor: "cyan"
+  publish:
+    enabled: true
+    githubPages: true
+    branch: "gh-pages"
+    domain: "docs.awesome-project.com"
+    cname: true
+```
+
+### Minimal Configuration
+
+```yaml
+docs:
+  build:
+    framework: "mkdocs"
+    siteName: "My Docs"
+  publish:
+    enabled: true
+```
+
+### Disable Publishing (Build Only)
+
+```yaml
+docs:
+  build:
+    framework: "mkdocs"
+  publish:
+    enabled: false
+```
+
 ### Custom Domain Configuration
 
 ```yaml
@@ -273,9 +342,9 @@ docs:
 The plugin includes embedded resources:
 
 - `workflows/docs-publish.yml`: GitHub Actions workflow template
-- `configs/mkdocs.yml`: MkDocs configuration template
-- `configs/docusaurus.config.js`: Docusaurus configuration template
-- `configs/vuepress.config.js`: VuePress configuration template
+- `configs/mkdocs.yml`: MkDocs configuration template (with placeholders)
+- `configs/docusaurus.config.js`: Docusaurus configuration template (with placeholders)
+- `configs/vuepress.config.js`: VuePress configuration template (with placeholders)
 - `scripts/publish-ghpages.sh`: GitHub Pages publishing script
 
 ## Workflow Integration
