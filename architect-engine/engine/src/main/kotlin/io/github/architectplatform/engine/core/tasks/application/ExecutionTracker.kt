@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap
 class ExecutionTracker {
     
     private val executions = ConcurrentHashMap<ExecutionId, ExecutionStatusDTO>()
+    private val UNKNOWN_TASK = "unknown"
     
     /**
      * Listen to execution events and update tracking state.
@@ -36,56 +37,42 @@ class ExecutionTracker {
                 executions[executionId] = ExecutionStatusDTO(
                     executionId = executionId,
                     projectName = projectName,
-                    taskId = "unknown", // Will be updated with task events
+                    taskId = UNKNOWN_TASK, // Will be updated with task events
                     status = ExecutionStatus.RUNNING,
                     startTime = System.currentTimeMillis()
                 )
             }
             "task.started" -> {
-                val current = executions[executionId]
-                if (current != null) {
-                    executions[executionId] = current.copy(
-                        totalTasks = current.totalTasks + 1
-                    )
+                executions.computeIfPresent(executionId) { _, current ->
+                    current.copy(totalTasks = current.totalTasks + 1)
                 }
             }
             "task.completed" -> {
-                val current = executions[executionId]
-                if (current != null) {
-                    executions[executionId] = current.copy(
-                        completedTasks = current.completedTasks + 1
-                    )
+                executions.computeIfPresent(executionId) { _, current ->
+                    current.copy(completedTasks = current.completedTasks + 1)
                 }
             }
             "task.failed" -> {
-                val current = executions[executionId]
-                if (current != null) {
-                    executions[executionId] = current.copy(
-                        failedTasks = current.failedTasks + 1
-                    )
+                executions.computeIfPresent(executionId) { _, current ->
+                    current.copy(failedTasks = current.failedTasks + 1)
                 }
             }
             "task.skipped" -> {
-                val current = executions[executionId]
-                if (current != null) {
-                    executions[executionId] = current.copy(
-                        skippedTasks = current.skippedTasks + 1
-                    )
+                executions.computeIfPresent(executionId) { _, current ->
+                    current.copy(skippedTasks = current.skippedTasks + 1)
                 }
             }
             "execution.completed" -> {
-                val current = executions[executionId]
-                if (current != null) {
-                    executions[executionId] = current.copy(
+                executions.computeIfPresent(executionId) { _, current ->
+                    current.copy(
                         status = ExecutionStatus.COMPLETED,
                         endTime = System.currentTimeMillis()
                     )
                 }
             }
             "execution.failed" -> {
-                val current = executions[executionId]
-                if (current != null) {
-                    executions[executionId] = current.copy(
+                executions.computeIfPresent(executionId) { _, current ->
+                    current.copy(
                         status = ExecutionStatus.FAILED,
                         endTime = System.currentTimeMillis()
                     )

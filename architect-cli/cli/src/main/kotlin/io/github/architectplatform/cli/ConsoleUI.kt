@@ -40,6 +40,11 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
     const val DIM = "\u001B[2m"
   }
 
+  companion object {
+    private const val SUMMARY_BOX_WIDTH = 79
+    private const val SEPARATOR_WIDTH = 80
+  }
+
   private var currentProject: String? = null
   private var currentSubProject: String? = null
   private var currentTask: String? = null
@@ -98,7 +103,7 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
    * Print a separator line.
    */
   private fun printSeparator(char: String = "─", color: String = AnsiColors.DIM) {
-    println(colorize(char.repeat(80), color))
+    println(colorize(char.repeat(SEPARATOR_WIDTH), color))
   }
 
   /**
@@ -297,7 +302,7 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
    */
   private fun printSummary(success: Boolean) {
     println(colorize("╔═══════════════════════════════════════════════════════════════════════════════╗", AnsiColors.BOLD))
-    println(colorize("║", AnsiColors.BOLD) + colorize(" EXECUTION SUMMARY".padEnd(79), "${AnsiColors.BOLD}${AnsiColors.WHITE}") + colorize("║", AnsiColors.BOLD))
+    println(colorize("║", AnsiColors.BOLD) + colorize(" EXECUTION SUMMARY".padEnd(SUMMARY_BOX_WIDTH), "${AnsiColors.BOLD}${AnsiColors.WHITE}") + colorize("║", AnsiColors.BOLD))
     println(colorize("╠═══════════════════════════════════════════════════════════════════════════════╣", AnsiColors.BOLD))
     
     // Status

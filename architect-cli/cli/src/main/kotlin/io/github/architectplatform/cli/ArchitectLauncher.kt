@@ -102,15 +102,19 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
         val phasedTasks = tasksByPhase.filterKeys { it != null }
         val unphasedTasks = tasksByPhase[null] ?: emptyList()
         
+        // Constants for formatting
+        val descMaxWidth = 73
+        val lineWidth = 77
+        
         // Display phased tasks
         phasedTasks.entries.sortedBy { it.key }.forEach { (phase, phaseTasks) ->
           println("║                                                                               ║")
           println("║ Phase: ${phase?.padEnd(70) ?: ""}║")
           phaseTasks.forEach { task ->
-            val taskLine = "  • ${task.id}".padEnd(77)
+            val taskLine = "  • ${task.id}".padEnd(lineWidth)
             println("║${taskLine}║")
             if (task.description.isNotEmpty()) {
-              val descLine = "    ${task.description.take(73)}".padEnd(77)
+              val descLine = "    ${task.description.take(descMaxWidth)}".padEnd(lineWidth)
               println("║${descLine}║")
             }
           }
@@ -123,10 +127,10 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
             println("║ Other Tasks:                                                                  ║")
           }
           unphasedTasks.forEach { task ->
-            val taskLine = "  • ${task.id}".padEnd(77)
+            val taskLine = "  • ${task.id}".padEnd(lineWidth)
             println("║${taskLine}║")
             if (task.description.isNotEmpty()) {
-              val descLine = "    ${task.description.take(73)}".padEnd(77)
+              val descLine = "    ${task.description.take(descMaxWidth)}".padEnd(lineWidth)
               println("║${descLine}║")
             }
           }
