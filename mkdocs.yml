@@ -1,0 +1,60 @@
+site_name: Architect Platform Documentation
+site_description: Comprehensive documentation for the Architect Platform
+site_author: Architect Platform Team
+repo_url: https://github.com/architect-platform/architect
+repo_name: architect-platform/architect
+
+theme:
+  name: material
+  palette:
+    primary: indigo
+    accent: purple
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+
+nav:
+  - Home: index.md
+  - Architect API: '!include architect-api/docs/mkdocs.yml'
+  - Architect CLI: '!include architect-cli/docs/mkdocs.yml'
+  - Architect Engine: '!include architect-engine/docs/mkdocs.yml'
+  - Architect Cloud: '!include architect-cloud/docs/mkdocs.yml'
+  - Plugins:
+      - Docs Plugin: '!include plugins/docs-architected/docs/mkdocs.yml'
+      - Git Plugin: '!include plugins/git-architected/docs/mkdocs.yml'
+      - GitHub Plugin: '!include plugins/github-architected/docs/mkdocs.yml'
+      - Gradle Plugin: '!include plugins/gradle-architected/docs/mkdocs.yml'
+      - JavaScript Plugin: '!include plugins/javascript-architected/docs/mkdocs.yml'
+      - Pipelines Plugin: '!include plugins/pipelines-architected/docs/mkdocs.yml'
+      - Scripts Plugin: '!include plugins/scripts-architected/docs/mkdocs.yml'
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
+  - attr_list
+  - md_in_html
+
+plugins:
+  - search
+  - monorepo
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/architect-platform/architect

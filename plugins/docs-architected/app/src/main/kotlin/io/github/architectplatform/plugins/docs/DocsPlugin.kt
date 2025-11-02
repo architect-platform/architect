@@ -143,6 +143,24 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
           .replace("{{projectName}}", "repo")
     }
 
+    // Handle component list for monorepo configuration
+    if (context.build.components.isNotEmpty()) {
+      val componentsPattern = Regex("""(?s)\{\{#components}}(.*?)\{\{/components}}""")
+      result = componentsPattern.replace(result) { matchResult ->
+        val componentTemplate = matchResult.groupValues[1]
+        context.build.components.joinToString("\n") { component ->
+          componentTemplate
+              .replace("{{name}}", component.name)
+              .replace("{{path}}", component.path)
+              .replace("{{docsPath}}", component.docsPath)
+        }
+      }
+    } else {
+      // Remove components sections if no components are configured
+      val componentsPattern = Regex("""(?s)\{\{#components}}.*?\{\{/components}}""")
+      result = componentsPattern.replace(result, "")
+    }
+
     return result
   }
 
@@ -287,7 +305,8 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
                       .replace("{{outputDir}}", sanitizePath(context.build.outputDir))
                       .replace("{{branch}}", sanitizeBranch(context.publish.branch))
                       .replace("{{mkdocsVersion}}", sanitizeVersion(context.build.mkdocsVersion))
-                      .replace("{{mkdocsMaterialVersion}}", sanitizeVersion(context.build.mkdocsMaterialVersion)))
+                      .replace("{{mkdocsMaterialVersion}}", sanitizeVersion(context.build.mkdocsMaterialVersion))
+                      .replace("{{mkdocsMonorepoVersion}}", sanitizeVersion(context.build.mkdocsMonorepoVersion)))
               results.add(TaskResult.success("Created GitHub Actions workflow for documentation"))
             }
       } catch (e: Exception) {
@@ -302,13 +321,61 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
         "mkdocs" -> {
           val configFile = File(gitDir, "mkdocs.yml")
           if (!configFile.exists()) {
+            // Choose the appropriate template based on monorepo configuration
+            val templateFile = if (context.build.monorepo) {
+              "configs/mkdocs-monorepo.yml"
+            } else {
+              "configs/mkdocs.yml"
+            }
+            
             resourceExtractor
-                .getResourceFileContent(this.javaClass.classLoader, "configs/mkdocs.yml")
+                .getResourceFileContent(this.javaClass.classLoader, templateFile)
                 .let { content -> 
                   val processedContent = replaceTemplatePlaceholders(content)
                   configFile.writeText(processedContent) 
                 }
-            results.add(TaskResult.success("Created MkDocs configuration file"))
+            results.add(TaskResult.success("Created MkDocs configuration file${if (context.build.monorepo) " (monorepo mode)" else ""}"))
+          }
+          
+          // If monorepo mode, create mkdocs.yml in each component directory
+          if (context.build.monorepo && context.build.components.isNotEmpty()) {
+            for (component in context.build.components) {
+              val componentDir = File(gitDir, component.path)
+              val componentDocsDir = File(componentDir, component.docsPath)
+              
+              // Create component docs directory if it doesn't exist
+              if (!componentDocsDir.exists()) {
+                componentDocsDir.mkdirs()
+                results.add(TaskResult.success("Created docs directory for ${component.name}"))
+              }
+              
+              // Create component mkdocs.yml
+              val componentConfigFile = File(componentDocsDir, "mkdocs.yml")
+              if (!componentConfigFile.exists()) {
+                resourceExtractor
+                    .getResourceFileContent(this.javaClass.classLoader, "configs/mkdocs-component.yml")
+                    .let { content ->
+                      val componentContent = content.replace("{{siteName}}", component.name)
+                      componentConfigFile.writeText(componentContent)
+                    }
+                results.add(TaskResult.success("Created mkdocs.yml for ${component.name}"))
+              }
+              
+              // Create initial index.md if it doesn't exist
+              val componentIndexFile = File(componentDocsDir, "index.md")
+              if (!componentIndexFile.exists()) {
+                componentIndexFile.writeText("""
+                  |# ${component.name}
+                  |
+                  |Documentation for the ${component.name} component.
+                  |
+                  |## Overview
+                  |
+                  |Add your component documentation here.
+                  |""".trimMargin())
+                results.add(TaskResult.success("Created index.md for ${component.name}"))
+              }
+            }
           }
         }
         "docusaurus" -> {
@@ -380,8 +447,19 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
           "mkdocs" -> {
             val mkdocsVer = sanitizeVersion(context.build.mkdocsVersion)
             val materialVer = sanitizeVersion(context.build.mkdocsMaterialVersion)
-            commandExecutor.execute("pip3 install mkdocs==$mkdocsVer mkdocs-material==$materialVer", gitDir.toString())
-            results.add(TaskResult.success("Installed MkDocs dependencies"))
+            val monorepoVer = sanitizeVersion(context.build.mkdocsMonorepoVersion)
+            
+            // Build the install command with monorepo plugin if needed
+            val packages = mutableListOf(
+              "mkdocs==$mkdocsVer",
+              "mkdocs-material==$materialVer"
+            )
+            if (context.build.monorepo) {
+              packages.add("mkdocs-monorepo-plugin==$monorepoVer")
+            }
+            
+            commandExecutor.execute("pip3 install ${packages.joinToString(" ")}", gitDir.toString())
+            results.add(TaskResult.success("Installed MkDocs dependencies${if (context.build.monorepo) " (with monorepo support)" else ""}"))
           }
           "docusaurus" -> {
             if (File(gitDir, "package.json").exists()) {

@@ -1,12 +1,13 @@
 # Docs Architected Plugin
 
-An Architect plugin that provides comprehensive documentation management capabilities, including building and publishing to GitHub Pages with support for multiple documentation frameworks.
+An Architect plugin that provides comprehensive documentation management capabilities, including building and publishing to GitHub Pages with support for multiple documentation frameworks and **monorepo/nested documentation structures**.
 
 ## Overview
 
 The Docs Architected plugin integrates with the Architect platform to provide:
 - Documentation building from Markdown sources
 - Support for multiple documentation frameworks (MkDocs, Docusaurus, VuePress)
+- **Monorepo support for nested component documentation**
 - Automated publishing to GitHub Pages
 - GitHub Actions workflow generation
 - Standardized documentation structure
@@ -36,6 +37,7 @@ docs:
     installDeps: true
     mkdocsVersion: "1.5.3"  # MkDocs version (configurable for security updates)
     mkdocsMaterialVersion: "9.5.3"  # Material theme version
+    mkdocsMonorepoVersion: "1.0.5"  # Monorepo plugin version (for nested docs)
     # Template configuration - all fields are configurable
     siteName: "My Project Documentation"
     siteDescription: "Project documentation"
@@ -46,14 +48,38 @@ docs:
     accentColor: "indigo"  # Theme accent color
 ```
 
-**Template Placeholders:**
-All configuration files (mkdocs.yml, docusaurus.config.js, vuepress config.js) support template placeholders that are automatically replaced with your configuration values:
-- Site information: `siteName`, `siteDescription`, `siteAuthor`
-- Repository: `repoUrl`, `repoName`, `organizationName`, `projectName`
-- Theme: `primaryColor`, `accentColor`
-- Conditional sections for optional fields (e.g., `{{#repoUrl}}...{{/repoUrl}}`)
+### 2. Monorepo/Nested Documentation Support ⭐ NEW
 
-### 2. GitHub Pages Publishing
+The plugin now supports building documentation for monorepos with multiple components:
+
+```yaml
+docs:
+  build:
+    framework: "mkdocs"
+    monorepo: true  # Enable monorepo mode
+    components:
+      - name: "Component A"
+        path: "component-a"
+        docsPath: "docs"
+      - name: "Component B"
+        path: "component-b"
+        docsPath: "docs"
+      - name: "Shared Library"
+        path: "libs/shared"
+        docsPath: "documentation"
+  publish:
+    enabled: true
+    githubPages: true
+```
+
+**How it works:**
+- Main documentation in root `docs/` folder
+- Each component has its own `docs/` folder with `mkdocs.yml`
+- Uses `mkdocs-monorepo-plugin` to aggregate all docs
+- Components accessible via URL paths (e.g., `/component-a/`, `/component-b/`)
+- All published together to GitHub Pages
+
+### 3. GitHub Pages Publishing
 
 Automatically publish your documentation to GitHub Pages:
 

@@ -1,0 +1,55 @@
+site_name: {{siteName}}
+site_description: {{siteDescription}}
+site_author: {{siteAuthor}}
+{{#repoUrl}}
+repo_url: {{repoUrl}}
+repo_name: {{repoName}}
+{{/repoUrl}}
+
+theme:
+  name: material
+  palette:
+    primary: {{primaryColor}}
+    accent: {{accentColor}}
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+
+nav:
+  - Home: index.md
+  {{#components}}
+  - {{name}}: '!include {{path}}/{{docsPath}}/mkdocs.yml'
+  {{/components}}
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
+  - attr_list
+  - md_in_html
+
+plugins:
+  - search
+  - monorepo
+
+{{#repoUrl}}
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: {{repoUrl}}
+{{/repoUrl}}
