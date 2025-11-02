@@ -94,6 +94,59 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
   }
 
   /**
+   * Replaces template placeholders in configuration files with actual values.
+   *
+   * @param template The template content with placeholders
+   * @return The template with all placeholders replaced
+   */
+  private fun replaceTemplatePlaceholders(template: String): String {
+    var result = template
+        .replace("{{siteName}}", context.build.siteName)
+        .replace("{{siteDescription}}", context.build.siteDescription)
+        .replace("{{siteAuthor}}", context.build.siteAuthor)
+        .replace("{{primaryColor}}", context.build.primaryColor)
+        .replace("{{accentColor}}", context.build.accentColor)
+
+    // Handle optional repository URL and name
+    if (context.build.repoUrl.isNotEmpty()) {
+      result = result
+          .replace("{{repoUrl}}", context.build.repoUrl)
+          .replace("{{repoName}}", context.build.repoName.ifEmpty { "repository" })
+      
+      // Handle conditional sections with {{#repoUrl}}...{{/repoUrl}}
+      val repoUrlPattern = Regex("""(?s)\{\{#repoUrl}}(.*?)\{\{/repoUrl}}""")
+      result = repoUrlPattern.replace(result) { matchResult ->
+        matchResult.groupValues[1].trim()
+      }
+      
+      // Extract organization and project names from repo name
+      val repoParts = context.build.repoName.split("/")
+      if (repoParts.size == 2) {
+        result = result
+            .replace("{{organizationName}}", repoParts[0])
+            .replace("{{projectName}}", repoParts[1])
+      } else {
+        result = result
+            .replace("{{organizationName}}", "organization")
+            .replace("{{projectName}}", "project")
+      }
+    } else {
+      // Remove conditional sections if repoUrl is not provided
+      val repoUrlPattern = Regex("""(?s)\{\{#repoUrl}}.*?\{\{/repoUrl}}""")
+      result = repoUrlPattern.replace(result, "")
+      
+      // Provide fallback values
+      result = result
+          .replace("{{repoUrl}}", "https://github.com/username/repo")
+          .replace("{{repoName}}", "username/repo")
+          .replace("{{organizationName}}", "username")
+          .replace("{{projectName}}", "repo")
+    }
+
+    return result
+  }
+
+  /**
    * Registers documentation-related tasks with the task registry.
    *
    * Registered tasks:
@@ -250,7 +303,10 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
           if (!configFile.exists()) {
             resourceExtractor
                 .getResourceFileContent(this.javaClass.classLoader, "configs/mkdocs.yml")
-                .let { content -> configFile.writeText(content) }
+                .let { content -> 
+                  val processedContent = replaceTemplatePlaceholders(content)
+                  configFile.writeText(processedContent) 
+                }
             results.add(TaskResult.success("Created MkDocs configuration file"))
           }
         }
@@ -259,7 +315,10 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
           if (!configFile.exists()) {
             resourceExtractor
                 .getResourceFileContent(this.javaClass.classLoader, "configs/docusaurus.config.js")
-                .let { content -> configFile.writeText(content) }
+                .let { content -> 
+                  val processedContent = replaceTemplatePlaceholders(content)
+                  configFile.writeText(processedContent) 
+                }
             results.add(TaskResult.success("Created Docusaurus configuration file"))
           }
         }
@@ -272,7 +331,10 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
           if (!configFile.exists()) {
             resourceExtractor
                 .getResourceFileContent(this.javaClass.classLoader, "configs/vuepress.config.js")
-                .let { content -> configFile.writeText(content) }
+                .let { content -> 
+                  val processedContent = replaceTemplatePlaceholders(content)
+                  configFile.writeText(processedContent) 
+                }
             results.add(TaskResult.success("Created VuePress configuration file"))
           }
         }
@@ -322,13 +384,19 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
           }
           "docusaurus" -> {
             if (File(gitDir, "package.json").exists()) {
-              commandExecutor.execute("npm install", gitDir.toString())
+              // Use npm ci for reproducible builds in CI/CD environments
+              val packageLock = File(gitDir, "package-lock.json")
+              val command = if (packageLock.exists()) "npm ci" else "npm install"
+              commandExecutor.execute(command, gitDir.toString())
               results.add(TaskResult.success("Installed Docusaurus dependencies"))
             }
           }
           "vuepress" -> {
             if (File(gitDir, "package.json").exists()) {
-              commandExecutor.execute("npm install", gitDir.toString())
+              // Use npm ci for reproducible builds in CI/CD environments
+              val packageLock = File(gitDir, "package-lock.json")
+              val command = if (packageLock.exists()) "npm ci" else "npm install"
+              commandExecutor.execute(command, gitDir.toString())
               results.add(TaskResult.success("Installed VuePress dependencies"))
             }
           }

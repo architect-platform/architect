@@ -6,16 +6,16 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'My Project Documentation',
-  tagline: 'Documentation built with Docusaurus',
-  url: 'https://your-username.github.io',
+  title: '{{siteName}}',
+  tagline: '{{siteDescription}}',
+  url: '{{repoUrl}}',
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
 
-  organizationName: 'your-username',
-  projectName: 'your-repo',
+  organizationName: '{{organizationName}}',
+  projectName: '{{projectName}}',
 
   i18n: {
     defaultLocale: 'en',
@@ -29,11 +29,11 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/your-username/your-repo/tree/main/',
+          editUrl: '{{repoUrl}}/tree/main/',
         },
         blog: {
           showReadingTime: true,
-          editUrl: 'https://github.com/your-username/your-repo/tree/main/',
+          editUrl: '{{repoUrl}}/tree/main/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -46,7 +46,7 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'My Project',
+        title: '{{siteName}}',
         items: [
           {
             type: 'doc',
@@ -55,7 +55,7 @@ const config = {
             label: 'Documentation',
           },
           {
-            href: 'https://github.com/your-username/your-repo',
+            href: '{{repoUrl}}',
             label: 'GitHub',
             position: 'right',
           },
@@ -78,12 +78,12 @@ const config = {
             items: [
               {
                 label: 'GitHub',
-                href: 'https://github.com/your-username/your-repo',
+                href: '{{repoUrl}}',
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} My Project. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} {{siteAuthor}}. Built with Docusaurus.`,
       },
       prism: {
         theme: lightCodeTheme,

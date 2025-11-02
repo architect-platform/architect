@@ -1,12 +1,16 @@
-site_name: My Project Documentation
-site_description: Project documentation built with MkDocs
-site_author: Your Name
+site_name: {{siteName}}
+site_description: {{siteDescription}}
+site_author: {{siteAuthor}}
+{{#repoUrl}}
+repo_url: {{repoUrl}}
+repo_name: {{repoName}}
+{{/repoUrl}}
 
 theme:
   name: material
   palette:
-    primary: indigo
-    accent: indigo
+    primary: {{primaryColor}}
+    accent: {{accentColor}}
   features:
     - navigation.tabs
     - navigation.sections
@@ -30,7 +34,9 @@ markdown_extensions:
 plugins:
   - search
 
+{{#repoUrl}}
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/your-username/your-repo
+      link: {{repoUrl}}
+{{/repoUrl}}

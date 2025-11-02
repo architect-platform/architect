@@ -1,13 +1,13 @@
 module.exports = {
-  title: 'My Project Documentation',
-  description: 'Documentation built with VuePress',
+  title: '{{siteName}}',
+  description: '{{siteDescription}}',
   base: '/',
   
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide/' },
-      { text: 'GitHub', link: 'https://github.com/your-username/your-repo' }
+      { text: 'GitHub', link: '{{repoUrl}}' }
     ],
     
     sidebar: {
@@ -17,7 +17,7 @@ module.exports = {
       ]
     },
     
-    repo: 'your-username/your-repo',
+    repo: '{{repoName}}',
     repoLabel: 'GitHub',
     docsDir: 'docs',
     editLinks: true,
