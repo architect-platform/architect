@@ -40,7 +40,7 @@ object TaskEvents {
                 executionId = executionId,
                 taskId = taskId,
                 success = success,
-                executionEventType = ExecutionEventType.COMPLETED,
+                executionEventType = ExecutionEventType.TASK_COMPLETED,
                 message = message,
                 parentProject = subProject))
   }

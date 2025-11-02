@@ -21,5 +21,6 @@ enum class ExecutionEventType {
   COMPLETED,
   FAILED,
   SKIPPED,
-  OUTPUT
+  OUTPUT,
+  TASK_COMPLETED
 }
