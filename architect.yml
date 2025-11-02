@@ -10,7 +10,7 @@ plugins:
   - name: github-architected
     repo: architect-platform/architect
 
-# Documentation configuration with monorepo support
+# Documentation configuration with auto-discovery
 docs:
   build:
     enabled: true
@@ -18,9 +18,6 @@ docs:
     sourceDir: "docs"
     outputDir: "site"
     installDeps: true
-    mkdocsVersion: "1.5.3"
-    mkdocsMaterialVersion: "9.5.3"
-    mkdocsMonorepoVersion: "1.0.5"
     siteName: "Architect Platform Documentation"
     siteDescription: "Comprehensive documentation for the Architect Platform"
     siteAuthor: "Architect Platform Team"
@@ -28,41 +25,8 @@ docs:
     repoName: "architect-platform/architect"
     primaryColor: "indigo"
     accentColor: "purple"
-    monorepo: true
-    components:
-      - name: "Architect API"
-        path: "architect-api"
-        docsPath: "docs"
-      - name: "Architect CLI"
-        path: "architect-cli"
-        docsPath: "docs"
-      - name: "Architect Engine"
-        path: "architect-engine"
-        docsPath: "docs"
-      - name: "Architect Cloud"
-        path: "architect-cloud"
-        docsPath: "docs"
-      - name: "Docs Plugin"
-        path: "plugins/docs-architected"
-        docsPath: "docs"
-      - name: "Git Plugin"
-        path: "plugins/git-architected"
-        docsPath: "docs"
-      - name: "GitHub Plugin"
-        path: "plugins/github-architected"
-        docsPath: "docs"
-      - name: "Gradle Plugin"
-        path: "plugins/gradle-architected"
-        docsPath: "docs"
-      - name: "JavaScript Plugin"
-        path: "plugins/javascript-architected"
-        docsPath: "docs"
-      - name: "Pipelines Plugin"
-        path: "plugins/pipelines-architected"
-        docsPath: "docs"
-      - name: "Scripts Plugin"
-        path: "plugins/scripts-architected"
-        docsPath: "docs"
+    autoDiscoverComponents: true
+    componentPaths: [".", "plugins"]
   publish:
     enabled: true
     githubPages: true

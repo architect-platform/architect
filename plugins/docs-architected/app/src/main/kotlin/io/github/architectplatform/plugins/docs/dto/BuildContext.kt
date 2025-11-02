@@ -34,8 +34,9 @@ data class ComponentDocs(
  * @property repoName Repository name (e.g., "username/repo")
  * @property primaryColor Primary color for theme (e.g., "indigo", "blue")
  * @property accentColor Accent color for theme (e.g., "indigo", "blue")
- * @property monorepo Whether this is a monorepo with nested component documentation
- * @property components List of component/subproject documentation configurations
+ * @property autoDiscoverComponents Whether to automatically discover components with docs folders (default: true)
+ * @property componentPaths List of paths to search for components (default: [".", "plugins"])
+ * @property components List of manual component/subproject documentation configurations (optional, auto-discovery used if empty)
  */
 data class BuildContext(
     val enabled: Boolean = true,
@@ -54,6 +55,7 @@ data class BuildContext(
     val repoName: String = "",
     val primaryColor: String = "indigo",
     val accentColor: String = "indigo",
-    val monorepo: Boolean = false,
+    val autoDiscoverComponents: Boolean = true,
+    val componentPaths: List<String> = listOf(".", "plugins"),
     val components: List<ComponentDocs> = emptyList()
 )

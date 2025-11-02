@@ -261,12 +261,175 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
   }
 
   /**
+   * Auto-discovers components with documentation folders.
+   * 
+   * Searches for directories containing a docs/ folder and returns them as ComponentDocs.
+   * Excludes hidden directories, build artifacts, and the root docs directory.
+   *
+   * @param gitDir The repository root directory
+   * @return List of discovered components
+   */
+  private fun discoverComponents(gitDir: File): List<ComponentDocs> {
+    val discovered = mutableListOf<ComponentDocs>()
+    val excludedDirs = setOf(".", ".git", ".github", "build", "target", "node_modules", ".gradle", "site")
+    
+    for (searchPath in context.build.componentPaths) {
+      val searchDir = File(gitDir, searchPath)
+      if (!searchDir.exists() || !searchDir.isDirectory) continue
+      
+      // For root directory, look for direct subdirectories with docs
+      val dirsToCheck = if (searchPath == ".") {
+        searchDir.listFiles()?.filter { 
+          it.isDirectory && !excludedDirs.contains(it.name) && it.name != context.build.sourceDir
+        } ?: emptyList()
+      } else {
+        // For other paths (like plugins), check all subdirectories
+        searchDir.listFiles()?.filter { 
+          it.isDirectory && !excludedDirs.contains(it.name)
+        } ?: emptyList()
+      }
+      
+      for (dir in dirsToCheck) {
+        val docsDir = File(dir, "docs")
+        if (docsDir.exists() && docsDir.isDirectory) {
+          val relativePath = dir.relativeTo(gitDir).path
+          val componentName = dir.name.split("-")
+              .joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase() else c.toString() } }
+          
+          discovered.add(ComponentDocs(
+              name = componentName,
+              path = relativePath,
+              docsPath = "docs"
+          ))
+        }
+      }
+    }
+    
+    return discovered.sortedBy { it.path }
+  }
+
+  /**
+   * Generates mkdocs.yml configuration file dynamically.
+   *
+   * @param gitDir The repository root directory
+   * @param components List of components to include
+   * @return Generated configuration content
+   */
+  private fun generateMkDocsConfig(gitDir: File, components: List<ComponentDocs>): String {
+    val nav = buildString {
+      appendLine("  - Home: index.md")
+      
+      if (components.isNotEmpty()) {
+        // Group components by category
+        val coreComponents = components.filter { !it.path.startsWith("plugins/") }
+        val pluginComponents = components.filter { it.path.startsWith("plugins/") }
+        
+        if (coreComponents.isNotEmpty()) {
+          appendLine("  - Core Components:")
+          for (component in coreComponents) {
+            appendLine("      - ${component.name}: ${component.path}/${component.docsPath}/index.md")
+          }
+        }
+        
+        if (pluginComponents.isNotEmpty()) {
+          appendLine("  - Official Plugins:")
+          for (component in pluginComponents) {
+            appendLine("      - ${component.name}: ${component.path}/${component.docsPath}/index.md")
+          }
+        }
+      }
+    }
+    
+    return """
+site_name: ${context.build.siteName}
+site_description: ${context.build.siteDescription}
+site_author: ${context.build.siteAuthor}
+${if (context.build.repoUrl.isNotEmpty()) """
+repo_url: ${context.build.repoUrl}
+repo_name: ${context.build.repoName.ifEmpty { "repository" }}
+""" else ""}
+
+theme:
+  name: material
+  palette:
+    primary: ${context.build.primaryColor}
+    accent: ${context.build.accentColor}
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+
+nav:
+$nav
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
+  - attr_list
+  - md_in_html
+
+plugins:
+  - search
+
+${if (context.build.repoUrl.isNotEmpty()) """
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: ${context.build.repoUrl}
+""" else ""}
+""".trimIndent()
+  }
+
+  /**
+   * Aggregates component documentation into a temporary build structure.
+   * 
+   * @param gitDir The repository root directory
+   * @param components List of components to aggregate
+   * @param tempDocsDir Temporary directory for aggregated docs
+   */
+  private fun aggregateComponentDocs(gitDir: File, components: List<ComponentDocs>, tempDocsDir: File) {
+    // Copy root docs
+    val rootDocsDir = File(gitDir, context.build.sourceDir)
+    if (rootDocsDir.exists()) {
+      rootDocsDir.copyRecursively(tempDocsDir, overwrite = true)
+    }
+    
+    // Copy component docs
+    for (component in components) {
+      val componentDocsSource = File(gitDir, "${component.path}/${component.docsPath}")
+      val componentDocsTarget = File(tempDocsDir, "${component.path}/${component.docsPath}")
+      
+      if (componentDocsSource.exists()) {
+        componentDocsTarget.parentFile.mkdirs()
+        componentDocsSource.copyRecursively(componentDocsTarget, overwrite = true)
+      }
+    }
+  }
+
+  /**
    * Initializes documentation structure and workflows.
    *
    * This task:
    * 1. Creates documentation directory structure if it doesn't exist
    * 2. Sets up GitHub Actions workflow for documentation publishing
-   * 3. Creates initial configuration files for the selected framework
+   * 3. Creates initial index.md if needed
+   *
+   * Note: mkdocs.yml is now generated dynamically at build time, not during init.
    *
    * @param environment Execution environment providing services
    * @param projectContext The project context
@@ -285,6 +448,23 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
     if (!docsDir.exists()) {
       docsDir.mkdirs()
       results.add(TaskResult.success("Created documentation directory: ${context.build.sourceDir}"))
+      
+      // Create initial index.md
+      val indexFile = File(docsDir, "index.md")
+      indexFile.writeText("""
+        |# ${context.build.siteName}
+        |
+        |Welcome to the ${context.build.siteName}!
+        |
+        |## Overview
+        |
+        |Add your documentation content here.
+        |
+        |## Getting Started
+        |
+        |Add getting started guide here.
+        |""".trimMargin())
+      results.add(TaskResult.success("Created initial index.md"))
     }
 
     // Initialize GitHub Actions workflow for documentation publishing
@@ -317,125 +497,21 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
       }
     }
 
-    // Create framework-specific configuration files
-    try {
-      when (context.build.framework) {
-        "mkdocs" -> {
-          val configFile = File(gitDir, "mkdocs.yml")
-          if (!configFile.exists()) {
-            // Choose the appropriate template based on monorepo configuration
-            val templateFile = if (context.build.monorepo) {
-              "configs/mkdocs-monorepo.yml"
-            } else {
-              "configs/mkdocs.yml"
-            }
-            
-            resourceExtractor
-                .getResourceFileContent(this.javaClass.classLoader, templateFile)
-                .let { content -> 
-                  val processedContent = replaceTemplatePlaceholders(content)
-                  configFile.writeText(processedContent) 
-                }
-            results.add(TaskResult.success("Created MkDocs configuration file${if (context.build.monorepo) " (monorepo mode)" else ""}"))
-          }
-          
-          // If monorepo mode, create mkdocs.yml in each component directory
-          if (context.build.monorepo && context.build.components.isNotEmpty()) {
-            for (component in context.build.components) {
-              val componentDir = File(gitDir, component.path)
-              val componentDocsDir = File(componentDir, component.docsPath)
-              
-              // Create component docs directory if it doesn't exist
-              if (!componentDocsDir.exists()) {
-                componentDocsDir.mkdirs()
-                results.add(TaskResult.success("Created docs directory for ${component.name}"))
-              }
-              
-              // Create component mkdocs.yml
-              val componentConfigFile = File(componentDocsDir, "mkdocs.yml")
-              if (!componentConfigFile.exists()) {
-                resourceExtractor
-                    .getResourceFileContent(this.javaClass.classLoader, "configs/mkdocs-component.yml")
-                    .let { content ->
-                      val componentContent = content.replace("{{siteName}}", component.name)
-                      componentConfigFile.writeText(componentContent)
-                    }
-                results.add(TaskResult.success("Created mkdocs.yml for ${component.name}"))
-              }
-              
-              // Create initial index.md if it doesn't exist
-              val componentIndexFile = File(componentDocsDir, "index.md")
-              if (!componentIndexFile.exists()) {
-                try {
-                  resourceExtractor
-                      .getResourceFileContent(this.javaClass.classLoader, "templates/component-index.md")
-                      .let { content ->
-                        val processedContent = content.replace("{{componentName}}", component.name)
-                        componentIndexFile.writeText(processedContent)
-                      }
-                  results.add(TaskResult.success("Created index.md for ${component.name}"))
-                } catch (e: Exception) {
-                  // Fallback to inline template if resource not found
-                  componentIndexFile.writeText("""
-                    |# ${component.name}
-                    |
-                    |Documentation for the ${component.name} component.
-                    |
-                    |## Overview
-                    |
-                    |Add your component documentation here.
-                    |""".trimMargin())
-                  results.add(TaskResult.success("Created index.md for ${component.name}"))
-                }
-              }
-            }
-          }
-        }
-        "docusaurus" -> {
-          val configFile = File(gitDir, "docusaurus.config.js")
-          if (!configFile.exists()) {
-            resourceExtractor
-                .getResourceFileContent(this.javaClass.classLoader, "configs/docusaurus.config.js")
-                .let { content -> 
-                  val processedContent = replaceTemplatePlaceholders(content)
-                  configFile.writeText(processedContent) 
-                }
-            results.add(TaskResult.success("Created Docusaurus configuration file"))
-          }
-        }
-        "vuepress" -> {
-          val configDir = File(gitDir, "${context.build.sourceDir}/.vuepress")
-          if (!configDir.exists()) {
-            configDir.mkdirs()
-          }
-          val configFile = File(configDir, "config.js")
-          if (!configFile.exists()) {
-            resourceExtractor
-                .getResourceFileContent(this.javaClass.classLoader, "configs/vuepress.config.js")
-                .let { content -> 
-                  val processedContent = replaceTemplatePlaceholders(content)
-                  configFile.writeText(processedContent) 
-                }
-            results.add(TaskResult.success("Created VuePress configuration file"))
-          }
-        }
-      }
-    } catch (e: Exception) {
-      results.add(
-          TaskResult.failure(
-              "Failed to create framework configuration: ${e.message ?: "Unknown error"}"))
-    }
-
     return TaskResult.success("Documentation initialized successfully", results)
   }
+
+  // Remove old framework-specific config generation code - now handled dynamically in buildDocs
 
   /**
    * Builds documentation from markdown sources.
    *
    * This task:
-   * 1. Installs documentation framework dependencies if needed
-   * 2. Executes the build command for the selected framework
-   * 3. Validates the output
+   * 1. Auto-discovers components with documentation
+   * 2. Generates mkdocs.yml dynamically
+   * 3. Aggregates component docs into temporary build structure
+   * 4. Installs dependencies if needed
+   * 5. Builds documentation
+   * 6. Cleans up temporary files
    *
    * @param environment Execution environment providing services
    * @param projectContext The project context
@@ -452,91 +528,127 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
 
     val commandExecutor = environment.service(CommandExecutor::class.java)
     val results = mutableListOf<TaskResult>()
+    
+    // Temporary files to clean up
+    val tempMkDocsConfig = File(gitDir, "mkdocs.yml.tmp")
+    val tempDocsDir = File(gitDir, ".docs-build-temp")
 
-    // Install dependencies if needed
-    if (context.build.installDeps) {
+    try {
+      // Step 1: Discover or use configured components
+      val components = if (context.build.autoDiscoverComponents && context.build.components.isEmpty()) {
+        discoverComponents(gitDir).also {
+          results.add(TaskResult.success("Auto-discovered ${it.size} components with documentation"))
+        }
+      } else {
+        context.build.components
+      }
+      
+      // Step 2: Generate mkdocs.yml (for MkDocs framework only)
+      if (context.build.framework == "mkdocs") {
+        val mkdocsConfig = generateMkDocsConfig(gitDir, components)
+        tempMkDocsConfig.writeText(mkdocsConfig)
+        results.add(TaskResult.success("Generated mkdocs.yml configuration"))
+      }
+      
+      // Step 3: Aggregate component documentation
+      if (components.isNotEmpty()) {
+        tempDocsDir.mkdirs()
+        aggregateComponentDocs(gitDir, components, tempDocsDir)
+        results.add(TaskResult.success("Aggregated documentation from ${components.size} components"))
+      }
+
+      // Step 4: Install dependencies if needed
+      if (context.build.installDeps) {
+        try {
+          when (context.build.framework) {
+            "mkdocs" -> {
+              val mkdocsVer = sanitizeVersion(context.build.mkdocsVersion)
+              val materialVer = sanitizeVersion(context.build.mkdocsMaterialVersion)
+              
+              val packages = listOf(
+                "mkdocs==$mkdocsVer",
+                "mkdocs-material==$materialVer"
+              )
+              
+              commandExecutor.execute("pip3 install ${packages.joinToString(" ")}", gitDir.toString())
+              results.add(TaskResult.success("Installed MkDocs dependencies"))
+            }
+            "docusaurus" -> {
+              if (File(gitDir, "package.json").exists()) {
+                val packageLock = File(gitDir, "package-lock.json")
+                val command = if (packageLock.exists()) "npm ci" else "npm install"
+                commandExecutor.execute(command, gitDir.toString())
+                results.add(TaskResult.success("Installed Docusaurus dependencies"))
+              }
+            }
+            "vuepress" -> {
+              if (File(gitDir, "package.json").exists()) {
+                val packageLock = File(gitDir, "package-lock.json")
+                val command = if (packageLock.exists()) "npm ci" else "npm install"
+                commandExecutor.execute(command, gitDir.toString())
+                results.add(TaskResult.success("Installed VuePress dependencies"))
+              }
+            }
+          }
+        } catch (e: Exception) {
+          results.add(
+              TaskResult.failure(
+                  "Failed to install dependencies: ${e.message ?: "Unknown error"}"))
+          return TaskResult.failure("Build failed", results)
+        }
+      }
+
+      // Step 5: Build documentation
       try {
         when (context.build.framework) {
           "mkdocs" -> {
-            val mkdocsVer = sanitizeVersion(context.build.mkdocsVersion)
-            val materialVer = sanitizeVersion(context.build.mkdocsMaterialVersion)
-            val monorepoVer = sanitizeVersion(context.build.mkdocsMonorepoVersion)
+            val sanitizedOutputDir = sanitizePath(context.build.outputDir)
+            // Use temporary mkdocs.yml if it exists
+            val configFlag = if (tempMkDocsConfig.exists()) {
+              "-f ${tempMkDocsConfig.name}"
+            } else ""
             
-            // Build the install command with monorepo plugin if needed
-            val packages = mutableListOf(
-              "mkdocs==$mkdocsVer",
-              "mkdocs-material==$materialVer"
-            )
-            if (context.build.monorepo) {
-              packages.add("mkdocs-monorepo-plugin==$monorepoVer")
+            val command = if (sanitizedOutputDir.isNotEmpty()) {
+              "mkdocs build $configFlag -d $sanitizedOutputDir"
+            } else {
+              "mkdocs build $configFlag"
             }
-            
-            commandExecutor.execute("pip3 install ${packages.joinToString(" ")}", gitDir.toString())
-            results.add(TaskResult.success("Installed MkDocs dependencies${if (context.build.monorepo) " (with monorepo support)" else ""}"))
+            commandExecutor.execute(command, gitDir.toString())
+            results.add(TaskResult.success("Built documentation with MkDocs"))
           }
           "docusaurus" -> {
-            if (File(gitDir, "package.json").exists()) {
-              // Use npm ci for reproducible builds in CI/CD environments
-              val packageLock = File(gitDir, "package-lock.json")
-              val command = if (packageLock.exists()) "npm ci" else "npm install"
-              commandExecutor.execute(command, gitDir.toString())
-              results.add(TaskResult.success("Installed Docusaurus dependencies"))
-            }
+            commandExecutor.execute("npm run build", gitDir.toString())
+            results.add(TaskResult.success("Built documentation with Docusaurus"))
           }
           "vuepress" -> {
-            if (File(gitDir, "package.json").exists()) {
-              // Use npm ci for reproducible builds in CI/CD environments
-              val packageLock = File(gitDir, "package-lock.json")
-              val command = if (packageLock.exists()) "npm ci" else "npm install"
-              commandExecutor.execute(command, gitDir.toString())
-              results.add(TaskResult.success("Installed VuePress dependencies"))
-            }
+            commandExecutor.execute("npm run docs:build", gitDir.toString())
+            results.add(TaskResult.success("Built documentation with VuePress"))
+          }
+          "manual" -> {
+            results.add(
+                TaskResult.success(
+                    "Manual framework selected - no automatic build performed"))
+          }
+          else -> {
+            return TaskResult.failure("Unsupported documentation framework: ${context.build.framework}")
           }
         }
       } catch (e: Exception) {
-        results.add(
-            TaskResult.failure(
-                "Failed to install dependencies: ${e.message ?: "Unknown error"}"))
-        return TaskResult.failure("Build failed", results)
+        return TaskResult.failure(
+            "Failed to build documentation: ${e.message ?: "Unknown error"}", results)
+      }
+      
+      return TaskResult.success("Documentation built successfully", results)
+      
+    } finally {
+      // Step 6: Clean up temporary files
+      if (tempMkDocsConfig.exists()) {
+        tempMkDocsConfig.delete()
+      }
+      if (tempDocsDir.exists()) {
+        tempDocsDir.deleteRecursively()
       }
     }
-
-    // Build documentation
-    try {
-      when (context.build.framework) {
-        "mkdocs" -> {
-          val sanitizedOutputDir = sanitizePath(context.build.outputDir)
-          val command = if (sanitizedOutputDir.isNotEmpty()) {
-            "mkdocs build -d $sanitizedOutputDir"
-          } else {
-            "mkdocs build"
-          }
-          commandExecutor.execute(command, gitDir.toString())
-          results.add(TaskResult.success("Built documentation with MkDocs"))
-        }
-        "docusaurus" -> {
-          commandExecutor.execute("npm run build", gitDir.toString())
-          results.add(TaskResult.success("Built documentation with Docusaurus"))
-        }
-        "vuepress" -> {
-          commandExecutor.execute("npm run docs:build", gitDir.toString())
-          results.add(TaskResult.success("Built documentation with VuePress"))
-        }
-        "manual" -> {
-          results.add(
-              TaskResult.success(
-                  "Manual framework selected - no automatic build performed"))
-        }
-        else -> {
-          return TaskResult.failure("Unsupported documentation framework: ${context.build.framework}")
-        }
-      }
-    } catch (e: Exception) {
-      return TaskResult.failure(
-          "Failed to build documentation: ${e.message ?: "Unknown error"}", results)
-    }
-
-    return TaskResult.success("Documentation built successfully", results)
   }
 
   /**
