@@ -1,0 +1,47 @@
+project:
+  name: scripts-demo
+  description: "Demo project for scripts-architected plugin"
+
+plugins:
+  - name: scripts-architected
+    repo: architect-platform/architect
+
+scripts:
+  enabled: true
+  scripts:
+    # Simple hello world script
+    hello:
+      command: "echo 'Hello from scripts-architected plugin!'"
+      description: "Prints a greeting"
+    
+    # Script attached to BUILD phase
+    build-app:
+      command: "echo 'Building application...' && sleep 1 && echo 'Build complete!'"
+      description: "Simulates application build"
+      phase: "BUILD"
+    
+    # Script attached to TEST phase
+    run-tests:
+      command: "echo 'Running tests...' && sleep 1 && echo 'All tests passed!'"
+      description: "Simulates running tests"
+      phase: "TEST"
+    
+    # Script with environment variables
+    deploy:
+      command: "echo \"Deploying to \$ENV environment in \$REGION region\""
+      description: "Simulates deployment"
+      phase: "PUBLISH"
+      environment:
+        ENV: "production"
+        REGION: "us-east-1"
+    
+    # Script with custom working directory
+    list-files:
+      command: "pwd && ls -la"
+      description: "Lists files in scripts directory"
+      workingDirectory: "scripts"
+    
+    # Script that accepts arguments
+    echo-args:
+      command: "echo 'Arguments received:' && echo"
+      description: "Echoes the provided arguments"

@@ -177,6 +177,21 @@ Integrates Gradle build automation with Architect workflows.
 - Task execution and lifecycle management
 - Build configuration through Architect
 
+#### [javascript-architected](plugins/javascript-architected/)
+Integrates JavaScript/Node.js package managers with Architect workflows.
+
+**Features:**
+- Support for npm, yarn, and pnpm
+- Standard JavaScript workflows (install, build, test, lint)
+- Custom working directory configuration
+
+**Example:**
+```yaml
+javascript:
+  packageManager: "npm"
+  workingDirectory: "."
+```
+
 #### [docs-architected](plugins/docs-architected/)
 Comprehensive documentation management with multi-framework support.
 
@@ -203,41 +218,35 @@ docs:
     domain: "docs.myproject.com"
 ```
 
-#### [pipelines-architected](plugins/pipelines-architected/) ⭐ NEW
-Create and execute workflows composed of Architect tasks with dependency management.
+#### [scripts-architected](plugins/scripts-architected/) ⭐ NEW
+Execute custom shell scripts with full workflow integration.
 
 **Features:**
-- Workflow templates for common tasks (CI, release, docs)
-- Step dependencies and execution order
-- Conditional execution based on environment
-- Error handling with continueOnError
-- Parallel execution of independent tasks
-- Template extension and customization
+- Define custom scripts in configuration
+- Attach scripts to workflow phases (INIT, BUILD, TEST, etc.)
+- Standalone script execution
+- Environment variable support
+- Custom working directory configuration
+- Command-line argument passing
 
 **Example:**
 ```yaml
-pipelines:
-  workflows:
-    - name: ci
-      extends: ci-standard
-      steps:
-        - name: security-scan
-          task: security-check
-          dependsOn:
-            - build
-    - name: deploy
-      steps:
-        - name: build
-          task: build
-        - name: test
-          task: test
-          dependsOn:
-            - build
-        - name: deploy
-          task: deploy-task
-          dependsOn:
-            - test
-          condition: "ENVIRONMENT == production"
+scripts:
+  scripts:
+    build:
+      command: "npm run build"
+      description: "Build the application"
+      phase: "BUILD"
+    deploy:
+      command: "./deploy.sh"
+      description: "Deploy to production"
+      phase: "PUBLISH"
+      environment:
+        ENV: "production"
+        REGION: "us-east-1"
+    custom:
+      command: "echo 'Custom task'"
+      description: "Standalone custom script"
 ```
 
 ## Use Cases
@@ -307,40 +316,6 @@ gradle:
       path: frontend/
     - name: shared
       path: shared/
-```
-
-### Workflow Orchestration
-
-Create reusable workflows for complex task sequences:
-
-```yaml
-pipelines:
-  workflows:
-    - name: full-ci
-      description: Complete CI workflow
-      extends: ci-standard
-      steps:
-        - name: security-scan
-          task: security-check
-          dependsOn:
-            - build
-          continueOnError: false
-        - name: performance-test
-          task: performance-test
-          dependsOn:
-            - test
-          continueOnError: true
-```
-
-```bash
-# Initialize pipeline templates
-architect pipelines-init
-
-# List available workflows
-architect pipelines-list
-
-# Execute a workflow
-architect pipelines-execute -- full-ci
 ```
 
 ## Configuration
@@ -529,11 +504,6 @@ architect docs-publish
 # GitHub
 architect github-init-pipelines
 architect github-release-task
-
-# Pipelines
-architect pipelines-init
-architect pipelines-list
-architect pipelines-execute -- <workflow-name>
 ```
 
 ## REST API

@@ -7,7 +7,7 @@ plugins {
   id("io.micronaut.aot") version "4.6.1"
 }
 
-version = "1.4.0"
+version = "1.5.0"
 
 group = "io.github.architectplatform"
 
@@ -33,7 +33,7 @@ repositories {
 }
 
 dependencies {
-  implementation("io.github.architectplatform:api:1.1.3")
+  implementation("io.github.architectplatform:api:1.2.0")
   ksp("io.micronaut:micronaut-http-validation")
   ksp("io.micronaut.serde:micronaut-serde-processor")
   implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
