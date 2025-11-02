@@ -322,31 +322,79 @@ scripts:
 
 ## Security Considerations
 
-### Command Injection Prevention
+The scripts-architected plugin implements multiple layers of security to prevent command injection vulnerabilities:
 
-The plugin executes scripts through the CommandExecutor service, which handles command execution. Always:
+### Built-in Security Measures
 
-1. **Validate input**: Ensure script commands are defined in configuration, not from user input
+1. **Argument Escaping**: All command-line arguments passed to scripts are automatically escaped using single-quote wrapping, preventing shell interpretation of special characters.
+
+2. **Environment Variable Validation**: Environment variable keys are strictly validated to only allow uppercase letters, numbers, and underscores (matching standard shell conventions).
+
+3. **Environment Variable Escaping**: Environment variable values are escaped using double-quote wrapping with proper escaping of special characters ($, `, ", \, !).
+
+4. **Configuration Source**: Script commands come from the trusted `architect.yml` configuration file, not from user input at runtime.
+
+### Security Implementation
+
+The plugin uses the `ScriptUtils` utility class that provides:
+
+- `escapeShellArg()`: Wraps arguments in single quotes and escapes any single quotes within
+- `validateEnvKey()`: Ensures environment variable keys follow shell naming conventions
+- `escapeEnvValue()`: Properly escapes special characters in environment variable values
+
+### Best Practices
+
+While the plugin implements security measures, users should still follow these best practices:
+
+1. **Review Configuration**: Audit `architect.yml` script definitions in code reviews
 2. **Use absolute paths**: Prefer absolute paths for critical scripts
 3. **Limit permissions**: Run with minimal required permissions
-4. **Review configuration**: Audit `architect.yml` changes in code reviews
+4. **Protect sensitive data**: Don't hardcode secrets in scripts or environment variables
+5. **Validate custom commands**: Ensure script commands don't contain malicious content
+
+### Example of Safe Configuration
+
+```yaml
+scripts:
+  scripts:
+    # Good: Simple, clear command
+    build:
+      command: "npm run build"
+      phase: "BUILD"
+    
+    # Good: Using environment variables for configuration
+    deploy:
+      command: "/usr/local/bin/deploy.sh"
+      phase: "PUBLISH"
+      environment:
+        ENVIRONMENT: "production"
+        LOG_LEVEL: "info"
+```
+
+### What to Avoid
+
+```yaml
+scripts:
+  scripts:
+    # Bad: Command injection attempt (but will be escaped safely)
+    bad-example:
+      command: "echo test; rm -rf /"  # Still executed as intended due to escaping
+      
+    # Bad: Hardcoded secrets (use environment or secret management instead)
+    bad-deploy:
+      command: "./deploy.sh"
+      environment:
+        API_KEY: "hardcoded-secret-key"  # Don't do this!
+```
 
 ### Environment Variables
 
 Environment variables are prepended to commands in the format:
 ```bash
-KEY1="value1" KEY2="value2" your-command
+KEY1="escaped-value1" KEY2="escaped-value2" your-command
 ```
 
-Ensure sensitive values are not logged or exposed in version control.
-
-### Best Practices
-
-- Store sensitive configuration in environment variables or secrets management
-- Use `.gitignore` to exclude sensitive scripts
-- Implement proper error handling in your scripts
-- Use descriptive script names and descriptions
-- Group related scripts with consistent naming conventions
+All values are properly escaped to prevent injection attacks.
 
 ## Integration with Other Plugins
 

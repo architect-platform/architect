@@ -34,6 +34,11 @@ class ScriptTask(
     /**
      * Executes the script command with the configured environment and working directory.
      *
+     * Security measures:
+     * - Environment variable keys are validated to prevent injection
+     * - Environment variable values are properly escaped
+     * - Command arguments are properly escaped
+     *
      * @param environment Execution environment providing CommandExecutor service
      * @param projectContext The project context
      * @param args Additional arguments to pass to the script command
@@ -52,18 +57,31 @@ class ScriptTask(
         val workingDir =
             Path(projectContext.dir.toString(), config.workingDirectory).toAbsolutePath()
 
-        // Build the full command with arguments
-        val argsString = if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""
+        // Escape all arguments to prevent command injection
+        val escapedArgs = args.map { ScriptUtils.escapeShellArg(it) }
+        val argsString = if (escapedArgs.isNotEmpty()) " ${escapedArgs.joinToString(" ")}" else ""
         
-        // Prepend environment variables to command if specified
+        // Build environment variable prefix with proper escaping
         val envPrefix = if (config.environment.isNotEmpty()) {
-            config.environment.entries.joinToString(" ") { (key, value) ->
-                "$key=\"$value\""
-            } + " "
+            try {
+                config.environment.entries.joinToString(" ") { (key, value) ->
+                    // Validate key format
+                    val validatedKey = ScriptUtils.validateEnvKey(key)
+                    // Escape value
+                    val escapedValue = ScriptUtils.escapeEnvValue(value)
+                    "$validatedKey=$escapedValue"
+                } + " "
+            } catch (e: IllegalArgumentException) {
+                return TaskResult.failure(
+                    "Script task: $id failed with invalid environment variable: ${e.message}"
+                )
+            }
         } else {
             ""
         }
         
+        // Note: The base command from config is trusted as it comes from configuration,
+        // not user input. However, arguments are always escaped.
         val fullCommand = "$envPrefix${config.command}$argsString"
 
         return try {
