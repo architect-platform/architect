@@ -22,18 +22,19 @@ theme:
 
 nav:
   - Home: index.md
-  - Architect API: '!include architect-api/docs/mkdocs.yml'
-  - Architect CLI: '!include architect-cli/docs/mkdocs.yml'
-  - Architect Engine: '!include architect-engine/docs/mkdocs.yml'
-  - Architect Cloud: '!include architect-cloud/docs/mkdocs.yml'
-  - Plugins:
-      - Docs Plugin: '!include plugins/docs-architected/docs/mkdocs.yml'
-      - Git Plugin: '!include plugins/git-architected/docs/mkdocs.yml'
-      - GitHub Plugin: '!include plugins/github-architected/docs/mkdocs.yml'
-      - Gradle Plugin: '!include plugins/gradle-architected/docs/mkdocs.yml'
-      - JavaScript Plugin: '!include plugins/javascript-architected/docs/mkdocs.yml'
-      - Pipelines Plugin: '!include plugins/pipelines-architected/docs/mkdocs.yml'
-      - Scripts Plugin: '!include plugins/scripts-architected/docs/mkdocs.yml'
+  - Core Components:
+      - Architect API: architect-api/index.md
+      - Architect CLI: architect-cli/index.md
+      - Architect Engine: architect-engine/index.md
+      - Architect Cloud: architect-cloud/index.md
+  - Official Plugins:
+      - Docs Plugin: plugins/docs-architected/index.md
+      - Git Plugin: plugins/git-architected/index.md
+      - GitHub Plugin: plugins/github-architected/index.md
+      - Gradle Plugin: plugins/gradle-architected/index.md
+      - JavaScript Plugin: plugins/javascript-architected/index.md
+      - Pipelines Plugin: plugins/pipelines-architected/index.md
+      - Scripts Plugin: plugins/scripts-architected/index.md
 
 markdown_extensions:
   - admonition
@@ -52,7 +53,6 @@ markdown_extensions:
 
 plugins:
   - search
-  - monorepo
 
 extra:
   social:

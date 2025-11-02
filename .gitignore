@@ -57,6 +57,12 @@ site/
 .vuepress/dist/
 build/
 docs/.vuepress/dist/
+# Copied docs from components (these are managed in component folders)
+docs/architect-api/
+docs/architect-cli/
+docs/architect-engine/
+docs/architect-cloud/
+docs/plugins/
 
 # Python (for MkDocs)
 __pycache__/
