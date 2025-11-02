@@ -70,6 +70,11 @@ class ClassLoaderResourceExtractor : ResourceExtractor {
       Files.walk(resourcePath).filter(Files::isRegularFile).forEach { source ->
         val relativePath = resourcePath.relativize(source)
         val targetPath = targetDirectory.resolve(relativePath.toString())
+          // If its already there and proper configured skip
+          if (Files.exists(targetPath) && targetPath.toFile().canExecute() && Files.readAllBytes(
+              source) contentEquals Files.readAllBytes(targetPath)) {
+            return@forEach
+          }
         Files.copy(source, targetPath, StandardCopyOption.REPLACE_EXISTING)
         targetPath.toFile().setExecutable(true)
       }

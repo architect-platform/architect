@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PRO
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.architectplatform.api.core.project.ProjectContext
+import io.github.architectplatform.api.core.project.getKey
+import io.github.architectplatform.engine.cloud.CloudReporterService
 import io.github.architectplatform.engine.core.config.EngineConfiguration
 import io.github.architectplatform.engine.core.plugin.app.PluginLoader
 import io.github.architectplatform.engine.core.project.app.repositories.ProjectRepository
@@ -12,6 +14,7 @@ import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTask
 import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
 import java.io.File
+import java.util.Optional
 import kotlin.io.path.Path
 import org.slf4j.LoggerFactory
 
@@ -28,12 +31,14 @@ import org.slf4j.LoggerFactory
  * @property projectRepository Repository for storing and retrieving projects
  * @property configLoader Loader for parsing project configuration files
  * @property pluginLoader Loader for discovering and instantiating plugins
+ * @property cloudReporter Optional cloud reporter for tracking projects in the cloud
  */
 @Singleton
 class ProjectService(
     private val projectRepository: ProjectRepository,
     private val configLoader: ConfigLoader,
     private val pluginLoader: PluginLoader,
+    private val cloudReporter: Optional<CloudReporterService>,
 ) {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
@@ -143,6 +148,12 @@ class ProjectService(
         loadProject(name, path)
             ?: throw IllegalArgumentException("Failed to load project $name from path $path")
     projectRepository.save(name, newProject)
+    
+    // Report project to cloud if cloud reporting is enabled
+    cloudReporter.ifPresent { reporter ->
+      val description = newProject.context.config.getKey<String>("project.description")
+      reporter.reportProject(name, path, description)
+    }
   }
 
   /**

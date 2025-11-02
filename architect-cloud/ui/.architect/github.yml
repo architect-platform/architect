@@ -1,0 +1,9 @@
+github:
+  pipelines:
+    - name: architect-cloud-ui
+      type: github/classic-java-17-no-release
+      path: architect-cloud/ui
+
+
+  deps:
+    type: renovate

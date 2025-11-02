@@ -11,3 +11,9 @@ micronaut:
     plugin:
       cache:
         enabled: false
+
+architect:
+  cloud:
+    enabled: false
+    url: http://localhost:8080
+    engine-id: ${ARCHITECT_ENGINE_ID:}
