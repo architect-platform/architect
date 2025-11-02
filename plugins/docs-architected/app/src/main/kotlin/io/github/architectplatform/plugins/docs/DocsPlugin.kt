@@ -43,6 +43,12 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
     private val DOMAIN_VALIDATION_REGEX =
         Regex("^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?)*$")
 
+    // Template pattern for components list
+    private val COMPONENTS_PATTERN = Regex("""(?s)\{\{#components}}(.*?)\{\{/components}}""")
+    
+    // Template pattern for repository URL
+    private val REPO_URL_PATTERN = Regex("""(?s)\{\{#repoUrl}}(.*?)\{\{/repoUrl}}""")
+
     /**
      * Sanitizes a path to prevent command injection and directory traversal.
      * Allows alphanumeric characters, underscores, hyphens, forward slashes, and dots.
@@ -114,8 +120,7 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
           .replace("{{repoName}}", context.build.repoName.ifEmpty { "repository" })
       
       // Handle conditional sections with {{#repoUrl}}...{{/repoUrl}}
-      val repoUrlPattern = Regex("""(?s)\{\{#repoUrl}}(.*?)\{\{/repoUrl}}""")
-      result = repoUrlPattern.replace(result) { matchResult ->
+      result = REPO_URL_PATTERN.replace(result) { matchResult ->
         matchResult.groupValues[1].trim()
       }
       
@@ -132,8 +137,7 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
       }
     } else {
       // Remove conditional sections if repoUrl is not provided
-      val repoUrlPattern = Regex("""(?s)\{\{#repoUrl}}.*?\{\{/repoUrl}}""")
-      result = repoUrlPattern.replace(result, "")
+      result = REPO_URL_PATTERN.replace(result, "")
       
       // Provide fallback values
       result = result
@@ -145,8 +149,7 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
 
     // Handle component list for monorepo configuration
     if (context.build.components.isNotEmpty()) {
-      val componentsPattern = Regex("""(?s)\{\{#components}}(.*?)\{\{/components}}""")
-      result = componentsPattern.replace(result) { matchResult ->
+      result = COMPONENTS_PATTERN.replace(result) { matchResult ->
         val componentTemplate = matchResult.groupValues[1]
         context.build.components.joinToString("\n") { component ->
           componentTemplate
@@ -157,8 +160,7 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
       }
     } else {
       // Remove components sections if no components are configured
-      val componentsPattern = Regex("""(?s)\{\{#components}}.*?\{\{/components}}""")
-      result = componentsPattern.replace(result, "")
+      result = COMPONENTS_PATTERN.replace(result, "")
     }
 
     return result
@@ -364,16 +366,27 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
               // Create initial index.md if it doesn't exist
               val componentIndexFile = File(componentDocsDir, "index.md")
               if (!componentIndexFile.exists()) {
-                componentIndexFile.writeText("""
-                  |# ${component.name}
-                  |
-                  |Documentation for the ${component.name} component.
-                  |
-                  |## Overview
-                  |
-                  |Add your component documentation here.
-                  |""".trimMargin())
-                results.add(TaskResult.success("Created index.md for ${component.name}"))
+                try {
+                  resourceExtractor
+                      .getResourceFileContent(this.javaClass.classLoader, "templates/component-index.md")
+                      .let { content ->
+                        val processedContent = content.replace("{{componentName}}", component.name)
+                        componentIndexFile.writeText(processedContent)
+                      }
+                  results.add(TaskResult.success("Created index.md for ${component.name}"))
+                } catch (e: Exception) {
+                  // Fallback to inline template if resource not found
+                  componentIndexFile.writeText("""
+                    |# ${component.name}
+                    |
+                    |Documentation for the ${component.name} component.
+                    |
+                    |## Overview
+                    |
+                    |Add your component documentation here.
+                    |""".trimMargin())
+                  results.add(TaskResult.success("Created index.md for ${component.name}"))
+                }
               }
             }
           }

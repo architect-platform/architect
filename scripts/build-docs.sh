@@ -13,22 +13,29 @@ mkdir -p docs/architect-engine
 mkdir -p docs/architect-cloud
 mkdir -p docs/plugins
 
+# Core components to copy
+COMPONENTS=("architect-api" "architect-cli" "architect-engine" "architect-cloud")
+
 # Copy component documentation
 echo "Copying component documentation..."
-cp -r architect-api/docs/* docs/architect-api/ 2>/dev/null || true
-cp -r architect-cli/docs/* docs/architect-cli/ 2>/dev/null || true
-cp -r architect-engine/docs/* docs/architect-engine/ 2>/dev/null || true
-cp -r architect-cloud/docs/* docs/architect-cloud/ 2>/dev/null || true
+for component in "${COMPONENTS[@]}"; do
+    if [ -d "$component/docs" ]; then
+        cp -r "$component/docs"/* "docs/$component/" 2>/dev/null || true
+        echo "  ✓ Copied $component documentation"
+    fi
+done
+
+# Plugins to copy
+PLUGINS=("docs-architected" "git-architected" "github-architected" "gradle-architected" "javascript-architected" "pipelines-architected" "scripts-architected")
 
 # Copy plugin documentation
 echo "Copying plugin documentation..."
-cp -r plugins/docs-architected/docs docs/plugins/docs-architected 2>/dev/null || true
-cp -r plugins/git-architected/docs docs/plugins/git-architected 2>/dev/null || true
-cp -r plugins/github-architected/docs docs/plugins/github-architected 2>/dev/null || true
-cp -r plugins/gradle-architected/docs docs/plugins/gradle-architected 2>/dev/null || true
-cp -r plugins/javascript-architected/docs docs/plugins/javascript-architected 2>/dev/null || true
-cp -r plugins/pipelines-architected/docs docs/plugins/pipelines-architected 2>/dev/null || true
-cp -r plugins/scripts-architected/docs docs/plugins/scripts-architected 2>/dev/null || true
+for plugin in "${PLUGINS[@]}"; do
+    if [ -d "plugins/$plugin/docs" ]; then
+        cp -r "plugins/$plugin/docs" "docs/plugins/$plugin" 2>/dev/null || true
+        echo "  ✓ Copied $plugin documentation"
+    fi
+done
 
 echo "Building documentation with MkDocs..."
 mkdocs build
