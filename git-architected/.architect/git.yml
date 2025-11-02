@@ -1,0 +1,9 @@
+git:
+  config:
+    user.name: "Architect Bot"
+    user.email: "architect@architect-platform.io"
+
+gradle:
+  projects:
+    - name: git-architected
+      path: app

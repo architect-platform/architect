@@ -1,0 +1,13 @@
+github:
+  pipelines:
+    - name: git-architected-pipeline
+      type: github/classic-java-17
+      path: git-architected
+
+  deps:
+    type: renovate
+
+  release:
+    assets:
+      - name: git-architected.jar
+        path: "app/build/libs/git-architected-*.jar"
