@@ -36,6 +36,63 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
   override val ctxClass = DocsContext::class.java
   override var context: DocsContext = DocsContext()
 
+  companion object {
+    // Domain validation regex - validates RFC-compliant domain names
+    // Matches: example.com, sub.example.com, my-site.github.io
+    // Does not match: -example.com, example-.com, .example.com
+    private val DOMAIN_VALIDATION_REGEX =
+        Regex("^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?)*$")
+
+    /**
+     * Sanitizes a path to prevent command injection and directory traversal.
+     * Allows alphanumeric characters, underscores, hyphens, forward slashes, and dots.
+     * Prevents absolute paths, parent directory references, and special characters.
+     *
+     * @param path The path to sanitize
+     * @return Sanitized path safe for shell commands
+     */
+    fun sanitizePath(path: String): String {
+      // Remove any absolute path indicators
+      val relativePath = path.removePrefix("/")
+      // Remove parent directory references
+      val noParentRefs = relativePath.replace("../", "").replace("/..", "")
+      // Remove disallowed characters
+      return noParentRefs.replace(Regex("[^a-zA-Z0-9/_.-]"), "")
+    }
+
+    /**
+     * Sanitizes a Git branch name for safe shell execution.
+     * Allows alphanumeric characters, underscores, hyphens, and forward slashes.
+     *
+     * @param branch The branch name to sanitize
+     * @return Sanitized branch name
+     */
+    fun sanitizeBranch(branch: String): String {
+      return branch.replace(Regex("[^a-zA-Z0-9/_-]"), "")
+    }
+
+    /**
+     * Sanitizes a version string for safe shell execution.
+     * Allows alphanumeric characters, dots, hyphens, and underscores.
+     *
+     * @param version The version string to sanitize
+     * @return Sanitized version string
+     */
+    fun sanitizeVersion(version: String): String {
+      return version.replace(Regex("[^a-zA-Z0-9._-]"), "")
+    }
+
+    /**
+     * Validates a domain name using RFC-compliant rules.
+     *
+     * @param domain The domain to validate
+     * @return True if the domain is valid, false otherwise
+     */
+    fun isValidDomain(domain: String): Boolean {
+      return DOMAIN_VALIDATION_REGEX.matches(domain)
+    }
+  }
+
   /**
    * Registers documentation-related tasks with the task registry.
    *
@@ -154,17 +211,6 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
     val docsDir = File(gitDir, context.build.sourceDir)
     if (!docsDir.exists()) {
       docsDir.mkdirs()
-      val readmeFile = File(docsDir, "index.md")
-      readmeFile.writeText(
-          """# Documentation
-              |
-              |Welcome to the documentation.
-              |
-              |## Getting Started
-              |
-              |Add your documentation here in Markdown format.
-              |"""
-              .trimMargin())
       results.add(TaskResult.success("Created documentation directory: ${context.build.sourceDir}"))
     }
 
@@ -269,8 +315,8 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
       try {
         when (context.build.framework) {
           "mkdocs" -> {
-            val mkdocsVer = context.build.mkdocsVersion
-            val materialVer = context.build.mkdocsMaterialVersion
+            val mkdocsVer = sanitizeVersion(context.build.mkdocsVersion)
+            val materialVer = sanitizeVersion(context.build.mkdocsMaterialVersion)
             commandExecutor.execute("pip3 install mkdocs==$mkdocsVer mkdocs-material==$materialVer", gitDir.toString())
             results.add(TaskResult.success("Installed MkDocs dependencies"))
           }
@@ -299,8 +345,7 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
     try {
       when (context.build.framework) {
         "mkdocs" -> {
-          // Sanitize output directory to prevent command injection
-          val sanitizedOutputDir = context.build.outputDir.replace(Regex("[^a-zA-Z0-9/_.-]"), "")
+          val sanitizedOutputDir = sanitizePath(context.build.outputDir)
           val command = if (sanitizedOutputDir.isNotEmpty()) {
             "mkdocs build -d $sanitizedOutputDir"
           } else {
@@ -372,9 +417,7 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
     // Create CNAME file if custom domain is specified
     if (context.publish.cname && context.publish.domain.isNotEmpty()) {
       try {
-        // Validate domain format (basic validation)
-        val domainRegex = Regex("^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?)*$")
-        if (!domainRegex.matches(context.publish.domain)) {
+        if (!isValidDomain(context.publish.domain)) {
           results.add(TaskResult.failure("Invalid domain format: ${context.publish.domain}"))
         } else {
           val cnameFile = File(outputDir, "CNAME")
@@ -395,9 +438,8 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
 
       commandExecutor.execute("chmod +x publish-ghpages.sh", gitDir.toString())
 
-      // Sanitize inputs to prevent command injection
-      val sanitizedOutputDir = context.build.outputDir.replace(Regex("[^a-zA-Z0-9/_.-]"), "")
-      val sanitizedBranch = context.publish.branch.replace(Regex("[^a-zA-Z0-9/_-]"), "")
+      val sanitizedOutputDir = sanitizePath(context.build.outputDir)
+      val sanitizedBranch = sanitizeBranch(context.publish.branch)
       
       val publishCommand =
           "./publish-ghpages.sh $sanitizedOutputDir $sanitizedBranch"
