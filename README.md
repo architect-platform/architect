@@ -66,31 +66,17 @@ Architect consists of three main components:
 - Gradle 8.x (included via wrapper)
 - Git
 
-### Installation
+###  One‑Line Installer Script
 
-1. **Clone the repository:**
 ```bash
-git clone https://github.com/architect-platform/architect.git
-cd architect
+curl -sSL https://raw.githubusercontent.com/architect-platform/architect/main/architect-cli/.installers/bash | bash
 ```
 
-2. **Build the project:**
+## Install & Run the Engine
 ```bash
-./gradlew build
-```
-
-3. **Install the CLI:**
-```bash
-cd architect-cli
-./gradlew installDist
-# Add to PATH or create alias
-export PATH=$PATH:$(pwd)/build/install/architect-cli/bin
-```
-
-4. **Start the engine:**
-```bash
-cd architect-engine
-./gradlew run
+architect engine install
+architect engine start
+# architect engine stop/clean
 ```
 
 ### Your First Project
@@ -127,14 +113,11 @@ docs:
 
 2. **Initialize your project:**
 ```bash
-architect
+architect init
 ```
 
 3. **Run tasks:**
 ```bash
-# Initialize documentation
-architect docs-init
-
 # Build documentation
 architect docs-build
 
