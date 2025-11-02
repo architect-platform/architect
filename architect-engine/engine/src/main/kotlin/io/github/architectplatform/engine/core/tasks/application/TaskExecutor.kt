@@ -162,16 +162,21 @@ class TaskExecutor(
                   val finalResult = if (childResults.isNotEmpty()) {
                     val allSuccess = result.success && childResults.all { it.success }
                     val combinedResults = listOf(result) + childResults
+                    val failedCount = combinedResults.count { !it.success }
                     if (allSuccess) {
                       TaskResult.success(
-                        result.message ?: "Task ${currentTask.id} and children completed",
+                        result.message ?: "Task ${currentTask.id} and ${childResults.size} children completed",
                         combinedResults
                       )
                     } else {
-                      TaskResult.failure(
-                        result.message ?: "Task ${currentTask.id} or children failed",
-                        combinedResults
-                      )
+                      val failureMsg = if (!result.success && childResults.any { !it.success }) {
+                        "Task ${currentTask.id} failed and $failedCount children failed"
+                      } else if (!result.success) {
+                        "Task ${currentTask.id} failed (children: ${childResults.size})"
+                      } else {
+                        "$failedCount of ${childResults.size} children failed for task ${currentTask.id}"
+                      }
+                      TaskResult.failure(failureMsg, combinedResults)
                     }
                   } else {
                     result

@@ -18,6 +18,11 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
  * - Simple tasks or tasks with arguments
  * - Any implementation of the Task interface
  *
+ * **Important:** Child tasks are executed by the TaskExecutor after the parent task's execute()
+ * method completes. The hooks (beforeChildren, afterChildren) run as part of the parent task's
+ * execute() method, so they don't have direct access to child execution results. To handle
+ * child results, check the aggregated TaskResult returned by TaskExecutor.
+ *
  * Example usage:
  * ```kotlin
  * val buildTask = CompositeTask(
@@ -26,8 +31,8 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
  *   phase = CoreWorkflow.BUILD,
  *   children = listOf("compile", "package", "verify-artifacts")
  * ) { env, ctx, childResults ->
- *   // Optional: custom logic after children execute
- *   TaskResult.success("All components built", childResults)
+ *   // Optional: custom logic before children execute
+ *   TaskResult.success("Prepared for build")
  * }
  * ```
  *
@@ -37,7 +42,8 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
  * @property children List of child task IDs to execute
  * @property customDependencies Additional dependencies beyond phase dependencies (optional)
  * @property beforeChildren Optional hook executed before child tasks (optional)
- * @property afterChildren Optional hook executed after child tasks with their results
+ * @property afterChildren Optional hook executed after the parent task completes (optional)
+ * Note: afterChildren runs before child tasks are executed, as it's part of parent's execute()
  */
 class CompositeTask(
   override val id: String,

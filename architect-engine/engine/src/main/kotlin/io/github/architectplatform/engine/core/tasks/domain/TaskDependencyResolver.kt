@@ -69,7 +69,7 @@ class TaskDependencyResolver {
      * 
      * @param tasks Map of task IDs to Task instances
      * @return List of tasks in execution order
-     * @throws IllegalStateException if a circular dependency is detected
+     * @throws IllegalStateException if a circular dependency is detected (in dependencies or children)
      */
     fun topologicalSort(tasks: Map<String, Task>): List<Task> {
         val visited = mutableSetOf<String>()
@@ -92,6 +92,22 @@ class TaskDependencyResolver {
                 val dependency = tasks[dependencyId]
                     ?: throw IllegalStateException("Missing task for id $dependencyId")
                 dfs(dependency)
+            }
+            
+            // Check children for circular references (but don't add them to result here)
+            for (childId in current.children()) {
+                val child = tasks[childId]
+                    ?: throw IllegalStateException("Missing task for id $childId")
+                // Detect circular reference through children
+                if (childId == current.id || child.children().contains(current.id)) {
+                    throw IllegalStateException(
+                        "Circular child relationship detected: ${current.id} <-> $childId"
+                    )
+                }
+                // Recursively check child's dependencies and children
+                if (childId !in visited && childId !in visiting) {
+                    dfs(child)
+                }
             }
             
             visiting.remove(current.id)
