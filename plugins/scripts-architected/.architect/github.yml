@@ -1,0 +1,13 @@
+github:
+  deps:
+    type: renovate
+
+  pipelines:
+    - name: scripts-architected
+      type: github/classic-java-17
+      path: plugins/scripts-architected
+
+  release:
+    assets:
+      - name: scripts-architected.jar
+        path: "app/build/libs/scripts-architected-*.jar"
