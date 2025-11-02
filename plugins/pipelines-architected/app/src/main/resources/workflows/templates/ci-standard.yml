@@ -1,0 +1,24 @@
+name: ci-standard
+description: Standard CI workflow with build and test phases
+steps:
+  - name: init
+    task: init
+    continueOnError: false
+  
+  - name: lint
+    task: lint
+    dependsOn:
+      - init
+    continueOnError: false
+  
+  - name: build
+    task: build
+    dependsOn:
+      - lint
+    continueOnError: false
+  
+  - name: test
+    task: test
+    dependsOn:
+      - build
+    continueOnError: false

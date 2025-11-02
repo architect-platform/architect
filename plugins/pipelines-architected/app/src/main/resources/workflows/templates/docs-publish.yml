@@ -1,0 +1,18 @@
+name: docs-publish
+description: Build and publish documentation workflow
+steps:
+  - name: docs-init
+    task: docs-init
+    continueOnError: false
+  
+  - name: docs-build
+    task: docs-build
+    dependsOn:
+      - docs-init
+    continueOnError: false
+  
+  - name: docs-publish
+    task: docs-publish
+    dependsOn:
+      - docs-build
+    continueOnError: false
