@@ -1,0 +1,18 @@
+name: release-standard
+description: Standard release workflow with version tagging and publishing
+steps:
+  - name: build
+    task: build
+    continueOnError: false
+  
+  - name: test
+    task: test
+    dependsOn:
+      - build
+    continueOnError: false
+  
+  - name: release
+    task: github-release-task
+    dependsOn:
+      - test
+    continueOnError: false

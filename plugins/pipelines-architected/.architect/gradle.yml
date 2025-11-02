@@ -1,0 +1,4 @@
+gradle:
+  projects:
+    - name: pipelines-architected
+      path: app
