@@ -88,9 +88,57 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
     engineCommandClient.registerProject(request)
 
     if (command == null) {
-      val commands = engineCommandClient.getAllTasks(projectName)
-      println("🧭 Available tasks:")
-      commands.forEach { println(" - ${it.id}") }
+      val tasks = engineCommandClient.getAllTasks(projectName)
+      println()
+      println("╔═══════════════════════════════════════════════════════════════════════════════╗")
+      println("║ AVAILABLE TASKS                                                               ║")
+      println("╠═══════════════════════════════════════════════════════════════════════════════╣")
+      
+      if (tasks.isEmpty()) {
+        println("║ No tasks found                                                                ║")
+      } else {
+        // Group tasks by phase
+        val tasksByPhase = tasks.groupBy { it.phase }
+        val phasedTasks = tasksByPhase.filterKeys { it != null }
+        val unphasedTasks = tasksByPhase[null] ?: emptyList()
+        
+        // Constants for formatting
+        val descMaxWidth = 73
+        val lineWidth = 77
+        
+        // Display phased tasks
+        phasedTasks.entries.sortedBy { it.key }.forEach { (phase, phaseTasks) ->
+          println("║                                                                               ║")
+          println("║ Phase: ${phase?.padEnd(70) ?: ""}║")
+          phaseTasks.forEach { task ->
+            val taskLine = "  • ${task.id}".padEnd(lineWidth)
+            println("║${taskLine}║")
+            if (task.description.isNotEmpty()) {
+              val descLine = "    ${task.description.take(descMaxWidth)}".padEnd(lineWidth)
+              println("║${descLine}║")
+            }
+          }
+        }
+        
+        // Display unphased tasks
+        if (unphasedTasks.isNotEmpty()) {
+          if (phasedTasks.isNotEmpty()) {
+            println("║                                                                               ║")
+            println("║ Other Tasks:                                                                  ║")
+          }
+          unphasedTasks.forEach { task ->
+            val taskLine = "  • ${task.id}".padEnd(lineWidth)
+            println("║${taskLine}║")
+            if (task.description.isNotEmpty()) {
+              val descLine = "    ${task.description.take(descMaxWidth)}".padEnd(lineWidth)
+              println("║${descLine}║")
+            }
+          }
+        }
+      }
+      
+      println("╚═══════════════════════════════════════════════════════════════════════════════╝")
+      println()
       return
     }
 
