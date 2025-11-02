@@ -1,0 +1,42 @@
+site_name: {{siteName}}
+site_description: {{siteDescription}}
+site_author: {{siteAuthor}}
+{{#repoUrl}}
+repo_url: {{repoUrl}}
+repo_name: {{repoName}}
+{{/repoUrl}}
+
+theme:
+  name: material
+  palette:
+    primary: {{primaryColor}}
+    accent: {{accentColor}}
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+nav:
+  - Home: index.md
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.details
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+{{#repoUrl}}
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: {{repoUrl}}
+{{/repoUrl}}

@@ -1,0 +1,79 @@
+name: Publish Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'docusaurus.config.js'
+      - '.github/workflows/docs-publish.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+        if: ${{ contains(fromJSON('["docusaurus", "vuepress"]'), '{{framework}}') }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+        if: ${{ '{{framework}}' == 'mkdocs' }}
+
+      - name: Install MkDocs dependencies
+        run: |
+          pip install mkdocs=={{mkdocsVersion}} mkdocs-material=={{mkdocsMaterialVersion}}
+        if: ${{ '{{framework}}' == 'mkdocs' }}
+
+      - name: Install Node dependencies
+        run: npm ci
+        if: ${{ contains(fromJSON('["docusaurus", "vuepress"]'), '{{framework}}') }}
+
+      - name: Build documentation
+        env:
+          FRAMEWORK: '{{framework}}'
+          OUTPUT_DIR: '{{outputDir}}'
+        run: |
+          if [ "$FRAMEWORK" = "mkdocs" ]; then
+            mkdocs build -d "$OUTPUT_DIR"
+          elif [ "$FRAMEWORK" = "docusaurus" ]; then
+            npm run build
+          elif [ "$FRAMEWORK" = "vuepress" ]; then
+            npm run docs:build
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '{{outputDir}}'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
