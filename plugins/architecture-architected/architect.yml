@@ -1,0 +1,9 @@
+project:
+  name: architecture-architected
+  description: "The Architect plugin for architectural rule management and validation"
+
+plugins:
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
