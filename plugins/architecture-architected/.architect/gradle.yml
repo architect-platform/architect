@@ -1,3 +1,4 @@
 gradle:
-  test: true
-  build: true
+  projects:
+    - name: architecture-architected
+      path: app

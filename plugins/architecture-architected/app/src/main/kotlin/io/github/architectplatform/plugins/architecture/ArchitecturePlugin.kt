@@ -60,7 +60,6 @@ import java.io.File
  *
  * Tasks:
  * - architecture-validate: Validates the project against defined architectural rules
- * - architecture-init: Initializes architecture configuration with templates
  */
 class ArchitecturePlugin : ArchitectPlugin<ArchitectureContext> {
     override val id = "architecture-plugin"
@@ -72,136 +71,12 @@ class ArchitecturePlugin : ArchitectPlugin<ArchitectureContext> {
      * Registers architecture tasks with the task registry.
      *
      * Registered tasks:
-     * - architecture-init: Initialize architecture configuration (INIT phase)
      * - architecture-validate: Validate architectural rules (VERIFY phase)
      *
      * @param registry The task registry to add tasks to
      */
     override fun register(registry: TaskRegistry) {
-        registry.add(ArchitectureInitTask(CodeWorkflow.INIT, context))
         registry.add(ArchitectureValidateTask(CodeWorkflow.VERIFY, context))
-    }
-
-    /**
-     * Task for initializing architecture configuration.
-     *
-     * Creates a sample architecture configuration file if it doesn't exist.
-     */
-    class ArchitectureInitTask(
-        private val phase: Phase,
-        private val context: ArchitectureContext
-    ) : Task {
-        override val id: String = "architecture-init"
-
-        override fun phase(): Phase = phase
-
-        override fun execute(
-            environment: Environment,
-            projectContext: ProjectContext,
-            args: List<String>
-        ): TaskResult {
-            if (!context.enabled) {
-                return TaskResult.success("Architecture plugin is disabled. Skipping initialization.")
-            }
-
-            val architectureFile = File(projectContext.dir.toFile(), ".architect/architecture.yml")
-            
-            if (architectureFile.exists()) {
-                return TaskResult.success("Architecture configuration already exists at ${architectureFile.path}")
-            }
-
-            // Create .architect directory if it doesn't exist
-            architectureFile.parentFile.mkdirs()
-
-            // Create a sample architecture configuration
-            val sampleConfig = """
-                # Architecture Rules Configuration
-                # 
-                # This file defines architectural rules that will be validated
-                # to ensure your project follows the adopted architectural patterns.
-                
-                architecture:
-                  enabled: true
-                  onViolation: warn  # Options: warn, fail
-                  reportFormat: text  # Options: text, json, html
-                  strict: false      # If true, warnings are treated as errors
-                  
-                  # Rulesets are collections of related rules
-                  rulesets:
-                    
-                    # Example: Layered Architecture Rules
-                    layered:
-                      enabled: true
-                      description: "Enforce layered architecture principles"
-                      rules:
-                        - id: "no-direct-db-access"
-                          description: "Controllers should not directly access database"
-                          type: "dependency"
-                          pattern: ".*Controller.*"
-                          forbidden: [".*Repository.*", ".*DAO.*", ".*Entity.*"]
-                          severity: "error"
-                          enabled: true
-                        
-                        - id: "service-layer-required"
-                          description: "Controllers must use service layer"
-                          type: "dependency"
-                          pattern: ".*Controller.*"
-                          required: [".*Service.*"]
-                          severity: "warning"
-                          enabled: true
-                    
-                    # Example: Naming Convention Rules
-                    naming:
-                      enabled: true
-                      description: "Enforce naming conventions"
-                      rules:
-                        - id: "controller-naming"
-                          description: "Controllers must end with 'Controller'"
-                          type: "naming"
-                          pattern: ".*Controller"
-                          paths: ["src/main/.*Controller\\..*"]
-                          severity: "warning"
-                          enabled: true
-                        
-                        - id: "service-naming"
-                          description: "Services must end with 'Service'"
-                          type: "naming"
-                          pattern: ".*Service"
-                          paths: ["src/main/.*Service\\..*"]
-                          severity: "warning"
-                          enabled: true
-                    
-                    # Example: Structure Rules
-                    structure:
-                      enabled: false
-                      description: "Enforce project structure"
-                      rules:
-                        - id: "required-directories"
-                          description: "Required directories must exist"
-                          type: "structure"
-                          paths: ["src/main", "src/test", "docs"]
-                          severity: "error"
-                          enabled: false
-                  
-                  # Custom rules can be defined here
-                  customRules: []
-            """.trimIndent()
-
-            try {
-                architectureFile.writeText(sampleConfig)
-                return TaskResult.success(
-                    "Architecture configuration initialized successfully at ${architectureFile.path}",
-                    listOf(
-                        TaskResult.success("Created sample architecture rules"),
-                        TaskResult.success("Edit .architect/architecture.yml to customize your architectural rules")
-                    )
-                )
-            } catch (e: Exception) {
-                return TaskResult.failure(
-                    "Failed to initialize architecture configuration: ${e.message ?: "Unknown error"}"
-                )
-            }
-        }
     }
 
     /**

@@ -1,4 +1,13 @@
 github:
-  publish:
-    enabled: true
-    registry: true
+  pipelines:
+    - name: architecture-architected
+      type: github/classic-java-17
+      path: plugins/architecture-architected
+
+  deps:
+    type: renovate
+
+  release:
+    assets:
+      - name: architecture-architected.jar
+        path: "app/build/libs/architecture-architected-*.jar"
