@@ -63,6 +63,10 @@ docs/architect-cli/
 docs/architect-engine/
 docs/architect-cloud/
 docs/plugins/
+# Temporary docs build and publish directories
+.docs-build-temp/
+.docs-publish-temp/
+mkdocs.yml.tmp
 
 # Python (for MkDocs)
 __pycache__/

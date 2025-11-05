@@ -21,13 +21,14 @@ import kotlin.io.path.Path
  * This plugin integrates documentation building and publishing with:
  * - Support for multiple documentation frameworks (MkDocs, Docusaurus, VuePress)
  * - Markdown-based documentation
- * - GitHub Pages publishing
- * - Automated workflow generation
+ * - GitHub Pages publishing (handled entirely within plugin, no external workflows)
+ * - Automatic component discovery
+ * - Dynamic configuration generation
  *
  * The plugin registers tasks in the following phases:
- * - INIT: Documentation structure and workflow initialization
- * - BUILD: Documentation building
- * - PUBLISH: Documentation publishing to GitHub Pages
+ * - INIT: Documentation structure initialization
+ * - BUILD: Documentation building with auto-discovery
+ * - PUBLISH: Documentation publishing to GitHub Pages (managed by plugin)
  */
 class DocsPlugin : ArchitectPlugin<DocsContext> {
   override val id = "docs-plugin"
@@ -422,14 +423,14 @@ extra:
   }
 
   /**
-   * Initializes documentation structure and workflows.
+   * Initializes documentation structure.
    *
    * This task:
    * 1. Creates documentation directory structure if it doesn't exist
-   * 2. Sets up GitHub Actions workflow for documentation publishing
-   * 3. Creates initial index.md if needed
+   * 2. Creates initial index.md if needed
    *
    * Note: mkdocs.yml is now generated dynamically at build time, not during init.
+   * Publishing is handled entirely by the plugin without requiring GitHub Actions.
    *
    * @param environment Execution environment providing services
    * @param projectContext The project context
@@ -440,7 +441,6 @@ extra:
         findRepoRoot(projectContext.dir.toFile())
             ?: return TaskResult.failure("Git directory not found in project hierarchy.")
 
-    val resourceExtractor = environment.service(ResourceExtractor::class.java)
     val results = mutableListOf<TaskResult>()
 
     // Create documentation directory if it doesn't exist
@@ -467,39 +467,8 @@ extra:
       results.add(TaskResult.success("Created initial index.md"))
     }
 
-    // Initialize GitHub Actions workflow for documentation publishing
-    if (context.publish.enabled && context.publish.githubPages) {
-      val workflowsDir = File(gitDir, ".github/workflows")
-      if (!workflowsDir.exists()) {
-        workflowsDir.mkdirs()
-      }
-
-      try {
-        resourceExtractor
-            .getResourceFileContent(this.javaClass.classLoader, "workflows/docs-publish.yml")
-            .let { content ->
-              val workflowFile = File(workflowsDir, "docs-publish.yml")
-              // Sanitize all template values before inserting into workflow
-              workflowFile.writeText(
-                  content
-                      .replace("{{framework}}", context.build.framework.replace(Regex("[^a-zA-Z0-9_-]"), ""))
-                      .replace("{{sourceDir}}", sanitizePath(context.build.sourceDir))
-                      .replace("{{outputDir}}", sanitizePath(context.build.outputDir))
-                      .replace("{{branch}}", sanitizeBranch(context.publish.branch))
-                      .replace("{{mkdocsVersion}}", sanitizeVersion(context.build.mkdocsVersion))
-                      .replace("{{mkdocsMaterialVersion}}", sanitizeVersion(context.build.mkdocsMaterialVersion))
-                      .replace("{{mkdocsMonorepoVersion}}", sanitizeVersion(context.build.mkdocsMonorepoVersion)))
-              results.add(TaskResult.success("Created GitHub Actions workflow for documentation"))
-            }
-      } catch (e: Exception) {
-        results.add(
-            TaskResult.failure("Failed to create workflow: ${e.message ?: "Unknown error"}"))
-      }
-    }
-
     return TaskResult.success("Documentation initialized successfully", results)
   }
-
   // Remove old framework-specific config generation code - now handled dynamically in buildDocs
 
   /**
@@ -656,8 +625,11 @@ extra:
    *
    * This task:
    * 1. Ensures documentation is built
-   * 2. Deploys to GitHub Pages using gh-pages branch
-   * 3. Configures custom domain if specified
+   * 2. Creates CNAME file for custom domains if configured
+   * 3. Commits documentation to gh-pages branch
+   * 4. Pushes to remote repository
+   *
+   * All operations are handled internally by the plugin using git commands.
    *
    * @param environment Execution environment providing services
    * @param projectContext The project context
@@ -686,9 +658,9 @@ extra:
           "Output directory not found: ${context.build.outputDir}. Please run docs-build first.")
     }
 
-    // Create CNAME file if custom domain is specified
-    if (context.publish.cname && context.publish.domain.isNotEmpty()) {
-      try {
+    try {
+      // Step 1: Create CNAME file if custom domain is specified
+      if (context.publish.cname && context.publish.domain.isNotEmpty()) {
         if (!isValidDomain(context.publish.domain)) {
           results.add(TaskResult.failure("Invalid domain format: ${context.publish.domain}"))
         } else {
@@ -696,33 +668,87 @@ extra:
           cnameFile.writeText(context.publish.domain)
           results.add(TaskResult.success("Created CNAME file for domain: ${context.publish.domain}"))
         }
-      } catch (e: Exception) {
-        results.add(
-            TaskResult.failure("Failed to create CNAME file: ${e.message ?: "Unknown error"}"))
       }
-    }
 
-    // Use the provided publish script to deploy to GitHub Pages
-    try {
-      val resourceExtractor = environment.service(ResourceExtractor::class.java)
-      resourceExtractor.copyFileFromResources(
-          this.javaClass.classLoader, "scripts/publish-ghpages.sh", projectContext.dir, "publish-ghpages.sh")
-
-      commandExecutor.execute("chmod +x publish-ghpages.sh", gitDir.toString())
-
-      val sanitizedOutputDir = sanitizePath(context.build.outputDir)
       val sanitizedBranch = sanitizeBranch(context.publish.branch)
       
-      val publishCommand =
-          "./publish-ghpages.sh $sanitizedOutputDir $sanitizedBranch"
-      commandExecutor.execute(publishCommand, gitDir.toString())
-
-      commandExecutor.execute("rm publish-ghpages.sh", gitDir.toString())
-
+      // Step 2: Get current branch
+      val getCurrentBranch = "git rev-parse --abbrev-ref HEAD"
+      commandExecutor.execute(getCurrentBranch, gitDir.toString())
+      
+      // Step 3: Create temporary directory for docs
+      val tempDir = File(gitDir, ".docs-publish-temp")
+      tempDir.mkdirs()
+      
+      // Step 4: Copy built documentation to temp directory
+      outputDir.copyRecursively(tempDir, overwrite = true)
+      
+      // Step 5: Stash current changes
+      commandExecutor.execute("git stash push -m 'Stashing changes before gh-pages deployment'", gitDir.toString())
+      
+      // Step 6: Check if gh-pages branch exists and checkout
+      try {
+        commandExecutor.execute("git show-ref --verify --quiet refs/heads/$sanitizedBranch", gitDir.toString())
+        // Branch exists
+        commandExecutor.execute("git checkout $sanitizedBranch", gitDir.toString())
+      } catch (e: Exception) {
+        // Branch doesn't exist, create orphan branch
+        commandExecutor.execute("git checkout --orphan $sanitizedBranch", gitDir.toString())
+        commandExecutor.execute("git rm -rf .", gitDir.toString())
+      }
+      
+      // Step 7: Remove all files except .git
+      val filesToRemove = gitDir.listFiles()?.filter { 
+        it.name != ".git" && it.name != ".docs-publish-temp"
+      } ?: emptyList()
+      filesToRemove.forEach { it.deleteRecursively() }
+      
+      // Step 8: Copy files from temp directory
+      tempDir.listFiles()?.forEach { file ->
+        file.copyRecursively(File(gitDir, file.name), overwrite = true)
+      }
+      
+      // Step 9: Create .nojekyll file to bypass Jekyll processing
+      File(gitDir, ".nojekyll").writeText("")
+      
+      // Step 10: Add and commit
+      commandExecutor.execute("git add .", gitDir.toString())
+      try {
+        commandExecutor.execute("git commit -m 'docs: update documentation'", gitDir.toString())
+      } catch (e: Exception) {
+        // No changes to commit - this is okay
+        results.add(TaskResult.success("No documentation changes to commit"))
+      }
+      
+      // Step 11: Push to remote
+      commandExecutor.execute("git push origin $sanitizedBranch", gitDir.toString())
+      
+      // Step 12: Return to original branch
+      commandExecutor.execute("git checkout -", gitDir.toString())
+      
+      // Step 13: Restore stashed changes
+      try {
+        commandExecutor.execute("git stash pop", gitDir.toString())
+      } catch (e: Exception) {
+        // No stashed changes - this is okay
+      }
+      
+      // Step 14: Clean up temp directory
+      if (tempDir.exists()) {
+        tempDir.deleteRecursively()
+      }
+      
       results.add(
           TaskResult.success(
               "Published documentation to GitHub Pages on branch: ${context.publish.branch}"))
+              
     } catch (e: Exception) {
+      // Clean up temp directory on error
+      val tempDir = File(gitDir, ".docs-publish-temp")
+      if (tempDir.exists()) {
+        tempDir.deleteRecursively()
+      }
+      
       return TaskResult.failure(
           "Failed to publish documentation: ${e.message ?: "Unknown error"}", results)
     }
