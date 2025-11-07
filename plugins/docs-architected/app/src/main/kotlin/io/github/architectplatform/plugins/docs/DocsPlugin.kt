@@ -10,6 +10,7 @@ import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
+import io.github.architectplatform.plugins.docs.dto.ComponentDocs
 import io.github.architectplatform.plugins.docs.dto.DocsContext
 import java.io.File
 import java.nio.file.Files
