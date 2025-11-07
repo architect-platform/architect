@@ -1,0 +1,4 @@
+gradle:
+  projects:
+    - name: architecture-architected
+      path: app
