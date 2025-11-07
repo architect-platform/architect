@@ -8,3 +8,16 @@ plugins:
   - name: github-architected
     repo: architect-platform/architect
 
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "Architect Engine"
+    siteDescription: "RESTful API server for task execution and project management"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+  publish:
+    enabled: true
+    githubPages: true

@@ -7,3 +7,17 @@ plugins:
     repo: architect-platform/architect
   - name: github-architected
     repo: architect-platform/architect
+
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "Pipelines Architected Plugin"
+    siteDescription: "Pipeline workflow management"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+  publish:
+    enabled: true
+    githubPages: true
