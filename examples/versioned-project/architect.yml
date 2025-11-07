@@ -1,0 +1,42 @@
+project:
+  name: versioned-example
+  description: "Example project demonstrating version pinning"
+
+# Pin specific versions for reproducibility
+architect:
+  cliVersion: "1.1.0"
+  engineVersion: "1.6.1"
+
+plugins:
+  - name: docs-architected
+    repo: architect-platform/architect
+  - name: git-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
+
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "Versioned Project Example"
+    siteDescription: "Demonstrates version pinning for reproducible builds"
+  publish:
+    enabled: true
+    githubPages: true
+
+# Git configuration
+git:
+  config:
+    user.name: "Example User"
+    user.email: "user@example.com"
+
+# GitHub configuration
+github:
+  pipelines:
+    - name: "ci"
+      type: "standard"
+      branch: "main"
+  release:
+    enabled: true

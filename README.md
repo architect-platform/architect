@@ -19,6 +19,7 @@ Architect is a comprehensive automation platform that brings **convention over c
 - 📚 **Documentation Management**: Multi-framework documentation building and publishing
 - 🔐 **Security First**: Built-in security validation and best practices
 - 🎯 **Convention Based**: Sensible defaults with full customization options
+- 📌 **Version Management**: Pin CLI and Engine versions for reproducible builds
 
 ## Architecture
 
@@ -124,6 +125,39 @@ architect docs-build
 # Publish to GitHub Pages
 architect docs-publish
 ```
+
+## Version Management
+
+Architect supports version pinning for reproducible builds and automatic update notifications.
+
+### Pin Versions
+
+Add version specifications to your `architect.yml` to ensure consistent tooling across your team:
+
+```yaml
+project:
+  name: my-project
+
+architect:
+  cliVersion: "1.1.0"    # Pin CLI version
+  engineVersion: "1.6.1"  # Pin Engine version
+
+plugins:
+  - name: docs-architected
+    repo: architect-platform/architect
+```
+
+**Benefits:**
+- ✅ Reproducible builds in CI/CD
+- ✅ Consistent tooling across team members
+- ✅ Prevent unexpected breaking changes
+- ✅ Explicit version control
+
+### Update Notifications
+
+For projects without pinned versions, Architect automatically checks for updates (once per 24 hours) and notifies you when new versions are available.
+
+**Learn more:** See [Version Management Documentation](docs/versioning.md) for detailed information.
 
 ## Available Plugins
 
