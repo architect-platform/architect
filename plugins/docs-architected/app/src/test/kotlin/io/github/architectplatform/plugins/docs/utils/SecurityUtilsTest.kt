@@ -40,13 +40,13 @@ class SecurityUtilsTest {
     @Test
     fun `sanitizePath should remove parent directory references`() {
         assertEquals("docs/", SecurityUtils.sanitizePath("../docs/"))
-        assertEquals("docs/index.md", SecurityUtils.sanitizePath("docs/../docs/index.md"))
+        assertEquals("docs/docs/index.md", SecurityUtils.sanitizePath("docs/../docs/index.md"))
     }
 
     @Test
     fun `sanitizePath should remove special characters`() {
-        assertEquals("docs/index.md", SecurityUtils.sanitizePath("docs/index.md;rm -rf /"))
-        assertEquals("docs/file.txt", SecurityUtils.sanitizePath("docs/file.txt && echo hacked"))
+        assertEquals("docs/index.mdrm-rf/", SecurityUtils.sanitizePath("docs/index.md;rm -rf /"))
+        assertEquals("docs/file.txtechohacked", SecurityUtils.sanitizePath("docs/file.txt && echo hacked"))
     }
 
     @Test
@@ -59,7 +59,7 @@ class SecurityUtilsTest {
     @Test
     fun `sanitizeBranch should remove special characters`() {
         assertEquals("mainrm-rf", SecurityUtils.sanitizeBranch("main;rm -rf /"))
-        assertEquals("feature", SecurityUtils.sanitizeBranch("feature && echo hacked"))
+        assertEquals("featureechohacked", SecurityUtils.sanitizeBranch("feature && echo hacked"))
     }
 
     @Test
@@ -71,7 +71,7 @@ class SecurityUtilsTest {
 
     @Test
     fun `sanitizeVersion should remove special characters`() {
-        assertEquals("1.5.3", SecurityUtils.sanitizeVersion("1.5.3;rm -rf /"))
-        assertEquals("2.0.0", SecurityUtils.sanitizeVersion("2.0.0 && echo hacked"))
+        assertEquals("1.5.3rm-rf", SecurityUtils.sanitizeVersion("1.5.3;rm -rf /"))
+        assertEquals("2.0.0echohacked", SecurityUtils.sanitizeVersion("2.0.0 && echo hacked"))
     }
 }

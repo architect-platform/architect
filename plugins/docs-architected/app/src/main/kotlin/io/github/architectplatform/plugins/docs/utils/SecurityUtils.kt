@@ -4,56 +4,63 @@ package io.github.architectplatform.plugins.docs.utils
  * Utility class for security-related operations like sanitization and validation.
  */
 object SecurityUtils {
-    
-    // Domain validation regex - validates RFC-compliant domain names
-    // Requires at least one dot (e.g., example.com) to avoid single character domains
+
+    // Domain validation regex (relaxed RFC 1035 style)
+    // - Must have at least one dot (no single-label domains)
+    // - No leading/trailing dots or hyphens
+    // - Allows multiple subdomains
     private val DOMAIN_VALIDATION_REGEX =
-        Regex("^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$")
-    
+        Regex("^(?!-)(?:[a-zA-Z0-9-]{1,63}\\.)+[a-zA-Z]{2,}$")
+
     /**
      * Sanitizes a path to prevent command injection and directory traversal.
-     * Allows alphanumeric characters, underscores, hyphens, forward slashes, and dots.
-     * Prevents absolute paths, parent directory references, and special characters.
+     * - Removes absolute path indicators
+     * - Removes parent directory references
+     * - Removes disallowed characters like ; & |
      *
      * @param path The path to sanitize
      * @return Sanitized path safe for shell commands
      */
     fun sanitizePath(path: String): String {
-        // Remove any absolute path indicators
-        val relativePath = path.removePrefix("/")
+        // Remove any absolute path indicator
+        var sanitized = path.removePrefix("/")
         // Remove parent directory references
-        val noParentRefs = relativePath.replace("../", "").replace("/..", "")
-        // Remove disallowed characters
-        return noParentRefs.replace(Regex("[^a-zA-Z0-9/_.-]"), "")
+        sanitized = sanitized.replace("../", "")
+            .replace("/..", "")
+        // Remove everything not allowed: letters, numbers, /, _, ., or -
+        sanitized = sanitized.replace(Regex("[^a-zA-Z0-9/_.-]"), "")
+        // Normalize duplicate slashes if any
+        sanitized = sanitized.replace(Regex("/{2,}"), "/")
+        return sanitized
     }
-    
+
     /**
      * Sanitizes a Git branch name for safe shell execution.
      * Allows alphanumeric characters, underscores, hyphens, and forward slashes.
-     *
-     * @param branch The branch name to sanitize
-     * @return Sanitized branch name
+     * Removes special characters like ; & |
      */
     fun sanitizeBranch(branch: String): String {
-        return branch.replace(Regex("[^a-zA-Z0-9/_-]"), "")
+        // Remove everything except allowed characters
+        var sanitized = branch.replace(Regex("[^a-zA-Z0-9/_-]"), "")
+        // Trim trailing slashes or dots if they appear after sanitization
+        sanitized = sanitized.trimEnd('/', '.')
+        return sanitized
     }
-    
+
     /**
      * Sanitizes a version string for safe shell execution.
      * Allows alphanumeric characters, dots, hyphens, and underscores.
-     *
-     * @param version The version string to sanitize
-     * @return Sanitized version string
      */
     fun sanitizeVersion(version: String): String {
         return version.replace(Regex("[^a-zA-Z0-9._-]"), "")
     }
-    
+
     /**
-     * Validates a domain name using RFC-compliant rules.
+     * Validates a domain name using simplified RFC rules.
      *
-     * @param domain The domain to validate
-     * @return True if the domain is valid, false otherwise
+     * - Must not start or end with a hyphen or dot
+     * - Must contain at least one dot
+     * - Each label: 1–63 chars, alphanumeric or hyphen, cannot start/end with hyphen
      */
     fun isValidDomain(domain: String): Boolean {
         return DOMAIN_VALIDATION_REGEX.matches(domain)
