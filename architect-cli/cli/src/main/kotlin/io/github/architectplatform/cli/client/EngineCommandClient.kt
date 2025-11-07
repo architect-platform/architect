@@ -3,6 +3,7 @@ package io.github.architectplatform.cli.client
 import io.github.architectplatform.cli.dto.ProjectDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.dto.TaskDTO
+import io.github.architectplatform.cli.dto.VersionInfo
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
@@ -87,4 +88,12 @@ interface EngineCommandClient {
    */
   @Get("/executions/{executionId}")
   fun getExecutionFlow(@PathVariable executionId: ExecutionId): Flow<Map<String, Any>>
+
+  /**
+   * Retrieves the engine version.
+   *
+   * @return Version information
+   */
+  @Get("/version")
+  fun getVersion(): VersionInfo
 }

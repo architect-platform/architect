@@ -1,7 +1,9 @@
 package io.github.architectplatform.cli
 
 import io.github.architectplatform.cli.client.EngineCommandClient
+import io.github.architectplatform.cli.config.ConfigService
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
+import io.github.architectplatform.cli.version.VersionManager
 import io.micronaut.context.ApplicationContext
 import jakarta.inject.Singleton
 import kotlin.system.exitProcess
@@ -29,7 +31,11 @@ import picocli.CommandLine.Parameters
     name = "architect",
     description = ["Architect CLI"],
 )
-class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : Runnable {
+class ArchitectLauncher(
+    private val engineCommandClient: EngineCommandClient,
+    private val versionManager: VersionManager,
+    private val configService: ConfigService
+) : Runnable {
 
   /**
    * The command to execute (e.g., "build", "test", "engine").
@@ -68,9 +74,11 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
    *
    * Flow:
    * 1. Check if command is "engine" and delegate to [handleEngineCommand]
-   * 2. Register the current project with the engine
-   * 3. If no command specified, list available tasks
-   * 4. Otherwise, execute the specified task and display results
+   * 2. Check for version updates (if not pinned)
+   * 3. Validate pinned versions (if configured)
+   * 4. Register the current project with the engine
+   * 5. If no command specified, list available tasks
+   * 6. Otherwise, execute the specified task and display results
    *
    * @throws Exception if task execution fails
    */
@@ -82,6 +90,33 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
 
     val projectPath = System.getProperty("user.dir")
     val projectName = extractProjectName(projectPath)
+
+    // Read project configuration
+    val config = configService.readConfig(projectPath)
+    val pinnedCliVersion = configService.getPinnedCliVersion(config)
+    val pinnedEngineVersion = configService.getPinnedEngineVersion(config)
+
+    // Validate CLI version if pinned
+    if (pinnedCliVersion != null) {
+      versionManager.validatePinnedCliVersion(pinnedCliVersion)
+    }
+
+    // Get engine version for validation and update checks
+    val engineVersion = try {
+      engineCommandClient.getVersion().version
+    } catch (e: Exception) {
+      null
+    }
+
+    // Validate engine version if pinned
+    if (pinnedEngineVersion != null) {
+      versionManager.validatePinnedEngineVersion(pinnedEngineVersion, engineVersion)
+    }
+
+    // Check for updates only if versions are not pinned
+    if (pinnedCliVersion == null && pinnedEngineVersion == null) {
+      checkForUpdates(engineVersion)
+    }
 
     println("📦 Registering project: $projectName")
     val request = RegisterProjectRequest(name = projectName, path = projectPath)
@@ -107,6 +142,38 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
    */
   private fun extractProjectName(projectPath: String): String {
     return projectPath.substringAfterLast("/").substringBeforeLast(".")
+  }
+
+  /**
+   * Checks for updates to CLI and Engine versions.
+   * Only checks once per day to avoid excessive notifications.
+   */
+  @Suppress("UNUSED_PARAMETER")
+  private fun checkForUpdates(engineVersion: String?) {
+    if (!versionManager.shouldCheckForUpdates()) {
+      return
+    }
+
+    // For now, we just record the check. 
+    // In a real implementation, this would call GitHub API to check for latest releases.
+    // Since we want to keep this simple and avoid external API dependencies for now,
+    // we'll just track that we performed the check.
+    versionManager.recordVersionCheck()
+    
+    // TODO: Implement actual version checking against GitHub releases API
+    // Example implementation:
+    // val latestCliVersion = fetchLatestCliVersion()
+    // val latestEngineVersion = fetchLatestEngineVersion()
+    // 
+    // if (versionManager.shouldNotifyAboutVersion(versionManager.getCliVersion(), latestCliVersion, "cli")) {
+    //   versionManager.displayUpdateNotification("CLI", versionManager.getCliVersion(), latestCliVersion)
+    //   versionManager.recordVersionCheck(cliVersion = latestCliVersion)
+    // }
+    //
+    // if (engineVersion != null && versionManager.shouldNotifyAboutVersion(engineVersion, latestEngineVersion, "engine")) {
+    //   versionManager.displayUpdateNotification("Engine", engineVersion, latestEngineVersion)
+    //   versionManager.recordVersionCheck(engineVersion = latestEngineVersion)
+    // }
   }
 
   /**
