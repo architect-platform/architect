@@ -29,8 +29,8 @@ repositories {
 dependencies {
   implementation("io.github.architectplatform:api:1.1.2")
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.14.1")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.14.1")
 }
 
 tasks.test {

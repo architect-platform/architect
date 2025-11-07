@@ -1,7 +1,7 @@
 plugins {
   kotlin("jvm") version "1.9.25"
   `maven-publish`
-  id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
+  id("org.jlleitschuh.gradle.ktlint") version "12.3.0"
 }
 
 group = "io.github.architectplatform"
@@ -22,8 +22,8 @@ dependencies {
   // Test dependencies
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.14.1")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.14.1")
 }
 
 tasks.test {

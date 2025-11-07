@@ -29,12 +29,12 @@ repositories {
 
 dependencies {
   implementation("io.github.architectplatform:api:1.1.3")
-  implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
+  implementation("com.fasterxml.jackson.core:jackson-databind:2.20.1")
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.1")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.20.1")
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.14.1")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.14.1")
 }
 
 tasks.test {
