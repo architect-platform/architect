@@ -41,12 +41,6 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
   override var context: DocsContext = DocsContext()
 
   companion object {
-    // Domain validation regex - validates RFC-compliant domain names
-    // Matches: example.com, sub.example.com, my-site.github.io
-    // Does not match: -example.com, example-.com, .example.com
-    private val DOMAIN_VALIDATION_REGEX =
-        Regex("^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?)*$")
-
     // Template pattern for components list
     private val COMPONENTS_PATTERN = Regex("""(?s)\{\{#components}}(.*?)\{\{/components}}""")
     
@@ -55,52 +49,31 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
 
     /**
      * Sanitizes a path to prevent command injection and directory traversal.
-     * Allows alphanumeric characters, underscores, hyphens, forward slashes, and dots.
-     * Prevents absolute paths, parent directory references, and special characters.
-     *
-     * @param path The path to sanitize
-     * @return Sanitized path safe for shell commands
+     * @deprecated Use SecurityUtils.sanitizePath() instead
      */
-    fun sanitizePath(path: String): String {
-      // Remove any absolute path indicators
-      val relativePath = path.removePrefix("/")
-      // Remove parent directory references
-      val noParentRefs = relativePath.replace("../", "").replace("/..", "")
-      // Remove disallowed characters
-      return noParentRefs.replace(Regex("[^a-zA-Z0-9/_.-]"), "")
-    }
+    @Deprecated("Use SecurityUtils.sanitizePath() instead", ReplaceWith("SecurityUtils.sanitizePath(path)", "io.github.architectplatform.plugins.docs.utils.SecurityUtils"))
+    fun sanitizePath(path: String): String = io.github.architectplatform.plugins.docs.utils.SecurityUtils.sanitizePath(path)
 
     /**
      * Sanitizes a Git branch name for safe shell execution.
-     * Allows alphanumeric characters, underscores, hyphens, and forward slashes.
-     *
-     * @param branch The branch name to sanitize
-     * @return Sanitized branch name
+     * @deprecated Use SecurityUtils.sanitizeBranch() instead
      */
-    fun sanitizeBranch(branch: String): String {
-      return branch.replace(Regex("[^a-zA-Z0-9/_-]"), "")
-    }
+    @Deprecated("Use SecurityUtils.sanitizeBranch() instead", ReplaceWith("SecurityUtils.sanitizeBranch(branch)", "io.github.architectplatform.plugins.docs.utils.SecurityUtils"))
+    fun sanitizeBranch(branch: String): String = io.github.architectplatform.plugins.docs.utils.SecurityUtils.sanitizeBranch(branch)
 
     /**
      * Sanitizes a version string for safe shell execution.
-     * Allows alphanumeric characters, dots, hyphens, and underscores.
-     *
-     * @param version The version string to sanitize
-     * @return Sanitized version string
+     * @deprecated Use SecurityUtils.sanitizeVersion() instead
      */
-    fun sanitizeVersion(version: String): String {
-      return version.replace(Regex("[^a-zA-Z0-9._-]"), "")
-    }
+    @Deprecated("Use SecurityUtils.sanitizeVersion() instead", ReplaceWith("SecurityUtils.sanitizeVersion(version)", "io.github.architectplatform.plugins.docs.utils.SecurityUtils"))
+    fun sanitizeVersion(version: String): String = io.github.architectplatform.plugins.docs.utils.SecurityUtils.sanitizeVersion(version)
 
     /**
      * Validates a domain name using RFC-compliant rules.
-     *
-     * @param domain The domain to validate
-     * @return True if the domain is valid, false otherwise
+     * @deprecated Use SecurityUtils.isValidDomain() instead
      */
-    fun isValidDomain(domain: String): Boolean {
-      return DOMAIN_VALIDATION_REGEX.matches(domain)
-    }
+    @Deprecated("Use SecurityUtils.isValidDomain() instead", ReplaceWith("SecurityUtils.isValidDomain(domain)", "io.github.architectplatform.plugins.docs.utils.SecurityUtils"))
+    fun isValidDomain(domain: String): Boolean = io.github.architectplatform.plugins.docs.utils.SecurityUtils.isValidDomain(domain)
   }
 
   /**

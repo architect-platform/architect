@@ -2,9 +2,9 @@ package io.github.architectplatform.plugins.docs.builders
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.api.core.tasks.TaskResult
-import io.github.architectplatform.plugins.docs.DocsPlugin
 import io.github.architectplatform.plugins.docs.dto.BuildContext
 import io.github.architectplatform.plugins.docs.dto.ComponentDocs
+import io.github.architectplatform.plugins.docs.utils.SecurityUtils
 import java.io.File
 
 /**
@@ -52,8 +52,8 @@ class MkDocsBuilder(
      * Installs MkDocs and dependencies in the virtual environment.
      */
     override fun installDependencies(workingDir: File): TaskResult {
-        val mkdocsVer = DocsPlugin.sanitizeVersion(context.mkdocsVersion)
-        val materialVer = DocsPlugin.sanitizeVersion(context.mkdocsMaterialVersion)
+        val mkdocsVer = SecurityUtils.sanitizeVersion(context.mkdocsVersion)
+        val materialVer = SecurityUtils.sanitizeVersion(context.mkdocsMaterialVersion)
         
         val packages = listOf(
             "mkdocs==$mkdocsVer",
@@ -97,7 +97,7 @@ class MkDocsBuilder(
      * Builds documentation using mkdocs build command.
      */
     override fun build(workingDir: File): TaskResult {
-        val sanitizedOutputDir = DocsPlugin.sanitizePath(context.outputDir)
+        val sanitizedOutputDir = SecurityUtils.sanitizePath(context.outputDir)
         
         return try {
             // Use mkdocs from virtual environment

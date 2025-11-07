@@ -73,7 +73,7 @@ class VuePressBuilder(
 module.exports = {
   title: '${context.siteName}',
   description: '${context.siteDescription}',
-  ${if (context.repoUrl.isNotEmpty()) "base: '/'" else "base: '/'"},
+  base: '/',
   
   themeConfig: {
     ${if (context.repoUrl.isNotEmpty()) """

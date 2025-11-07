@@ -2,8 +2,8 @@ package io.github.architectplatform.plugins.docs.publishers
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.api.core.tasks.TaskResult
-import io.github.architectplatform.plugins.docs.DocsPlugin
 import io.github.architectplatform.plugins.docs.dto.PublishContext
+import io.github.architectplatform.plugins.docs.utils.SecurityUtils
 import java.io.File
 
 /**
@@ -46,7 +46,7 @@ class GitHubPagesPublisher(
         
         // Create CNAME file if custom domain is specified
         if (context.cname && context.domain.isNotEmpty()) {
-            if (!DocsPlugin.isValidDomain(context.domain)) {
+            if (!SecurityUtils.isValidDomain(context.domain)) {
                 return TaskResult.failure("Invalid domain format: ${context.domain}")
             } else {
                 val cnameFile = File(outputDir, "CNAME")
@@ -74,7 +74,7 @@ class GitHubPagesPublisher(
      */
     override fun publish(workingDir: File, outputDir: File): TaskResult {
         val results = mutableListOf<String>()
-        val sanitizedBranch = DocsPlugin.sanitizeBranch(context.branch)
+        val sanitizedBranch = SecurityUtils.sanitizeBranch(context.branch)
         
         try {
             // Step 1: Get current branch
