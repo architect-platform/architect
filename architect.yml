@@ -1,40 +1,48 @@
 project:
   name: architect
-  description: "The Architect Project"
+  description: "The Architect Project - A powerful, plugin-based task execution framework"
 
-# Example configuration for pipelines plugin
-# Uncomment to use:
-#
-# plugins:
-#   - name: pipelines-architected
-#     repo: architect-platform/architect
-#   - name: gradle-architected
-#     repo: architect-platform/architect
-#   - name: git-architected
-#     repo: architect-platform/architect
-#   - name: github-architected
-#     repo: architect-platform/architect
-#
-# pipelines:
-#   workflows:
-#     # Use a standard template
-#     - name: ci
-#       extends: ci-standard
-#     
-#     # Custom workflow with dependencies
-#     - name: full-pipeline
-#       description: Complete build, test, and release pipeline
-#       steps:
-#         - name: build
-#           task: gradle-build
-#         
-#         - name: test
-#           task: gradle-test
-#           dependsOn:
-#             - build
-#         
-#         - name: release
-#           task: github-release-task
-#           dependsOn:
-#             - test
-#           condition: "RELEASE == true"
+plugins:
+  - name: docs-architected
+    repo: architect-platform/architect
+  - name: git-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
+
+# Documentation configuration with auto-discovery
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    sourceDir: "docs"
+    outputDir: "site"
+    installDeps: true
+    siteName: "Architect Platform Documentation"
+    siteDescription: "Comprehensive documentation for the Architect Platform"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+    primaryColor: "indigo"
+    accentColor: "purple"
+    autoDiscoverComponents: true
+    componentPaths: [".", "plugins"]
+  publish:
+    enabled: true
+    githubPages: true
+    branch: "gh-pages"
+
+# Git configuration
+git:
+  config:
+    user.name: "Architect Bot"
+    user.email: "bot@architect-platform.io"
+
+# GitHub configuration
+github:
+  pipelines:
+    - name: "documentation"
+      type: "docs"
+      branch: "main"
+  release:
+    enabled: true

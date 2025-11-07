@@ -6,7 +6,9 @@ on:
       - main
     paths:
       - 'docs/**'
+      - '*/docs/**'
       - 'mkdocs.yml'
+      - '*/mkdocs.yml'
       - 'docusaurus.config.js'
       - '.github/workflows/docs-publish.yml'
   workflow_dispatch:
@@ -42,7 +44,7 @@ jobs:
 
       - name: Install MkDocs dependencies
         run: |
-          pip install mkdocs=={{mkdocsVersion}} mkdocs-material=={{mkdocsMaterialVersion}}
+          pip install mkdocs=={{mkdocsVersion}} mkdocs-material=={{mkdocsMaterialVersion}} mkdocs-monorepo-plugin=={{mkdocsMonorepoVersion}}
         if: ${{ '{{framework}}' == 'mkdocs' }}
 
       - name: Install Node dependencies

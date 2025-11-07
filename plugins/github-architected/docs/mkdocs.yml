@@ -1,0 +1,4 @@
+site_name: GitHub Plugin
+
+nav:
+  - Overview: index.md

@@ -7,3 +7,17 @@ plugins:
     repo: architect-platform/architect
   - name: github-architected
     repo: architect-platform/architect
+
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "Git Architected Plugin"
+    siteDescription: "Git version control integration"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+  publish:
+    enabled: true
+    githubPages: true

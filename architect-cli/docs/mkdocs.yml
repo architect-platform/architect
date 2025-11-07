@@ -1,0 +1,4 @@
+site_name: Architect CLI
+
+nav:
+  - Overview: index.md

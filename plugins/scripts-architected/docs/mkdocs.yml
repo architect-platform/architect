@@ -1,0 +1,4 @@
+site_name: Scripts Plugin
+
+nav:
+  - Overview: index.md
