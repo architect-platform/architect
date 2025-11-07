@@ -17,11 +17,20 @@ The Docs Architected plugin integrates with the Architect platform to provide:
 
 ### 1. Documentation Building
 
-Build documentation from Markdown sources using your preferred framework:
+Build documentation from Markdown sources using your preferred framework. **Each builder automatically manages its own environment:**
 
 - **MkDocs**: Python-based documentation generator with Material theme
+  - ✅ **Automatic Python venv creation** (`.venv-docs`)
+  - ✅ Isolated dependency installation in virtual environment
+  - ✅ No global Python package pollution
 - **Docusaurus**: React-based documentation framework by Facebook
+  - ✅ **Automatic Node.js environment detection**
+  - ✅ Smart package manager detection (npm/yarn/pnpm)
+  - ✅ Lockfile-based dependency installation
 - **VuePress**: Vue-powered static site generator
+  - ✅ **Automatic Node.js environment detection**
+  - ✅ Smart package manager detection (npm/yarn/pnpm)
+  - ✅ Lockfile-based dependency installation
 - **Manual**: Custom build process for specialized needs
 
 #### Configuration
@@ -111,6 +120,8 @@ Generates GitHub Actions workflows for continuous documentation deployment:
 
 ## Architecture
 
+The plugin uses a **builder pattern** with separate abstractions for building and publishing documentation. Each documentation framework (MkDocs, Docusaurus, VuePress) has its own builder implementation that manages its specific environment and dependencies.
+
 ### Core Components
 
 - **DocsPlugin**: Main plugin class implementing `ArchitectPlugin`
@@ -118,6 +129,34 @@ Generates GitHub Actions workflows for continuous documentation deployment:
 - **DocsContext**: Configuration container for documentation settings
 - **BuildContext**: Build-specific configuration
 - **PublishContext**: Publishing-specific configuration
+
+### Builder Pattern
+
+#### Documentation Builders
+
+Each builder is responsible for:
+- **Environment Setup**: Creating and managing required runtime environments (Python venv, Node.js)
+- **Dependency Installation**: Installing framework-specific dependencies
+- **Configuration Generation**: Creating framework configuration files
+- **Building**: Executing the build process
+- **Cleanup**: Removing temporary files
+
+Available builders:
+- **MkDocsBuilder**: Python-based, creates and manages Python virtual environment (`.venv-docs`)
+- **DocusaurusBuilder**: Node.js-based, manages npm/yarn/pnpm dependencies
+- **VuePressBuilder**: Node.js-based, manages npm/yarn/pnpm dependencies
+- **NodeJsDocumentationBuilder**: Base class for Node.js-based builders
+
+#### Publishing Strategies
+
+Each publisher is responsible for:
+- **Environment Validation**: Ensuring prerequisites are met
+- **Pre-publish Operations**: Creating necessary files (CNAME, .nojekyll)
+- **Publishing**: Deploying documentation to target destination
+- **Cleanup**: Removing temporary files
+
+Available publishers:
+- **GitHubPagesPublisher**: Publishes to GitHub Pages via gh-pages branch
 
 ### Configuration Model
 
@@ -139,6 +178,17 @@ DocsContext(
     cname: Boolean
   )
 )
+```
+
+### Class Diagram
+
+```
+DocsPlugin
+  ├── Uses DocumentationBuilderFactory
+  │     ├── Creates MkDocsBuilder (Python + venv)
+  │     ├── Creates DocusaurusBuilder (Node.js)
+  │     └── Creates VuePressBuilder (Node.js)
+  └── Uses GitHubPagesPublisher
 ```
 
 ## Tasks
@@ -408,22 +458,95 @@ The generated workflow file automatically:
 
 ### Adding New Framework Support
 
-1. Create a configuration template in `resources/configs/`
-2. Update the `initDocs()` method to handle the new framework
-3. Update the `buildDocs()` method with build commands
-4. Update the workflow template for the new framework
+The plugin uses a **builder pattern** making it easy to add new documentation frameworks:
 
-### Customizing Build Process
+1. **Create a new builder class** extending `DocumentationBuilder`:
+   ```kotlin
+   class MyFrameworkBuilder(
+       context: BuildContext,
+       commandExecutor: CommandExecutor
+   ) : DocumentationBuilder(context, commandExecutor) {
+       
+       override fun setupEnvironment(workingDir: File): TaskResult {
+           // Setup runtime environment (venv, node_modules, etc.)
+       }
+       
+       override fun installDependencies(workingDir: File): TaskResult {
+           // Install framework dependencies
+       }
+       
+       override fun generateConfiguration(workingDir: File, components: List<ComponentDocs>): TaskResult {
+           // Generate framework config files
+       }
+       
+       override fun build(workingDir: File): TaskResult {
+           // Execute build command
+       }
+       
+       override fun cleanup(workingDir: File) {
+           // Clean up temporary files
+       }
+       
+       override fun getName(): String = "MyFramework"
+   }
+   ```
 
-1. Modify `buildDocs()` method in `DocsPlugin.kt`
-2. Add custom build logic for your framework
-3. Update configuration context if new settings are needed
+2. **Register the builder** in `DocumentationBuilderFactory`:
+   ```kotlin
+   fun createBuilder(context: BuildContext, commandExecutor: CommandExecutor): DocumentationBuilder {
+       return when (context.framework.lowercase()) {
+           "mkdocs" -> MkDocsBuilder(context, commandExecutor)
+           "docusaurus" -> DocusaurusBuilder(context, commandExecutor)
+           "vuepress" -> VuePressBuilder(context, commandExecutor)
+           "myframework" -> MyFrameworkBuilder(context, commandExecutor) // Add here
+           else -> throw IllegalArgumentException("Unsupported framework")
+       }
+   }
+   ```
 
-### Extending Publishing Options
+3. **Add tests** for your new builder
 
-1. Add new properties to `PublishContext`
-2. Update `publishDocs()` method with new logic
-3. Modify publish script if needed
+### Adding New Publishing Targets
+
+To add support for publishing to new destinations (S3, Netlify, etc.):
+
+1. **Create a new publisher class** extending `PublishStrategy`:
+   ```kotlin
+   class MyPublisher(
+       context: PublishContext,
+       commandExecutor: CommandExecutor
+   ) : PublishStrategy(context, commandExecutor) {
+       
+       override fun validateEnvironment(workingDir: File, outputDir: File): TaskResult {
+           // Validate prerequisites
+       }
+       
+       override fun prePublish(outputDir: File): TaskResult {
+           // Pre-publish setup
+       }
+       
+       override fun publish(workingDir: File, outputDir: File): TaskResult {
+           // Publish documentation
+       }
+       
+       override fun cleanup(workingDir: File) {
+           // Clean up
+       }
+       
+       override fun getName(): String = "MyPublisher"
+   }
+   ```
+
+2. **Update `DocsPlugin.publishDocs()`** to use your publisher based on configuration
+3. **Add configuration** to `PublishContext` for your publisher's settings
+
+### Extending Configuration
+
+To add new configuration options:
+
+1. Update `BuildContext` or `PublishContext` in the `dto` package
+2. Use the new configuration in your builder or publisher
+3. Update documentation with new configuration examples
 
 ## Error Handling
 

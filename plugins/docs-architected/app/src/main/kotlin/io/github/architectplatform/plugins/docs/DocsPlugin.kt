@@ -10,8 +10,10 @@ import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
+import io.github.architectplatform.plugins.docs.builders.DocumentationBuilderFactory
 import io.github.architectplatform.plugins.docs.dto.ComponentDocs
 import io.github.architectplatform.plugins.docs.dto.DocsContext
+import io.github.architectplatform.plugins.docs.publishers.GitHubPagesPublisher
 import java.io.File
 import java.nio.file.Files
 import kotlin.io.path.Path
@@ -39,12 +41,6 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
   override var context: DocsContext = DocsContext()
 
   companion object {
-    // Domain validation regex - validates RFC-compliant domain names
-    // Matches: example.com, sub.example.com, my-site.github.io
-    // Does not match: -example.com, example-.com, .example.com
-    private val DOMAIN_VALIDATION_REGEX =
-        Regex("^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?)*$")
-
     // Template pattern for components list
     private val COMPONENTS_PATTERN = Regex("""(?s)\{\{#components}}(.*?)\{\{/components}}""")
     
@@ -53,52 +49,31 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
 
     /**
      * Sanitizes a path to prevent command injection and directory traversal.
-     * Allows alphanumeric characters, underscores, hyphens, forward slashes, and dots.
-     * Prevents absolute paths, parent directory references, and special characters.
-     *
-     * @param path The path to sanitize
-     * @return Sanitized path safe for shell commands
+     * @deprecated Use SecurityUtils.sanitizePath() instead
      */
-    fun sanitizePath(path: String): String {
-      // Remove any absolute path indicators
-      val relativePath = path.removePrefix("/")
-      // Remove parent directory references
-      val noParentRefs = relativePath.replace("../", "").replace("/..", "")
-      // Remove disallowed characters
-      return noParentRefs.replace(Regex("[^a-zA-Z0-9/_.-]"), "")
-    }
+    @Deprecated("Use SecurityUtils.sanitizePath() instead", ReplaceWith("SecurityUtils.sanitizePath(path)", "io.github.architectplatform.plugins.docs.utils.SecurityUtils"))
+    fun sanitizePath(path: String): String = io.github.architectplatform.plugins.docs.utils.SecurityUtils.sanitizePath(path)
 
     /**
      * Sanitizes a Git branch name for safe shell execution.
-     * Allows alphanumeric characters, underscores, hyphens, and forward slashes.
-     *
-     * @param branch The branch name to sanitize
-     * @return Sanitized branch name
+     * @deprecated Use SecurityUtils.sanitizeBranch() instead
      */
-    fun sanitizeBranch(branch: String): String {
-      return branch.replace(Regex("[^a-zA-Z0-9/_-]"), "")
-    }
+    @Deprecated("Use SecurityUtils.sanitizeBranch() instead", ReplaceWith("SecurityUtils.sanitizeBranch(branch)", "io.github.architectplatform.plugins.docs.utils.SecurityUtils"))
+    fun sanitizeBranch(branch: String): String = io.github.architectplatform.plugins.docs.utils.SecurityUtils.sanitizeBranch(branch)
 
     /**
      * Sanitizes a version string for safe shell execution.
-     * Allows alphanumeric characters, dots, hyphens, and underscores.
-     *
-     * @param version The version string to sanitize
-     * @return Sanitized version string
+     * @deprecated Use SecurityUtils.sanitizeVersion() instead
      */
-    fun sanitizeVersion(version: String): String {
-      return version.replace(Regex("[^a-zA-Z0-9._-]"), "")
-    }
+    @Deprecated("Use SecurityUtils.sanitizeVersion() instead", ReplaceWith("SecurityUtils.sanitizeVersion(version)", "io.github.architectplatform.plugins.docs.utils.SecurityUtils"))
+    fun sanitizeVersion(version: String): String = io.github.architectplatform.plugins.docs.utils.SecurityUtils.sanitizeVersion(version)
 
     /**
      * Validates a domain name using RFC-compliant rules.
-     *
-     * @param domain The domain to validate
-     * @return True if the domain is valid, false otherwise
+     * @deprecated Use SecurityUtils.isValidDomain() instead
      */
-    fun isValidDomain(domain: String): Boolean {
-      return DOMAIN_VALIDATION_REGEX.matches(domain)
-    }
+    @Deprecated("Use SecurityUtils.isValidDomain() instead", ReplaceWith("SecurityUtils.isValidDomain(domain)", "io.github.architectplatform.plugins.docs.utils.SecurityUtils"))
+    fun isValidDomain(domain: String): Boolean = io.github.architectplatform.plugins.docs.utils.SecurityUtils.isValidDomain(domain)
   }
 
   /**
@@ -473,15 +448,12 @@ extra:
   // Remove old framework-specific config generation code - now handled dynamically in buildDocs
 
   /**
-   * Builds documentation from markdown sources.
+   * Builds documentation from markdown sources using appropriate builder.
    *
    * This task:
    * 1. Auto-discovers components with documentation
-   * 2. Generates mkdocs.yml dynamically
-   * 3. Aggregates component docs into temporary build structure
-   * 4. Installs dependencies if needed
-   * 5. Builds documentation
-   * 6. Cleans up temporary files
+   * 2. Creates appropriate builder based on framework
+   * 3. Delegates build process to the builder
    *
    * @param environment Execution environment providing services
    * @param projectContext The project context
@@ -499,138 +471,46 @@ extra:
     val commandExecutor = environment.service(CommandExecutor::class.java)
     val results = mutableListOf<TaskResult>()
     
-    // Temporary files to clean up
-    val tempMkDocsConfig = File(gitDir, "mkdocs.yml.tmp")
-    val tempDocsDir = File(gitDir, ".docs-build-temp")
-
-    try {
-      // Step 1: Discover or use configured components
-      val components = if (context.build.autoDiscoverComponents && context.build.components.isEmpty()) {
-        discoverComponents(gitDir).also {
-          results.add(TaskResult.success("Auto-discovered ${it.size} components with documentation"))
-        }
+    // Step 1: Discover or use configured components
+    val components = if (context.build.autoDiscoverComponents && context.build.components.isEmpty()) {
+      discoverComponents(gitDir).also {
+        results.add(TaskResult.success("Auto-discovered ${it.size} components with documentation"))
+      }
+    } else {
+      context.build.components
+    }
+    
+    // Step 2: Handle manual framework (no automatic build)
+    if (context.build.framework == "manual") {
+      results.add(TaskResult.success("Manual framework selected - no automatic build performed"))
+      return TaskResult.success("Documentation build skipped for manual framework", results)
+    }
+    
+    // Step 3: Create appropriate builder and execute build
+    return try {
+      val builder = DocumentationBuilderFactory.createBuilder(context.build, commandExecutor)
+      val buildResult = builder.executeBuild(gitDir, components)
+      results.add(buildResult)
+      
+      if (buildResult.success) {
+        TaskResult.success("Documentation built successfully", results)
       } else {
-        context.build.components
+        TaskResult.failure("Documentation build failed", results)
       }
-      
-      // Step 2: Generate mkdocs.yml (for MkDocs framework only)
-      if (context.build.framework == "mkdocs") {
-        val mkdocsConfig = generateMkDocsConfig(gitDir, components)
-        tempMkDocsConfig.writeText(mkdocsConfig)
-        results.add(TaskResult.success("Generated mkdocs.yml configuration"))
-      }
-      
-      // Step 3: Aggregate component documentation
-      if (components.isNotEmpty()) {
-        tempDocsDir.mkdirs()
-        aggregateComponentDocs(gitDir, components, tempDocsDir)
-        results.add(TaskResult.success("Aggregated documentation from ${components.size} components"))
-      }
-
-      // Step 4: Install dependencies if needed
-      if (context.build.installDeps) {
-        try {
-          when (context.build.framework) {
-            "mkdocs" -> {
-              val mkdocsVer = sanitizeVersion(context.build.mkdocsVersion)
-              val materialVer = sanitizeVersion(context.build.mkdocsMaterialVersion)
-              
-              val packages = listOf(
-                "mkdocs==$mkdocsVer",
-                "mkdocs-material==$materialVer"
-              )
-              
-              commandExecutor.execute("pip3 install ${packages.joinToString(" ")}", gitDir.toString())
-              results.add(TaskResult.success("Installed MkDocs dependencies"))
-            }
-            "docusaurus" -> {
-              if (File(gitDir, "package.json").exists()) {
-                val packageLock = File(gitDir, "package-lock.json")
-                val command = if (packageLock.exists()) "npm ci" else "npm install"
-                commandExecutor.execute(command, gitDir.toString())
-                results.add(TaskResult.success("Installed Docusaurus dependencies"))
-              }
-            }
-            "vuepress" -> {
-              if (File(gitDir, "package.json").exists()) {
-                val packageLock = File(gitDir, "package-lock.json")
-                val command = if (packageLock.exists()) "npm ci" else "npm install"
-                commandExecutor.execute(command, gitDir.toString())
-                results.add(TaskResult.success("Installed VuePress dependencies"))
-              }
-            }
-          }
-        } catch (e: Exception) {
-          results.add(
-              TaskResult.failure(
-                  "Failed to install dependencies: ${e.message ?: "Unknown error"}"))
-          return TaskResult.failure("Build failed", results)
-        }
-      }
-
-      // Step 5: Build documentation
-      try {
-        when (context.build.framework) {
-          "mkdocs" -> {
-            val sanitizedOutputDir = sanitizePath(context.build.outputDir)
-            // Use temporary mkdocs.yml if it exists
-            val configFlag = if (tempMkDocsConfig.exists()) {
-              "-f ${tempMkDocsConfig.name}"
-            } else ""
-            
-            val command = if (sanitizedOutputDir.isNotEmpty()) {
-              "mkdocs build $configFlag -d $sanitizedOutputDir"
-            } else {
-              "mkdocs build $configFlag"
-            }
-            commandExecutor.execute(command, gitDir.toString())
-            results.add(TaskResult.success("Built documentation with MkDocs"))
-          }
-          "docusaurus" -> {
-            commandExecutor.execute("npm run build", gitDir.toString())
-            results.add(TaskResult.success("Built documentation with Docusaurus"))
-          }
-          "vuepress" -> {
-            commandExecutor.execute("npm run docs:build", gitDir.toString())
-            results.add(TaskResult.success("Built documentation with VuePress"))
-          }
-          "manual" -> {
-            results.add(
-                TaskResult.success(
-                    "Manual framework selected - no automatic build performed"))
-          }
-          else -> {
-            return TaskResult.failure("Unsupported documentation framework: ${context.build.framework}")
-          }
-        }
-      } catch (e: Exception) {
-        return TaskResult.failure(
-            "Failed to build documentation: ${e.message ?: "Unknown error"}", results)
-      }
-      
-      return TaskResult.success("Documentation built successfully", results)
-      
-    } finally {
-      // Step 6: Clean up temporary files
-      if (tempMkDocsConfig.exists()) {
-        tempMkDocsConfig.delete()
-      }
-      if (tempDocsDir.exists()) {
-        tempDocsDir.deleteRecursively()
-      }
+    } catch (e: IllegalArgumentException) {
+      TaskResult.failure("Unsupported documentation framework: ${context.build.framework}", results)
+    } catch (e: Exception) {
+      TaskResult.failure("Failed to build documentation: ${e.message ?: "Unknown error"}", results)
     }
   }
 
   /**
-   * Publishes documentation to GitHub Pages.
+   * Publishes documentation using appropriate publishing strategy.
    *
    * This task:
    * 1. Ensures documentation is built
-   * 2. Creates CNAME file for custom domains if configured
-   * 3. Commits documentation to gh-pages branch
-   * 4. Pushes to remote repository
-   *
-   * All operations are handled internally by the plugin using git commands.
+   * 2. Creates appropriate publisher based on configuration
+   * 3. Delegates publishing process to the publisher
    *
    * @param environment Execution environment providing services
    * @param projectContext The project context
@@ -650,110 +530,14 @@ extra:
             ?: return TaskResult.failure("Git directory not found in project hierarchy.")
 
     val commandExecutor = environment.service(CommandExecutor::class.java)
-    val results = mutableListOf<TaskResult>()
-
-    // Ensure output directory exists
     val outputDir = File(gitDir, context.build.outputDir)
-    if (!outputDir.exists()) {
-      return TaskResult.failure(
-          "Output directory not found: ${context.build.outputDir}. Please run docs-build first.")
-    }
-
-    try {
-      // Step 1: Create CNAME file if custom domain is specified
-      if (context.publish.cname && context.publish.domain.isNotEmpty()) {
-        if (!isValidDomain(context.publish.domain)) {
-          results.add(TaskResult.failure("Invalid domain format: ${context.publish.domain}"))
-        } else {
-          val cnameFile = File(outputDir, "CNAME")
-          cnameFile.writeText(context.publish.domain)
-          results.add(TaskResult.success("Created CNAME file for domain: ${context.publish.domain}"))
-        }
-      }
-
-      val sanitizedBranch = sanitizeBranch(context.publish.branch)
-      
-      // Step 2: Get current branch
-      val getCurrentBranch = "git rev-parse --abbrev-ref HEAD"
-      commandExecutor.execute(getCurrentBranch, gitDir.toString())
-      
-      // Step 3: Create temporary directory for docs
-      val tempDir = File(gitDir, ".docs-publish-temp")
-      tempDir.mkdirs()
-      
-      // Step 4: Copy built documentation to temp directory
-      outputDir.copyRecursively(tempDir, overwrite = true)
-      
-      // Step 5: Stash current changes
-      commandExecutor.execute("git stash push -m 'Stashing changes before gh-pages deployment'", gitDir.toString())
-      
-      // Step 6: Check if gh-pages branch exists and checkout
-      try {
-        commandExecutor.execute("git show-ref --verify --quiet refs/heads/$sanitizedBranch", gitDir.toString())
-        // Branch exists
-        commandExecutor.execute("git checkout $sanitizedBranch", gitDir.toString())
-      } catch (e: Exception) {
-        // Branch doesn't exist, create orphan branch
-        commandExecutor.execute("git checkout --orphan $sanitizedBranch", gitDir.toString())
-        commandExecutor.execute("git rm -rf .", gitDir.toString())
-      }
-      
-      // Step 7: Remove all files except .git
-      val filesToRemove = gitDir.listFiles()?.filter { 
-        it.name != ".git" && it.name != ".docs-publish-temp"
-      } ?: emptyList()
-      filesToRemove.forEach { it.deleteRecursively() }
-      
-      // Step 8: Copy files from temp directory
-      tempDir.listFiles()?.forEach { file ->
-        file.copyRecursively(File(gitDir, file.name), overwrite = true)
-      }
-      
-      // Step 9: Create .nojekyll file to bypass Jekyll processing
-      File(gitDir, ".nojekyll").writeText("")
-      
-      // Step 10: Add and commit
-      commandExecutor.execute("git add .", gitDir.toString())
-      try {
-        commandExecutor.execute("git commit -m 'docs: update documentation'", gitDir.toString())
-      } catch (e: Exception) {
-        // No changes to commit - this is okay
-        results.add(TaskResult.success("No documentation changes to commit"))
-      }
-      
-      // Step 11: Push to remote
-      commandExecutor.execute("git push origin $sanitizedBranch", gitDir.toString())
-      
-      // Step 12: Return to original branch
-      commandExecutor.execute("git checkout -", gitDir.toString())
-      
-      // Step 13: Restore stashed changes
-      try {
-        commandExecutor.execute("git stash pop", gitDir.toString())
-      } catch (e: Exception) {
-        // No stashed changes - this is okay
-      }
-      
-      // Step 14: Clean up temp directory
-      if (tempDir.exists()) {
-        tempDir.deleteRecursively()
-      }
-      
-      results.add(
-          TaskResult.success(
-              "Published documentation to GitHub Pages on branch: ${context.publish.branch}"))
-              
+    
+    // Create publisher and execute publish
+    return try {
+      val publisher = GitHubPagesPublisher(context.publish, commandExecutor)
+      publisher.executePublish(gitDir, outputDir)
     } catch (e: Exception) {
-      // Clean up temp directory on error
-      val tempDir = File(gitDir, ".docs-publish-temp")
-      if (tempDir.exists()) {
-        tempDir.deleteRecursively()
-      }
-      
-      return TaskResult.failure(
-          "Failed to publish documentation: ${e.message ?: "Unknown error"}", results)
+      TaskResult.failure("Failed to publish documentation: ${e.message ?: "Unknown error"}")
     }
-
-    return TaskResult.success("Documentation published successfully", results)
   }
 }
