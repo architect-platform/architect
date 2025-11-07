@@ -6,8 +6,9 @@ package io.github.architectplatform.plugins.docs.utils
 object SecurityUtils {
     
     // Domain validation regex - validates RFC-compliant domain names
+    // Requires at least one dot (e.g., example.com) to avoid single character domains
     private val DOMAIN_VALIDATION_REGEX =
-        Regex("^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?)*$")
+        Regex("^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$")
     
     /**
      * Sanitizes a path to prevent command injection and directory traversal.

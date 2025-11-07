@@ -21,6 +21,8 @@ class SecurityUtilsTest {
         assertFalse(SecurityUtils.isValidDomain("-example.com"))
         assertFalse(SecurityUtils.isValidDomain(".example.com"))
         assertFalse(SecurityUtils.isValidDomain(""))
+        assertFalse(SecurityUtils.isValidDomain("a")) // Single character domain
+        assertFalse(SecurityUtils.isValidDomain("ab")) // Two character domain without TLD
     }
 
     @Test

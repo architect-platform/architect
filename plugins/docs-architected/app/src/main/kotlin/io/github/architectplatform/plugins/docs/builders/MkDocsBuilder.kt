@@ -26,6 +26,13 @@ class MkDocsBuilder(
     private var tempMkDocsConfig: File? = null
     private var tempDocsDir: File? = null
     
+    // Platform-specific paths for virtual environment
+    private val isWindows = System.getProperty("os.name").lowercase().contains("windows")
+    private val binDir = if (isWindows) "Scripts" else "bin"
+    private val pythonExe = if (isWindows) "python.exe" else "python3"
+    private val pipExe = if (isWindows) "pip.exe" else "pip3"
+    private val mkdocsExe = if (isWindows) "mkdocs.exe" else "mkdocs"
+    
     override fun getName(): String = "MkDocs"
     
     /**
@@ -33,14 +40,16 @@ class MkDocsBuilder(
      */
     override fun setupEnvironment(workingDir: File): TaskResult {
         val venvPath = File(workingDir, venvDir)
+        val activateScript = if (isWindows) "$binDir/activate.bat" else "$binDir/activate"
         
         return try {
             // Check if venv already exists
-            if (venvPath.exists() && File(venvPath, "bin/activate").exists()) {
+            if (venvPath.exists() && File(venvPath, activateScript).exists()) {
                 TaskResult.success("Python virtual environment already exists at $venvDir")
             } else {
                 // Create new virtual environment
-                commandExecutor.execute("python3 -m venv $venvDir", workingDir.toString())
+                val pythonCmd = if (isWindows) "python" else "python3"
+                commandExecutor.execute("$pythonCmd -m venv $venvDir", workingDir.toString())
                 TaskResult.success("Created Python virtual environment at $venvDir")
             }
         } catch (e: Exception) {
@@ -62,7 +71,7 @@ class MkDocsBuilder(
         
         return try {
             // Install packages in virtual environment
-            val pipCommand = "$venvDir/bin/pip3 install ${packages.joinToString(" ")}"
+            val pipCommand = "$venvDir/$binDir/$pipExe install ${packages.joinToString(" ")}"
             commandExecutor.execute(pipCommand, workingDir.toString())
             TaskResult.success("Installed MkDocs dependencies in virtual environment")
         } catch (e: Exception) {
@@ -106,9 +115,9 @@ class MkDocsBuilder(
             } else ""
             
             val command = if (sanitizedOutputDir.isNotEmpty()) {
-                "$venvDir/bin/mkdocs build $configFlag -d $sanitizedOutputDir"
+                "$venvDir/$binDir/$mkdocsExe build $configFlag -d $sanitizedOutputDir"
             } else {
-                "$venvDir/bin/mkdocs build $configFlag"
+                "$venvDir/$binDir/$mkdocsExe build $configFlag"
             }
             
             commandExecutor.execute(command, workingDir.toString())
