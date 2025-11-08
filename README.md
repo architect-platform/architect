@@ -79,6 +79,31 @@ architect engine start
 # architect engine stop/clean
 ```
 
+### GitHub Authentication (Optional but Recommended)
+
+To avoid GitHub API rate limiting when fetching plugins, authenticate with a GitHub Personal Access Token:
+
+```bash
+architect login github
+```
+
+The CLI will prompt you to enter your GitHub token. To create a token:
+1. Go to https://github.com/settings/tokens
+2. Click "Generate new token" → "Generate new token (classic)"
+3. Give it a name (e.g., "Architect CLI")
+4. Select scopes: `repo` (for private repos) or `public_repo` (for public repos only)
+5. Click "Generate token" and copy it
+
+Your token is stored securely in `~/.architect-engine/config.yml` with restricted file permissions (600).
+
+**Other authentication commands:**
+```bash
+architect login status   # Check authentication status
+architect login logout   # Remove stored token
+```
+
+**Note:** You can also use the `GITHUB_TOKEN` environment variable as an alternative to `architect login github`.
+
 ### Your First Project
 
 1. **Create a project configuration** (`architect.yml`):
@@ -488,6 +513,19 @@ architect engine stop
 architect engine clean
 ```
 
+### Authentication
+
+```bash
+# Authenticate with GitHub (recommended to avoid rate limiting)
+architect login github
+
+# Check authentication status
+architect login status
+
+# Logout (remove stored token)
+architect login logout
+```
+
 ### Plugin-Specific Commands
 
 ```bash
@@ -635,6 +673,29 @@ docs:
     githubPages: true
     domain: "docs.project.org"
 ```
+
+## Security
+
+### Authentication Token Storage
+
+GitHub Personal Access Tokens are stored securely:
+
+- **Location**: `~/.architect-engine/config.yml`
+- **Permissions**: File permissions set to `600` (owner read/write only) on Unix-like systems
+- **Encoding**: Tokens are base64 encoded (basic obfuscation) in the config file
+- **Transmission**: Tokens are only transmitted over localhost between CLI and Engine
+- **Logging**: Tokens are never logged or included in error messages
+
+### Best Practices
+
+1. **Use fine-grained tokens**: When creating GitHub tokens, grant only the minimum necessary scopes
+2. **Rotate tokens regularly**: GitHub allows token expiration - use this feature
+3. **CI/CD environments**: Use environment variables (`GITHUB_TOKEN`) instead of `architect login github`
+4. **Keep engine updated**: Security patches are included in releases
+
+### Reporting Security Issues
+
+Please report security vulnerabilities to the maintainers privately. See [SECURITY.md](SECURITY.md) for details.
 
 ## Contributing
 
