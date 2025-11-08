@@ -1,9 +1,13 @@
 package io.github.architectplatform.cli.client
 
+import io.github.architectplatform.cli.dto.AuthResponse
+import io.github.architectplatform.cli.dto.AuthStatusResponse
 import io.github.architectplatform.cli.dto.ProjectDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
+import io.github.architectplatform.cli.dto.SetGitHubTokenRequest
 import io.github.architectplatform.cli.dto.TaskDTO
 import io.micronaut.http.annotation.Body
+import io.micronaut.http.annotation.Delete
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Post
@@ -18,8 +22,9 @@ import kotlinx.coroutines.flow.Flow
  * - Task management (list, get)
  * - Task execution
  * - Execution monitoring via reactive streams
+ * - Authentication management
  */
-@Client("engine", path = "/api")
+@Client("engine")
 interface EngineCommandClient {
 
   /**
@@ -27,7 +32,7 @@ interface EngineCommandClient {
    *
    * @return List of all projects
    */
-  @Get("/projects") fun getAllProjects(): List<ProjectDTO>
+  @Get("/api/projects") fun getAllProjects(): List<ProjectDTO>
 
   /**
    * Registers a new project with the engine.
@@ -35,7 +40,7 @@ interface EngineCommandClient {
    * @param request Project registration details
    * @return The registered project
    */
-  @Post("/projects") fun registerProject(@Body request: RegisterProjectRequest): ProjectDTO
+  @Post("/api/projects") fun registerProject(@Body request: RegisterProjectRequest): ProjectDTO
 
   /**
    * Retrieves a specific project by name.
@@ -43,7 +48,7 @@ interface EngineCommandClient {
    * @param name The name of the project
    * @return The project, or null if not found
    */
-  @Get("/projects/{name}") fun getProject(@PathVariable name: String): ProjectDTO?
+  @Get("/api/projects/{name}") fun getProject(@PathVariable name: String): ProjectDTO?
 
   /**
    * Retrieves all tasks available for a project.
@@ -51,7 +56,7 @@ interface EngineCommandClient {
    * @param projectName The name of the project
    * @return List of available tasks
    */
-  @Get("/projects/{projectName}/tasks")
+  @Get("/api/projects/{projectName}/tasks")
   fun getAllTasks(@PathVariable projectName: String): List<TaskDTO>
 
   /**
@@ -61,7 +66,7 @@ interface EngineCommandClient {
    * @param taskName The name of the task
    * @return The task, or null if not found
    */
-  @Get("/projects/{projectName}/tasks/{taskName}")
+  @Get("/api/projects/{projectName}/tasks/{taskName}")
   fun getTask(@PathVariable projectName: String, @PathVariable taskName: String): TaskDTO?
 
   /**
@@ -72,7 +77,7 @@ interface EngineCommandClient {
    * @param args Arguments to pass to the task
    * @return Execution identifier for monitoring progress
    */
-  @Post("/projects/{projectName}/tasks/{taskName}")
+  @Post("/api/projects/{projectName}/tasks/{taskName}")
   fun execute(
       @PathVariable projectName: String,
       @PathVariable taskName: String,
@@ -85,6 +90,33 @@ interface EngineCommandClient {
    * @param executionId The execution identifier
    * @return Flow of event maps emitted during task execution
    */
-  @Get("/executions/{executionId}")
+  @Get("/api/executions/{executionId}")
   fun getExecutionFlow(@PathVariable executionId: ExecutionId): Flow<Map<String, Any>>
+  
+  // Authentication endpoints
+  
+  /**
+   * Sets the GitHub token for authenticated API requests.
+   *
+   * @param request The request containing the GitHub token
+   * @return Response indicating success or failure
+   */
+  @Post("/auth/github")
+  fun setGitHubToken(@Body request: SetGitHubTokenRequest): AuthResponse
+  
+  /**
+   * Checks the authentication status for GitHub.
+   *
+   * @return Status indicating if authenticated
+   */
+  @Get("/auth/github/status")
+  fun getGitHubStatus(): AuthStatusResponse
+  
+  /**
+   * Removes the stored GitHub token.
+   *
+   * @return Response indicating success or failure
+   */
+  @Delete("/auth/github")
+  fun clearGitHubToken(): AuthResponse
 }

@@ -2,6 +2,7 @@ package io.github.architectplatform.cli
 
 import io.github.architectplatform.cli.client.EngineCommandClient
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
+import io.github.architectplatform.cli.dto.SetGitHubTokenRequest
 import io.micronaut.context.ApplicationContext
 import jakarta.inject.Singleton
 import kotlin.system.exitProcess
@@ -79,6 +80,11 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
       handleEngineCommand()
       return
     }
+    
+    if (command == "login") {
+      handleLoginCommand()
+      return
+    }
 
     val projectPath = System.getProperty("user.dir")
     val projectName = extractProjectName(projectPath)
@@ -152,6 +158,125 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
         println()
         println("Duration: ${"%.1f".format(duration)}s")
         exitProcess(1)
+      }
+    }
+  }
+
+  /**
+   * Handles login commands for authentication with external services.
+   *
+   * Supported commands:
+   * - github: Authenticate with GitHub
+   * - status: Check authentication status
+   * - logout: Clear stored authentication
+   */
+  private fun handleLoginCommand() {
+    val arg = args.getOrNull(1)
+    if (arg == null) {
+      println("No command provided for 'login'. Available commands: github, status, logout")
+      return
+    }
+
+    when (arg) {
+      "github" -> {
+        println()
+        println("━".repeat(80))
+        println("🔐 GitHub Authentication")
+        println("━".repeat(80))
+        println()
+        println("To authenticate with GitHub, you need a Personal Access Token (PAT).")
+        println("This token will be used to avoid rate limiting when fetching plugins.")
+        println()
+        println("To create a token:")
+        println("1. Go to https://github.com/settings/tokens")
+        println("2. Click 'Generate new token' → 'Generate new token (classic)'")
+        println("3. Give it a name (e.g., 'Architect CLI')")
+        println("4. Select scopes: 'repo' (for private repos) or 'public_repo' (for public only)")
+        println("5. Click 'Generate token' and copy the token")
+        println()
+        print("Enter your GitHub token (input will be hidden): ")
+        
+        // Read token securely (without echoing to console)
+        val token = System.console()?.readPassword()?.let { String(it) }
+            ?: readLine()?.trim() // Fallback for non-console environments
+        
+        if (token.isNullOrBlank()) {
+          println()
+          println("❌ No token provided. Authentication cancelled.")
+          exitProcess(1)
+        }
+        
+        println()
+        println("Storing token securely...")
+        
+        try {
+          val request = SetGitHubTokenRequest(token = token)
+          val response = engineCommandClient.setGitHubToken(request)
+          
+          if (response.success) {
+            println()
+            println("✅ ${response.message}")
+            println()
+            println("You can now use Architect without GitHub rate limits!")
+            println("Your token is stored securely in ~/.architect-engine/config.yml")
+            exitProcess(0)
+          } else {
+            println()
+            println("❌ Failed to store token: ${response.message}")
+            exitProcess(1)
+          }
+        } catch (e: Exception) {
+          println()
+          println("❌ Failed to communicate with Architect Engine")
+          println("Error: ${e.message}")
+          println()
+          println("Make sure the engine is running: architect engine start")
+          exitProcess(1)
+        }
+      }
+      "status" -> {
+        try {
+          val status = engineCommandClient.getGitHubStatus()
+          println()
+          if (status.authenticated) {
+            println("✅ Authenticated with GitHub")
+          } else {
+            println("❌ Not authenticated with GitHub")
+            println()
+            println("Run 'architect login github' to authenticate")
+          }
+          println()
+        } catch (e: Exception) {
+          println()
+          println("❌ Failed to check authentication status")
+          println("Error: ${e.message}")
+          println()
+          println("Make sure the engine is running: architect engine start")
+          exitProcess(1)
+        }
+      }
+      "logout" -> {
+        try {
+          val response = engineCommandClient.clearGitHubToken()
+          println()
+          if (response.success) {
+            println("✅ ${response.message}")
+          } else {
+            println("❌ ${response.message}")
+          }
+          println()
+        } catch (e: Exception) {
+          println()
+          println("❌ Failed to logout")
+          println("Error: ${e.message}")
+          println()
+          println("Make sure the engine is running: architect engine start")
+          exitProcess(1)
+        }
+      }
+      else -> {
+        println("Unknown command for 'login': $arg")
+        println("Available commands: github, status, logout")
       }
     }
   }

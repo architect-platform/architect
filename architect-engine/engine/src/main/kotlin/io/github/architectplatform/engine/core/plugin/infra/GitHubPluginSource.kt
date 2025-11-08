@@ -2,6 +2,7 @@ package io.github.architectplatform.engine.core.plugin.infra
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.github.architectplatform.engine.core.auth.AuthConfigManager
 import io.github.architectplatform.engine.core.common.Result
 import io.github.architectplatform.engine.core.config.EngineConfiguration
 import io.github.architectplatform.engine.core.plugin.app.PluginDownloader
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory
 class GitHubPluginSource(
     private val httpClient: HttpClient,
     private val downloader: PluginDownloader,
+    private val authConfigManager: AuthConfigManager,
     
     @Property(name = EngineConfiguration.PluginLoader.USER_AGENT, defaultValue = EngineConfiguration.PluginLoader.DEFAULT_USER_AGENT)
     private val userAgent: String = EngineConfiguration.PluginLoader.DEFAULT_USER_AGENT
@@ -66,13 +68,19 @@ class GitHubPluginSource(
         return Result.catching {
             val apiUrl = "https://api.github.com/repos/$repo/releases"
             
-            val token = System.getenv("GITHUB_TOKEN") ?: System.getProperty("GITHUB_TOKEN")
+            // Try to get token from: 1) stored config, 2) environment variable, 3) system property
+            val token = authConfigManager.getGitHubToken()
+                ?: System.getenv("GITHUB_TOKEN")
+                ?: System.getProperty("GITHUB_TOKEN")
             
             var req: MutableHttpRequest<*> = HttpRequest.GET<Any>(apiUrl)
                 .header("User-Agent", userAgent)
             
             if (!token.isNullOrBlank()) {
                 req = req.header("Authorization", "Bearer $token")
+                logger.debug("Using authenticated GitHub API request")
+            } else {
+                logger.debug("Using unauthenticated GitHub API request (rate limits may apply)")
             }
             
             val response = httpClient.toBlocking().retrieve(req, String::class.java)
