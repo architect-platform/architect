@@ -1,6 +1,6 @@
 package io.github.architectplatform.engine.core.auth
 
-import io.github.architectplatform.engine.core.auth.dto.SetGitHubTokenRequest
+import io.github.architectplatform.engine.core.auth.dto.LoginRequest
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
@@ -32,7 +32,7 @@ class AuthControllerTest {
     fun `should set GitHub token via API`() {
         // Given
         val token = "ghp_test1234567890abcdefghijklmnopqrst"
-        val request = HttpRequest.POST("/auth/github", SetGitHubTokenRequest(token))
+        val request = HttpRequest.POST("/auth/github", LoginRequest(token))
         
         // When
         val response = client.toBlocking().retrieve(request)
@@ -89,7 +89,7 @@ class AuthControllerTest {
     @Test
     fun `should reject empty token`() {
         // Given
-        val request = HttpRequest.POST("/auth/github", SetGitHubTokenRequest("   "))
+        val request = HttpRequest.POST("/auth/github", LoginRequest("   "))
         
         // When
         val response = client.toBlocking().retrieve(request)

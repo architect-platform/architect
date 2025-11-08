@@ -1,7 +1,7 @@
 package io.github.architectplatform.cli.commands
 
 import io.github.architectplatform.cli.client.EngineCommandClient
-import io.github.architectplatform.cli.dto.SetGitHubTokenRequest
+import io.github.architectplatform.cli.dto.LoginRequest
 import jakarta.inject.Inject
 import picocli.CommandLine.Command
 import java.util.concurrent.Callable
@@ -73,8 +73,8 @@ class LoginCommand : Callable<Int> {
             println("Storing token securely...")
             
             return try {
-                val request = SetGitHubTokenRequest(token = token)
-                val response = engineCommandClient.setGitHubToken(request)
+                val request = LoginRequest(token = token)
+                val response = engineCommandClient.login("github", request)
                 
                 if (response.success) {
                     println()
@@ -110,7 +110,7 @@ class LoginCommand : Callable<Int> {
         
         override fun call(): Int {
             return try {
-                val status = engineCommandClient.getGitHubStatus()
+                val status = engineCommandClient.getStatus("github")
                 println()
                 if (status.authenticated) {
                     println("✅ Authenticated with GitHub")
@@ -143,7 +143,7 @@ class LoginCommand : Callable<Int> {
         
         override fun call(): Int {
             return try {
-                val response = engineCommandClient.clearGitHubToken()
+                val response = engineCommandClient.logout("github")
                 println()
                 if (response.success) {
                     println("✅ ${response.message}")

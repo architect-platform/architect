@@ -3,10 +3,10 @@ package io.github.architectplatform.cli.dto
 import io.micronaut.serde.annotation.Serdeable
 
 /**
- * Request to set a GitHub token.
+ * Generic request to store an authentication token.
  */
 @Serdeable
-data class SetGitHubTokenRequest(
+data class LoginRequest(
     val token: String
 )
 

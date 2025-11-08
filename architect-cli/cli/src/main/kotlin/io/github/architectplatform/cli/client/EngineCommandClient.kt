@@ -2,9 +2,9 @@ package io.github.architectplatform.cli.client
 
 import io.github.architectplatform.cli.dto.AuthResponse
 import io.github.architectplatform.cli.dto.AuthStatusResponse
+import io.github.architectplatform.cli.dto.LoginRequest
 import io.github.architectplatform.cli.dto.ProjectDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
-import io.github.architectplatform.cli.dto.SetGitHubTokenRequest
 import io.github.architectplatform.cli.dto.TaskDTO
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Delete
@@ -96,27 +96,33 @@ interface EngineCommandClient {
   // Authentication endpoints
   
   /**
-   * Sets the GitHub token for authenticated API requests.
+   * Stores an authentication token for a provider.
    *
-   * @param request The request containing the GitHub token
+   * @param provider The provider name (e.g., "github")
+   * @param request The request containing the authentication token
    * @return Response indicating success or failure
    */
-  @Post("/auth/github")
-  fun setGitHubToken(@Body request: SetGitHubTokenRequest): AuthResponse
+  @Post("/auth/{provider}")
+  fun login(
+      @PathVariable provider: String,
+      @Body request: LoginRequest
+  ): AuthResponse
   
   /**
-   * Checks the authentication status for GitHub.
+   * Checks the authentication status for a provider.
    *
+   * @param provider The provider name
    * @return Status indicating if authenticated
    */
-  @Get("/auth/github/status")
-  fun getGitHubStatus(): AuthStatusResponse
+  @Get("/auth/{provider}/status")
+  fun getStatus(@PathVariable provider: String): AuthStatusResponse
   
   /**
-   * Removes the stored GitHub token.
+   * Removes the stored token for a provider.
    *
+   * @param provider The provider name
    * @return Response indicating success or failure
    */
-  @Delete("/auth/github")
-  fun clearGitHubToken(): AuthResponse
+  @Delete("/auth/{provider}")
+  fun logout(@PathVariable provider: String): AuthResponse
 }

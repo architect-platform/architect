@@ -3,10 +3,10 @@ package io.github.architectplatform.engine.core.auth.dto
 import io.micronaut.serde.annotation.Serdeable
 
 /**
- * Request to set a GitHub token.
+ * Generic request to store an authentication token.
  */
 @Serdeable
-data class SetGitHubTokenRequest(
+data class LoginRequest(
     val token: String
 )
 
@@ -16,7 +16,7 @@ data class SetGitHubTokenRequest(
 @Serdeable
 data class AuthStatusResponse(
     val authenticated: Boolean,
-    val provider: String = "github"
+    val provider: String
 )
 
 /**
@@ -26,27 +26,4 @@ data class AuthStatusResponse(
 data class AuthResponse(
     val success: Boolean,
     val message: String
-)
-
-/**
- * Response for device flow initialization.
- */
-@Serdeable
-data class DeviceFlowInitResponse(
-    val success: Boolean,
-    val deviceCode: String? = null,
-    val userCode: String? = null,
-    val verificationUri: String? = null,
-    val expiresIn: Int? = null,
-    val interval: Int? = null,
-    val errorMessage: String? = null
-)
-
-/**
- * Request to poll for access token during device flow.
- */
-@Serdeable
-data class PollTokenRequest(
-    val deviceCode: String,
-    val interval: Int = 5
 )
