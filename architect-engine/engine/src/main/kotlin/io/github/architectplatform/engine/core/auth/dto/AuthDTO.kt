@@ -27,3 +27,26 @@ data class AuthResponse(
     val success: Boolean,
     val message: String
 )
+
+/**
+ * Response for device flow initialization.
+ */
+@Serdeable
+data class DeviceFlowInitResponse(
+    val success: Boolean,
+    val deviceCode: String? = null,
+    val userCode: String? = null,
+    val verificationUri: String? = null,
+    val expiresIn: Int? = null,
+    val interval: Int? = null,
+    val errorMessage: String? = null
+)
+
+/**
+ * Request to poll for access token during device flow.
+ */
+@Serdeable
+data class PollTokenRequest(
+    val deviceCode: String,
+    val interval: Int = 5
+)
