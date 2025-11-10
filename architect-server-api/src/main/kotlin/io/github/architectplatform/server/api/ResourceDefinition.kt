@@ -3,75 +3,122 @@ package io.github.architectplatform.server.api
 import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
- * Resource definition for creating Kubernetes applications
+ * Platform-agnostic application definition.
+ * Simple, clean API for defining deployable applications.
+ * Supports dependencies on databases, brokers, and other services.
+ * Agents map these generic concepts to platform-specific implementations.
  */
-data class ResourceDefinitionDTO(
+data class ApplicationDefinitionDTO(
     @JsonProperty("name")
     val name: String,
     
     @JsonProperty("version")
     val version: String,
     
-    @JsonProperty("namespace")
-    val namespace: String = "default",
+    @JsonProperty("type")
+    val type: ApplicationType = ApplicationType.APPLICATION,
     
     @JsonProperty("image")
-    val image: String? = null,
+    val image: String,
     
-    @JsonProperty("replicas")
-    val replicas: Int = 1,
+    @JsonProperty("instances")
+    val instances: Int = 1,
     
-    @JsonProperty("environmentVariables")
-    val environmentVariables: Map<String, String> = emptyMap(),
+    @JsonProperty("environment")
+    val environment: Map<String, String> = emptyMap(),
     
-    @JsonProperty("ports")
-    val ports: List<PortDTO> = emptyList(),
+    @JsonProperty("exposedPorts")
+    val exposedPorts: List<ExposedPortDTO> = emptyList(),
     
     @JsonProperty("resources")
-    val resources: ResourceRequirementsDTO? = null,
+    val resources: ResourceLimitsDTO? = null,
     
-    @JsonProperty("labels")
-    val labels: Map<String, String> = emptyMap(),
+    @JsonProperty("healthCheck")
+    val healthCheck: HealthCheckDTO? = null,
     
-    @JsonProperty("annotations")
-    val annotations: Map<String, String> = emptyMap()
+    @JsonProperty("metadata")
+    val metadata: Map<String, String> = emptyMap(),
+    
+    @JsonProperty("dependencies")
+    val dependencies: List<DependencyDTO> = emptyList()
 )
 
 /**
- * Port configuration
+ * Simple port exposure definition
  */
-data class PortDTO(
-    @JsonProperty("name")
-    val name: String,
-    
-    @JsonProperty("containerPort")
-    val containerPort: Int,
+data class ExposedPortDTO(
+    @JsonProperty("port")
+    val port: Int,
     
     @JsonProperty("protocol")
     val protocol: String = "TCP",
     
-    @JsonProperty("servicePort")
-    val servicePort: Int? = null
+    @JsonProperty("public")
+    val public: Boolean = false
 )
 
 /**
- * Resource requirements (CPU/Memory)
+ * Resource limits (platform-agnostic)
  */
-data class ResourceRequirementsDTO(
-    @JsonProperty("requests")
-    val requests: ResourceSpecDTO? = null,
-    
-    @JsonProperty("limits")
-    val limits: ResourceSpecDTO? = null
-)
-
-/**
- * Resource specification
- */
-data class ResourceSpecDTO(
+data class ResourceLimitsDTO(
     @JsonProperty("cpu")
     val cpu: String? = null,
     
     @JsonProperty("memory")
-    val memory: String? = null
+    val memory: String? = null,
+    
+    @JsonProperty("storage")
+    val storage: String? = null
+)
+
+/**
+ * Health check configuration
+ */
+data class HealthCheckDTO(
+    @JsonProperty("type")
+    val type: HealthCheckType,
+    
+    @JsonProperty("path")
+    val path: String? = null,
+    
+    @JsonProperty("port")
+    val port: Int? = null,
+    
+    @JsonProperty("intervalSeconds")
+    val intervalSeconds: Int = 30,
+    
+    @JsonProperty("timeoutSeconds")
+    val timeoutSeconds: Int = 5
+)
+
+enum class HealthCheckType {
+    HTTP,
+    TCP,
+    COMMAND
+}
+
+/**
+ * Application type classification
+ */
+enum class ApplicationType {
+    APPLICATION,
+    DATABASE,
+    MESSAGE_BROKER,
+    CACHE,
+    STORAGE,
+    SERVICE
+}
+
+/**
+ * Dependency definition
+ */
+data class DependencyDTO(
+    @JsonProperty("applicationId")
+    val applicationId: String,
+    
+    @JsonProperty("required")
+    val required: Boolean = true,
+    
+    @JsonProperty("connectionInfo")
+    val connectionInfo: Map<String, String> = emptyMap()
 )

@@ -50,7 +50,7 @@ interface ManageDeploymentCommandUseCase {
     /**
      * Get commands by resource definition
      */
-    fun getCommandsByResourceDefinition(resourceDefinitionId: String): List<DeploymentCommand>
+    fun getCommandsByApplicationDefinition(resourceDefinitionId: String): List<DeploymentCommand>
     
     /**
      * Cancel a pending command

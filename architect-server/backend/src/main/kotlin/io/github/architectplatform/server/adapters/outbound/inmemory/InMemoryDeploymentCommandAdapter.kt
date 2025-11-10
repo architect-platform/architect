@@ -28,8 +28,8 @@ class InMemoryDeploymentCommandAdapter : DeploymentCommandPort {
         return commands.values.filter { it.agentId == agentId }
     }
     
-    override fun findByResourceDefinitionId(resourceDefinitionId: String): List<DeploymentCommand> {
-        return commands.values.filter { it.resourceDefinitionId == resourceDefinitionId }
+    override fun findByApplicationDefinitionId(applicationDefinitionId: String): List<DeploymentCommand> {
+        return commands.values.filter { it.applicationDefinitionId == applicationDefinitionId }
     }
     
     override fun findByStatus(status: CommandStatus): List<DeploymentCommand> {

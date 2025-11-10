@@ -52,7 +52,7 @@ class DeploymentController(
 
     @Get("/resource/{resourceId}")
     fun getCommandsByResource(@PathVariable resourceId: String): List<DeploymentCommandResponse> {
-        return manageDeploymentCommandUseCase.getCommandsByResourceDefinition(resourceId)
+        return manageDeploymentCommandUseCase.getCommandsByApplicationDefinition(resourceId)
             .map { DeploymentCommandResponse.fromDomain(it) }
     }
 

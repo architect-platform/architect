@@ -17,7 +17,7 @@ interface DeploymentCommandPort {
     
     fun findByAgentId(agentId: String): List<DeploymentCommand>
     
-    fun findByResourceDefinitionId(resourceDefinitionId: String): List<DeploymentCommand>
+    fun findByApplicationDefinitionId(resourceDefinitionId: String): List<DeploymentCommand>
     
     fun findByStatus(status: CommandStatus): List<DeploymentCommand>
     

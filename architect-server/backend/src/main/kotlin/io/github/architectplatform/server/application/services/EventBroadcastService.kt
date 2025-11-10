@@ -147,10 +147,10 @@ class EventBroadcastService {
             data = mapOf(
                 "id" to command.id,
                 "agentId" to command.agentId,
-                "resourceName" to command.resourceName,
-                "namespace" to command.namespace,
+                "applicationName" to command.applicationName,
                 "operation" to command.operation.name,
-                "status" to command.status.name
+                "status" to command.status.name,
+                "dependencies" to command.dependencies
             )
         ))
     }
@@ -163,7 +163,7 @@ class EventBroadcastService {
             data = mapOf(
                 "id" to command.id,
                 "agentId" to command.agentId,
-                "resourceName" to command.resourceName,
+                "applicationName" to command.applicationName,
                 "status" to command.status.name,
                 "success" to (command.result?.success ?: false)
             )

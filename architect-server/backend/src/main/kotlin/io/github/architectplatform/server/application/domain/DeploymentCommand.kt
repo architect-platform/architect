@@ -3,17 +3,17 @@ package io.github.architectplatform.server.application.domain
 import java.time.Instant
 
 /**
- * Domain model representing a deployment command to be sent to an agent.
- * Pure domain object without infrastructure concerns.
+ * Platform-agnostic deployment command.
+ * Clean domain model without platform-specific concepts.
  */
 data class DeploymentCommand(
     val id: String,
     val agentId: String,
-    val resourceDefinitionId: String,
-    val resourceName: String,
-    val namespace: String,
+    val applicationDefinitionId: String,
+    val applicationName: String,
     val templates: List<String>,
     val variables: Map<String, Any>,
+    val dependencies: List<String> = emptyList(),
     val operation: DeploymentOperation = DeploymentOperation.APPLY,
     val status: CommandStatus = CommandStatus.PENDING,
     val createdAt: Instant = Instant.now(),

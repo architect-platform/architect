@@ -7,7 +7,7 @@ import io.github.architectplatform.server.application.domain.DeploymentResult
 import io.github.architectplatform.server.application.ports.inbound.ManageDeploymentCommandUseCase
 import io.github.architectplatform.server.application.ports.outbound.AgentPort
 import io.github.architectplatform.server.application.ports.outbound.DeploymentCommandPort
-import io.github.architectplatform.server.application.ports.outbound.ResourceDefinitionPort
+import io.github.architectplatform.server.application.ports.outbound.ApplicationDefinitionPort
 import io.github.architectplatform.server.application.ports.outbound.TemplatePort
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
@@ -21,7 +21,7 @@ import java.util.UUID
 @Singleton
 class DeploymentCommandService(
     private val deploymentCommandPort: DeploymentCommandPort,
-    private val resourceDefinitionPort: ResourceDefinitionPort,
+    private val resourceDefinitionPort: ApplicationDefinitionPort,
     private val templatePort: TemplatePort,
     private val agentPort: AgentPort,
     private val eventBroadcastService: EventBroadcastService
@@ -58,11 +58,11 @@ class DeploymentCommandService(
         val command = DeploymentCommand(
             id = UUID.randomUUID().toString(),
             agentId = agentId,
-            resourceDefinitionId = resourceDefinitionId,
-            resourceName = resourceDef.name,
-            namespace = resourceDef.namespace,
+            applicationDefinitionId = resourceDefinitionId,
+            applicationName = resourceDef.name,
             templates = templates.map { it.content },
             variables = resourceDef.toVariableMap(),
+            dependencies = resourceDef.getDependenciesInOrder(),
             operation = operation
         )
         
@@ -113,8 +113,8 @@ class DeploymentCommandService(
         return deploymentCommandPort.findByAgentId(agentId)
     }
 
-    override fun getCommandsByResourceDefinition(resourceDefinitionId: String): List<DeploymentCommand> {
-        return deploymentCommandPort.findByResourceDefinitionId(resourceDefinitionId)
+    override fun getCommandsByApplicationDefinition(resourceDefinitionId: String): List<DeploymentCommand> {
+        return deploymentCommandPort.findByApplicationDefinitionId(resourceDefinitionId)
     }
 
     override fun cancelCommand(commandId: String): DeploymentCommand? {
