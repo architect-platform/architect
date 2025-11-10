@@ -1,0 +1,22 @@
+micronaut:
+  application:
+    name: architect-kubernetes-agent
+  server:
+    port: 8090
+
+agent:
+  id: ${AGENT_ID:`agent-${random.uuid}`}
+  server:
+    url: ${ARCHITECT_SERVER_URL:`http://localhost:8080`}
+    token: ${ARCHITECT_SERVER_TOKEN:}
+  kubernetes:
+    namespace: ${KUBERNETES_NAMESPACE:`default`}
+    isolate-applications: ${ISOLATE_APPLICATIONS:`true`}
+  heartbeat:
+    interval-seconds: ${HEARTBEAT_INTERVAL:`30`}
+
+logger:
+  levels:
+    io.github.architectplatform.agent: INFO
+    io.micronaut: INFO
+    io.fabric8: WARN

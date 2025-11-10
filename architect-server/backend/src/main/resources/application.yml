@@ -1,0 +1,43 @@
+micronaut:
+  application:
+    name: architect-server-backend
+  server:
+    port: 8080
+    cors:
+      enabled: true
+      configurations:
+        web:
+          allowed-origins:
+            - http://localhost:3000
+            - http://localhost:5173
+          allowed-methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+          allowed-headers:
+            - Content-Type
+            - Authorization
+
+datasources:
+  default:
+    url: jdbc:h2:mem:architectServerDb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ''
+    dialect: H2
+    schema-generate: CREATE_DROP
+
+jpa:
+  default:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: update
+        show_sql: false
+
+logger:
+  levels:
+    io.github.architectplatform.server: INFO
+    io.micronaut: INFO
