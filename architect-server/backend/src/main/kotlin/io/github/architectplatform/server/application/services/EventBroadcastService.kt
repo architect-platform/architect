@@ -99,6 +99,76 @@ class EventBroadcastService {
             )
         ))
     }
+    
+    fun broadcastAgentRegistered(agent: Agent) {
+        broadcast(CloudEvent(
+            type = "AGENT_REGISTERED",
+            entityId = agent.id,
+            entityType = "AGENT",
+            data = mapOf(
+                "id" to agent.id,
+                "agentType" to agent.agentType.name,
+                "namespace" to (agent.namespace ?: ""),
+                "capabilities" to agent.capabilities,
+                "status" to agent.status.name
+            )
+        ))
+    }
+    
+    fun broadcastAgentHeartbeat(agent: Agent) {
+        broadcast(CloudEvent(
+            type = "AGENT_HEARTBEAT",
+            entityId = agent.id,
+            entityType = "AGENT",
+            data = mapOf(
+                "id" to agent.id,
+                "status" to agent.status.name
+            )
+        ))
+    }
+    
+    fun broadcastAgentOffline(agent: Agent) {
+        broadcast(CloudEvent(
+            type = "AGENT_OFFLINE",
+            entityId = agent.id,
+            entityType = "AGENT",
+            data = mapOf(
+                "id" to agent.id,
+                "status" to agent.status.name
+            )
+        ))
+    }
+    
+    fun broadcastDeploymentCommandCreated(command: DeploymentCommand) {
+        broadcast(CloudEvent(
+            type = "DEPLOYMENT_COMMAND_CREATED",
+            entityId = command.id,
+            entityType = "DEPLOYMENT_COMMAND",
+            data = mapOf(
+                "id" to command.id,
+                "agentId" to command.agentId,
+                "resourceName" to command.resourceName,
+                "namespace" to command.namespace,
+                "operation" to command.operation.name,
+                "status" to command.status.name
+            )
+        ))
+    }
+    
+    fun broadcastDeploymentCompleted(command: DeploymentCommand) {
+        broadcast(CloudEvent(
+            type = "DEPLOYMENT_COMPLETED",
+            entityId = command.id,
+            entityType = "DEPLOYMENT_COMMAND",
+            data = mapOf(
+                "id" to command.id,
+                "agentId" to command.agentId,
+                "resourceName" to command.resourceName,
+                "status" to command.status.name,
+                "success" to (command.result?.success ?: false)
+            )
+        ))
+    }
 }
 
 /**

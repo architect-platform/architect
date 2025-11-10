@@ -52,6 +52,7 @@ dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("io.micronaut:micronaut-http-client")
   implementation("io.micronaut:micronaut-runtime")
+  implementation("com.hubspot.jinjava:jinjava:2.7.2")
   runtimeOnly("ch.qos.logback:logback-classic")
   runtimeOnly("com.h2database:h2")
   runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -61,7 +62,7 @@ dependencies {
   testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 }
 
-application { mainClass.set("io.github.architectplatform.cloud.ApplicationKt") }
+application { mainClass.set("io.github.architectplatform.server.ApplicationKt") }
 
 kotlin { jvmToolchain(17) }
 
