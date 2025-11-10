@@ -1,0 +1,21 @@
+micronaut:
+  application:
+    name: architect-docker-compose-agent
+  server:
+    port: 8091
+
+agent:
+  id: ${AGENT_ID:`agent-docker-${random.uuid}`}
+  server:
+    url: ${ARCHITECT_SERVER_URL:`http://localhost:8080`}
+    token: ${ARCHITECT_SERVER_TOKEN:}
+  docker-compose:
+    working-directory: ${DOCKER_COMPOSE_WORKING_DIR:`/tmp/docker-compose`}
+    command: ${DOCKER_COMPOSE_COMMAND:`docker-compose`}
+  heartbeat:
+    interval-seconds: ${HEARTBEAT_INTERVAL:`30`}
+
+logger:
+  levels:
+    io.github.architectplatform.agent.dockercompose: INFO
+    io.micronaut: INFO
