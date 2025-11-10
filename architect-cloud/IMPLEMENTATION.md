@@ -1,4 +1,4 @@
-# Architect Cloud - Implementation Summary
+# Architect Server - Implementation Summary
 
 ## 🎯 What Was Built
 
@@ -59,7 +59,7 @@ Engine → REST API → Service → EventBroadcast
 ## 🗂️ Project Structure
 
 ```
-architect-cloud/
+architect-server/
 ├── backend/                    # Kotlin/Micronaut Backend
 │   ├── application/
 │   │   ├── domain/            # Pure business objects
@@ -130,7 +130,7 @@ Streams real-time events:
 ### 1. Start Cloud Backend
 
 ```bash
-cd architect-cloud/backend
+cd architect-server/backend
 ./gradlew run
 ```
 
@@ -139,7 +139,7 @@ Backend starts on http://localhost:8080
 ### 2. Start Dashboard UI
 
 ```bash
-cd architect-cloud/ui
+cd architect-server/ui
 npm install
 npm run dev
 ```
@@ -214,7 +214,7 @@ Engine automatically:
 ### Backend Tests
 
 ```bash
-cd architect-cloud/backend
+cd architect-server/backend
 ./gradlew test
 ```
 
@@ -363,7 +363,7 @@ services:
 
 ## 📝 Summary
 
-The Architect Cloud implementation provides:
+The Architect Server implementation provides:
 
 ✅ **Production-ready backend** with clean architecture  
 ✅ **Real-time event streaming** via WebSocket  

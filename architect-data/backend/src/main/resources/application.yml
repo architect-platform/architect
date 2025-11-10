@@ -1,0 +1,32 @@
+micronaut:
+  application:
+    name: architectData
+  server:
+    port: 8090
+  executors:
+    io:
+      type: fixed
+      nThreads: 75
+
+datasources:
+  default:
+    url: jdbc:h2:file:./data/architectDataDb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ''
+    schema-generate: CREATE_DROP
+    dialect: H2
+
+jackson:
+  serialization:
+    indentOutput: true
+    writeDatesAsTimestamps: false
+
+endpoints:
+  health:
+    enabled: true
+    sensitive: false
+
+logger:
+  levels:
+    io.github.architectplatform.data: INFO

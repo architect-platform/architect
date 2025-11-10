@@ -52,16 +52,17 @@ dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("io.micronaut:micronaut-http-client")
   implementation("io.micronaut:micronaut-runtime")
+  implementation("com.hubspot.jinjava:jinjava:2.7.2")
   runtimeOnly("ch.qos.logback:logback-classic")
   runtimeOnly("com.h2database:h2")
   runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
   testImplementation("io.micronaut:micronaut-http-client")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
-  testImplementation("org.mockito:mockito-core:5.7.0")
+  testImplementation("io.mockk:mockk:1.13.8")
+  testImplementation("io.projectreactor:reactor-test:3.6.0")
   testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 }
 
-application { mainClass.set("io.github.architectplatform.cloud.ApplicationKt") }
+application { mainClass.set("io.github.architectplatform.server.ApplicationKt") }
 
 kotlin { jvmToolchain(17) }
 

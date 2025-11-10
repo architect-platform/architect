@@ -1,8 +1,8 @@
-# Architect Cloud - Architecture Documentation
+# Architect Server - Architecture Documentation
 
 ## Overview
 
-Architect Cloud follows a **Clean/Hexagonal Architecture** pattern, ensuring:
+Architect Server follows a **Clean/Hexagonal Architecture** pattern, ensuring:
 - **Independence from frameworks** - Business logic doesn't depend on Micronaut, databases, or UI
 - **Testability** - Each layer can be tested independently
 - **Flexibility** - Easy to swap implementations (e.g., change database, add new protocols)

@@ -1,6 +1,6 @@
 micronaut:
   application:
-    name: architect-cloud-backend
+    name: architect-server-backend
   server:
     port: 8080
     cors:
@@ -22,7 +22,7 @@ micronaut:
 
 datasources:
   default:
-    url: jdbc:h2:mem:architectCloudDb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:mem:architectServerDb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driverClassName: org.h2.Driver
     username: sa
     password: ''
@@ -39,5 +39,5 @@ jpa:
 
 logger:
   levels:
-    io.github.architectplatform.cloud: INFO
+    io.github.architectplatform.server: INFO
     io.micronaut: INFO

@@ -1,36 +1,45 @@
 # Architect Cloud
 
-**A centralized backend and dashboard for tracking and monitoring multiple Architect Engine instances.**
+**Multi-Cloud Infrastructure Deployment and Orchestration Platform**
 
 ## Overview
 
-Architect Cloud provides a complete solution for managing and monitoring Architect Engine deployments at scale. It consists of two main components:
+Architect Cloud is a platform-agnostic infrastructure deployment solution that enables you to deploy applications across multiple cloud providers and orchestration platforms from a single API.
 
-1. **Backend** - RESTful API service that receives and stores data from engine instances
-2. **UI** - Web-based dashboard for visualizing engine activity and execution history
+### Key Features
+
+✅ **Multi-Cloud Support** - Deploy to AWS, GCP, Azure, Kubernetes, Docker, and more  
+✅ **Environment Management** - Separate deployments for dev, staging, and production  
+✅ **Deployment History** - Complete audit trail of all deployments and rollbacks  
+✅ **Rollback Capabilities** - Quick rollback to any previous deployment  
+✅ **Resource Tagging** - Organize and track resources with custom tags  
+✅ **Template-Based** - Flexible Jinja2 templates for any platform  
+✅ **Agent Architecture** - Deploy anywhere with platform-specific agents  
+✅ **Clean Architecture** - Testable, maintainable, domain-driven design
 
 ## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                    Architect Cloud                        │
-├──────────────────┬───────────────────────────────────────┤
-│                  │                                        │
-│   Backend API    │          Web Dashboard                │
-│   (Port 8080)    │          (Port 3000)                  │
-│                  │                                        │
-│   - REST API     │   - Engine monitoring                 │
-│   - H2 Database  │   - Project tracking                  │
-│   - Event Store  │   - Execution history                 │
-│                  │   - Real-time updates                 │
-└──────────┬───────┴───────────────────────────────────────┘
+│               Architect Cloud Platform                     │
+│                                                            │
+│   Backend API (Port 8080)                                 │
+│   - Application Definitions                               │
+│   - Deployment Commands                                   │
+│   - Template Management                                   │
+│   - Deployment History                                    │
+│   - Multi-Environment Support                             │
+└──────────┬──────────────────────────────────────────────┘
            │
-           │ Reports via HTTP
+           │ Deployment Commands
            │
-┌──────────▼──────┬──────────────┬──────────────┐
-│  Engine Inst 1  │Engine Inst 2 │Engine Inst 3 │
-│  (localhost)    │ (server-1)   │ (server-2)   │
-└─────────────────┴──────────────┴──────────────┘
+     ┌─────┴─────┬──────────────┬──────────────┐
+     │           │              │              │
+┌────▼────┐ ┌───▼────┐  ┌─────▼─────┐ ┌──────▼──────┐
+│Kubernetes│ │ Docker  │  │AWS ECS/    │ │Google Cloud │
+│ Agent   │ │Compose  │  │Fargate     │ │Run Agent    │
+│         │ │ Agent   │  │Agent       │ │             │
+└─────────┘ └─────────┘  └───────────┘ └─────────────┘
 ```
 
 ## Quick Start
@@ -38,150 +47,317 @@ Architect Cloud provides a complete solution for managing and monitoring Archite
 ### 1. Start the Backend
 
 ```bash
-cd backend
+cd architect-cloud/backend
 ./gradlew run
 ```
 
-The backend will start on http://localhost:8080
+Backend starts on **http://localhost:8080**
 
-### 2. Start the Dashboard
+### 2. Start an Agent
 
+For Kubernetes:
 ```bash
-cd ui
-npm run serve
+cd architect-cloud/agents/kubernetes-agent
+./gradlew run
 ```
 
-The dashboard will be available at http://localhost:3000
+For Docker Compose:
+```bash
+cd architect-cloud/agents/docker-compose-agent
+./gradlew run
+```
 
-### 3. Configure Engine to Report to Cloud
+### 3. Create an Application Definition
 
-Enable cloud reporting in your engine's `application.yml`:
+```bash
+curl -X POST http://localhost:8080/api/applications \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "my-app",
+    "name": "my-application",
+    "version": "1.0.0",
+    "type": "APPLICATION",
+    "image": "nginx:latest",
+    "instances": 2,
+    "targetEnvironment": "DEVELOPMENT",
+    "cloudProvider": "KUBERNETES",
+    "exposedPorts": [
+      {"port": 80, "protocol": "TCP", "public": true}
+    ],
+    "tags": {
+      "team": "platform",
+      "cost-center": "engineering"
+    }
+  }'
+```
+
+### 4. Deploy the Application
+
+```bash
+curl -X POST http://localhost:8080/api/deployments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "applicationDefinitionId": "my-app",
+    "agentId": "kubernetes-agent-1",
+    "targetEnvironment": "development"
+  }'
+```
+
+## Core Concepts
+
+### Application Definition
+
+Platform-agnostic description of your application:
+
+```kotlin
+data class ApplicationDefinition(
+    val id: String,
+    val name: String,
+    val version: String,
+    val type: ApplicationType,
+    val image: String,
+    val instances: Int,
+    val targetEnvironment: DeploymentEnvironment,
+    val cloudProvider: CloudProvider?,
+    val tags: Map<String, String>
+    // ... resources, health checks, dependencies
+)
+```
+
+### Deployment Command
+
+Instruction sent to agents to perform deployments:
+
+```kotlin
+data class DeploymentCommand(
+    val id: String,
+    val agentId: String,
+    val applicationDefinitionId: String,
+    val operation: DeploymentOperation,  // APPLY, DELETE, UPDATE, ROLLBACK
+    val targetEnvironment: String,
+    val deploymentVersion: Int,
+    val previousCommandId: String?  // For rollbacks
+)
+```
+
+### Deployment History
+
+Audit trail of all deployments:
+
+```kotlin
+data class DeploymentHistory(
+    val id: String,
+    val applicationName: String,
+    val version: String,
+    val operation: DeploymentOperation,
+    val environment: String,
+    val success: Boolean,
+    val startedAt: Instant,
+    val completedAt: Instant?,
+    val duration: Long?
+)
+```
+
+### Agents
+
+Platform-specific deployment executors:
+
+```kotlin
+data class Agent(
+    val id: String,
+    val agentType: AgentType,  // KUBERNETES, DOCKER_COMPOSE, AWS_ECS, etc.
+    val supportedEnvironments: List<String>,
+    val cloudProvider: String?,
+    val status: AgentStatus
+)
+```
+
+## Environment Management
+
+Architect Cloud supports multiple deployment environments:
+
+- **DEVELOPMENT** - Local development and testing
+- **STAGING** - Pre-production environment
+- **PRODUCTION** - Live production environment
+- **TEST** - Automated testing environment
+
+### Environment-Specific Configuration
+
+```kotlin
+val devApp = appDefinition.copy(
+    targetEnvironment = DeploymentEnvironment.DEVELOPMENT,
+    instances = 1,
+    resources = ResourceLimits(cpu = "100m", memory = "128Mi")
+)
+
+val prodApp = appDefinition.copy(
+    targetEnvironment = DeploymentEnvironment.PRODUCTION,
+    instances = 5,
+    resources = ResourceLimits(cpu = "1000m", memory = "2Gi")
+)
+```
+
+## Multi-Cloud Support
+
+Deploy to any cloud provider:
+
+```kotlin
+// Kubernetes
+val k8sApp = appDefinition.copy(
+    cloudProvider = CloudProvider.KUBERNETES
+)
+
+// AWS ECS
+val awsApp = appDefinition.copy(
+    cloudProvider = CloudProvider.AWS
+)
+
+// Docker Compose
+val dockerApp = appDefinition.copy(
+    cloudProvider = CloudProvider.DOCKER
+)
+```
+
+## Rollback
+
+Quick rollback to previous deployments:
+
+```bash
+# Get deployment history
+curl http://localhost:8080/api/deployments/history/my-app
+
+# Rollback to previous version
+curl -X POST http://localhost:8080/api/deployments/rollback \
+  -H "Content-Type: application/json" \
+  -d '{
+    "deploymentCommandId": "cmd-123"
+  }'
+```
+
+## Resource Tagging
+
+Organize and track resources:
+
+```kotlin
+val app = appDefinition.withTags(mapOf(
+    "team" to "platform",
+    "cost-center" to "engineering",
+    "environment" to "production",
+    "project" to "architect-cloud"
+))
+```
+
+## API Endpoints
+
+### Application Management
+
+- `POST /api/applications` - Create application definition
+- `GET /api/applications` - List all applications
+- `GET /api/applications/{id}` - Get application details
+- `PUT /api/applications/{id}` - Update application
+- `DELETE /api/applications/{id}` - Delete application
+
+### Deployment Management
+
+- `POST /api/deployments` - Create deployment
+- `GET /api/deployments` - List deployments
+- `GET /api/deployments/{id}` - Get deployment status
+- `POST /api/deployments/rollback` - Rollback deployment
+- `GET /api/deployments/history/{appId}` - Get deployment history
+
+### Agent Management
+
+- `POST /api/agents` - Register agent
+- `GET /api/agents` - List agents
+- `GET /api/agents/{id}` - Get agent details
+- `POST /api/agents/heartbeat` - Send heartbeat
+
+### Template Management
+
+- `POST /api/templates` - Create template
+- `GET /api/templates` - List templates
+- `GET /api/templates/{id}` - Get template
+- `PUT /api/templates/{id}` - Update template
+
+## Agents
+
+### Supported Platforms
+
+| Agent Type | Platform | Status |
+|------------|----------|--------|
+| Kubernetes | Kubernetes clusters | ✅ Available |
+| Docker Compose | Docker + Docker Compose | ✅ Available |
+| AWS ECS | Amazon ECS/Fargate | 🚧 Coming Soon |
+| Google Cloud Run | Google Cloud Run | 🚧 Coming Soon |
+| Azure Container Instances | Azure ACI | 🚧 Coming Soon |
+
+### Agent Configuration
+
+Agents are configured via `application.yml`:
 
 ```yaml
-architect:
-  cloud:
-    enabled: true
+agent:
+  id: kubernetes-agent-1
+  type: KUBERNETES
+  namespace: default
+  supportedEnvironments:
+    - development
+    - staging
+    - production
+  cloudProvider: KUBERNETES
+  server:
     url: http://localhost:8080
-    engine-id: my-engine-instance  # Optional: auto-generated if not provided
+  heartbeat:
+    intervalSeconds: 30
 ```
 
-Or set environment variables:
+## Templates
 
-```bash
-export ARCHITECT_CLOUD_ENABLED=true
-export ARCHITECT_CLOUD_URL=http://localhost:8080
-export ARCHITECT_CLOUD_ENGINE_ID=my-engine-001
-```
+Architect Cloud uses Jinja2 templates for flexible deployment definitions:
 
-### 4. Start Your Engine
-
-```bash
-cd architect-engine/engine
-./gradlew run
-```
-
-The engine will automatically:
-- Register itself with the cloud
-- Report all project registrations
-- Stream execution events in real-time
-- Send periodic heartbeats
-
-## Components
-
-### Backend Service
-
-A Micronaut-based REST API service that:
-- Receives and stores engine registrations
-- Tracks projects across all engines
-- Collects execution events and logs
-- Provides query APIs for the dashboard
-- Uses H2 database (configurable for production)
-
-**[Backend Documentation →](backend/README.md)**
-
-### Dashboard UI
-
-A web-based dashboard that displays:
-- Active engine instances
-- All registered projects
-- Execution history and status
-- Real-time updates every 5 seconds
-
-**[UI Documentation →](ui/README.md)**
-
-## Features
-
-### Engine Management
-- ✅ Unique engine identification
-- ✅ Automatic registration on startup
-- ✅ Heartbeat monitoring
-- ✅ Status tracking (Active/Inactive/Offline)
-
-### Project Tracking
-- ✅ Multi-engine project visibility
-- ✅ Project metadata storage
-- ✅ Path and description tracking
-
-### Execution Monitoring
-- ✅ Real-time execution events
-- ✅ Task status tracking
-- ✅ Output and log collection
-- ✅ Error details capture
-- ✅ Execution history
-
-### Dashboard Features
-- ✅ Overview statistics
-- ✅ Engine instance table
-- ✅ Recent executions view
-- ✅ Auto-refreshing data
-- ✅ Status indicators
-
-## Data Model
-
-### Engine Instance
 ```yaml
-id: string           # Unique engine identifier
-hostname: string     # Engine hostname
-port: int           # Engine port
-version: string     # Engine version
-status: enum        # ACTIVE | INACTIVE | OFFLINE
-createdAt: timestamp
-lastHeartbeat: timestamp
-```
-
-### Project
-```yaml
-id: string          # Unique project identifier
-name: string        # Project name
-path: string        # Filesystem path
-engineId: string    # Associated engine
-description: string # Optional description
-createdAt: timestamp
-```
-
-### Execution
-```yaml
-id: string              # Execution ID
-projectId: string       # Associated project
-engineId: string        # Engine that ran it
-taskId: string          # Task executed
-status: enum            # STARTED | RUNNING | COMPLETED | FAILED | SKIPPED
-message: string         # Status message
-errorDetails: string    # Error info if failed
-startedAt: timestamp
-completedAt: timestamp
-```
-
-### Execution Event
-```yaml
-id: string          # Event ID
-executionId: string # Associated execution
-eventType: string   # Event type (task.started, etc.)
-taskId: string      # Task ID
-message: string     # Event message
-output: string      # Task output/logs
-success: boolean    # Success flag
-timestamp: timestamp
+# kubernetes-deployment.yaml.j2
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ name }}
+  namespace: {{ targetEnvironment }}
+  labels:
+    app: {{ name }}
+    version: {{ version }}
+    {% for key, value in tags.items() %}
+    {{ key }}: {{ value }}
+    {% endfor %}
+spec:
+  replicas: {{ instances }}
+  selector:
+    matchLabels:
+      app: {{ name }}
+  template:
+    metadata:
+      labels:
+        app: {{ name }}
+        version: {{ version }}
+    spec:
+      containers:
+      - name: {{ name }}
+        image: {{ image }}
+        ports:
+        {% for port in ports %}
+        - containerPort: {{ port.port }}
+          protocol: {{ port.protocol }}
+        {% endfor %}
+        {% if resources %}
+        resources:
+          limits:
+            cpu: {{ resources.cpu }}
+            memory: {{ resources.memory }}
+        {% endif %}
+        env:
+        {% for key, value in environment.items() %}
+        - name: {{ key }}
+          value: "{{ value }}"
+        {% endfor %}
 ```
 
 ## Configuration
@@ -197,178 +373,63 @@ micronaut:
 
 datasources:
   default:
-    url: jdbc:h2:file:./data/architectCloudDb  # Persistent H2
-    # url: jdbc:postgresql://localhost:5432/architect  # PostgreSQL
-    # url: jdbc:mysql://localhost:3306/architect  # MySQL
+    url: jdbc:h2:file:./data/architectCloudDb
+    # url: jdbc:postgresql://localhost:5432/architect_cloud
+    # url: jdbc:mysql://localhost:3306/architect_cloud
 ```
-
-### Engine Configuration
-
-Add to engine's `application.yml`:
-
-```yaml
-architect:
-  cloud:
-    enabled: true                    # Enable cloud reporting
-    url: http://localhost:8080       # Cloud backend URL
-    engine-id: ${ARCHITECT_ENGINE_ID:}  # Optional engine ID
-```
-
-### UI Configuration
-
-Edit `ui/public/app.js`:
-
-```javascript
-const API_BASE_URL = 'http://localhost:8080/api';
-const REFRESH_INTERVAL = 5000;  // milliseconds
-```
-
-## Deployment
-
-### Docker Deployment
-
-Create `docker-compose.yml`:
-
-```yaml
-version: '3.8'
-
-services:
-  cloud-backend:
-    build: ./backend
-    ports:
-      - "8080:8080"
-    environment:
-      - DATASOURCE_URL=jdbc:postgresql://db:5432/architect
-    depends_on:
-      - db
-
-  cloud-ui:
-    build: ./ui
-    ports:
-      - "3000:80"
-    environment:
-      - API_BASE_URL=http://cloud-backend:8080/api
-
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_DB=architect
-      - POSTGRES_PASSWORD=password
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
-```
-
-### Kubernetes Deployment
-
-See deployment examples in the `deployment/` directory.
-
-## Testing
-
-### Backend Tests
-
-```bash
-cd backend
-./gradlew test
-```
-
-### Integration Testing
-
-1. Start the cloud backend
-2. Start an engine instance with cloud reporting enabled
-3. Register a project
-4. Execute a task
-5. View the dashboard to see real-time updates
 
 ## Development
 
-### Building from Source
+### Build
 
 ```bash
-# Build backend
-cd backend
 ./gradlew build
-
-# Package UI (already static files)
-cd ui
-# No build needed
 ```
 
-### Running Tests
+### Test
 
 ```bash
-cd backend
 ./gradlew test
 ```
 
-## API Documentation
+### Run
 
-### Engine Registration
-```http
-POST /api/engines
-Content-Type: application/json
-
-{
-  "id": "engine-001",
-  "hostname": "localhost",
-  "port": 9292,
-  "version": "1.3.0"
-}
+```bash
+./gradlew run
 ```
 
-### Project Registration
-```http
-POST /api/projects
-Content-Type: application/json
+## Technology Stack
 
-{
-  "id": "proj-001",
-  "name": "my-project",
-  "path": "/path/to/project",
-  "engineId": "engine-001",
-  "description": "My project"
-}
-```
-
-### Report Execution
-```http
-POST /api/executions
-Content-Type: application/json
-
-{
-  "id": "exec-001",
-  "projectId": "proj-001",
-  "engineId": "engine-001",
-  "taskId": "build",
-  "status": "STARTED"
-}
-```
-
-See [Backend API Documentation](backend/README.md) for complete API reference.
+- **Framework**: Micronaut 4.6
+- **Language**: Kotlin 1.9.25
+- **Database**: Micronaut Data JDBC (H2, PostgreSQL, MySQL)
+- **Templates**: Jinjava (Jinja2 for JVM)
+- **Architecture**: Clean/Hexagonal
 
 ## Roadmap
 
-- [ ] WebSocket support for real-time updates
-- [ ] Advanced filtering and search
-- [ ] Execution logs viewer
-- [ ] Metrics and analytics
-- [ ] Alert system
-- [ ] User authentication
-- [ ] Multi-tenancy support
-- [ ] Export functionality
-
-## Contributing
-
-Contributions are welcome! Please see the main repository [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
+- [x] Multi-cloud provider support
+- [x] Environment management
+- [x] Deployment history tracking
+- [x] Rollback capabilities
+- [x] Resource tagging
+- [ ] AWS ECS agent
+- [ ] Google Cloud Run agent
+- [ ] Azure Container Instances agent
+- [ ] WebSocket real-time updates
+- [ ] UI Dashboard
+- [ ] Authentication/Authorization
+- [ ] Multi-tenancy
+- [ ] Deployment approval workflows
+- [ ] Cost estimation
+- [ ] Resource optimization suggestions
 
 ## License
 
-MIT License - see [LICENSE](../LICENSE) for details.
+MIT License - see LICENSE for details
 
-## Support
+## Related Projects
 
-- **Documentation**: Check component READMEs
-- **Issues**: GitHub Issues
-- **Discussions**: GitHub Discussions
+- **[Architect Data](../architect-data/README.md)** - Execution tracking and workflow monitoring
+- **[Architect Engine](../architect-engine/README.md)** - Task execution engine
+- **[Architect CLI](../architect-cli/README.md)** - Command-line interface
