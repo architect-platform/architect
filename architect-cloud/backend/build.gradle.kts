@@ -57,8 +57,8 @@ dependencies {
   runtimeOnly("com.h2database:h2")
   runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
   testImplementation("io.micronaut:micronaut-http-client")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
-  testImplementation("org.mockito:mockito-core:5.7.0")
+  testImplementation("io.mockk:mockk:1.13.8")
+  testImplementation("io.projectreactor:reactor-test:3.6.0")
   testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 }
 
