@@ -54,9 +54,8 @@ Architect consists of three main components:
 ### Components
 
 - **[Architect CLI](architect-cli/)**: Interactive command-line tool for developers
-- **[Architect Engine](architect-engine/)**: RESTful API server managing task execution
+- **[Architect Engine](architect-engine/)**: RESTful API server managing task execution with built-in MCP support
 - **[Architect API](architect-api/)**: Core library for building plugins
-- **[Architect MCP Server](architect-mcp-server/)**: Model Context Protocol server for AI agent integration
 - **[Plugins](plugins/)**: Extensible plugins for various technologies and platforms
 
 ## Quick Start
@@ -669,13 +668,13 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ## AI Agent Integration
 
-Architect now integrates with AI agents through the [Model Context Protocol (MCP)](https://modelcontextprotocol.io). The **[Architect MCP Server](architect-mcp-server/)** enables AI agents like Claude to interact with the Architect platform:
+Architect Engine includes built-in support for the [Model Context Protocol (MCP)](https://modelcontextprotocol.io), enabling AI agents like Claude to interact with the Architect platform.
 
 ### Features
-- Execute tasks through natural language commands
-- Automate project management workflows
-- Manage the Architect Engine lifecycle
-- Access all Architect CLI capabilities
+- **Dynamic Tool Generation**: Tools are automatically generated based on registered projects and their tasks
+- **Plugin-Aware**: Exposes all tasks from active plugins
+- **Two Modes**: HTTP API for custom clients, stdio for Claude Desktop
+- **Real-time Updates**: Tools reflect the current state of the engine
 
 ### Quick Start with Claude Desktop
 
@@ -685,13 +684,27 @@ Add to your Claude Desktop configuration:
 {
   "mcpServers": {
     "architect": {
-      "command": "architect-mcp-server"
+      "command": "sh",
+      "args": [
+        "-c",
+        "cd /path/to/architect/architect-engine/engine && ./gradlew runMcpStdio"
+      ]
     }
   }
 }
 ```
 
-See the [Architect MCP Server documentation](architect-mcp-server/) for detailed setup and usage instructions.
+### HTTP API Access
+
+The engine also exposes MCP via HTTP at `/api/mcp`:
+
+```bash
+curl -X POST http://localhost:9292/api/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+See the [MCP Integration documentation](architect-engine/engine/MCP.md) for detailed setup and usage instructions.
 
 ## Roadmap
 

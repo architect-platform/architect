@@ -1,6 +1,6 @@
 # Architect Engine
 
-The Architect Engine is a plugin-based task execution engine built with Kotlin and Micronaut. It provides a flexible framework for managing projects and executing tasks through a RESTful API.
+The Architect Engine is a plugin-based task execution engine built with Kotlin and Micronaut. It provides a flexible framework for managing projects and executing tasks through a RESTful API, with built-in support for AI agents via the Model Context Protocol (MCP).
 
 ## Overview
 
@@ -9,6 +9,7 @@ Architect Engine allows you to:
 - Load and execute plugins that provide domain-specific tasks
 - Execute tasks with event-driven feedback
 - Support nested project structures (subprojects)
+- **NEW**: Expose capabilities to AI agents via Model Context Protocol (MCP)
 
 ## Architecture
 
@@ -18,6 +19,7 @@ Architect Engine allows you to:
 - **Task Service**: Handles task discovery and execution across projects
 - **Plugin System**: Extensible plugin architecture using SPI (Service Provider Interface)
 - **Event System**: Real-time event streaming for task execution monitoring
+- **MCP Integration**: Built-in Model Context Protocol support for AI agents (see [MCP.md](engine/MCP.md))
 
 ### Plugins
 
