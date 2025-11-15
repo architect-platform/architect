@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "architect": {
+      "command": "architect-mcp-server",
+      "env": {
+        "ARCHITECT_ENGINE_URL": "http://localhost:9292"
+      }
+    }
+  }
+}
