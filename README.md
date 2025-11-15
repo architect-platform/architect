@@ -56,6 +56,7 @@ Architect consists of three main components:
 - **[Architect CLI](architect-cli/)**: Interactive command-line tool for developers
 - **[Architect Engine](architect-engine/)**: RESTful API server managing task execution
 - **[Architect API](architect-api/)**: Core library for building plugins
+- **[Architect MCP Server](architect-mcp-server/)**: Model Context Protocol server for AI agent integration
 - **[Plugins](plugins/)**: Extensible plugins for various technologies and platforms
 
 ## Quick Start
@@ -665,6 +666,32 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 - **Issues**: [GitHub Issues](https://github.com/architect-platform/architect/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/architect-platform/architect/discussions)
 - **Documentation**: Check individual component READMEs
+
+## AI Agent Integration
+
+Architect now integrates with AI agents through the [Model Context Protocol (MCP)](https://modelcontextprotocol.io). The **[Architect MCP Server](architect-mcp-server/)** enables AI agents like Claude to interact with the Architect platform:
+
+### Features
+- Execute tasks through natural language commands
+- Automate project management workflows
+- Manage the Architect Engine lifecycle
+- Access all Architect CLI capabilities
+
+### Quick Start with Claude Desktop
+
+Add to your Claude Desktop configuration:
+
+```json
+{
+  "mcpServers": {
+    "architect": {
+      "command": "architect-mcp-server"
+    }
+  }
+}
+```
+
+See the [Architect MCP Server documentation](architect-mcp-server/) for detailed setup and usage instructions.
 
 ## Roadmap
 

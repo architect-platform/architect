@@ -1,0 +1,35 @@
+{
+  "name": "architect-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server to integrate Architect commands into Agent workflow",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "architect-mcp-server": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "architect",
+    "model-context-protocol",
+    "agent",
+    "automation"
+  ],
+  "author": "Architect Platform Team",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
