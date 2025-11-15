@@ -58,6 +58,15 @@ dependencies {
 
 application { mainClass.set("io.github.architectplatform.engine.ApplicationKt") }
 
+// Create MCP stdio executable
+tasks.register<JavaExec>("runMcpStdio") {
+  group = "application"
+  description = "Run the MCP stdio server for Claude Desktop integration"
+  classpath = sourceSets["main"].runtimeClasspath
+  mainClass.set("io.github.architectplatform.engine.mcp.McpStdioLauncherKt")
+  standardInput = System.`in`
+}
+
 kotlin { jvmToolchain(17) }
 
 java {
