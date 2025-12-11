@@ -28,13 +28,13 @@ repositories {
 
 dependencies {
   implementation("io.github.architectplatform:api:1.1.2")
-  implementation("com.fasterxml.jackson.core:jackson-databind:2.20.0") // core Jackson
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.0") // Kotlin support
+  implementation("com.fasterxml.jackson.core:jackson-databind:2.20.1") // core Jackson
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.1") // Kotlin support
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
-  testImplementation("org.mockito:mockito-core:5.8.0")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.14.1")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.14.1")
+  testImplementation("org.mockito:mockito-core:5.21.0")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
 }
 
 tasks.test {
