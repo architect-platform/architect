@@ -1,4 +1,4 @@
-plugins { kotlin("jvm") version "1.9.25" }
+plugins { kotlin("jvm") version "2.3.0" }
 
 group = "io.github.architectplatform.plugins"
 
@@ -31,8 +31,8 @@ dependencies {
   implementation("com.fasterxml.jackson.core:jackson-databind:2.20.0") // core Jackson
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.0") // Kotlin support
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.1")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:6.0.1")
 }
 
 tasks.test {
