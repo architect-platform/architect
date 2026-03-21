@@ -1,6 +1,7 @@
 package io.github.architectplatform.cli
 
 import io.github.architectplatform.cli.client.EngineCommandClient
+import io.github.architectplatform.cli.dto.HistoryRecordDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.micronaut.context.ApplicationContext
@@ -105,6 +106,16 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
       return
     }
 
+    if (command == "history") {
+      val records = if (args.getOrNull(1) != null) {
+        engineCommandClient.getProjectHistory(args[1])
+      } else {
+        engineCommandClient.getHistory()
+      }
+      printHistory(records)
+      return
+    }
+
     // Drop first arg as it's the command itself (included by PicoCLI)
     val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
     executeTask(projectName, command!!, taskArgs)
@@ -167,12 +178,6 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
     }
   }
 
-  /**
-   * Prints the execution plan for a task in a human-readable format.
-   * Groups tasks by parallel batch so the user can see what will run concurrently.
-   *
-   * @param plan The plan returned from the engine
-   */
   private fun printPlan(plan: TaskPlanDTO) {
     println()
     println("━".repeat(80))
@@ -194,6 +199,29 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
         println("  │  $connector ${step.id}$phase  ${step.description}$deps")
       }
       println("  │")
+    }
+    println()
+  }
+
+  private fun printHistory(records: List<HistoryRecordDTO>) {
+    if (records.isEmpty()) {
+      println("No execution history found.")
+      return
+    }
+    println()
+    println("━".repeat(80))
+    println("📜 Execution History")
+    println("━".repeat(80))
+    val fmt = "%-8s  %-18s  %-14s  %-7s  %s"
+    println(fmt.format("STATUS", "WHEN", "PROJECT", "DURATION", "TASK"))
+    println("─".repeat(80))
+    records.forEach { r ->
+      val status = if (r.success) "✅" else "❌"
+      val when_ = java.time.Instant.ofEpochMilli(r.timestamp)
+          .atZone(java.time.ZoneId.systemDefault())
+          .format(java.time.format.DateTimeFormatter.ofPattern("MM-dd HH:mm:ss"))
+      val duration = "${r.durationMs / 1000}.${(r.durationMs % 1000) / 100}s"
+      println(fmt.format(status, when_, r.project, duration, r.task))
     }
     println()
   }

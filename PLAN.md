@@ -58,12 +58,12 @@ tasks:
 **Goal:** Execution results are persisted to `~/.architect/history/` as JSON. `architect history` shows recent executions.
 
 ### Tasks
-- [ ] 4.1 Create `ExecutionRecord` data class (id, project, task, timestamp, success, duration, message)
-- [ ] 4.2 Create `HistoryService` — writes/reads JSON files in `~/.architect/history/`
-- [ ] 4.3 Wire `HistoryService` into `TaskService.executeTask()` to record completions
-- [ ] 4.4 Add `GET /api/history` and `GET /api/history/{project}` endpoints
-- [ ] 4.5 Add `history` HTTP call to CLI `EngineCommandClient`
-- [ ] 4.6 Handle `architect history` in `ArchitectLauncher` with formatted table output
+- [x] 4.1 Create `ExecutionRecord` data class (id, project, task, timestamp, success, duration, message)
+- [x] 4.2 Create `HistoryService` — writes/reads JSON files in `~/.architect/history/`
+- [x] 4.3 Wire `HistoryService` into `TaskService.executeTask()` to record completions
+- [x] 4.4 Add `GET /api/history` and `GET /api/history/{project}` endpoints
+- [x] 4.5 Add `history` HTTP call to CLI `EngineCommandClient`
+- [x] 4.6 Handle `architect history` in `ArchitectLauncher` with formatted table output
 
 ---
 
@@ -98,6 +98,6 @@ tasks:
 | 1: Plan Mode | ✅ done | feat(engine,cli): add plan mode |
 | 2: Parallel Execution | ✅ done | feat(engine): parallel task batch execution |
 | 3: Inline Tasks | ✅ done | feat(engine): inline task definitions in architect.yml |
-| 4: History | [ ] pending | — |
+| 4: History | ✅ done | feat(engine,cli): local execution history |
 | 5: Validation | [ ] pending | — |
 | 6: Auto-Start | [ ] pending | — |

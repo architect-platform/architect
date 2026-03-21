@@ -2,6 +2,8 @@ package io.github.architectplatform.engine.core.tasks.application
 
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
+import io.github.architectplatform.engine.core.history.app.HistoryService
+import io.github.architectplatform.engine.core.history.domain.ExecutionRecord
 import io.github.architectplatform.engine.core.project.app.ProjectService
 import io.github.architectplatform.engine.core.project.domain.Project
 import io.github.architectplatform.engine.core.tasks.domain.TaskDependencyResolver
@@ -43,7 +45,8 @@ class TaskService(
     private val projectService: ProjectService,
     private val executor: TaskExecutor,
     private val eventCollector: ExecutionEventCollector,
-    private val eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>
+    private val eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>,
+    private val historyService: HistoryService,
 ) {
 
   /**
@@ -132,6 +135,7 @@ class TaskService(
     // Generate a single execution ID for the entire execution tree
     val executionId = generateExecutionId()
       CoroutineScope(IO).launch {
+          val startTime = System.currentTimeMillis()
           eventPublisher.publishEvent(
               executionStartedEvent(
                   projectName,
@@ -139,6 +143,16 @@ class TaskService(
                   message = "Starting execution of task: $taskId in project: $projectName")
           )
         val result = executeRecursivelyOverSubprojectsFirst(project, taskId, args, executionId = executionId)
+        val durationMs = System.currentTimeMillis() - startTime
+        historyService.record(ExecutionRecord(
+            id = executionId,
+            project = projectName,
+            task = taskId,
+            timestamp = startTime,
+            success = result.success,
+            durationMs = durationMs,
+            message = result.message,
+        ))
         if (!result.success) {
             eventPublisher.publishEvent(
                 executionFailedEvent(

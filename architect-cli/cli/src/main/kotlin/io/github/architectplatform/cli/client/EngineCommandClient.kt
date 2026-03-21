@@ -1,5 +1,6 @@
 package io.github.architectplatform.cli.client
 
+import io.github.architectplatform.cli.dto.HistoryRecordDTO
 import io.github.architectplatform.cli.dto.ProjectDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.dto.TaskDTO
@@ -98,4 +99,21 @@ interface EngineCommandClient {
    */
   @Get("/executions/{executionId}")
   fun getExecutionFlow(@PathVariable executionId: ExecutionId): Flow<Map<String, Any>>
+
+  /**
+   * Retrieves recent execution history across all projects.
+   *
+   * @return List of execution records, newest first
+   */
+  @Get("/history")
+  fun getHistory(): List<HistoryRecordDTO>
+
+  /**
+   * Retrieves recent execution history for a specific project.
+   *
+   * @param project The project name
+   * @return List of execution records for this project, newest first
+   */
+  @Get("/history/{project}")
+  fun getProjectHistory(@PathVariable project: String): List<HistoryRecordDTO>
 }

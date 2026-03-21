@@ -4,6 +4,7 @@ import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
+import io.github.architectplatform.engine.core.history.app.HistoryService
 import io.github.architectplatform.engine.core.project.app.ProjectService
 import io.github.architectplatform.engine.core.project.domain.Project
 import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTaskRegistry
@@ -27,6 +28,7 @@ class TaskServiceTest {
     private lateinit var taskExecutor: TaskExecutor
     private lateinit var eventCollector: ExecutionEventCollector
     private lateinit var eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>
+    private lateinit var historyService: HistoryService
     private lateinit var taskService: TaskService
 
     @BeforeEach
@@ -35,7 +37,8 @@ class TaskServiceTest {
         taskExecutor = mock()
         eventCollector = mock()
         eventPublisher = mock()
-        taskService = TaskService(projectService, taskExecutor, eventCollector, eventPublisher)
+        historyService = mock()
+        taskService = TaskService(projectService, taskExecutor, eventCollector, eventPublisher, historyService)
     }
 
     @Test
