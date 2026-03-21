@@ -52,11 +52,20 @@ object EngineConfiguration {
     object PluginLoader {
         const val DOWNLOAD_TIMEOUT_SECONDS = "architect.engine.plugins.download-timeout-seconds"
         const val DEFAULT_DOWNLOAD_TIMEOUT_SECONDS = 300L
-        
+
         const val DOWNLOAD_RETRY_ATTEMPTS = "architect.engine.plugins.download-retry-attempts"
         const val DEFAULT_DOWNLOAD_RETRY_ATTEMPTS = 3
-        
+
         const val USER_AGENT = "architect.engine.plugins.user-agent"
         const val DEFAULT_USER_AGENT = "ArchitectPlatform/1.0"
+    }
+
+    /**
+     * Task execution configuration properties
+     */
+    object TaskExecution {
+        /** When true, tasks with no ordering dependency between them execute concurrently. */
+        const val PARALLEL_ENABLED = "architect.engine.executor.parallel-execution"
+        const val DEFAULT_PARALLEL_ENABLED = true
     }
 }

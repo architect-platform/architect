@@ -23,9 +23,9 @@ Tasks are marked with status: `[ ]` pending, `[x]` done, `[~]` in progress.
 **Goal:** Independent tasks (no dependency relationship between them) run concurrently instead of sequentially.
 
 ### Tasks
-- [ ] 2.1 Add `toBatches()` to `TaskDependencyResolver` — groups topologically sorted tasks into parallel batches
-- [ ] 2.2 Modify `TaskExecutor.syncExecuteTask()` to execute each batch via `async/awaitAll`
-- [ ] 2.3 Add `parallelExecution` flag to `EngineConfiguration` (default `true`)
+- [x] 2.1 Add `toBatches()` to `TaskDependencyResolver` — groups topologically sorted tasks into parallel batches
+- [x] 2.2 Modify `TaskExecutor.syncExecuteTask()` to execute each batch via `async/awaitAll`
+- [x] 2.3 Add `parallelExecution` flag to `EngineConfiguration` (default `true`)
 
 ---
 
@@ -96,7 +96,7 @@ tasks:
 | Phase | Status | Commit |
 |-------|--------|--------|
 | 1: Plan Mode | ✅ done | feat(engine,cli): add plan mode |
-| 2: Parallel Execution | [ ] pending | — |
+| 2: Parallel Execution | ✅ done | feat(engine): parallel task batch execution |
 | 3: Inline Tasks | [ ] pending | — |
 | 4: History | [ ] pending | — |
 | 5: Validation | [ ] pending | — |
