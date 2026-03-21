@@ -5,6 +5,7 @@ import io.github.architectplatform.engine.core.project.app.ProjectService
 import io.github.architectplatform.engine.core.project.domain.Project
 import io.github.architectplatform.engine.core.project.interfaces.dto.ProjectDTO
 import io.github.architectplatform.engine.core.project.interfaces.dto.RegisterProjectRequest
+import io.github.architectplatform.engine.core.project.interfaces.dto.ValidationResultDTO
 import io.github.architectplatform.engine.core.project.interfaces.dto.toDTO
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
@@ -53,5 +54,12 @@ class ProjectsApiController(
     logger.info("Fetching context for project: $projectName")
     val project = projectService.getProject(projectName)!!
     return project.context.config
+  }
+
+  @Get("/{projectName}/validate")
+  fun validateProject(@PathVariable projectName: String): ValidationResultDTO {
+    logger.info("Validating project: $projectName")
+    val result = projectService.validateProject(projectName)
+    return ValidationResultDTO(valid = result.valid, errors = result.errors, warnings = result.warnings)
   }
 }

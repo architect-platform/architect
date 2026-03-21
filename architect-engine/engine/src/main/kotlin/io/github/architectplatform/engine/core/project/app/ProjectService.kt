@@ -39,6 +39,7 @@ class ProjectService(
     private val configLoader: ConfigLoader,
     private val pluginLoader: PluginLoader,
     private val cloudReporter: Optional<CloudReporterService>,
+    private val configValidator: ConfigValidator,
 ) {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
@@ -52,6 +53,11 @@ class ProjectService(
   private fun loadProject(name: String, path: String): Project? {
     logger.info("Loading project $name from path $path")
     val projectConfig = configLoader.load(path) ?: return null
+
+    val validation = configValidator.validate(projectConfig)
+    validation.warnings.forEach { logger.warn("Project $name: $it") }
+    validation.errors.forEach { logger.error("Project $name: $it") }
+
     val projectContext = ProjectContext(Path(path), projectConfig)
 
     // Call this method for every subfolder and build the subProjects list
@@ -185,5 +191,18 @@ class ProjectService(
    */
   fun getAllProjects(): List<Project> {
     return projectRepository.getAll()
+  }
+
+  /**
+   * Validates the configuration of an already-registered project.
+   *
+   * @param name The unique name identifier of the project
+   * @return Validation result with errors and warnings
+   * @throws IllegalArgumentException if the project is not registered
+   */
+  fun validateProject(name: String): ValidationResult {
+    val project = getProject(name)
+        ?: throw IllegalArgumentException("Project $name is not registered")
+    return configValidator.validate(project.context.config)
   }
 }

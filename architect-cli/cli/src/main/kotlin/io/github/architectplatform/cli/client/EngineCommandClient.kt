@@ -5,6 +5,7 @@ import io.github.architectplatform.cli.dto.ProjectDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.dto.TaskDTO
 import io.github.architectplatform.cli.dto.TaskPlanDTO
+import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
@@ -116,4 +117,13 @@ interface EngineCommandClient {
    */
   @Get("/history/{project}")
   fun getProjectHistory(@PathVariable project: String): List<HistoryRecordDTO>
+
+  /**
+   * Validates the configuration of a registered project.
+   *
+   * @param projectName The project name
+   * @return Validation result with errors and warnings
+   */
+  @Get("/projects/{projectName}/validate")
+  fun validateProject(@PathVariable projectName: String): ValidationResultDTO
 }

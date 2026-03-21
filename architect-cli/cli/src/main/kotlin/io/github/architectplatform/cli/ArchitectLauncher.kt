@@ -4,6 +4,7 @@ import io.github.architectplatform.cli.client.EngineCommandClient
 import io.github.architectplatform.cli.dto.HistoryRecordDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.dto.TaskPlanDTO
+import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.micronaut.context.ApplicationContext
 import jakarta.inject.Singleton
 import kotlin.system.exitProcess
@@ -116,6 +117,13 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
       return
     }
 
+    if (command == "validate") {
+      val validation = engineCommandClient.validateProject(projectName)
+      printValidation(projectName, validation)
+      if (!validation.valid) exitProcess(1)
+      return
+    }
+
     // Drop first arg as it's the command itself (included by PicoCLI)
     val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
     executeTask(projectName, command!!, taskArgs)
@@ -200,6 +208,20 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
       }
       println("  │")
     }
+    println()
+  }
+
+  private fun printValidation(projectName: String, result: ValidationResultDTO) {
+    println()
+    println("━".repeat(80))
+    val status = if (result.valid) "✅ VALID" else "❌ INVALID"
+    println("$status — Project: $projectName")
+    println("━".repeat(80))
+    if (result.errors.isEmpty() && result.warnings.isEmpty()) {
+      println("  No issues found.")
+    }
+    result.errors.forEach { println("  ❌ ERROR:   $it") }
+    result.warnings.forEach { println("  ⚠️  WARNING: $it") }
     println()
   }
 

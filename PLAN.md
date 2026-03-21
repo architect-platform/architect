@@ -72,10 +72,10 @@ tasks:
 **Goal:** `architect.yml` errors are caught at project load time with meaningful messages, not silently at runtime.
 
 ### Tasks
-- [ ] 5.1 Create `ConfigValidator` — validates required fields (`project.name`), warns on unknown top-level keys
-- [ ] 5.2 Wire `ConfigValidator` into `ProjectService.loadProject()` — throw `ConfigValidationException` on hard errors, log warnings
-- [ ] 5.3 Add `architect validate` CLI command that registers the project and returns validation results
-- [ ] 5.4 Add `GET /api/projects/{name}/validate` engine endpoint
+- [x] 5.1 Create `ConfigValidator` — validates required fields (`project.name`), warns on unknown top-level keys
+- [x] 5.2 Wire `ConfigValidator` into `ProjectService.loadProject()` — throw `ConfigValidationException` on hard errors, log warnings
+- [x] 5.3 Add `architect validate` CLI command that registers the project and returns validation results
+- [x] 5.4 Add `GET /api/projects/{name}/validate` engine endpoint
 
 ---
 
@@ -99,5 +99,5 @@ tasks:
 | 2: Parallel Execution | ✅ done | feat(engine): parallel task batch execution |
 | 3: Inline Tasks | ✅ done | feat(engine): inline task definitions in architect.yml |
 | 4: History | ✅ done | feat(engine,cli): local execution history |
-| 5: Validation | [ ] pending | — |
+| 5: Validation | ✅ done | feat(engine,cli): config validation |
 | 6: Auto-Start | [ ] pending | — |
