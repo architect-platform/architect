@@ -46,10 +46,10 @@ tasks:
 ```
 
 ### Tasks
-- [ ] 3.1 Define `InlineTaskConfig` data class (id, description, run, phase?, depends?)
-- [ ] 3.2 Create `InlineTaskPlugin` — built-in engine plugin that reads `tasks:` from config and registers `SimpleTask` instances with shell execution
-- [ ] 3.3 Register `InlineTaskPlugin` in the engine's built-in plugin list
-- [ ] 3.4 Add tests for `InlineTaskPlugin`
+- [x] 3.1 Define `InlineTaskConfig` data class (id, description, run, phase?, depends?)
+- [x] 3.2 Create `InlineTaskPlugin` — built-in engine plugin that reads `tasks:` from config and registers `SimpleTask` instances with shell execution
+- [x] 3.3 Register `InlineTaskPlugin` in the engine's built-in plugin list
+- [x] 3.4 Add tests for `InlineTaskPlugin`
 
 ---
 
@@ -97,7 +97,7 @@ tasks:
 |-------|--------|--------|
 | 1: Plan Mode | ✅ done | feat(engine,cli): add plan mode |
 | 2: Parallel Execution | ✅ done | feat(engine): parallel task batch execution |
-| 3: Inline Tasks | [ ] pending | — |
+| 3: Inline Tasks | ✅ done | feat(engine): inline task definitions in architect.yml |
 | 4: History | [ ] pending | — |
 | 5: Validation | [ ] pending | — |
 | 6: Auto-Start | [ ] pending | — |
