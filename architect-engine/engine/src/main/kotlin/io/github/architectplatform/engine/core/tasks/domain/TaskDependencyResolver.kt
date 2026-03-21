@@ -120,6 +120,27 @@ class TaskDependencyResolver {
     }
 
     /**
+     * Assigns each task a parallel batch index.
+     *
+     * Batch 0 = tasks with no unresolved dependencies.
+     * Batch N = tasks whose dependencies are all in batches < N.
+     * Tasks in the same batch have no ordering dependency on each other and can run concurrently.
+     *
+     * @param orderedTasks Topologically sorted task list (from [topologicalSort])
+     * @return Map of task ID to batch index
+     */
+    fun toBatches(orderedTasks: List<Task>): Map<String, Int> {
+        val batchOf = mutableMapOf<String, Int>()
+        for (task in orderedTasks) {
+            val maxDepBatch = task.depends()
+                .mapNotNull { batchOf[it] }
+                .maxOrNull() ?: -1
+            batchOf[task.id] = maxDepBatch + 1
+        }
+        return batchOf
+    }
+
+    /**
      * Resolves and orders child tasks for execution.
      * 
      * Child tasks are resolved with their own dependencies, creating a complete

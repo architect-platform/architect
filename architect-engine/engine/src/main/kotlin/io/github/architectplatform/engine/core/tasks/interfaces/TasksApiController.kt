@@ -2,6 +2,7 @@ package io.github.architectplatform.engine.core.tasks.interfaces
 
 import io.github.architectplatform.engine.core.tasks.application.TaskService
 import io.github.architectplatform.engine.core.tasks.interfaces.dto.TaskDTO
+import io.github.architectplatform.engine.core.tasks.interfaces.dto.TaskPlanDTO
 import io.github.architectplatform.engine.core.tasks.interfaces.dto.toDTO
 import io.github.architectplatform.engine.domain.events.ExecutionId
 import io.micronaut.http.annotation.Body
@@ -37,6 +38,15 @@ class TasksApiController(private val taskService: TaskService) {
     logger.info("Fetching task '$taskName' for project: $projectName")
     val task = taskService.getTaskById(projectName, taskName)
     return task.toDTO()
+  }
+
+  @Get("/{taskName}/plan")
+  fun planTask(
+      @PathVariable projectName: String,
+      @PathVariable taskName: String,
+  ): TaskPlanDTO {
+    logger.info("Computing plan for task '$taskName' in project: $projectName")
+    return taskService.planTask(projectName, taskName)
   }
 
   @Post("/{taskName}")

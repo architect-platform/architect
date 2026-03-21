@@ -23,9 +23,9 @@ Tasks are marked with status: `[ ]` pending, `[x]` done, `[~]` in progress.
 **Goal:** Independent tasks (no dependency relationship between them) run concurrently instead of sequentially.
 
 ### Tasks
-- [x] 2.1 Add `toBatches()` to `TaskDependencyResolver` — groups topologically sorted tasks into parallel batches
-- [x] 2.2 Modify `TaskExecutor.syncExecuteTask()` to execute each batch via `async/awaitAll`
-- [x] 2.3 Add `parallelExecution` flag to `EngineConfiguration` (default `true`)
+- [ ] 2.1 Add `toBatches()` to `TaskDependencyResolver` — groups topologically sorted tasks into parallel batches
+- [ ] 2.2 Modify `TaskExecutor.syncExecuteTask()` to execute each batch via `async/awaitAll`
+- [ ] 2.3 Add `parallelExecution` flag to `EngineConfiguration` (default `true`)
 
 ---
 
@@ -46,10 +46,10 @@ tasks:
 ```
 
 ### Tasks
-- [x] 3.1 Define `InlineTaskConfig` data class (id, description, run, phase?, depends?)
-- [x] 3.2 Create `InlineTaskPlugin` — built-in engine plugin that reads `tasks:` from config and registers `SimpleTask` instances with shell execution
-- [x] 3.3 Register `InlineTaskPlugin` in the engine's built-in plugin list
-- [x] 3.4 Add tests for `InlineTaskPlugin`
+- [ ] 3.1 Define `InlineTaskConfig` data class (id, description, run, phase?, depends?)
+- [ ] 3.2 Create `InlineTaskPlugin` — built-in engine plugin that reads `tasks:` from config and registers `SimpleTask` instances with shell execution
+- [ ] 3.3 Register `InlineTaskPlugin` in the engine's built-in plugin list
+- [ ] 3.4 Add tests for `InlineTaskPlugin`
 
 ---
 
@@ -58,12 +58,12 @@ tasks:
 **Goal:** Execution results are persisted to `~/.architect/history/` as JSON. `architect history` shows recent executions.
 
 ### Tasks
-- [x] 4.1 Create `ExecutionRecord` data class (id, project, task, timestamp, success, duration, message)
-- [x] 4.2 Create `HistoryService` — writes/reads JSON files in `~/.architect/history/`
-- [x] 4.3 Wire `HistoryService` into `TaskService.executeTask()` to record completions
-- [x] 4.4 Add `GET /api/history` and `GET /api/history/{project}` endpoints
-- [x] 4.5 Add `history` HTTP call to CLI `EngineCommandClient`
-- [x] 4.6 Handle `architect history` in `ArchitectLauncher` with formatted table output
+- [ ] 4.1 Create `ExecutionRecord` data class (id, project, task, timestamp, success, duration, message)
+- [ ] 4.2 Create `HistoryService` — writes/reads JSON files in `~/.architect/history/`
+- [ ] 4.3 Wire `HistoryService` into `TaskService.executeTask()` to record completions
+- [ ] 4.4 Add `GET /api/history` and `GET /api/history/{project}` endpoints
+- [ ] 4.5 Add `history` HTTP call to CLI `EngineCommandClient`
+- [ ] 4.6 Handle `architect history` in `ArchitectLauncher` with formatted table output
 
 ---
 
@@ -72,10 +72,10 @@ tasks:
 **Goal:** `architect.yml` errors are caught at project load time with meaningful messages, not silently at runtime.
 
 ### Tasks
-- [x] 5.1 Create `ConfigValidator` — validates required fields (`project.name`), warns on unknown top-level keys
-- [x] 5.2 Wire `ConfigValidator` into `ProjectService.loadProject()` — throw `ConfigValidationException` on hard errors, log warnings
-- [x] 5.3 Add `architect validate` CLI command that registers the project and returns validation results
-- [x] 5.4 Add `GET /api/projects/{name}/validate` engine endpoint
+- [ ] 5.1 Create `ConfigValidator` — validates required fields (`project.name`), warns on unknown top-level keys
+- [ ] 5.2 Wire `ConfigValidator` into `ProjectService.loadProject()` — throw `ConfigValidationException` on hard errors, log warnings
+- [ ] 5.3 Add `architect validate` CLI command that registers the project and returns validation results
+- [ ] 5.4 Add `GET /api/projects/{name}/validate` engine endpoint
 
 ---
 
@@ -84,10 +84,10 @@ tasks:
 **Goal:** `architect build` works even if the daemon is not running — CLI auto-starts it, waits for readiness, then executes.
 
 ### Tasks
-- [x] 6.1 Add `EngineHealthClient` — simple `GET /health` call with short timeout
-- [x] 6.2 In `ArchitectLauncher`, before any engine call: check health, if down → start engine process, poll until ready (max 30s)
-- [x] 6.3 Add `--no-daemon` flag to skip auto-start (for CI environments that manage the daemon themselves)
-- [x] 6.4 Print status messages during engine startup: `⚙️ Starting Architect Engine...`, `✅ Engine ready`
+- [ ] 6.1 Add `EngineHealthClient` — simple `GET /health` call with short timeout
+- [ ] 6.2 In `ArchitectLauncher`, before any engine call: check health, if down → start engine process, poll until ready (max 30s)
+- [ ] 6.3 Add `--no-daemon` flag to skip auto-start (for CI environments that manage the daemon themselves)
+- [ ] 6.4 Print status messages during engine startup: `⚙️ Starting Architect Engine...`, `✅ Engine ready`
 
 ---
 
@@ -95,9 +95,9 @@ tasks:
 
 | Phase | Status | Commit |
 |-------|--------|--------|
-| 1: Plan Mode | ✅ done | — |
-| 2: Parallel Execution | ✅ done | — |
-| 3: Inline Tasks | ✅ done | — |
-| 4: History | ✅ done | — |
-| 5: Validation | ✅ done | — |
-| 6: Auto-Start | ✅ done | — |
+| 1: Plan Mode | ✅ done | feat(engine,cli): add plan mode |
+| 2: Parallel Execution | [ ] pending | — |
+| 3: Inline Tasks | [ ] pending | — |
+| 4: History | [ ] pending | — |
+| 5: Validation | [ ] pending | — |
+| 6: Auto-Start | [ ] pending | — |

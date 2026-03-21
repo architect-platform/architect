@@ -4,9 +4,12 @@ import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.engine.core.project.app.ProjectService
 import io.github.architectplatform.engine.core.project.domain.Project
+import io.github.architectplatform.engine.core.tasks.domain.TaskDependencyResolver
 import io.github.architectplatform.engine.core.tasks.domain.events.ExecutionEvents.executionCompletedEvent
 import io.github.architectplatform.engine.core.tasks.domain.events.ExecutionEvents.executionFailedEvent
 import io.github.architectplatform.engine.core.tasks.domain.events.ExecutionEvents.executionStartedEvent
+import io.github.architectplatform.engine.core.tasks.interfaces.dto.TaskPlanDTO
+import io.github.architectplatform.engine.core.tasks.interfaces.dto.TaskPlanStepDTO
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import io.github.architectplatform.engine.domain.events.ExecutionEvent
 import io.github.architectplatform.engine.domain.events.ExecutionId
@@ -70,6 +73,41 @@ class TaskService(
         projectService.getProject(projectName)
             ?: throw IllegalArgumentException("Project not found")
     return project.taskRegistry.get(taskId) ?: throw IllegalArgumentException("Task not found")
+  }
+
+  /**
+   * Computes the execution plan for a task without running it.
+   *
+   * Returns the ordered list of tasks that would execute, including transitive dependencies,
+   * with each task assigned a parallel batch index (tasks in the same batch have no ordering
+   * dependency on each other and can run concurrently).
+   *
+   * @param projectName The name of the project
+   * @param taskId The unique identifier of the task
+   * @return The execution plan with ordered steps and batch assignments
+   * @throws IllegalArgumentException if the project or task is not found
+   */
+  fun planTask(projectName: String, taskId: String): TaskPlanDTO {
+    val project = projectService.getProject(projectName)
+        ?: throw IllegalArgumentException("Project not found")
+    val task = project.taskRegistry.get(taskId)
+        ?: throw IllegalArgumentException("Task '$taskId' not found")
+
+    val resolver = TaskDependencyResolver()
+    val allTasks = resolver.resolveAllDependencies(task, project.taskRegistry)
+    val ordered = resolver.topologicalSort(allTasks)
+    val batches = resolver.toBatches(ordered)
+
+    val steps = ordered.map { t ->
+      TaskPlanStepDTO(
+          id = t.id,
+          description = t.description(),
+          phase = t.phase()?.id,
+          depends = t.depends(),
+          batch = batches[t.id] ?: 0,
+      )
+    }
+    return TaskPlanDTO(task = taskId, project = projectName, steps = steps)
   }
 
   /**

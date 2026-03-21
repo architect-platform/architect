@@ -2,6 +2,7 @@ package io.github.architectplatform.cli
 
 import io.github.architectplatform.cli.client.EngineCommandClient
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
+import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.micronaut.context.ApplicationContext
 import jakarta.inject.Singleton
 import kotlin.system.exitProcess
@@ -94,6 +95,16 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
       return
     }
 
+    if (command == "plan") {
+      val taskName = args.getOrNull(1)
+      if (taskName == null) {
+        println("Usage: architect plan <task>")
+        exitProcess(1)
+      }
+      printPlan(engineCommandClient.planTask(projectName, taskName))
+      return
+    }
+
     // Drop first arg as it's the command itself (included by PicoCLI)
     val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
     executeTask(projectName, command!!, taskArgs)
@@ -154,6 +165,37 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
         exitProcess(1)
       }
     }
+  }
+
+  /**
+   * Prints the execution plan for a task in a human-readable format.
+   * Groups tasks by parallel batch so the user can see what will run concurrently.
+   *
+   * @param plan The plan returned from the engine
+   */
+  private fun printPlan(plan: TaskPlanDTO) {
+    println()
+    println("━".repeat(80))
+    println("📋 Execution Plan: ${plan.task}")
+    println("📦 Project: ${plan.project}")
+    println("━".repeat(80))
+    println()
+    println("  ${plan.totalSteps} tasks across ${plan.parallelBatches} parallel batch(es)")
+    println()
+
+    val byBatch = plan.steps.groupBy { it.batch }.toSortedMap()
+    byBatch.forEach { (batchIdx, tasks) ->
+      val batchLabel = if (tasks.size > 1) "Batch $batchIdx — ${tasks.size} tasks (run in parallel)" else "Batch $batchIdx"
+      println("  ┌─ $batchLabel")
+      tasks.forEachIndexed { i, step ->
+        val connector = if (i == tasks.size - 1) "└──" else "├──"
+        val phase = if (step.phase != null) " [${step.phase}]" else ""
+        val deps = if (step.depends.isNotEmpty()) " ← ${step.depends.joinToString(", ")}" else ""
+        println("  │  $connector ${step.id}$phase  ${step.description}$deps")
+      }
+      println("  │")
+    }
+    println()
   }
 
   /**

@@ -3,6 +3,7 @@ package io.github.architectplatform.cli.client
 import io.github.architectplatform.cli.dto.ProjectDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.dto.TaskDTO
+import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
@@ -63,6 +64,16 @@ interface EngineCommandClient {
    */
   @Get("/projects/{projectName}/tasks/{taskName}")
   fun getTask(@PathVariable projectName: String, @PathVariable taskName: String): TaskDTO?
+
+  /**
+   * Returns the execution plan for a task without running it.
+   *
+   * @param projectName The name of the project
+   * @param taskName The name of the task
+   * @return The ordered execution plan with batch assignments
+   */
+  @Get("/projects/{projectName}/tasks/{taskName}/plan")
+  fun planTask(@PathVariable projectName: String, @PathVariable taskName: String): TaskPlanDTO
 
   /**
    * Executes a task within a project.
