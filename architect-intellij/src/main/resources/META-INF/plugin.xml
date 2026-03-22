@@ -1,0 +1,31 @@
+<idea-plugin>
+  <id>io.github.architectplatform.intellij</id>
+  <name>Architect Platform</name>
+  <vendor>architect-platform</vendor>
+  <description><![CDATA[
+    <p>Architect Platform support for IntelliJ IDEA.</p>
+    <ul>
+      <li>JSON Schema validation and auto-complete for <code>architect.yml</code></li>
+      <li>Run configuration support for tasks</li>
+      <li>Gutter icons to run tasks directly from <code>architect.yml</code></li>
+    </ul>
+  ]]></description>
+
+  <depends>com.intellij.modules.platform</depends>
+  <depends>org.jetbrains.plugins.yaml</depends>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- JSON Schema association for architect.yml -->
+    <com.jetbrains.jsonSchema.extension.JsonSchemaProviderFactory
+        implementation="io.github.architectplatform.intellij.ArchitectSchemaProviderFactory"/>
+
+    <!-- Run configuration type -->
+    <configurationType
+        implementation="io.github.architectplatform.intellij.ArchitectRunConfigurationType"/>
+
+    <!-- Gutter icon provider for task definitions -->
+    <runLineMarkerContributor
+        language="yaml"
+        implementationClass="io.github.architectplatform.intellij.ArchitectTaskLineMarkerProvider"/>
+  </extensions>
+</idea-plugin>

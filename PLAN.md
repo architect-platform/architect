@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 28/131 tasks completed (21%)
+Overall Progress: 29/131 tasks completed (22%)
 Current Phase: Phase 9 — Enhanced Config Validation & Schema
-Last Updated: 2026-03-22T14:10:32Z
+Last Updated: 2026-03-22T14:13:00Z
 
 ---
 
@@ -137,10 +137,11 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
   - Task panel showing all registered tasks with run/plan buttons
   - Output panel showing live execution events
   | Finished: 2026-03-22T14:10:32Z | Notes: Scaffolded `architect-vscode/` extension with `package.json` (yamlValidation, commands, views, configuration), `extension.ts` (activation, command registration, process spawning), `taskTreeProvider.ts` (TreeDataProvider parsing inline tasks from architect.yml), README, tsconfig; depends on redhat.vscode-yaml for YAML language server.
-- [ ] 9.7 **IntelliJ plugin** `architect-intellij`:
+- [x] 9.7 **IntelliJ plugin** `architect-intellij`:
   - JSON Schema association for `architect.yml`
   - Run configurations for tasks
   - Gutter icons to run tasks from `architect.yml`
+  | Finished: 2026-03-22T14:13:00Z | Notes: Scaffolded `architect-intellij/` with Gradle IntelliJ Platform plugin, `plugin.xml` registering `JsonSchemaProviderFactory`, `ConfigurationType` run config, `RunLineMarkerContributor` for gutter icons on task definitions; bundled JSON Schema in resources.
 - [ ] 9.8 Write `ConfigValidatorTest` — covers all error and warning cases, including per-plugin validation
 - [ ] 9.9 Update docs with the JSON Schema URL and IDE setup instructions
 
