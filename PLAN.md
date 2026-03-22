@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 13/131 tasks completed (10%)
+Overall Progress: 14/131 tasks completed (11%)
 Current Phase: Phase 8 — Embedded Execution Mode
-Last Updated: 2026-03-22T13:34:40Z
+Last Updated: 2026-03-22T13:36:27Z
 
 ---
 
@@ -102,7 +102,7 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 ### Tasks
 
 - [x] 8.1 Extract `architect-engine` execution domain into a separate Gradle sub-project `architect-core` (no Micronaut, no HTTP). Depends on `architect-api`. Contains: `TaskExecutor`, `TaskDependencyResolver`, `ProjectService`, `PluginLoader`, `HistoryService`, `ConfigValidator`, `BashCommandExecutor`, `InlineTaskPlugin`, `CorePlugin`, etc. | Finished: 2026-03-22T13:34:40Z | Notes: Completed standalone `architect-core/core` Gradle project and extraction of core execution domain classes; removed all `io.micronaut` imports and direct HTTP usage from core by introducing core abstractions (`EventBus`, `ProjectRegistrationReporter`, `RemoteContentFetcher`); verified with `./gradlew -q compileKotlin`.
-- [ ] 8.2 `architect-engine` and `architect-cli` both depend on `architect-core`
+- [x] 8.2 `architect-engine` and `architect-cli` both depend on `architect-core` | Finished: 2026-03-22T13:36:27Z | Notes: added `io.github.architectplatform:architect-core:1.6.1` dependency to both modules and wired `includeBuild("../../architect-core/core")` dependency substitution in `architect-engine/engine/settings.gradle.kts` and `architect-cli/cli/settings.gradle.kts`; verified with `./gradlew -q compileKotlin` in both modules.
 - [ ] 8.3 Add `EmbeddedEventBus` — an in-process event publisher that replaces Micronaut's `ApplicationEventPublisher` for embedded mode
 - [ ] 8.4 Add `EmbeddedExecutionContext` — wires core services without a Micronaut container
 - [ ] 8.5 Add `--embedded` flag to `ArchitectLauncher`

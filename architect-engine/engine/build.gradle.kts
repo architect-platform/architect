@@ -33,6 +33,7 @@ repositories {
 }
 
 dependencies {
+  implementation("io.github.architectplatform:architect-core:1.6.1")
   implementation("io.github.architectplatform:api:2.1.0")
   ksp("io.micronaut:micronaut-http-validation")
   ksp("io.micronaut.serde:micronaut-serde-processor")
