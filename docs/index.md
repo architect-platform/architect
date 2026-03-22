@@ -27,6 +27,10 @@ The Architect Platform consists of several core components:
 - **[pipelines-architected](plugins/pipelines-architected/index.md)** - Pipeline workflow management
 - **[scripts-architected](plugins/scripts-architected/index.md)** - Custom shell script execution
 
+## Guides
+
+- **[Plugin Authoring Guide](guides/authoring-plugins.md)** - Create, test, document, validate, and publish Architect plugins across JVM and process-plugin workflows
+
 ## Quick Start
 
 ### Prerequisites
