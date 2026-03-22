@@ -16,6 +16,7 @@ import jakarta.inject.Singleton
 class EmbeddedTaskExecutor(
   private val remoteContentFetcher: JdkRemoteContentFetcher,
   var activeProfile: String = "default",
+  var outputCacheEnabled: Boolean = false,
 ) {
   private val dependencyResolver = TaskDependencyResolver()
 
@@ -23,6 +24,7 @@ class EmbeddedTaskExecutor(
     EmbeddedExecutionContext.create(
       remoteContentFetcher = remoteContentFetcher,
       activeProfile = activeProfile,
+      outputCacheEnabled = outputCacheEnabled,
     )
 
   fun listTasks(projectName: String, projectPath: String): List<TaskDTO> {

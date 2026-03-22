@@ -53,6 +53,7 @@ class EmbeddedExecutionContext private constructor(
       parallelExecutionEnabled: Boolean = EngineConfiguration.TaskExecution.DEFAULT_PARALLEL_ENABLED,
       activeProfile: String = "default",
       classloaderDebug: Boolean = false,
+      outputCacheEnabled: Boolean = false,
     ): EmbeddedExecutionContext {
       val eventBus = EmbeddedEventBus<ArchitectEvent<*>>()
       val historyService = HistoryService()
@@ -72,6 +73,8 @@ class EmbeddedExecutionContext private constructor(
           taskCache = TaskCache(taskCacheEnabled),
           eventBus = eventBus::invoke,
           parallelExecutionEnabled = parallelExecutionEnabled,
+          outputCache = if (outputCacheEnabled) io.github.architectplatform.engine.core.tasks.application.LocalOutputCache() else null,
+          outputCacheEnabled = outputCacheEnabled,
         )
 
       val configLoader = ConfigLoader(YamlConfigParser())

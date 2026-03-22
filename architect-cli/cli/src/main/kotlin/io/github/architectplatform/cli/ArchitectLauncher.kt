@@ -152,6 +152,13 @@ class ArchitectLauncher(
   )
   var baseRef: String? = null
 
+  @CommandLine.Option(
+      names = ["--no-cache"],
+      description = ["Bypass task output cache for this run"],
+      defaultValue = "false",
+  )
+  var noCache: Boolean = false
+
   /**
    * Main execution logic for the CLI.
    *
@@ -172,6 +179,7 @@ class ArchitectLauncher(
     // Resolve active profile (explicit flag > CI auto-detection > default)
     val resolvedProfile = io.github.architectplatform.engine.core.project.app.ProfileMerger.detectProfile(envProfile)
     embeddedTaskExecutor.activeProfile = resolvedProfile
+    embeddedTaskExecutor.outputCacheEnabled = !noCache
 
     if (version) {
       printVersion()
@@ -200,6 +208,11 @@ class ArchitectLauncher(
 
     if (command == "plugin") {
       handlePluginCommand()
+      return
+    }
+
+    if (command == "cache") {
+      handleCacheCommand()
       return
     }
 
@@ -633,6 +646,45 @@ class ArchitectLauncher(
         println("Commands:")
         println("  search <query>       Search the plugin registry")
         println("  install <plugin-id>  Add a plugin to architect.yml")
+        exitProcess(1)
+      }
+    }
+  }
+
+  private fun handleCacheCommand() {
+    val cache = io.github.architectplatform.engine.core.tasks.application.LocalOutputCache()
+    val subCommand = args.getOrNull(1)
+    when (subCommand) {
+      "clear" -> {
+        cache.clear()
+        println("✅ Cache cleared")
+      }
+      "info" -> {
+        val entries = cache.entryCount()
+        val sizeBytes = cache.sizeBytes()
+        val sizeDisplay = when {
+          sizeBytes < 1024 -> "${sizeBytes}B"
+          sizeBytes < 1024 * 1024 -> "${"%.1f".format(sizeBytes / 1024.0)}KB"
+          else -> "${"%.1f".format(sizeBytes / (1024.0 * 1024.0))}MB"
+        }
+        if (json) {
+          println("""{"entries":$entries,"sizeBytes":$sizeBytes}""")
+        } else {
+          println()
+          println("━".repeat(40))
+          println("📦 Task Output Cache")
+          println("━".repeat(40))
+          println("  Entries:  $entries")
+          println("  Size:     $sizeDisplay")
+          println()
+        }
+      }
+      else -> {
+        println("Usage: architect cache <clear|info>")
+        println()
+        println("Commands:")
+        println("  clear   Wipe the local task output cache")
+        println("  info    Show cache size and entry count")
         exitProcess(1)
       }
     }

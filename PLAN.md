@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 95/131 tasks completed (73%)
+Overall Progress: 97/131 tasks completed (74%)
 Current Phase: Phase 17 — Task Output Caching
-Last Updated: 2026-03-22T18:25:00Z
+Last Updated: 2026-03-22T18:35:00Z
 
 ---
 
@@ -384,8 +384,8 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 17.4 `TaskExecutor` cache integration: compute key → check cache → skip if hit → execute and store on miss | Finished: 2026-03-22T18:15:00Z | Notes: Added `outputCache` and `outputCacheEnabled` params to TaskExecutor; integrated CacheKeyComputer + LocalOutputCache into executeSingleTask: checks output cache before execution using cacheDescriptor(), stores on successful miss; fixed pre-existing EmbeddedExecutionContextTest assertion for expanded plugin source types.
 - [x] 17.5 `RemoteOutputCache` interface — `storeResult(key, result)`, `fetchResult(key): Result?`. Writable provider: HTTP cache server. | Finished: 2026-03-22T18:20:00Z | Notes: Defined `RemoteOutputCache` interface with `fetchResult`/`storeResult` methods and `CachedTaskResult` transport type; integrated into TaskExecutor with local→remote fallback on cache miss and remote push on store.
 - [x] 17.6 Implement HTTP remote cache backend (simple REST API: `GET /cache/{key}`, `PUT /cache/{key}`). Can be self-hosted or use architect-cloud. | Finished: 2026-03-22T18:25:00Z | Notes: Created `HttpRemoteOutputCache` implementing `RemoteOutputCache` using `RemoteContentFetcher`; uses simple text-based protocol (success flag + message + stdout separated by `---`).
-- [ ] 17.7 `architect cache clear` — wipes local cache. `architect cache info` — shows cache size, hit rate from last session.
-- [ ] 17.8 `--no-cache` flag to bypass cache for a run
+- [x] 17.7 `architect cache clear` — wipes local cache. `architect cache info` — shows cache size, hit rate from last session. | Finished: 2026-03-22T18:30:00Z | Notes: Added `handleCacheCommand()` to `ArchitectLauncher` with `clear` and `info` subcommands; info shows entry count and human-readable size; supports `--json` output.
+- [x] 17.8 `--no-cache` flag to bypass cache for a run | Finished: 2026-03-22T18:35:00Z | Notes: Added `--no-cache` CLI flag in ArchitectLauncher; wired through EmbeddedTaskExecutor → EmbeddedExecutionContext → TaskExecutor `outputCacheEnabled` parameter; added `outputCacheEnabled` parameter to EmbeddedExecutionContext.create().
 - [ ] 17.9 Write `TaskOutputCacheTest` — hit, miss, invalidation, remote fallback
 
 ### Acceptance Criteria
