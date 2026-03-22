@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 27/131 tasks completed (21%)
+Overall Progress: 28/131 tasks completed (21%)
 Current Phase: Phase 9 — Enhanced Config Validation & Schema
-Last Updated: 2026-03-22T14:08:04Z
+Last Updated: 2026-03-22T14:10:32Z
 
 ---
 
@@ -132,10 +132,11 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 - [x] 9.3 Extend `ConfigValidator` to validate plugin configuration sections against each loaded plugin's declared schema. Each `ArchitectPlugin` gains an optional `configSchema(): JsonNode?` method (default: null = no validation) | Finished: 2026-03-22T14:03:50Z | Notes: Added `configSchema(): Map<String, Any>? = null` to `ArchitectPlugin` interface; `ConfigValidator.validate()` now accepts `plugins` list and validates each plugin's config section against its declared schema using networknt json-schema-validator; added `includeBuild` for API in architect-core settings.
 - [x] 9.4 Produce diagnostics with **YAML line numbers** — use SnakeYAML marks for precise location | Finished: 2026-03-22T14:06:32Z | Notes: Created `YamlLineTracker` using SnakeYAML `compose()` API to map key paths to 1-based line numbers; updated `ConfigValidator.validate()` to accept `lineMap` parameter; errors and warnings now include `line N:` prefix; `ConfigLoader.loadWithRaw()` returns raw YAML alongside parsed config; `ProjectService` wires line tracking into validation.
 - [x] 9.5 Produce actionable error messages: not just "missing field" but "Add `project.name: your-project` to fix this" | Finished: 2026-03-22T14:08:04Z | Notes: Updated `ConfigValidator` to produce actionable hints: missing `project.name` suggests exact YAML to add; unknown keys suggest nearest known keys; plugin validation errors reference the section name to check.
-- [ ] 9.6 **VS Code extension** `architect-vscode`:
+- [x] 9.6 **VS Code extension** `architect-vscode`:
   - YAML language server integration for `architect.yml` auto-complete and inline error highlighting
   - Task panel showing all registered tasks with run/plan buttons
   - Output panel showing live execution events
+  | Finished: 2026-03-22T14:10:32Z | Notes: Scaffolded `architect-vscode/` extension with `package.json` (yamlValidation, commands, views, configuration), `extension.ts` (activation, command registration, process spawning), `taskTreeProvider.ts` (TreeDataProvider parsing inline tasks from architect.yml), README, tsconfig; depends on redhat.vscode-yaml for YAML language server.
 - [ ] 9.7 **IntelliJ plugin** `architect-intellij`:
   - JSON Schema association for `architect.yml`
   - Run configurations for tasks

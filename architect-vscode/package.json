@@ -1,0 +1,128 @@
+{
+  "name": "architect-vscode",
+  "displayName": "Architect Platform",
+  "description": "Architect Platform support — auto-complete, validation, and task execution for architect.yml",
+  "version": "0.1.0",
+  "publisher": "architect-platform",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/architect-platform/architect"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:architect.yml",
+    "workspaceContains:architect.yaml"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "yamlValidation": [
+      {
+        "fileMatch": "architect.yml",
+        "url": "https://architect.dev/schema/architect.yml.json"
+      },
+      {
+        "fileMatch": "architect.yaml",
+        "url": "https://architect.dev/schema/architect.yml.json"
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "architect.yml",
+        "url": "https://architect.dev/schema/architect.yml.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "architect.runTask",
+        "title": "Architect: Run Task",
+        "icon": "$(play)"
+      },
+      {
+        "command": "architect.planTask",
+        "title": "Architect: Plan Task",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "architect.validate",
+        "title": "Architect: Validate Config"
+      },
+      {
+        "command": "architect.refreshTasks",
+        "title": "Architect: Refresh Tasks",
+        "icon": "$(refresh)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "architect",
+          "title": "Architect",
+          "icon": "$(tools)"
+        }
+      ]
+    },
+    "views": {
+      "architect": [
+        {
+          "id": "architectTasks",
+          "name": "Tasks"
+        }
+      ]
+    },
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "architect.runTask",
+          "when": "view == architectTasks",
+          "group": "inline"
+        },
+        {
+          "command": "architect.planTask",
+          "when": "view == architectTasks"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "architect.refreshTasks",
+          "when": "view == architectTasks",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Architect",
+      "properties": {
+        "architect.executablePath": {
+          "type": "string",
+          "default": "architect",
+          "description": "Path to the architect CLI executable"
+        },
+        "architect.embedded": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use embedded mode (no daemon) by default"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  },
+  "extensionDependencies": [
+    "redhat.vscode-yaml"
+  ]
+}
