@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 129/131 tasks completed (98%)
+Overall Progress: 130/131 tasks completed (99%)
 Current Phase: Phase 21 — Testing — Coverage to >85%
-Last Updated: 2026-03-22T21:02:12Z
+Last Updated: 2026-03-22T21:03:49Z
 
 ---
 
@@ -486,7 +486,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 21.7 `TaskDependencyResolverTest` — expand existing; add: children resolution, batch assignment for diamond graph, large graph performance test | Finished: 2026-03-22T20:21:53Z | Notes: added coverage for resolving child tasks and composite child ordering, explicit parallel batch assignment on a diamond dependency graph, and a bounded 1,000-task topological-sort performance check; confirmed with `./gradlew test --tests '*TaskDependencyResolverTest'` in `architect-engine/engine`.
 - [x] 21.8 `ProjectServiceTest` — loadProject round-trip with inline tasks, subproject discovery, validation exception on invalid config | Finished: 2026-03-22T21:00:41Z | Notes: added core-level ProjectService coverage for inline-task plugin round-trip loading, recursive subproject discovery, and invalid-config rejection; tightened ProjectService in both core and engine to throw `ConfigValidationException` when validation errors are present; confirmed with focused `ProjectServiceTest` runs in both `architect-core/core` and `architect-engine/engine`.
 - [x] 21.9 `BashCommandExecutorTest` — expand with: timeout enforcement, non-zero exit code, environment variable injection, working directory | Finished: 2026-03-22T21:02:12Z | Notes: tightened the engine executor suite to assert timeout failure messaging, non-zero exit code plus stderr capture, environment variable propagation into a shell command, and correct working-directory execution with macOS-safe path normalization; confirmed with `./gradlew test --tests '*BashCommandExecutorTest'` in `architect-engine/engine`.
-- [ ] 21.10 `ExecutionApiControllerTest` — SSE stream: verify events are received, stream terminates on COMPLETED, stream terminates on FAILED
+- [x] 21.10 `ExecutionApiControllerTest` — SSE stream: verify events are received, stream terminates on COMPLETED, stream terminates on FAILED | Finished: 2026-03-22T21:03:49Z | Notes: added a focused controller unit suite with mocked `TaskService` flows to verify SSE event delivery and clean stream termination after root-level `COMPLETED` and `FAILED` execution events while still emitting the terminal event itself; confirmed with `./gradlew test --tests '*ExecutionApiControllerTest'` in `architect-engine/engine`.
 - [ ] 21.11 `TaskCacheTest` — expand: concurrent reads, cache invalidation, TTL expiry
 
 ### architect-cli
