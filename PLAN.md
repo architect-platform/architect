@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 97/131 tasks completed (74%)
+Overall Progress: 98/131 tasks completed (75%)
 Current Phase: Phase 17 — Task Output Caching
-Last Updated: 2026-03-22T18:35:00Z
+Last Updated: 2026-03-22T18:42:00Z
 
 ---
 
@@ -386,7 +386,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 17.6 Implement HTTP remote cache backend (simple REST API: `GET /cache/{key}`, `PUT /cache/{key}`). Can be self-hosted or use architect-cloud. | Finished: 2026-03-22T18:25:00Z | Notes: Created `HttpRemoteOutputCache` implementing `RemoteOutputCache` using `RemoteContentFetcher`; uses simple text-based protocol (success flag + message + stdout separated by `---`).
 - [x] 17.7 `architect cache clear` — wipes local cache. `architect cache info` — shows cache size, hit rate from last session. | Finished: 2026-03-22T18:30:00Z | Notes: Added `handleCacheCommand()` to `ArchitectLauncher` with `clear` and `info` subcommands; info shows entry count and human-readable size; supports `--json` output.
 - [x] 17.8 `--no-cache` flag to bypass cache for a run | Finished: 2026-03-22T18:35:00Z | Notes: Added `--no-cache` CLI flag in ArchitectLauncher; wired through EmbeddedTaskExecutor → EmbeddedExecutionContext → TaskExecutor `outputCacheEnabled` parameter; added `outputCacheEnabled` parameter to EmbeddedExecutionContext.create().
-- [ ] 17.9 Write `TaskOutputCacheTest` — hit, miss, invalidation, remote fallback
+- [x] 17.9 Write `TaskOutputCacheTest` — 15 tests: LocalOutputCache (miss/hit/convert/clear/info), CacheKeyComputer (deterministic/diff/fileset/envvar/outputs), invalidation, RemoteOutputCache (hit/miss/convert) with InMemoryRemoteCache
 
 ### Acceptance Criteria
 
