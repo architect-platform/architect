@@ -6,7 +6,7 @@
 ---
 
 ## Status
-Overall Progress: 99/131 tasks completed (76%)
+Overall Progress: 100/131 tasks completed (76%)
 Current Phase: Phase 17 — Task Output Caching
 Last Updated: 2026-03-22T18:50:00Z
 
@@ -402,7 +402,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 
 ### New Plugins
 
-- [ ] 18.1 `docker-architected` — `docker-build` (BUILD), `docker-push` (PUBLISH), `docker-run` (RUN), `docker-compose-up/down/logs` (RUN). Context: `image`, `registry`, `platforms`.
+- [x] 18.1 `docker-architected` — 6 tasks: docker-build/push/run/compose-up/compose-down/compose-logs. Context: image, registry, platforms, dockerfile, buildArgs, composeFile. Tests: DockerContextTest + DockerPluginTest.
 - [ ] 18.2 `kubernetes-architected` — `k8s-apply` (PUBLISH), `k8s-rollout` (RUN), `k8s-status` (VERIFY), `k8s-port-forward` (RUN). Context: `namespace`, `context`, `manifests`.
 - [ ] 18.3 `terraform-architected` — `tf-init` (INIT), `tf-plan` (VERIFY), `tf-apply` (PUBLISH), `tf-destroy`. Context: `workspace`, `backend`, `vars`.
 - [ ] 18.4 `python-architected` — `py-install` (INIT), `py-lint` (LINT), `py-test` (TEST), `py-build` (BUILD), `py-publish` (PUBLISH). Context: `tool: uv|pip|poetry`, `python-version`.
