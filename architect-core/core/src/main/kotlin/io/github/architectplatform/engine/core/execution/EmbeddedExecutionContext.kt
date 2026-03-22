@@ -52,9 +52,13 @@ class EmbeddedExecutionContext private constructor(
     ): EmbeddedExecutionContext {
       val eventBus = EmbeddedEventBus<ArchitectEvent<*>>()
       val historyService = HistoryService()
+      val commandExecutor = BashCommandExecutor()
       val environment =
         ApplicationEnvironment(
-          services = mapOf(HistoryService::class.java to historyService),
+          services = mapOf(
+            HistoryService::class.java to historyService,
+            io.github.architectplatform.api.components.execution.CommandExecutor::class.java to commandExecutor,
+          ),
           eventBus = { event -> if (event is ArchitectEvent<*>) eventBus(event) },
         )
       val taskExecutor =
