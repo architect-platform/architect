@@ -292,6 +292,40 @@ class ArchitectLauncherTest {
     }
   }
 
+  @Test
+  fun `plan --tree outputs dependency tree for a task`(@TempDir tmpDir: Path) {
+    val client = GraphEngineCommandClient()
+    val launcher = ArchitectLauncher(
+      client,
+      stubHealthChecker(running = true),
+      io.github.architectplatform.cli.history.LocalHistoryReader(),
+      io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor(io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()),
+    )
+    val originalUserDir = System.getProperty("user.dir")
+    System.setProperty("user.dir", tmpDir.toString())
+    try {
+      launcher.command = "plan"
+      launcher.args = listOf("plan", "deploy", "--tree")
+
+      val output = java.io.ByteArrayOutputStream()
+      val originalOut = System.out
+      System.setOut(java.io.PrintStream(output))
+      try {
+        launcher.run()
+      } finally {
+        System.setOut(originalOut)
+      }
+
+      val tree = output.toString()
+      assertTrue(tree.contains("🌳 Dependency Tree: deploy"))
+      assertTrue(tree.contains("deploy [PUBLISH]"))
+      assertTrue(tree.contains("└── test [TEST]"))
+      assertTrue(tree.contains("└── build [BUILD]"))
+    } finally {
+      System.setProperty("user.dir", originalUserDir)
+    }
+  }
+
   // ─── Helpers ─────────────────────────────────────────────────────────────
 
   private fun createTestPluginJar(jarPath: Path): Path {

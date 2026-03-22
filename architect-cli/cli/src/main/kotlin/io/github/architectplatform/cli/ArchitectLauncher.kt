@@ -16,6 +16,7 @@ import io.github.architectplatform.cli.graph.ProjectGraphDotRenderer
 import io.github.architectplatform.cli.graph.ProjectGraphHtmlRenderer
 import io.github.architectplatform.cli.graph.TaskGraphDotRenderer
 import io.github.architectplatform.cli.graph.TaskGraphHtmlRenderer
+import io.github.architectplatform.cli.graph.TaskPlanTreeRenderer
 import io.github.architectplatform.engine.core.execution.EmbeddedExecutionContext
 import io.github.architectplatform.engine.core.project.app.AffectedProjectResolver
 import io.github.architectplatform.engine.core.project.domain.ProjectDependencyGraph
@@ -63,6 +64,7 @@ class ArchitectLauncher(
   private val projectGraphHtmlRenderer = ProjectGraphHtmlRenderer()
   private val taskGraphDotRenderer = TaskGraphDotRenderer()
   private val taskGraphHtmlRenderer = TaskGraphHtmlRenderer()
+  private val taskPlanTreeRenderer = TaskPlanTreeRenderer()
 
   @Property(name = "architect.engine.startup-timeout-seconds", defaultValue = "30")
   var startupTimeoutSeconds: Int = 30
@@ -269,12 +271,17 @@ class ArchitectLauncher(
     }
 
     if (command == "plan") {
-      val taskName = args.getOrNull(1)
-      if (taskName == null) {
-        println("Usage: architect plan <task>")
+      val planOptions = parsePlanOptions(args)
+      if (planOptions.taskName == null) {
+        println("Usage: architect plan <task> [--tree]")
         exitProcess(1)
       }
-      printPlan(engineCommandClient.planTask(projectName, taskName))
+      val plan = engineCommandClient.planTask(projectName, planOptions.taskName)
+      if (planOptions.tree) {
+        printPlanTree(plan)
+      } else {
+        printPlan(plan)
+      }
       return
     }
 
@@ -373,12 +380,17 @@ class ArchitectLauncher(
     }
 
     if (command == "plan") {
-      val taskName = args.getOrNull(1)
-      if (taskName == null) {
-        println("Usage: architect plan <task>")
+      val planOptions = parsePlanOptions(args)
+      if (planOptions.taskName == null) {
+        println("Usage: architect plan <task> [--tree]")
         exitProcess(1)
       }
-      printPlan(embeddedTaskExecutor.plan(projectName, projectPath, taskName))
+      val plan = embeddedTaskExecutor.plan(projectName, projectPath, planOptions.taskName)
+      if (planOptions.tree) {
+        printPlanTree(plan)
+      } else {
+        printPlan(plan)
+      }
       return
     }
 
@@ -1046,6 +1058,32 @@ class ArchitectLauncher(
     val taskName: String?,
     val showProjects: Boolean,
   )
+
+  private fun parsePlanOptions(arguments: List<String>): PlanOptions {
+    var tree = false
+    val positional = mutableListOf<String>()
+    arguments.drop(1).forEach { argument ->
+      when (argument) {
+        "--tree" -> tree = true
+        else -> if (argument.startsWith("--")) {
+          println("Usage: architect plan <task> [--tree]")
+          exitProcess(1)
+        } else {
+          positional += argument
+        }
+      }
+    }
+    return PlanOptions(taskName = positional.singleOrNull(), tree = tree)
+  }
+
+  private data class PlanOptions(
+    val taskName: String?,
+    val tree: Boolean,
+  )
+
+  private fun printPlanTree(plan: TaskPlanDTO) {
+    print(taskPlanTreeRenderer.render(plan))
+  }
 
   private fun printValidation(projectName: String, result: ValidationResultDTO) {
     println()
