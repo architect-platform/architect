@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 15/131 tasks completed (11%)
+Overall Progress: 16/131 tasks completed (12%)
 Current Phase: Phase 8 — Embedded Execution Mode
-Last Updated: 2026-03-22T13:37:10Z
+Last Updated: 2026-03-22T13:38:53Z
 
 ---
 
@@ -104,7 +104,7 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 - [x] 8.1 Extract `architect-engine` execution domain into a separate Gradle sub-project `architect-core` (no Micronaut, no HTTP). Depends on `architect-api`. Contains: `TaskExecutor`, `TaskDependencyResolver`, `ProjectService`, `PluginLoader`, `HistoryService`, `ConfigValidator`, `BashCommandExecutor`, `InlineTaskPlugin`, `CorePlugin`, etc. | Finished: 2026-03-22T13:34:40Z | Notes: Completed standalone `architect-core/core` Gradle project and extraction of core execution domain classes; removed all `io.micronaut` imports and direct HTTP usage from core by introducing core abstractions (`EventBus`, `ProjectRegistrationReporter`, `RemoteContentFetcher`); verified with `./gradlew -q compileKotlin`.
 - [x] 8.2 `architect-engine` and `architect-cli` both depend on `architect-core` | Finished: 2026-03-22T13:36:27Z | Notes: added `io.github.architectplatform:architect-core:1.6.1` dependency to both modules and wired `includeBuild("../../architect-core/core")` dependency substitution in `architect-engine/engine/settings.gradle.kts` and `architect-cli/cli/settings.gradle.kts`; verified with `./gradlew -q compileKotlin` in both modules.
 - [x] 8.3 Add `EmbeddedEventBus` — an in-process event publisher that replaces Micronaut's `ApplicationEventPublisher` for embedded mode | Finished: 2026-03-22T13:37:10Z | Notes: added `EmbeddedEventBus<T>` in `architect-core/core` with subscribe/unsubscribe support and synchronous in-process dispatch; verified with `./gradlew -q compileKotlin`.
-- [ ] 8.4 Add `EmbeddedExecutionContext` — wires core services without a Micronaut container
+- [x] 8.4 Add `EmbeddedExecutionContext` — wires core services without a Micronaut container | Finished: 2026-03-22T13:38:53Z | Notes: added `EmbeddedExecutionContext.create(...)` in `architect-core/core` to wire `ProjectService`, `TaskExecutor`, `HistoryService`, plugin loader/downloader/resolver, source registry, and default core plugins with `EmbeddedEventBus` and `RemoteContentFetcher`; verified via `./gradlew -q compileKotlin`.
 - [ ] 8.5 Add `--embedded` flag to `ArchitectLauncher`
 - [ ] 8.6 When `--embedded` is set (or engine is not reachable and `--no-daemon` is set): use `EmbeddedTaskExecutor`
 - [ ] 8.7 `EmbeddedConsoleUI` — same output contract as `ConsoleUI` but driven by in-process events
