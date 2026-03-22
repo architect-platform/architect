@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "architect-plugin-sdk"
+version = "0.1.0"
+description = "Python SDK for Architect Plugin Protocol v1 process plugins"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+  { name = "Architect Platform" }
+]
+keywords = ["architect", "plugin", "json-rpc", "python", "sdk"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "License :: OSI Approved :: MIT License",
+  "Typing :: Typed"
+]
+
+[project.urls]
+Homepage = "https://github.com/architect-platform/architect/tree/main/sdk/python/architect-plugin-sdk"
+Repository = "https://github.com/architect-platform/architect.git"
+Issues = "https://github.com/architect-platform/architect/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]

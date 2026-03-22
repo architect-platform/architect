@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 78/131 tasks completed (60%)
+Overall Progress: 79/131 tasks completed (60%)
 Current Phase: Phase 15 — Language-Agnostic Plugin Protocol
-Last Updated: 2026-03-22T15:35:00Z
+Last Updated: 2026-03-22T15:36:00Z
 
 ---
 
@@ -317,7 +317,7 @@ Engine  ←→  JSON-RPC over stdin/stdout  ←→  Plugin Process (Go, Python, 
 - [x] 15.3 Implement `ProcessPluginAdapter` in engine — launches the process, speaks APP v1, bridges to `ArchitectPlugin<Any>` | Finished: 2026-03-22T15:33:00Z | Notes: wired `ProjectPluginLoader` to instantiate process plugins from the declared command, added shell-command support plus JSON-RPC execute ack handling and stderr draining in `ProcessPluginAdapter`, and verified end-to-end behavior with a fresh `cleanTest test --tests '*ProcessPluginAdapterTest'` run.
 - [x] 15.4 Publish **TypeScript SDK** (`@architect-platform/plugin-sdk`) with full APP v1 implementation. npm-installable. | Finished: 2026-03-22T15:34:00Z | Notes: added `sdk/typescript/plugin-sdk` with typed APP v1 protocol contracts, `PluginServer`/`runPlugin` runtime, package metadata for `@architect-platform/plugin-sdk`, README usage docs, and Node-based package tests verified via `npm test`.
 - [x] 15.5 Publish **Go SDK** (`github.com/architect-platform/plugin-sdk-go`) implementing APP v1. | Finished: 2026-03-22T15:35:00Z | Notes: added `sdk/go/plugin-sdk-go` with APP v1 protocol types, a JSON-RPC stdin/stdout server, optional init support, README usage docs, and verified the package with `gofmt -w *.go && go test ./...`.
-- [ ] 15.6 Publish **Python SDK** (`architect-plugin-sdk` on PyPI) implementing APP v1.
+- [x] 15.6 Publish **Python SDK** (`architect-plugin-sdk` on PyPI) implementing APP v1. | Finished: 2026-03-22T15:36:00Z | Notes: added `sdk/python/architect-plugin-sdk` as a standard `src`-layout package with APP v1 constants, protocol models, `PluginServer`/`run_plugin`, README usage docs, and verified the package with `PYTHONPATH=src ... python -m unittest discover -s tests`.
 - [ ] 15.7 Implement `type: npm` shorthand — downloads and runs an npm package as a plugin:
   ```yaml
   plugins:

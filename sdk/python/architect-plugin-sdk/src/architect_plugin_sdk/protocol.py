@@ -1,0 +1,19 @@
+from __future__ import annotations
+
+JSON_RPC_VERSION = "2.0"
+APP_VERSION = "1.0.0"
+
+METHOD_INIT = "init"
+METHOD_LIST_TASKS = "listTasks"
+METHOD_EXECUTE_TASK = "executeTask"
+METHOD_SHUTDOWN = "shutdown"
+
+EVENT_OUTPUT = "output"
+EVENT_PROGRESS = "progress"
+EVENT_ERROR = "error"
+EVENT_COMPLETED = "completed"
+
+ERROR_PARSE = -32700
+ERROR_INVALID = -32600
+ERROR_METHOD_NOT_FOUND = -32601
+ERROR_INTERNAL = -32603
