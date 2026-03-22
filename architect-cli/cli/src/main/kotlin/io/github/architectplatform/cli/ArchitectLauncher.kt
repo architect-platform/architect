@@ -5,8 +5,11 @@ import io.github.architectplatform.cli.dto.HistoryRecordDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
+import io.github.architectplatform.cli.engine.EngineHealthChecker
 import io.micronaut.context.ApplicationContext
+import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
+import java.io.File
 import kotlin.system.exitProcess
 import kotlinx.coroutines.runBlocking
 import picocli.CommandLine
@@ -32,7 +35,13 @@ import picocli.CommandLine.Parameters
     name = "architect",
     description = ["Architect CLI"],
 )
-class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : Runnable {
+class ArchitectLauncher(
+    private val engineCommandClient: EngineCommandClient,
+    private val engineHealthChecker: EngineHealthChecker,
+) : Runnable {
+
+  @Property(name = "architect.engine.startup-timeout-seconds", defaultValue = "30")
+  var startupTimeoutSeconds: Int = 30
 
   /**
    * The command to execute (e.g., "build", "test", "engine").
@@ -67,6 +76,17 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
   var plain: Boolean = false
 
   /**
+   * When true, skips auto-starting the engine daemon.
+   * Use in CI environments where the daemon is managed externally.
+   */
+  @CommandLine.Option(
+      names = ["--no-daemon"],
+      description = ["Skip auto-starting the engine daemon (for CI environments)"],
+      defaultValue = "false",
+  )
+  var noDaemon: Boolean = false
+
+  /**
    * Main execution logic for the CLI.
    *
    * Flow:
@@ -82,6 +102,8 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
       handleEngineCommand()
       return
     }
+
+    ensureEngineRunning()
 
     val projectPath = System.getProperty("user.dir")
     val projectName = extractProjectName(projectPath)
@@ -127,6 +149,66 @@ class ArchitectLauncher(private val engineCommandClient: EngineCommandClient) : 
     // Drop first arg as it's the command itself (included by PicoCLI)
     val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
     executeTask(projectName, command!!, taskArgs)
+  }
+
+  /**
+   * Ensures the engine daemon is running. If it is not running and `--no-daemon` is false,
+   * resolves the engine binary (checking `~/.architect/bin/` first, then PATH), starts it,
+   * and waits up to `architect.engine.startup-timeout-seconds` for it to become ready.
+   */
+  private fun ensureEngineRunning() {
+    if (noDaemon) return
+    if (engineHealthChecker.isRunning()) return
+
+    val engineBinary = resolveEngineBinary()
+    if (engineBinary == null) {
+      println(
+        "❌ Architect Engine not found.\n" +
+          "   Install it with: architect engine install\n" +
+          "   Or start manually and retry with: architect --no-daemon <task>"
+      )
+      exitProcess(1)
+    }
+
+    if (!plain) println("⚙️  Starting Architect Engine...")
+    ProcessBuilder(engineBinary)
+      .inheritIO()
+      .start()
+
+    val timeoutMs = startupTimeoutSeconds * 1_000L
+    val deadline = System.currentTimeMillis() + timeoutMs
+    while (System.currentTimeMillis() < deadline) {
+      Thread.sleep(500)
+      if (engineHealthChecker.isRunning()) {
+        if (!plain) println("✅ Engine ready")
+        return
+      }
+    }
+
+    println("❌ Engine failed to start within ${startupTimeoutSeconds}s. Run 'architect engine start' manually.")
+    exitProcess(1)
+  }
+
+  /**
+   * Resolves the engine binary path.
+   * Checks `~/.architect/bin/architect-engine` first, then falls back to `architect-engine` on PATH.
+   */
+  internal fun resolveEngineBinary(): String? {
+    val home = System.getProperty("user.home") ?: return null
+    val localBin = File("$home/.architect/bin/architect-engine")
+    if (localBin.exists() && localBin.canExecute()) return localBin.absolutePath
+
+    // Fall back to PATH lookup
+    return try {
+      val which = ProcessBuilder("which", "architect-engine")
+        .redirectErrorStream(true)
+        .start()
+      val output = which.inputStream.bufferedReader().readLine()?.trim()
+      which.waitFor()
+      if (!output.isNullOrBlank()) output else null
+    } catch (_: Exception) {
+      null
+    }
   }
 
   /**

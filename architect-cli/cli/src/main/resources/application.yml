@@ -9,3 +9,7 @@ micronaut:
         read-timeout: 300s
         connect-timeout: 300s
         exception-on-error-status: false
+
+architect:
+  engine:
+    startup-timeout-seconds: 30
