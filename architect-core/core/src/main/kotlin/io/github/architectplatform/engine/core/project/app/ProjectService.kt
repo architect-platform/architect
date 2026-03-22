@@ -8,6 +8,7 @@ import io.github.architectplatform.api.core.project.getKey
 import io.github.architectplatform.engine.core.config.EngineConfiguration
 import io.github.architectplatform.engine.core.plugin.app.PluginLoader
 import io.github.architectplatform.engine.core.project.app.repositories.ProjectRepository
+import io.github.architectplatform.engine.core.project.domain.ProjectDependencyGraph
 import io.github.architectplatform.engine.core.project.domain.Project
 import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTaskRegistry
 import io.github.architectplatform.engine.core.project.infra.YamlLineTracker
@@ -44,6 +45,7 @@ class ProjectService(
 ) {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
+  private val dependencyGraphBuilder = ProjectDependencyGraphBuilder()
 
   private val objectMapper =
       ObjectMapper().registerKotlinModule().apply { disable(FAIL_ON_UNKNOWN_PROPERTIES) }
@@ -214,5 +216,14 @@ class ProjectService(
         ?: throw IllegalArgumentException("Project $name is not registered")
     val pluginContextKeys = project.plugins.map { it.contextKey }.toSet()
     return configValidator.validate(project.context.config, pluginContextKeys)
+  }
+
+  /**
+   * Builds a dependency graph for the registered project and its discovered subprojects.
+   */
+  fun buildDependencyGraph(name: String): ProjectDependencyGraph {
+    val project = getProject(name)
+      ?: throw IllegalArgumentException("Project $name is not registered")
+    return dependencyGraphBuilder.build(project)
   }
 }

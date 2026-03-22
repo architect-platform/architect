@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 82/131 tasks completed (63%)
-Current Phase: Phase 15 — Language-Agnostic Plugin Protocol
-Last Updated: 2026-03-22T16:30:55Z
+Overall Progress: 83/131 tasks completed (63%)
+Current Phase: Phase 16 — Affected Task Detection
+Last Updated: 2026-03-22T16:33:37Z
 
 ---
 
@@ -343,7 +343,7 @@ Engine  ←→  JSON-RPC over stdin/stdout  ←→  Plugin Process (Go, Python, 
 
 ### Tasks
 
-- [ ] 16.1 Build **project dependency graph** from `architect.yml` `subprojects` declarations and inferred relationships (plugin shared config, shared `build.gradle.kts`, etc.)
+- [x] 16.1 Build **project dependency graph** from `architect.yml` `subprojects` declarations and inferred relationships (plugin shared config, shared `build.gradle.kts`, etc.) | Finished: 2026-03-22T16:33:37Z | Notes: added `ProjectDependencyGraph` model and `ProjectDependencyGraphBuilder` in `architect-core` with support for declared `subprojects` entries (`name`/`path` and `dependsOn`/`dependencies`) plus inferred parent-child and shared-build-file relationships; exposed graph construction through `ProjectService.buildDependencyGraph(...)`; added `ProjectDependencyGraphBuilderTest` (4 tests) and verified with `./gradlew -q test --tests '*ProjectDependencyGraphBuilderTest'` and `./gradlew -q compileKotlin`.
 - [ ] 16.2 **`git diff` integration** — compare against a base ref (default: `HEAD~1`, configurable to `origin/main`):
   - Map changed files to source roots
   - Walk the dependency graph to find all transitively affected projects
