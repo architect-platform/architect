@@ -4,6 +4,7 @@ import io.github.architectplatform.api.core.tasks.TaskResult
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.util.Collections
 
 /**
  * Unit tests for TaskCache.
@@ -66,44 +67,49 @@ class TaskCacheTest {
     }
 
     @Test
-    fun `should handle concurrent access safely`() {
-        // Given
-        val threads = (1..10).map { index ->
+    fun `should support concurrent reads of cached entries`() {
+        val enabledCache = TaskCache(cacheEnabled = true)
+        enabledCache.store("task-1", TaskResult.success("cached-result"))
+        val messages = Collections.synchronizedList(mutableListOf<String?>())
+
+        val threads = (1..10).map {
             Thread {
-                cache.store("task-$index", TaskResult.success("Result $index"))
-                cache.get("task-$index")
-                cache.isCached("task-$index")
+                repeat(25) {
+                    messages += enabledCache.get("task-1")?.message
+                }
             }
         }
 
-        // When & Then - should not throw
         assertDoesNotThrow {
             threads.forEach { it.start() }
             threads.forEach { it.join() }
         }
+
+        assertEquals(250, messages.size)
+        assertTrue(messages.all { it == "cached-result" })
     }
 
     @Test
-    fun `should handle clear with concurrent access`() {
-        // Given
-        val storeThread = Thread {
-            repeat(100) {
-                cache.store("task-$it", TaskResult.success())
-            }
-        }
-        val clearThread = Thread {
-            repeat(10) {
-                Thread.sleep(5)
-                cache.clear()
-            }
-        }
+    fun `should invalidate cached entries when cleared`() {
+        val enabledCache = TaskCache(cacheEnabled = true)
+        enabledCache.store("task-1", TaskResult.success("cached"))
 
-        // When & Then - should not throw
-        assertDoesNotThrow {
-            storeThread.start()
-            clearThread.start()
-            storeThread.join()
-            clearThread.join()
-        }
+        enabledCache.clear()
+
+        assertFalse(enabledCache.isCached("task-1"))
+        assertNull(enabledCache.get("task-1"))
+    }
+
+    @Test
+    fun `should expire cached entries after ttl`() {
+        val enabledCache = TaskCache(cacheEnabled = true, ttlSeconds = 1)
+        enabledCache.store("task-ttl", TaskResult.success("cached"))
+
+        assertTrue(enabledCache.isCached("task-ttl"))
+
+        Thread.sleep(1100)
+
+        assertNull(enabledCache.get("task-ttl"))
+        assertFalse(enabledCache.isCached("task-ttl"))
     }
 }

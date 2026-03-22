@@ -14,6 +14,8 @@ object EngineConfiguration {
     object Cache {
         const val ENABLED = "architect.cache.enabled"
         const val DEFAULT_ENABLED = false
+        const val TTL_SECONDS = "architect.cache.ttl-seconds"
+        const val DEFAULT_TTL_SECONDS = 0L
     }
     
     /**

@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 130/131 tasks completed (99%)
-Current Phase: Phase 21 — Testing — Coverage to >85%
-Last Updated: 2026-03-22T21:03:49Z
+Overall Progress: 134/217 tasks completed (62%)
+Current Phase: Phase 22 — Integration & End-to-End Tests
+Last Updated: 2026-03-22T21:06:33Z
 
 ---
 
@@ -487,7 +487,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 21.8 `ProjectServiceTest` — loadProject round-trip with inline tasks, subproject discovery, validation exception on invalid config | Finished: 2026-03-22T21:00:41Z | Notes: added core-level ProjectService coverage for inline-task plugin round-trip loading, recursive subproject discovery, and invalid-config rejection; tightened ProjectService in both core and engine to throw `ConfigValidationException` when validation errors are present; confirmed with focused `ProjectServiceTest` runs in both `architect-core/core` and `architect-engine/engine`.
 - [x] 21.9 `BashCommandExecutorTest` — expand with: timeout enforcement, non-zero exit code, environment variable injection, working directory | Finished: 2026-03-22T21:02:12Z | Notes: tightened the engine executor suite to assert timeout failure messaging, non-zero exit code plus stderr capture, environment variable propagation into a shell command, and correct working-directory execution with macOS-safe path normalization; confirmed with `./gradlew test --tests '*BashCommandExecutorTest'` in `architect-engine/engine`.
 - [x] 21.10 `ExecutionApiControllerTest` — SSE stream: verify events are received, stream terminates on COMPLETED, stream terminates on FAILED | Finished: 2026-03-22T21:03:49Z | Notes: added a focused controller unit suite with mocked `TaskService` flows to verify SSE event delivery and clean stream termination after root-level `COMPLETED` and `FAILED` execution events while still emitting the terminal event itself; confirmed with `./gradlew test --tests '*ExecutionApiControllerTest'` in `architect-engine/engine`.
-- [ ] 21.11 `TaskCacheTest` — expand: concurrent reads, cache invalidation, TTL expiry
+- [x] 21.11 `TaskCacheTest` — expand: concurrent reads, cache invalidation, TTL expiry | Finished: 2026-03-22T21:06:33Z | Notes: added TTL-based expiry support to the simple in-memory `TaskCache` in both core and engine, introduced cache TTL configuration constants, and expanded the engine test suite to verify concurrent reads on enabled cache entries, cache invalidation via `clear()`, and expiry after a short TTL; confirmed with `./gradlew test --tests '*TaskCacheTest'` in `architect-engine/engine` plus `./gradlew test --tests '*TaskExecutorTest'` in `architect-core/core`.
 
 ### architect-cli
 
