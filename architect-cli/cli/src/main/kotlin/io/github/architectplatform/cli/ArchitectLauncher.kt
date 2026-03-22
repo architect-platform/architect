@@ -5,6 +5,7 @@ import io.github.architectplatform.cli.dto.HistoryRecordDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.history.LocalHistoryReader
 import io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor
+import io.github.architectplatform.cli.plugin.PluginDocumentationGenerator
 import io.github.architectplatform.cli.plugin.PluginScaffolder
 import io.github.architectplatform.cli.plugin.PluginTemplate
 import io.github.architectplatform.cli.dto.TaskPlanDTO
@@ -49,6 +50,7 @@ class ArchitectLauncher(
   private val embeddedTaskExecutor: EmbeddedTaskExecutor,
 ) : Runnable {
   private val pluginScaffolder = PluginScaffolder()
+  private val pluginDocumentationGenerator = PluginDocumentationGenerator()
 
   @Property(name = "architect.engine.startup-timeout-seconds", defaultValue = "30")
   var startupTimeoutSeconds: Int = 30
@@ -664,6 +666,36 @@ class ArchitectLauncher(
   private fun handlePluginCommand() {
     val subCommand = args.getOrNull(1)
     when (subCommand) {
+      "docs" -> {
+        val pluginPath = args.getOrNull(2)
+        if (pluginPath == null) {
+          println("Usage: architect plugin docs <path>")
+          exitProcess(1)
+        }
+
+        try {
+          val generatedDocs = pluginDocumentationGenerator.generate(java.nio.file.Path.of(pluginPath))
+          if (json) {
+            val mapper = com.fasterxml.jackson.databind.ObjectMapper()
+              .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+            println(
+              mapper.writerWithDefaultPrettyPrinter().writeValueAsString(
+                mapOf(
+                  "plugin" to generatedDocs.manifest.name,
+                  "template" to generatedDocs.manifest.template,
+                  "outputPath" to generatedDocs.outputPath.toString(),
+                  "tasks" to generatedDocs.tasks.map { it.id },
+                ),
+              ),
+            )
+          } else {
+            println("✅ Generated plugin reference doc at ${generatedDocs.outputPath}")
+          }
+        } catch (e: Exception) {
+          println("Failed to generate plugin docs: ${e.message}")
+          exitProcess(1)
+        }
+      }
       "create" -> {
         val pluginName = args.getOrNull(2)
         if (pluginName == null) {
@@ -753,9 +785,10 @@ class ArchitectLauncher(
         println("✅ Added plugin '$pluginId' to architect.yml")
       }
       else -> {
-        println("Usage: architect plugin <create|search|install> [args]")
+        println("Usage: architect plugin <create|docs|search|install> [args]")
         println()
         println("Commands:")
+        println("  docs <path>              Generate PLUGIN_REFERENCE.md from plugin metadata")
         println("  create <name> [template]  Scaffold a new plugin (kotlin, typescript, go)")
         println("  search <query>       Search the plugin registry")
         println("  install <plugin-id>  Add a plugin to architect.yml")

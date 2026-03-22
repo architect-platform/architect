@@ -9,6 +9,8 @@ import io.github.architectplatform.cli.dto.TaskDTO
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.cli.engine.EngineHealthChecker
+import io.github.architectplatform.cli.plugin.PluginScaffolder
+import io.github.architectplatform.cli.plugin.PluginTemplate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -19,6 +21,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.nio.file.Path
+import kotlin.io.path.exists
 
 /**
  * Unit tests for [ArchitectLauncher].
@@ -176,6 +179,25 @@ class ArchitectLauncherTest {
     } finally {
       System.setProperty("user.dir", originalUserDir)
     }
+  }
+
+  @Test
+  fun `plugin docs generates reference markdown for scaffolded plugin`(@TempDir tmpDir: Path) {
+    val pluginDir = PluginScaffolder().scaffold("docs-sample", PluginTemplate.GO, tmpDir)
+    val launcher = launcher()
+    launcher.command = "plugin"
+    launcher.args = listOf("plugin", "docs", pluginDir.toString())
+
+    val originalOut = System.out
+    System.setOut(java.io.PrintStream(java.io.ByteArrayOutputStream()))
+    try {
+      launcher.run()
+    } finally {
+      System.setOut(originalOut)
+    }
+
+    assertTrue(pluginDir.resolve("PLUGIN_REFERENCE.md").exists())
+    assertTrue(pluginDir.resolve("PLUGIN_REFERENCE.md").toFile().readText().contains("docs-sample-hello"))
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
