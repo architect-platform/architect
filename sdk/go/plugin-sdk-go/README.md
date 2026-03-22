@@ -43,6 +43,23 @@ func main() {
 }
 ```
 
+## Full Example Plugin
+
+A full-featured APP v1 example is available at `examples/full-featured/main.go`.
+
+It demonstrates:
+
+- `Init(config)` returning plugin metadata
+- `ListTasks()` with `Phase`, `Dependencies`, and `RequiresConfirmation`
+- `ExecuteTask(id, args, env)` using `Output`, `Progress`, and `Error` events
+- Success (`exitCode: 0`) and failure (`exitCode: 1`) task paths
+
+Run it locally:
+
+```bash
+go run ./examples/full-featured
+```
+
 ## API
 
 - `Run(ctx, plugin)` starts the APP v1 server on stdin/stdout

@@ -28,6 +28,23 @@ if __name__ == "__main__":
     PluginServer(ExamplePlugin()).serve()
 ```
 
+## Full Example Plugin
+
+A full-featured APP v1 example is available at `examples/full_featured_plugin.py`.
+
+It demonstrates:
+
+- `init(config)` returning plugin metadata
+- `list_tasks()` with `phase`, `dependencies`, and `requires_confirmation`
+- `execute_task(id, args, env)` using `output`, `progress`, and `error` events
+- Success (`exitCode: 0`) and failure (`exitCode: 1`) task paths
+
+Run it locally:
+
+```bash
+PYTHONPATH=src python examples/full_featured_plugin.py
+```
+
 ## API
 
 - `PluginServer`: APP v1 JSON-RPC server for stdin/stdout plugins

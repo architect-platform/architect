@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 80/131 tasks completed (61%)
+Overall Progress: 81/131 tasks completed (62%)
 Current Phase: Phase 15 — Language-Agnostic Plugin Protocol
-Last Updated: 2026-03-22T16:10:43Z
+Last Updated: 2026-03-22T16:13:15Z
 
 ---
 
@@ -326,7 +326,7 @@ Engine  ←→  JSON-RPC over stdin/stdout  ←→  Plugin Process (Go, Python, 
       package: "@my-org/architect-plugin"
       version: "^1.0.0"
   ```
-- [ ] 15.8 Example plugins in each language demonstrating all protocol features
+- [x] 15.8 Example plugins in each language demonstrating all protocol features | Finished: 2026-03-22T16:13:15Z | Notes: added full-featured APP v1 examples for TypeScript (`sdk/typescript/plugin-sdk/examples/full-featured-plugin.ts`), Go (`sdk/go/plugin-sdk-go/examples/full-featured/main.go`), and Python (`sdk/python/architect-plugin-sdk/examples/full_featured_plugin.py`) covering init metadata, task descriptors with phase/dependencies/requires-confirmation, output/progress/error events, and success/failure execution paths; documented examples in each SDK README and verified SDK tests (`npm test`, `go test ./...`, `python3 -m unittest discover -s tests`).
 - [ ] 15.9 Write `ProcessPluginAdapterTest` with a mock subprocess
 
 ### Acceptance Criteria

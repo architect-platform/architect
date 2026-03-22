@@ -41,6 +41,19 @@ const plugin: ArchitectProcessPlugin = {
 void runPlugin(plugin);
 ```
 
+## Full Example Plugin
+
+A full-featured APP v1 example is available at `examples/full-featured-plugin.ts`.
+
+It demonstrates:
+
+- `init(config)` returning plugin metadata
+- `listTasks()` with `phase`, `dependencies`, and `requires_confirmation`
+- `executeTask(id, args, env)` using `output`, `progress`, and `error` events
+- Success (`exitCode: 0`) and failure (`exitCode: 1`) task paths
+
+Use this example as a template in your plugin package where `@architect-platform/plugin-sdk` is installed.
+
 ## API
 
 - `runPlugin(plugin)`: starts the APP v1 JSON-RPC server on stdin/stdout
