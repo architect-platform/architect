@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 8/131 tasks completed (6%)
+Overall Progress: 9/131 tasks completed (7%)
 Current Phase: Phase 7 — Bug Fixes & Tech Debt
-Last Updated: 2026-03-22T00:01:00Z
+Last Updated: 2026-03-22T00:02:00Z
 
 ---
 
@@ -66,7 +66,7 @@ Last Updated: 2026-03-22T00:01:00Z
 ### Tasks
 
 - [x] 7.1 **API version mismatch** — `architect-engine/engine/build.gradle.kts` updated from `api:1.2.0` to `api:2.1.0`. Engine still compiles. | Finished: 2026-03-22T00:01:00Z
-- [ ] 7.2 **SSE stream termination** — `ExecutionApiController` terminates the flow with `error(...)` (throws exception as control flow). Replace with a proper `Flow` `takeWhile { }` or `transformWhile { }` that completes cleanly when a `COMPLETED` or `FAILED` event is received
+- [x] 7.2 **SSE stream termination** — replaced `error(...)` + `try/catch` with `sharedFlow.filter { }.transformWhile { }` that completes cleanly on root COMPLETED/FAILED events. | Finished: 2026-03-22T00:02:00Z
 - [ ] 7.3 **ConfigValidator false warnings** — the validator warns on all plugin config keys (`gradle`, `docs`, `git`, etc.) as "unknown". Fix: build the known-key set dynamically from loaded plugin `contextKey` values, not a static list
 - [ ] 7.4 **`ScriptsPlugin` phase resolution** — `parsePhase()` only resolves `CodeWorkflow`. Extend to resolve `CoreWorkflow` and `HooksWorkflow` (mirrors `InlineTaskPlugin` behavior)
 - [ ] 7.5 **Duplicate GitHub tag resolution** — `ProjectPluginLoader` contains private `resolveLatestTag()` and `compareVersions()` methods that duplicate `GitHubPluginSource`. Extract to a shared `GitHubReleaseResolver` utility and use it from both call sites

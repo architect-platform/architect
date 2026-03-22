@@ -5,14 +5,14 @@ import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import io.github.architectplatform.engine.domain.events.ExecutionEvent
 import io.github.architectplatform.engine.domain.events.ExecutionEventType
 import io.github.architectplatform.engine.domain.events.ExecutionId
-import io.github.architectplatform.engine.domain.events.ExecutionTaskEvent
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.transformWhile
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -28,27 +28,19 @@ class ExecutionApiController(private val taskService: TaskService) {
   ): Flow<ArchitectEvent<ExecutionEvent>> {
     val sharedFlow = taskService.getExecutionFlow(executionId)
 
-    return flow {
-      try {
-        sharedFlow.collect { eventWrapper ->
-          if (eventWrapper.event !is ExecutionEvent) {
-            return@collect
-          }
-          emit(eventWrapper)
-          val executionEvent = eventWrapper.event as ExecutionEvent
-          logger.info("Collected event for execution $executionId: $executionEvent")
-          if (executionEvent.parentProject == null) {
-            when (executionEvent.executionEventType) {
-              ExecutionEventType.COMPLETED,
-              ExecutionEventType.FAILED -> {
-                error("Execution completed with event: $eventWrapper")
-              }
-              else -> {}
-            }
-          }
-
-        }
-      } catch (_: Exception) {}
-    }
+    // Emit events downstream. Stop cleanly when the root execution reaches a terminal state
+    // (COMPLETED or FAILED on the top-level project — parentProject == null).
+    // Using transformWhile avoids throwing an exception as control flow.
+    return sharedFlow
+      .filter { it.event is ExecutionEvent }
+      .transformWhile { eventWrapper ->
+        emit(eventWrapper)
+        val event = eventWrapper.event as ExecutionEvent
+        logger.debug("SSE event for execution {}: type={}", executionId, event.executionEventType)
+        // Continue while the event is NOT a terminal root-level event
+        !(event.parentProject == null &&
+          (event.executionEventType == ExecutionEventType.COMPLETED ||
+            event.executionEventType == ExecutionEventType.FAILED))
+      }
   }
 }
