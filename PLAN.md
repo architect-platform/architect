@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 81/131 tasks completed (62%)
+Overall Progress: 82/131 tasks completed (63%)
 Current Phase: Phase 15 — Language-Agnostic Plugin Protocol
-Last Updated: 2026-03-22T16:13:15Z
+Last Updated: 2026-03-22T16:30:55Z
 
 ---
 
@@ -327,7 +327,7 @@ Engine  ←→  JSON-RPC over stdin/stdout  ←→  Plugin Process (Go, Python, 
       version: "^1.0.0"
   ```
 - [x] 15.8 Example plugins in each language demonstrating all protocol features | Finished: 2026-03-22T16:13:15Z | Notes: added full-featured APP v1 examples for TypeScript (`sdk/typescript/plugin-sdk/examples/full-featured-plugin.ts`), Go (`sdk/go/plugin-sdk-go/examples/full-featured/main.go`), and Python (`sdk/python/architect-plugin-sdk/examples/full_featured_plugin.py`) covering init metadata, task descriptors with phase/dependencies/requires-confirmation, output/progress/error events, and success/failure execution paths; documented examples in each SDK README and verified SDK tests (`npm test`, `go test ./...`, `python3 -m unittest discover -s tests`).
-- [ ] 15.9 Write `ProcessPluginAdapterTest` with a mock subprocess
+- [x] 15.9 Write `ProcessPluginAdapterTest` with a mock subprocess | Finished: 2026-03-22T16:30:55Z | Notes: verified dedicated `ProcessPluginAdapterTest` includes a mock subprocess script that exercises APP v1 request/response flow (`init`, `listTasks`, `executeTask`, `shutdown`) and success/failure event handling; re-ran focused suite with `./gradlew -q test --tests '*ProcessPluginAdapterTest'`.
 
 ### Acceptance Criteria
 
