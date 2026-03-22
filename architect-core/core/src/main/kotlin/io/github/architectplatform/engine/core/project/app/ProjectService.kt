@@ -40,6 +40,7 @@ class ProjectService(
   private val projectReporter: Optional<ProjectRegistrationReporter>,
     private val configValidator: ConfigValidator,
     private val cacheEnabled: Boolean = EngineConfiguration.Project.DEFAULT_CACHE_ENABLED,
+    private val activeProfile: String = "default",
 ) {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
@@ -50,8 +51,14 @@ class ProjectService(
   private fun loadProject(name: String, path: String): Project? {
     logger.info("Loading project $name from path $path")
     val loadResult = configLoader.loadWithRaw(path) ?: return null
-    val projectConfig = loadResult.config
+    val rawConfig = loadResult.config
     val lineMap = YamlLineTracker.trackLines(loadResult.rawYaml)
+
+    // Apply environment profile (deep-merge profile config on top of root)
+    val projectConfig = ProfileMerger.merge(rawConfig, activeProfile)
+    if (activeProfile != "default") {
+      logger.info("Applied profile '$activeProfile' to project $name")
+    }
 
     val projectContext = ProjectContext(Path(path), projectConfig)
 

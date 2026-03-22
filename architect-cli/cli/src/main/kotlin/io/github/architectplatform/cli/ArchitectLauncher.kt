@@ -131,6 +131,12 @@ class ArchitectLauncher(
   )
   var watch: Boolean = false
 
+  @CommandLine.Option(
+      names = ["--env"],
+      description = ["Environment profile to apply (e.g., staging, production, ci)"],
+  )
+  var envProfile: String? = null
+
   /**
    * Main execution logic for the CLI.
    *
@@ -147,6 +153,10 @@ class ArchitectLauncher(
     if (noColor || System.getenv("NO_COLOR") != null || System.getenv("CI") != null) {
       plain = true
     }
+
+    // Resolve active profile (explicit flag > CI auto-detection > default)
+    val resolvedProfile = io.github.architectplatform.engine.core.project.app.ProfileMerger.detectProfile(envProfile)
+    embeddedTaskExecutor.activeProfile = resolvedProfile
 
     if (version) {
       printVersion()

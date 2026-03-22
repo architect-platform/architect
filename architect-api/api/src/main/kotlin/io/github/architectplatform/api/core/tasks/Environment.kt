@@ -42,4 +42,14 @@ interface Environment {
    * @param event The event object to publish
    */
   fun publish(event: Any)
+
+  /**
+   * Returns the active environment profile name.
+   *
+   * Profiles allow different configurations for dev, staging, production, CI, etc.
+   * Returns "default" when no profile is explicitly set.
+   *
+   * @return The active profile name (e.g., "staging", "ci", "default")
+   */
+  fun profile(): String = "default"
 }

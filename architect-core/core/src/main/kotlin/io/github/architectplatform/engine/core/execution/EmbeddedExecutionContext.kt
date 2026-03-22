@@ -49,6 +49,7 @@ class EmbeddedExecutionContext private constructor(
       projectCacheEnabled: Boolean = EngineConfiguration.Project.DEFAULT_CACHE_ENABLED,
       taskCacheEnabled: Boolean = false,
       parallelExecutionEnabled: Boolean = EngineConfiguration.TaskExecution.DEFAULT_PARALLEL_ENABLED,
+      activeProfile: String = "default",
     ): EmbeddedExecutionContext {
       val eventBus = EmbeddedEventBus<ArchitectEvent<*>>()
       val historyService = HistoryService()
@@ -60,6 +61,7 @@ class EmbeddedExecutionContext private constructor(
             io.github.architectplatform.api.components.execution.CommandExecutor::class.java to commandExecutor,
           ),
           eventBus = { event -> if (event is ArchitectEvent<*>) eventBus(event) },
+          activeProfile = activeProfile,
         )
       val taskExecutor =
         TaskExecutor(
@@ -91,6 +93,7 @@ class EmbeddedExecutionContext private constructor(
           projectReporter = projectReporter,
           configValidator = configValidator,
           cacheEnabled = projectCacheEnabled,
+          activeProfile = activeProfile,
         )
 
       val pluginSourceRegistry =

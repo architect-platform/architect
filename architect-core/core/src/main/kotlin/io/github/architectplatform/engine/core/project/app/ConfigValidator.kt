@@ -22,7 +22,7 @@ class ConfigValidationException(message: String) : RuntimeException(message)
 class ConfigValidator {
 
     companion object {
-        private val BASE_KNOWN_KEYS = setOf("project", "plugins", "tasks", "\$schema")
+        private val BASE_KNOWN_KEYS = setOf("project", "plugins", "tasks", "\$schema", "profiles", "watch")
     }
 
     private val objectMapper = ObjectMapper().registerKotlinModule()

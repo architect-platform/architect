@@ -15,11 +15,15 @@ import jakarta.inject.Singleton
 @Singleton
 class EmbeddedTaskExecutor(
   private val remoteContentFetcher: JdkRemoteContentFetcher,
+  var activeProfile: String = "default",
 ) {
   private val dependencyResolver = TaskDependencyResolver()
 
   private fun newContext(): EmbeddedExecutionContext =
-    EmbeddedExecutionContext.create(remoteContentFetcher = remoteContentFetcher)
+    EmbeddedExecutionContext.create(
+      remoteContentFetcher = remoteContentFetcher,
+      activeProfile = activeProfile,
+    )
 
   fun listTasks(projectName: String, projectPath: String): List<TaskDTO> {
     val context = newContext()

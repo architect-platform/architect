@@ -7,7 +7,8 @@ import jakarta.inject.Singleton
 @Singleton
 class ApplicationEnvironment(
     private val services: Map<Class<*>, Any> = emptyMap(),
-    private val eventBus: EventBus<Any> = {}
+    private val eventBus: EventBus<Any> = {},
+    private val activeProfile: String = "default",
 ) : Environment {
 
     override fun <T> service(type: Class<T>): T =
@@ -15,4 +16,6 @@ class ApplicationEnvironment(
             ?: throw IllegalArgumentException("Service of type ${type.name} not registered in environment")
 
     override fun publish(event: Any) = eventBus(event)
+
+    override fun profile(): String = activeProfile
 }

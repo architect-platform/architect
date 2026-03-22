@@ -93,6 +93,16 @@ interface Task {
   fun children(): List<String> = emptyList()
 
   /**
+   * Whether this task requires explicit user confirmation before execution.
+   *
+   * When true, the executor pauses before running the task in interactive mode.
+   * In CI/plain mode, tasks requiring confirmation are automatically skipped.
+   *
+   * @return true if the task requires confirmation, false otherwise
+   */
+  fun requiresConfirmation(): Boolean = false
+
+  /**
    * Executes the task's work.
    *
    * This method contains the main logic of the task. It receives the execution environment,

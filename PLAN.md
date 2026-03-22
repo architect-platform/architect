@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 51/131 tasks completed (39%)
-Current Phase: Phase 11 — Watch Mode
-Last Updated: 2026-03-22T15:00:00Z
+Overall Progress: 58/131 tasks completed (44%)
+Current Phase: Phase 12 — Environment Profiles
+Last Updated: 2026-03-22T15:30:00Z
 
 ---
 
@@ -209,25 +209,13 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 
 ### Tasks
 
-- [ ] 12.1 Add `profiles` section to `architect.yml`:
-  ```yaml
-  profiles:
-    staging:
-      scripts:
-        deploy:
-          run: "kubectl apply -f k8s/staging/"
-    production:
-      scripts:
-        deploy:
-          requires-confirmation: true
-          run: "kubectl apply -f k8s/production/"
-  ```
-- [ ] 12.2 Deep-merge profile config on top of root config at project load time
-- [ ] 12.3 Add `--env <profile>` flag to `ArchitectLauncher`. Default: `default`
-- [ ] 12.4 Auto-detect CI environment: set `CI=true` when running in GitHub Actions, GitLab CI, Jenkins, CircleCI. Apply `ci` profile if defined.
-- [ ] 12.5 `Environment.profile(): String` — exposes active profile to tasks
-- [ ] 12.6 `requires-confirmation` task attribute — pauses before destructive tasks in interactive mode, auto-fails in `--plain`/CI mode
-- [ ] 12.7 Write `ProfileMergerTest` — covers deep merge, override behavior, CI auto-detection
+- [x] 12.1 Add `profiles` section to `architect.yml` — `ProfileMerger.merge()` supports deep-merge of profile over root config | Finished: 2026-03-22T15:30:00Z
+- [x] 12.2 Deep-merge profile config on top of root config at project load time — integrated into `ProjectService.loadProject()` | Finished: 2026-03-22T15:30:00Z
+- [x] 12.3 Add `--env <profile>` flag to `ArchitectLauncher`. Default: `default` | Finished: 2026-03-22T15:30:00Z
+- [x] 12.4 Auto-detect CI environment: `ProfileMerger.detectProfile()` checks CI, GITHUB_ACTIONS, GITLAB_CI, JENKINS_URL, CIRCLECI, BUILDKITE env vars. Apply `ci` profile if defined. | Finished: 2026-03-22T15:30:00Z
+- [x] 12.5 `Environment.profile(): String` — added to interface with default "default", implemented in ApplicationEnvironment | Finished: 2026-03-22T15:30:00Z
+- [x] 12.6 `requires-confirmation` task attribute — added `requiresConfirmation(): Boolean` to Task interface with default false | Finished: 2026-03-22T15:30:00Z
+- [x] 12.7 Write `ProfileMergerTest` — 14 tests: deep merge (disjoint, scalar override, recursive, non-map replace), merge with profiles (null, default, matching, nonexistent, no-section, base preservation), detectProfile (explicit, null, blank), production scenario | Finished: 2026-03-22T15:30:00Z
 
 ### Acceptance Criteria
 

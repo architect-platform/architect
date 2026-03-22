@@ -16,7 +16,7 @@ class ConfigValidationException(message: String) : RuntimeException(message)
 class ConfigValidator {
 
     companion object {
-        private val BASE_KNOWN_KEYS = setOf("project", "plugins", "tasks")
+        private val BASE_KNOWN_KEYS = setOf("project", "plugins", "tasks", "profiles", "watch")
     }
 
     /**
