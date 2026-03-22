@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 135/217 tasks completed (62%)
+Overall Progress: 136/217 tasks completed (63%)
 Current Phase: Phase 22 — Integration & End-to-End Tests
-Last Updated: 2026-03-22T21:11:09Z
+Last Updated: 2026-03-22T21:14:02Z
 
 ---
 
@@ -523,7 +523,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 ### Tasks
 
 - [x] 22.1 **CLI ↔ Engine integration tests** — use `@MicronautTest` to spin up the real engine, execute commands via the real CLI HTTP client, assert events via SSE | Finished: 2026-03-22T21:11:09Z | Notes: added a real CLI-to-engine integration suite in `architect-engine/engine` by wiring the CLI `EngineCommandClient` into the engine test module through a composite-build test dependency and fixed test-service URL; covered successful and failing inline-task execution over HTTP plus SSE event collection; integration exposed and fixed an SSE bug where `ExecutionApiController` terminated streams on root `task.failed` before `execution.failed`.
-- [ ] 22.2 **Embedded mode end-to-end** — load a real plugin JAR locally, execute a real task, assert the result and history record
+- [x] 22.2 **Embedded mode end-to-end** — load a real plugin JAR locally, execute a real task, assert the result and history record | Finished: 2026-03-22T21:14:02Z | Notes: added a CLI integration test that builds a valid local plugin JAR from compiled test classes (including synthetic Kotlin class files), executes the plugin task through `EmbeddedTaskExecutor`, captures emitted events, and verifies the persisted history record through `LocalHistoryReader`.
 - [ ] 22.3 **Plugin contract tests** — a shared test suite that any `ArchitectPlugin` implementation can run to verify protocol compliance
 - [ ] 22.4 **Monorepo end-to-end** — create a temporary multi-project workspace, run a task across all subprojects, assert parallel execution and result aggregation
 - [ ] 22.5 **CI simulation test** — run the full pipeline (`init → lint → verify → build → test`) on the project itself using Architect
