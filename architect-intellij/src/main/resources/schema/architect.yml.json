@@ -59,7 +59,7 @@
         "type" : {
           "type" : "string",
           "description" : "Plugin source type",
-          "enum" : [ "github", "local", "registry", "http", "process" ],
+          "enum" : [ "github", "local", "registry", "http", "process", "npm" ],
           "default" : "github"
         },
         "repo" : {
@@ -101,6 +101,10 @@
         "command" : {
           "type" : "string",
           "description" : "Command to execute for type: process"
+        },
+        "package" : {
+          "type" : "string",
+          "description" : "npm package name for type: npm"
         }
       },
       "required" : [ "name" ],
@@ -147,6 +151,17 @@
         },
         "then" : {
           "required" : [ "command" ]
+        }
+      }, {
+        "if" : {
+          "properties" : {
+            "type" : {
+              "const" : "npm"
+            }
+          }
+        },
+        "then" : {
+          "required" : [ "package" ]
         }
       } ],
       "additionalProperties" : false

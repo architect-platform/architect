@@ -161,6 +161,47 @@ class ConfigValidatorTest {
   }
 
   @Test
+  fun `schema validation requires package for npm plugins`() {
+    val config = mapOf(
+      "\$schema" to "https://architect.dev/schema/architect.yml.json",
+      "project" to mapOf("name" to "test"),
+      "plugins" to listOf(
+        mapOf(
+          "name" to "my-ts-plugin",
+          "type" to "npm",
+          "version" to "^1.0.0",
+        ),
+      ),
+    )
+
+    val result = validator.validate(config)
+
+    assertFalse(result.valid)
+    assertTrue(result.errors.any { it.contains("package") })
+  }
+
+  @Test
+  fun `schema validation accepts npm plugins with package`() {
+    val config = mapOf(
+      "\$schema" to "https://architect.dev/schema/architect.yml.json",
+      "project" to mapOf("name" to "test"),
+      "plugins" to listOf(
+        mapOf(
+          "name" to "my-ts-plugin",
+          "type" to "npm",
+          "package" to "@my-org/architect-plugin",
+          "version" to "^1.0.0",
+        ),
+      ),
+    )
+
+    val result = validator.validate(config)
+
+    assertTrue(result.valid)
+    assertTrue(result.errors.isEmpty())
+  }
+
+  @Test
   fun `schema validation still accepts http plugins with url`() {
     val config = mapOf(
       "\$schema" to "https://architect.dev/schema/architect.yml.json",

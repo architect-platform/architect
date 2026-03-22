@@ -59,6 +59,25 @@ class ProjectPluginLoader(
                 return@forEach
             }
 
+            if (plugin.type == "npm") {
+                val packageName = plugin.packageName
+                    ?: throw IllegalArgumentException("Plugin '${plugin.name}' type 'npm' requires 'package' field")
+                val packageSpec =
+                    if (plugin.version.isBlank() || plugin.version == "latest") {
+                        packageName
+                    } else {
+                        "$packageName@${plugin.version}"
+                    }
+                val adapter = io.github.architectplatform.engine.core.plugin.protocol.ProcessPluginAdapter(
+                    pluginId = plugin.name,
+                    command = "npx --yes ${shellQuote(packageSpec)}",
+                    workingDir = context.dir.toString(),
+                )
+                eventBus(pluginLoaded(plugin.name))
+                enabled += adapter
+                return@forEach
+            }
+
             val jar =
                 when (plugin.type) {
                     "github" -> {
@@ -95,5 +114,8 @@ class ProjectPluginLoader(
 
         return enabled
     }
+
+    private fun shellQuote(value: String): String =
+        "'${value.replace("'", "'\"'\"'")}'"
 
 }

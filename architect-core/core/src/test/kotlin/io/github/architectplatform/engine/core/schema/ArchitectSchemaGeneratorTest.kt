@@ -69,6 +69,8 @@ class ArchitectSchemaGeneratorTest {
 
     assertNotNull(props.get("command"))
     assertEquals("string", props.get("command").get("type").asText())
+    assertNotNull(props.get("package"))
+    assertEquals("string", props.get("package").get("type").asText())
   }
 
   @Test
@@ -83,6 +85,19 @@ class ArchitectSchemaGeneratorTest {
       typeConst == "process" && requiredFields != null && requiredFields.any { field -> field.asText() == "command" }
     })
     assertFalse(allOf.isEmpty)
+  }
+
+  @Test
+  fun `plugin config definition requires package when type is npm`() {
+    val schema = ArchitectSchemaGenerator.generate()
+    val allOf = schema.get("definitions").get("pluginConfig").get("allOf")
+
+    assertNotNull(allOf)
+    assertTrue(allOf.any {
+      val typeConst = it.get("if")?.get("properties")?.get("type")?.get("const")?.asText()
+      val requiredFields = it.get("then")?.get("required")
+      typeConst == "npm" && requiredFields != null && requiredFields.any { field -> field.asText() == "package" }
+    })
   }
 
   @Test
@@ -111,6 +126,16 @@ class ArchitectSchemaGeneratorTest {
     assertTrue("CODE-build" in values)
     // HooksWorkflow
     assertTrue("pre-commit" in values)
+  }
+
+  @Test
+  fun `plugin type enum includes npm`() {
+    val schema = ArchitectSchemaGenerator.generate()
+    val pluginTypeEnum =
+      schema.get("definitions").get("pluginConfig").get("properties").get("type").get("enum")
+    val values = pluginTypeEnum.map { it.asText() }
+
+    assertTrue("npm" in values)
   }
 
   @Test

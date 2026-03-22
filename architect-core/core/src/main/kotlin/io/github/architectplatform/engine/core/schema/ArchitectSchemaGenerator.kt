@@ -95,6 +95,7 @@ object ArchitectSchemaGenerator {
       props.set<ObjectNode>("registry", stringProp("Registry index URL for type: registry"))
       props.set<ObjectNode>("url", stringProp("Direct plugin asset URL for type: http"))
     props.set<ObjectNode>("command", stringProp("Command to execute for type: process"))
+      props.set<ObjectNode>("package", stringProp("npm package name for type: npm"))
 
     node.putArray("required").add("name")
     node.set<ArrayNode>("allOf", pluginTypeRequirements())
@@ -148,7 +149,7 @@ object ArchitectSchemaGenerator {
     node.put("type", "string")
     node.put("description", "Plugin source type")
     val arr = node.putArray("enum")
-    listOf("github", "local", "registry", "http", "process").forEach { arr.add(it) }
+    listOf("github", "local", "registry", "http", "process", "npm").forEach { arr.add(it) }
     node.put("default", "github")
     return node
   }
@@ -159,6 +160,7 @@ object ArchitectSchemaGenerator {
     allOf.add(typeRequirement(type = "http", field = "url"))
     allOf.add(typeRequirement(type = "registry", field = "registry"))
     allOf.add(typeRequirement(type = "process", field = "command"))
+    allOf.add(typeRequirement(type = "npm", field = "package"))
     return allOf
   }
 

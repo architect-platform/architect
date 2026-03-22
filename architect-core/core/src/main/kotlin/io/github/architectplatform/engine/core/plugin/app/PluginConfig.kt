@@ -1,5 +1,7 @@
 package io.github.architectplatform.engine.core.plugin.app
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class PluginConfig(
     var name: String,
     val version: String = "latest",
@@ -14,4 +16,6 @@ data class PluginConfig(
     val url: String? = null,
     val sha256: String? = null,
     val command: String? = null,
+    @JsonProperty("package")
+    val packageName: String? = null,
 )

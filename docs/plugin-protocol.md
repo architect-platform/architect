@@ -27,6 +27,18 @@ plugins:
     command: "./my-go-plugin"
 ```
 
+For npm-based plugins, use the shorthand `type: npm` with a required `package` field:
+
+```yaml
+plugins:
+  - name: my-ts-plugin
+    type: npm
+    package: "@my-org/architect-plugin"
+    version: "^1.0.0"
+```
+
+Architect resolves this by running the plugin process through `npx --yes <package>@<version>` (or latest when `version` is omitted).
+
 ## Requests
 
 ### `init`

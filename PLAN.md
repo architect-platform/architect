@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 79/131 tasks completed (60%)
+Overall Progress: 80/131 tasks completed (61%)
 Current Phase: Phase 15 — Language-Agnostic Plugin Protocol
-Last Updated: 2026-03-22T15:36:00Z
+Last Updated: 2026-03-22T16:10:43Z
 
 ---
 
@@ -318,7 +318,7 @@ Engine  ←→  JSON-RPC over stdin/stdout  ←→  Plugin Process (Go, Python, 
 - [x] 15.4 Publish **TypeScript SDK** (`@architect-platform/plugin-sdk`) with full APP v1 implementation. npm-installable. | Finished: 2026-03-22T15:34:00Z | Notes: added `sdk/typescript/plugin-sdk` with typed APP v1 protocol contracts, `PluginServer`/`runPlugin` runtime, package metadata for `@architect-platform/plugin-sdk`, README usage docs, and Node-based package tests verified via `npm test`.
 - [x] 15.5 Publish **Go SDK** (`github.com/architect-platform/plugin-sdk-go`) implementing APP v1. | Finished: 2026-03-22T15:35:00Z | Notes: added `sdk/go/plugin-sdk-go` with APP v1 protocol types, a JSON-RPC stdin/stdout server, optional init support, README usage docs, and verified the package with `gofmt -w *.go && go test ./...`.
 - [x] 15.6 Publish **Python SDK** (`architect-plugin-sdk` on PyPI) implementing APP v1. | Finished: 2026-03-22T15:36:00Z | Notes: added `sdk/python/architect-plugin-sdk` as a standard `src`-layout package with APP v1 constants, protocol models, `PluginServer`/`run_plugin`, README usage docs, and verified the package with `PYTHONPATH=src ... python -m unittest discover -s tests`.
-- [ ] 15.7 Implement `type: npm` shorthand — downloads and runs an npm package as a plugin:
+- [x] 15.7 Implement `type: npm` shorthand — downloads and runs an npm package as a plugin: | Finished: 2026-03-22T16:10:43Z | Notes: added npm shorthand support in `ProjectPluginLoader` via `npx --yes <package>@<version>`, added `package` field mapping in plugin config, extended schema generation and bundled schema files to include `type: npm` and required `package`, added/updated validator+schema tests, and documented npm plugin declaration in protocol docs.
   ```yaml
   plugins:
     - name: my-ts-plugin
