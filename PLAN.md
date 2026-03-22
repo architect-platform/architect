@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 18/131 tasks completed (14%)
+Overall Progress: 19/131 tasks completed (15%)
 Current Phase: Phase 8 — Embedded Execution Mode
-Last Updated: 2026-03-22T13:44:15Z
+Last Updated: 2026-03-22T13:45:30Z
 
 ---
 
@@ -107,7 +107,7 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 - [x] 8.4 Add `EmbeddedExecutionContext` — wires core services without a Micronaut container | Finished: 2026-03-22T13:38:53Z | Notes: added `EmbeddedExecutionContext.create(...)` in `architect-core/core` to wire `ProjectService`, `TaskExecutor`, `HistoryService`, plugin loader/downloader/resolver, source registry, and default core plugins with `EmbeddedEventBus` and `RemoteContentFetcher`; verified via `./gradlew -q compileKotlin`.
 - [x] 8.5 Add `--embedded` flag to `ArchitectLauncher` | Finished: 2026-03-22T13:39:49Z | Notes: added `--embedded` Picocli option to `ArchitectLauncher` with default `false`; verified with `./gradlew -q compileKotlin` in `architect-cli/cli`.
 - [x] 8.6 When `--embedded` is set (or engine is not reachable and `--no-daemon` is set): use `EmbeddedTaskExecutor` | Finished: 2026-03-22T13:44:15Z | Notes: added CLI `EmbeddedTaskExecutor` and `JdkRemoteContentFetcher`, integrated `ArchitectLauncher` routing to embedded mode when `--embedded` is set or when `--no-daemon` is used and engine health check fails; embedded path now supports list/plan/validate/task execution with local history recording; verified via `./gradlew -q compileKotlin` in `architect-cli/cli`.
-- [ ] 8.7 `EmbeddedConsoleUI` — same output contract as `ConsoleUI` but driven by in-process events
+- [x] 8.7 `EmbeddedConsoleUI` — same output contract as `ConsoleUI` but driven by in-process events | Finished: 2026-03-22T13:45:30Z | Notes: added `EmbeddedConsoleUI` delegating to `ConsoleUI` with identical completion/failure contract and wired embedded execution path to stream in-process `ArchitectEvent` objects into it; verified with `./gradlew compileKotlin --console=plain` in `architect-cli/cli`.
 - [ ] 8.8 Update `architect engine install` to make the engine optional for basic usage; document that embedded mode exists
 - [ ] 8.9 Write comprehensive tests for `EmbeddedExecutionContext` wiring
 - [ ] 8.10 Write end-to-end embedded-mode integration test: load a real plugin, run a task, assert result

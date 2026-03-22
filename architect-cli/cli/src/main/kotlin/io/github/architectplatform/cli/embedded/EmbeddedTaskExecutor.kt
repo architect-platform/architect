@@ -1,8 +1,5 @@
 package io.github.architectplatform.cli.embedded
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.TaskPlanStepDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
@@ -10,6 +7,7 @@ import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.engine.core.execution.EmbeddedExecutionContext
 import io.github.architectplatform.engine.core.history.domain.ExecutionRecord
 import io.github.architectplatform.engine.core.tasks.domain.TaskDependencyResolver
+import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import kotlinx.coroutines.runBlocking
 import jakarta.inject.Singleton
 
@@ -17,7 +15,6 @@ import jakarta.inject.Singleton
 class EmbeddedTaskExecutor(
   private val remoteContentFetcher: JdkRemoteContentFetcher,
 ) {
-  private val objectMapper = ObjectMapper().registerKotlinModule()
   private val dependencyResolver = TaskDependencyResolver()
 
   private fun newContext(): EmbeddedExecutionContext =
@@ -73,7 +70,7 @@ class EmbeddedTaskExecutor(
     projectPath: String,
     taskName: String,
     taskArgs: List<String>,
-    onEvent: (Map<String, Any>) -> Unit,
+    onEvent: (ArchitectEvent<*>) -> Unit,
   ): TaskResult {
     val context = newContext()
     context.projectService.registerProject(projectName, projectPath)
@@ -82,9 +79,7 @@ class EmbeddedTaskExecutor(
     val task = project.taskRegistry.get(taskName)
       ?: throw IllegalArgumentException("Task '$taskName' not found in project '$projectName'")
 
-    val unsubscribe = context.eventBus.subscribe { event ->
-      onEvent(objectMapper.convertValue(event))
-    }
+    val unsubscribe = context.eventBus.subscribe(onEvent)
 
     val start = System.currentTimeMillis()
     try {

@@ -332,7 +332,7 @@ class ArchitectLauncher(
       taskName: String,
       taskArgs: List<String>,
   ) {
-    val ui = ConsoleUI(taskName, plain)
+    val ui = EmbeddedConsoleUI(taskName, plain)
 
     println()
     println("━".repeat(80))
