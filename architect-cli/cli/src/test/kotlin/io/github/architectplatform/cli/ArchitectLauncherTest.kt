@@ -1,5 +1,7 @@
 package io.github.architectplatform.cli
 
+import io.github.architectplatform.api.core.plugins.ArchitectPlugin
+import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.cli.client.EngineCommandClient
 import io.github.architectplatform.cli.client.ExecutionId
 import io.github.architectplatform.cli.dto.HistoryRecordDTO
@@ -9,6 +11,7 @@ import io.github.architectplatform.cli.dto.TaskDTO
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.cli.engine.EngineHealthChecker
+import io.github.architectplatform.cli.plugin.PluginJarValidator
 import io.github.architectplatform.cli.plugin.PluginScaffolder
 import io.github.architectplatform.cli.plugin.PluginTemplate
 import kotlinx.coroutines.flow.Flow
@@ -21,7 +24,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.nio.file.Path
+import java.util.jar.JarEntry
+import java.util.jar.JarOutputStream
 import kotlin.io.path.exists
+import kotlin.io.path.outputStream
 
 /**
  * Unit tests for [ArchitectLauncher].
@@ -200,7 +206,52 @@ class ArchitectLauncherTest {
     assertTrue(pluginDir.resolve("PLUGIN_REFERENCE.md").toFile().readText().contains("docs-sample-hello"))
   }
 
+  @Test
+  fun `plugin validate exits successfully for a valid plugin jar`(@TempDir tmpDir: Path) {
+    val jarPath = createTestPluginJar(tmpDir.resolve("valid-plugin.jar"))
+
+    val launcher = launcher()
+    launcher.command = "plugin"
+    launcher.args = listOf("plugin", "validate", jarPath.toString())
+
+    val originalOut = System.out
+    System.setOut(java.io.PrintStream(java.io.ByteArrayOutputStream()))
+    try {
+      launcher.run()
+    } finally {
+      System.setOut(originalOut)
+    }
+
+    assertTrue(jarPath.exists())
+  }
+
   // ─── Helpers ─────────────────────────────────────────────────────────────
+
+  private fun createTestPluginJar(jarPath: Path): Path {
+    JarOutputStream(jarPath.outputStream().buffered()).use { output ->
+      writeClassEntry(output, LauncherValidPlugin::class.java)
+      writeClassEntry(output, LauncherValidContext::class.java)
+      writeTextEntry(output, PluginJarValidator.SPI_RESOURCE, LauncherValidPlugin::class.java.name + "\n")
+    }
+    return jarPath
+  }
+
+  private fun writeClassEntry(output: JarOutputStream, type: Class<*>) {
+    val resourcePath = type.name.replace('.', '/') + ".class"
+    val bytes = type.classLoader.getResourceAsStream(resourcePath)?.use { it.readBytes() }
+      ?: error("Missing compiled class resource $resourcePath")
+    writeBytesEntry(output, resourcePath, bytes)
+  }
+
+  private fun writeTextEntry(output: JarOutputStream, entryName: String, content: String) {
+    writeBytesEntry(output, entryName, content.toByteArray())
+  }
+
+  private fun writeBytesEntry(output: JarOutputStream, entryName: String, content: ByteArray) {
+    output.putNextEntry(JarEntry(entryName))
+    output.write(content)
+    output.closeEntry()
+  }
 
   private fun launcher(healthChecker: EngineHealthChecker = stubHealthChecker(running = true)): ArchitectLauncher {
     return ArchitectLauncher(StubEngineCommandClient(), healthChecker, io.github.architectplatform.cli.history.LocalHistoryReader(), io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor(io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()))
@@ -219,6 +270,19 @@ class ArchitectLauncherTest {
       System.setProperty("user.home", original)
     }
   }
+}
+
+data class LauncherValidContext(
+  val enabled: Boolean = true,
+)
+
+class LauncherValidPlugin : ArchitectPlugin<LauncherValidContext> {
+  override val id: String = "launcher-valid-plugin"
+  override val contextKey: String = "launcher-valid"
+  override val ctxClass: Class<LauncherValidContext> = LauncherValidContext::class.java
+  override var context: LauncherValidContext = LauncherValidContext()
+
+  override fun register(registry: TaskRegistry) = Unit
 }
 
 /** No-op stub implementation of [EngineCommandClient] for unit tests. */

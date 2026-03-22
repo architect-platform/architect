@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 112/131 tasks completed (85%)
+Overall Progress: 113/131 tasks completed (86%)
 Current Phase: Phase 19 — Plugin Authoring Toolkit
-Last Updated: 2026-03-22T19:40:13Z
+Last Updated: 2026-03-22T19:45:54Z
 
 ---
 
@@ -438,7 +438,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
   ```
 - [x] 19.3 **Local plugin dev loop** — `type: local` plugin source reloads the plugin JAR on every execution (no engine restart). Add `architect engine reload-plugins` endpoint. | Finished: 2026-03-22T19:20:46Z | Notes: engine project registration now reloads cached projects when they declare `type: local` plugins, added `POST /api/projects/{projectName}/reload-plugins`, and exposed it in the CLI as `architect engine reload-plugins`; verified with focused CLI and engine tests.
 - [x] 19.4 **Plugin documentation generator** — `architect plugin docs <path>` — reads plugin metadata and generates a Markdown reference doc | Finished: 2026-03-22T19:40:13Z | Notes: added CLI `architect plugin docs <path>` with `PluginDocumentationGenerator` that reads `plugin.yml`, emits `PLUGIN_REFERENCE.md`, infers scaffolded task metadata for Kotlin, TypeScript, and Go templates, and verified with focused CLI tests.
-- [ ] 19.5 **Plugin validation** — `architect plugin validate <path>` — validates a plugin JAR: checks SPI file, verifies `ArchitectPlugin` implementation, tests config deserialization
+- [x] 19.5 **Plugin validation** — `architect plugin validate <path>` — validates a plugin JAR: checks SPI file, verifies `ArchitectPlugin` implementation, tests config deserialization | Finished: 2026-03-22T19:45:54Z | Notes: added CLI `architect plugin validate <path>` with `PluginJarValidator` that inspects the JAR SPI descriptor, loads implementations through the isolated classloader and SPI loader, verifies plugin metadata, and checks config initialization via `ArchitectPluginTestKit`; verified with focused validator and CLI tests.
 - [ ] 19.6 Write plugin authoring guide (see Phase 25)
 
 ### Acceptance Criteria

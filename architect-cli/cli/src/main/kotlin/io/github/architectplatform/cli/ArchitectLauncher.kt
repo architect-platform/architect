@@ -6,6 +6,7 @@ import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.history.LocalHistoryReader
 import io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor
 import io.github.architectplatform.cli.plugin.PluginDocumentationGenerator
+import io.github.architectplatform.cli.plugin.PluginJarValidator
 import io.github.architectplatform.cli.plugin.PluginScaffolder
 import io.github.architectplatform.cli.plugin.PluginTemplate
 import io.github.architectplatform.cli.dto.TaskPlanDTO
@@ -51,6 +52,7 @@ class ArchitectLauncher(
 ) : Runnable {
   private val pluginScaffolder = PluginScaffolder()
   private val pluginDocumentationGenerator = PluginDocumentationGenerator()
+  private val pluginJarValidator = PluginJarValidator()
 
   @Property(name = "architect.engine.startup-timeout-seconds", defaultValue = "30")
   var startupTimeoutSeconds: Int = 30
@@ -666,6 +668,44 @@ class ArchitectLauncher(
   private fun handlePluginCommand() {
     val subCommand = args.getOrNull(1)
     when (subCommand) {
+      "validate" -> {
+        val pluginPath = args.getOrNull(2)
+        if (pluginPath == null) {
+          println("Usage: architect plugin validate <path>")
+          exitProcess(1)
+        }
+
+        try {
+          val validation = pluginJarValidator.validate(java.nio.file.Path.of(pluginPath))
+          if (json) {
+            val mapper = com.fasterxml.jackson.databind.ObjectMapper()
+              .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+            println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(validation))
+          } else {
+            val statusIcon = if (validation.valid) "✅" else "❌"
+            println("$statusIcon Plugin validation ${if (validation.valid) "passed" else "failed"} for ${validation.jarPath}")
+            println("SPI providers: ${validation.spiImplementations.size}")
+            validation.plugins.forEach { plugin ->
+              println("- ${plugin.pluginId} (${plugin.className})")
+              println("  contextKey=${plugin.contextKey}, ctxClass=${plugin.contextClass}, config=${if (plugin.configDeserializationValid) "ok" else "failed"}")
+            }
+            if (validation.warnings.isNotEmpty()) {
+              println("Warnings:")
+              validation.warnings.forEach { println("- $it") }
+            }
+            if (validation.errors.isNotEmpty()) {
+              println("Errors:")
+              validation.errors.forEach { println("- $it") }
+            }
+          }
+          if (!validation.valid) {
+            exitProcess(1)
+          }
+        } catch (e: Exception) {
+          println("Failed to validate plugin JAR: ${e.message}")
+          exitProcess(1)
+        }
+      }
       "docs" -> {
         val pluginPath = args.getOrNull(2)
         if (pluginPath == null) {
@@ -785,10 +825,11 @@ class ArchitectLauncher(
         println("✅ Added plugin '$pluginId' to architect.yml")
       }
       else -> {
-        println("Usage: architect plugin <create|docs|search|install> [args]")
+        println("Usage: architect plugin <create|docs|validate|search|install> [args]")
         println()
         println("Commands:")
         println("  docs <path>              Generate PLUGIN_REFERENCE.md from plugin metadata")
+        println("  validate <path>          Validate a plugin JAR and its SPI/config wiring")
         println("  create <name> [template]  Scaffold a new plugin (kotlin, typescript, go)")
         println("  search <query>       Search the plugin registry")
         println("  install <plugin-id>  Add a plugin to architect.yml")
