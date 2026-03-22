@@ -46,6 +46,19 @@ class ProjectPluginLoader(
             }
         // 2) Download & load each project-declared plugin JAR
         plugins.forEach { plugin ->
+            if (plugin.type == "process") {
+                val cmd = plugin.command
+                    ?: throw IllegalArgumentException("Plugin '${plugin.name}' type 'process' requires 'command' field")
+                val adapter = io.github.architectplatform.engine.core.plugin.protocol.ProcessPluginAdapter(
+                    pluginId = plugin.name,
+                    command = cmd,
+                    workingDir = context.dir.toString(),
+                )
+                eventBus(pluginLoaded(plugin.name))
+                enabled += adapter
+                return@forEach
+            }
+
             val jar =
                 when (plugin.type) {
                     "github" -> {

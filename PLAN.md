@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 75/131 tasks completed (57%)
+Overall Progress: 76/131 tasks completed (58%)
 Current Phase: Phase 15 — Language-Agnostic Plugin Protocol
-Last Updated: 2026-03-22T15:32:00Z
+Last Updated: 2026-03-22T15:33:00Z
 
 ---
 
@@ -314,7 +314,7 @@ Engine  ←→  JSON-RPC over stdin/stdout  ←→  Plugin Process (Go, Python, 
       type: process
       command: "./my-go-plugin"
   ```
-- [ ] 15.3 Implement `ProcessPluginAdapter` in engine — launches the process, speaks APP v1, bridges to `ArchitectPlugin<Any>`
+- [x] 15.3 Implement `ProcessPluginAdapter` in engine — launches the process, speaks APP v1, bridges to `ArchitectPlugin<Any>` | Finished: 2026-03-22T15:33:00Z | Notes: wired `ProjectPluginLoader` to instantiate process plugins from the declared command, added shell-command support plus JSON-RPC execute ack handling and stderr draining in `ProcessPluginAdapter`, and verified end-to-end behavior with a fresh `cleanTest test --tests '*ProcessPluginAdapterTest'` run.
 - [ ] 15.4 Publish **TypeScript SDK** (`@architect-platform/plugin-sdk`) with full APP v1 implementation. npm-installable.
 - [ ] 15.5 Publish **Go SDK** (`github.com/architect-platform/plugin-sdk-go`) implementing APP v1.
 - [ ] 15.6 Publish **Python SDK** (`architect-plugin-sdk` on PyPI) implementing APP v1.
