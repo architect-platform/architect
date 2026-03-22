@@ -8,7 +8,7 @@
 ## Status
 Overall Progress: 12/131 tasks completed (9%)
 Current Phase: Phase 8 — Embedded Execution Mode
-Last Updated: 2026-03-22T13:23:23Z
+Last Updated: 2026-03-22T13:25:43Z
 
 ---
 
@@ -101,7 +101,7 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 
 ### Tasks
 
-- [ ] 8.1 Extract `architect-engine` execution domain into a separate Gradle sub-project `architect-core` (no Micronaut, no HTTP). Depends on `architect-api`. Contains: `TaskExecutor`, `TaskDependencyResolver`, `ProjectService`, `PluginLoader`, `HistoryService`, `ConfigValidator`, `BashCommandExecutor`, `InlineTaskPlugin`, `CorePlugin`, etc. | Blockers: partial extraction exists but not independently buildable (`architect-core/core` has no `build.gradle.kts` / `settings.gradle.kts` / `gradle.properties`) and still has Micronaut/HTTP coupling (17 import/coupling references). | Plan: (a) add standalone Gradle descriptors for `architect-core/core`; (b) replace Micronaut event/config/http dependencies with core interfaces + adapter boundaries; (c) move/compile target classes in `architect-core`; (d) wire engine/cli to consume the new module.
+- [ ] 8.1 Extract `architect-engine` execution domain into a separate Gradle sub-project `architect-core` (no Micronaut, no HTTP). Depends on `architect-api`. Contains: `TaskExecutor`, `TaskDependencyResolver`, `ProjectService`, `PluginLoader`, `HistoryService`, `ConfigValidator`, `BashCommandExecutor`, `InlineTaskPlugin`, `CorePlugin`, etc. | Blockers: (1) scaffolding step completed (`build.gradle.kts`, `settings.gradle.kts`, `gradle.properties` added in `architect-core/core`), but compile still fails due to Kotlin/coroutines metadata mismatch (`1.9.25` vs coroutines `1.10.2`), unresolved Micronaut serde annotation dependency (`Serdeable`), and cross-module coupling to `CloudReporterService` from `architect-cloud`; (2) Micronaut/HTTP coupling remains (17 references). | Plan: (a) align core coroutine/toolchain versions to engine-compatible set; (b) isolate/remove cloud-specific dependency from `ProjectService` via interface boundary; (c) introduce core event/config/http abstractions and remove direct Micronaut/HTTP imports; (d) recompile core module and then wire engine/cli dependencies.
 - [ ] 8.2 `architect-engine` and `architect-cli` both depend on `architect-core`
 - [ ] 8.3 Add `EmbeddedEventBus` — an in-process event publisher that replaces Micronaut's `ApplicationEventPublisher` for embedded mode
 - [ ] 8.4 Add `EmbeddedExecutionContext` — wires core services without a Micronaut container
