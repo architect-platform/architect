@@ -126,4 +126,7 @@ interface EngineCommandClient {
    */
   @Get("/projects/{projectName}/validate")
   fun validateProject(@PathVariable projectName: String): ValidationResultDTO
+
+  @Post("/projects/{projectName}/reload-plugins")
+  fun reloadProjectPlugins(@PathVariable projectName: String): ProjectDTO
 }

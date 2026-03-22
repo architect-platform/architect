@@ -36,7 +36,7 @@ class ProjectServiceTest {
 
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = TestPluginLoader()
-        val projectService = ProjectService(projectRepository, configLoader, pluginLoader, Optional.empty())
+        val projectService = ProjectService(projectRepository, configLoader, pluginLoader, Optional.empty(), ConfigValidator())
 
         // When
         projectService.registerProject(projectName, projectPath)
@@ -57,7 +57,7 @@ class ProjectServiceTest {
 
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = TestPluginLoader()
-        val projectService = ProjectService(projectRepository, configLoader, pluginLoader, Optional.empty())
+        val projectService = ProjectService(projectRepository, configLoader, pluginLoader, Optional.empty(), ConfigValidator())
 
         // When
         projectService.registerProject(projectName, projectPath)
@@ -69,6 +69,25 @@ class ProjectServiceTest {
     }
 
     @Test
+    fun `should reload existing project when it uses local plugins`() {
+        val projectName = "local-plugin-project"
+        val projectPath = tempDir.toString()
+        createTestProjectStructure(
+            projectPath,
+            includeLocalPlugin = true,
+        )
+
+        val configLoader = ConfigLoader(YamlConfigParser())
+        val pluginLoader = CountingPluginLoader()
+        val projectService = ProjectService(projectRepository, configLoader, pluginLoader, Optional.empty(), ConfigValidator())
+
+        projectService.registerProject(projectName, projectPath)
+        projectService.registerProject(projectName, projectPath)
+
+        assertEquals(2, pluginLoader.loadCalls)
+    }
+
+    @Test
     fun `should retrieve all registered projects`() {
         // Given
         val projectPath1 = createTempProjectDir("project1")
@@ -76,7 +95,7 @@ class ProjectServiceTest {
 
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = TestPluginLoader()
-        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty())
+        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty(), ConfigValidator())
 
         // When
         projectService.registerProject("project1", projectPath1)
@@ -94,7 +113,7 @@ class ProjectServiceTest {
         // Given
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = TestPluginLoader()
-        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty())
+        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty(), ConfigValidator())
 
         // When
         val project = projectService.getProject("non-existent")
@@ -111,7 +130,7 @@ class ProjectServiceTest {
 
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = TestPluginLoader()
-        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty())
+        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty(), ConfigValidator())
 
         // When & Then
         assertThrows(IllegalArgumentException::class.java) {
@@ -119,13 +138,28 @@ class ProjectServiceTest {
         }
     }
 
-    private fun createTestProjectStructure(path: String) {
+    private fun createTestProjectStructure(path: String, includeLocalPlugin: Boolean = false) {
         val architectFile = File(path, "architect.yml")
-        architectFile.writeText("""
-            project:
-              name: test-project
-              description: "Test project"
-        """.trimIndent())
+        val pluginsSection = if (includeLocalPlugin) {
+            """
+            plugins:
+              - name: local-dev
+                type: local
+                path: build/local-dev.jar
+            """.trimIndent()
+        } else {
+            ""
+        }
+        architectFile.writeText(
+            listOf(
+                """
+                project:
+                  name: test-project
+                  description: \"Test project\"
+                """.trimIndent(),
+                pluginsSection,
+            ).filter { it.isNotBlank() }.joinToString("\n") + "\n"
+        )
     }
 
     private fun createTempProjectDir(name: String): String {
@@ -140,6 +174,15 @@ class ProjectServiceTest {
      */
     class TestPluginLoader : PluginLoader {
         override fun load(context: ProjectContext): List<ArchitectPlugin<*>> {
+            return emptyList()
+        }
+    }
+
+    class CountingPluginLoader : PluginLoader {
+        var loadCalls: Int = 0
+
+        override fun load(context: ProjectContext): List<ArchitectPlugin<*>> {
+            loadCalls += 1
             return emptyList()
         }
     }

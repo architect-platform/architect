@@ -62,4 +62,10 @@ class ProjectsApiController(
     val result = projectService.validateProject(projectName)
     return ValidationResultDTO(valid = result.valid, errors = result.errors, warnings = result.warnings)
   }
+
+  @Post("/{projectName}/reload-plugins")
+  fun reloadPlugins(@PathVariable projectName: String): ProjectDTO {
+    logger.info("Reloading local plugins for project: $projectName")
+    return projectService.reloadProject(projectName).toDTO()
+  }
 }

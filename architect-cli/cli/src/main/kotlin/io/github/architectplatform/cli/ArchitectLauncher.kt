@@ -1023,9 +1023,17 @@ class ArchitectLauncher(
         val command = "rm -rf ~/.architect-engine"
         execute(command)
       }
+      "reload-plugins" -> {
+        ensureEngineRunning()
+        val projectPath = System.getProperty("user.dir")
+        val projectName = extractProjectName(projectPath)
+        engineCommandClient.registerProject(RegisterProjectRequest(name = projectName, path = projectPath))
+        engineCommandClient.reloadProjectPlugins(projectName)
+        println("✅ Reloaded plugins for $projectName")
+      }
       else -> {
         println("Unknown command for 'engine': $arg")
-        println("Available commands: install, start, stop, clean")
+        println("Available commands: install, start, stop, clean, reload-plugins")
       }
     }
   }

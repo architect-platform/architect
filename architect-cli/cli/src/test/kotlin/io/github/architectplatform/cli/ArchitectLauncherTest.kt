@@ -147,6 +147,37 @@ class ArchitectLauncherTest {
     assertTrue(!healthChecked, "Health checker should not be called for 'engine' subcommand")
   }
 
+  @Test
+  fun `engine reload-plugins registers and reloads current project`(@TempDir tmpDir: Path) {
+    val client = TrackingEngineCommandClient()
+    val launcher = ArchitectLauncher(
+      client,
+      stubHealthChecker(running = true),
+      io.github.architectplatform.cli.history.LocalHistoryReader(),
+      io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor(io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()),
+    )
+    val originalUserDir = System.getProperty("user.dir")
+    System.setProperty("user.dir", tmpDir.toString())
+    try {
+      launcher.command = "engine"
+      launcher.args = listOf("engine", "reload-plugins")
+
+      val originalOut = System.out
+      System.setOut(java.io.PrintStream(java.io.ByteArrayOutputStream()))
+      try {
+        launcher.run()
+      } finally {
+        System.setOut(originalOut)
+      }
+
+      assertEquals(tmpDir.fileName.toString(), client.registeredName)
+      assertEquals(tmpDir.toString(), client.registeredPath)
+      assertEquals(tmpDir.fileName.toString(), client.reloadedProject)
+    } finally {
+      System.setProperty("user.dir", originalUserDir)
+    }
+  }
+
   // ─── Helpers ─────────────────────────────────────────────────────────────
 
   private fun launcher(healthChecker: EngineHealthChecker = stubHealthChecker(running = true)): ArchitectLauncher {
@@ -184,4 +215,37 @@ private class StubEngineCommandClient : EngineCommandClient {
   override fun getProjectHistory(project: String): List<HistoryRecordDTO> = emptyList()
   override fun validateProject(projectName: String): ValidationResultDTO =
     ValidationResultDTO(valid = true, errors = emptyList(), warnings = emptyList())
+  override fun reloadProjectPlugins(projectName: String): ProjectDTO =
+    ProjectDTO(name = projectName, path = ".", context = ProjectDTO.ProjectContextDTO(dir = ".", config = emptyMap()))
+}
+
+private class TrackingEngineCommandClient : EngineCommandClient {
+  var registeredName: String? = null
+  var registeredPath: String? = null
+  var reloadedProject: String? = null
+
+  override fun getAllProjects(): List<ProjectDTO> = emptyList()
+
+  override fun registerProject(request: RegisterProjectRequest): ProjectDTO {
+    registeredName = request.name
+    registeredPath = request.path
+    return ProjectDTO(name = request.name, path = request.path, context = ProjectDTO.ProjectContextDTO(dir = request.path, config = emptyMap()))
+  }
+
+  override fun getProject(name: String): ProjectDTO? = null
+  override fun getAllTasks(projectName: String): List<TaskDTO> = emptyList()
+  override fun getTask(projectName: String, taskName: String): TaskDTO? = null
+  override fun planTask(projectName: String, taskName: String): TaskPlanDTO =
+    TaskPlanDTO(task = taskName, project = projectName, totalSteps = 0, parallelBatches = 0, steps = emptyList())
+  override fun execute(projectName: String, taskName: String, args: List<String>): ExecutionId = "test-exec-id"
+  override fun getExecutionFlow(executionId: ExecutionId): Flow<Map<String, Any>> = emptyFlow()
+  override fun getHistory(): List<HistoryRecordDTO> = emptyList()
+  override fun getProjectHistory(project: String): List<HistoryRecordDTO> = emptyList()
+  override fun validateProject(projectName: String): ValidationResultDTO =
+    ValidationResultDTO(valid = true, errors = emptyList(), warnings = emptyList())
+
+  override fun reloadProjectPlugins(projectName: String): ProjectDTO {
+    reloadedProject = projectName
+    return ProjectDTO(name = projectName, path = registeredPath ?: ".", context = ProjectDTO.ProjectContextDTO(dir = registeredPath ?: ".", config = emptyMap()))
+  }
 }

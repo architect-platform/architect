@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 110/131 tasks completed (84%)
+Overall Progress: 111/131 tasks completed (85%)
 Current Phase: Phase 19 — Plugin Authoring Toolkit
-Last Updated: 2026-03-22T19:16:18Z
+Last Updated: 2026-03-22T19:20:46Z
 
 ---
 
@@ -436,7 +436,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
   val result = kit.executeTask("my-task")
   assertThat(result).isSuccess()
   ```
-- [ ] 19.3 **Local plugin dev loop** — `type: local` plugin source reloads the plugin JAR on every execution (no engine restart). Add `architect engine reload-plugins` endpoint.
+- [x] 19.3 **Local plugin dev loop** — `type: local` plugin source reloads the plugin JAR on every execution (no engine restart). Add `architect engine reload-plugins` endpoint. | Finished: 2026-03-22T19:20:46Z | Notes: engine project registration now reloads cached projects when they declare `type: local` plugins, added `POST /api/projects/{projectName}/reload-plugins`, and exposed it in the CLI as `architect engine reload-plugins`; verified with focused CLI and engine tests.
 - [ ] 19.4 **Plugin documentation generator** — `architect plugin docs <path>` — reads plugin metadata and generates a Markdown reference doc
 - [ ] 19.5 **Plugin validation** — `architect plugin validate <path>` — validates a plugin JAR: checks SPI file, verifies `ArchitectPlugin` implementation, tests config deserialization
 - [ ] 19.6 Write plugin authoring guide (see Phase 25)

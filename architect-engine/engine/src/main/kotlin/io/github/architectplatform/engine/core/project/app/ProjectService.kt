@@ -150,6 +150,10 @@ class ProjectService(
   fun registerProject(name: String, path: String) {
     val project = projectRepository.get(name)
     if (project != null) {
+      if (hasLocalPlugins(project.context.config)) {
+        logger.debug("Project $name uses local plugins, reloading project state")
+        reloadProject(name)
+      }
       logger.debug("Project $name already registered at path ${project.path}")
       return
     }
@@ -163,6 +167,15 @@ class ProjectService(
       val description = newProject.context.config.getKey<String>("project.description")
       reporter.reportProject(name, path, description)
     }
+  }
+
+  fun reloadProject(name: String): Project {
+    val existingProject = projectRepository.get(name)
+      ?: throw IllegalArgumentException("Project $name is not registered")
+    val reloadedProject = loadProject(name, existingProject.path)
+      ?: throw IllegalArgumentException("Failed to reload project $name from path ${existingProject.path}")
+    projectRepository.save(name, reloadedProject)
+    return reloadedProject
   }
 
   /**
@@ -208,5 +221,12 @@ class ProjectService(
         ?: throw IllegalArgumentException("Project $name is not registered")
     val pluginContextKeys = project.plugins.map { it.contextKey }.toSet()
     return configValidator.validate(project.context.config, pluginContextKeys)
+  }
+
+  private fun hasLocalPlugins(config: Map<String, Any>): Boolean {
+    val plugins = config["plugins"] as? List<*> ?: return false
+    return plugins.filterIsInstance<Map<*, *>>().any { plugin ->
+      plugin["type"] == "local"
+    }
   }
 }
