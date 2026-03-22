@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 106/131 tasks completed (81%)
-Current Phase: Phase 17 — Task Output Caching
-Last Updated: 2026-03-22T19:10:00Z
+Overall Progress: 107/131 tasks completed (82%)
+Current Phase: Phase 18 — Extended Official Plugin Library
+Last Updated: 2026-03-22T19:03:56Z
 
 ---
 
@@ -409,7 +409,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 18.5 `go-architected` — 4 tasks: go-build/test/lint/release. Context: module, ldflags, outputBinary. Tests pass.
 - [x] 18.6 `rust-architected` — 4 tasks: cargo-build/test/lint/publish. Context: profile, features, target. Tests pass.
 - [x] 18.7 `maven-architected` — 3 tasks: mvn-verify/package/deploy. Context: profiles, settings, skipTests. Tests pass.
-- [ ] 18.8 `nx-architected` — integrate with Nx monorepo: expose Nx targets as Architect tasks. Bridge affectedness detection.
+- [x] 18.8 `nx-architected` — integrate with Nx monorepo: expose Nx targets as Architect tasks. Bridge affectedness detection. | Finished: 2026-03-22T19:03:56Z | Notes: completed the Nx plugin module scaffold, wired CLI `--affected` runs to pass Architect-computed affected projects into `nx-*` tasks, taught `NxTask` to translate those bridge args into `nx run-many` or `nx affected` commands, and verified with focused Nx plugin and CLI tests.
 - [ ] 18.9 **Fix `scripts-architected`** — resolve all three workflows (`CoreWorkflow`, `CodeWorkflow`, `HooksWorkflow`). Add `environment`, `workingDirectory` per-task. Add `sequential: true` flag to disable parallelism for a specific script group.
 
 ### Acceptance Criteria

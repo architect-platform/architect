@@ -86,6 +86,33 @@ class ArchitectLauncherTest {
     }
   }
 
+  @Test
+  fun `augmentTaskArgsForExecution leaves non nx tasks unchanged`() {
+    val launcher = launcher()
+    launcher.affected = true
+
+    val args = launcher.augmentTaskArgsForExecution("build", listOf("--scan"), setOf("web", "api"))
+
+    assertEquals(listOf("--scan"), args)
+  }
+
+  @Test
+  fun `augmentTaskArgsForExecution adds architect affected bridge for nx tasks`() {
+    val launcher = launcher()
+    launcher.affected = true
+
+    val args = launcher.augmentTaskArgsForExecution("nx-build", listOf("--skip-nx-cache"), setOf("api", "web"))
+
+    assertEquals(
+      listOf(
+        "--skip-nx-cache",
+        "--architect-affected",
+        "--architect-projects=api,web",
+      ),
+      args,
+    )
+  }
+
   // ─── --no-daemon flag ─────────────────────────────────────────────────────
 
   @Test

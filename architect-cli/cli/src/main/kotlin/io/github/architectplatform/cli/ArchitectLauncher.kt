@@ -275,23 +275,44 @@ class ArchitectLauncher(
     val watchTask = if (command == "watch") args.getOrNull(1) else if (watch) command else null
     if (watchTask != null) {
       runWatchMode(projectPath, watchTask) {
-        executeTask(projectName, watchTask, taskArgs)
+        val watchAffectedProjects =
+          if (affected) {
+            val resolved = resolveAffectedProjects(projectName, projectPath)
+            if (resolved.isEmpty()) {
+              println("✅ No projects affected — nothing to run.")
+              return@runWatchMode
+            }
+            if (!plain) {
+              println("🎯 Affected projects: ${resolved.joinToString(", ")}")
+            }
+            resolved
+          } else {
+            emptySet()
+          }
+        executeTask(
+          projectName,
+          watchTask,
+          augmentTaskArgsForExecution(watchTask, taskArgs, watchAffectedProjects),
+        )
       }
       return
     }
 
-    if (affected) {
-      val affectedProjects = resolveAffectedProjects(projectName, projectPath)
-      if (affectedProjects.isEmpty()) {
+    val affectedProjects = if (affected) {
+      val resolved = resolveAffectedProjects(projectName, projectPath)
+      if (resolved.isEmpty()) {
         println("✅ No projects affected — nothing to run.")
         return
       }
       if (!plain) {
-        println("🎯 Affected projects: ${affectedProjects.joinToString(", ")}")
+        println("🎯 Affected projects: ${resolved.joinToString(", ")}")
       }
+      resolved
+    } else {
+      emptySet()
     }
 
-    executeTask(projectName, command!!, taskArgs)
+    executeTask(projectName, command!!, augmentTaskArgsForExecution(command!!, taskArgs, affectedProjects))
   }
 
   private fun runEmbeddedMode() {
@@ -337,23 +358,50 @@ class ArchitectLauncher(
     val watchTask = if (command == "watch") args.getOrNull(1) else if (watch) command else null
     if (watchTask != null) {
       runWatchMode(projectPath, watchTask) {
-        executeTaskEmbedded(projectName, projectPath, watchTask, taskArgs)
+        val watchAffectedProjects =
+          if (affected) {
+            val resolved = resolveAffectedProjects(projectName, projectPath)
+            if (resolved.isEmpty()) {
+              println("✅ No projects affected — nothing to run.")
+              return@runWatchMode
+            }
+            if (!plain) {
+              println("🎯 Affected projects: ${resolved.joinToString(", ")}")
+            }
+            resolved
+          } else {
+            emptySet()
+          }
+        executeTaskEmbedded(
+          projectName,
+          projectPath,
+          watchTask,
+          augmentTaskArgsForExecution(watchTask, taskArgs, watchAffectedProjects),
+        )
       }
       return
     }
 
-    if (affected) {
-      val affectedProjects = resolveAffectedProjects(projectName, projectPath)
-      if (affectedProjects.isEmpty()) {
+    val affectedProjects = if (affected) {
+      val resolved = resolveAffectedProjects(projectName, projectPath)
+      if (resolved.isEmpty()) {
         println("✅ No projects affected — nothing to run.")
         return
       }
       if (!plain) {
-        println("🎯 Affected projects: ${affectedProjects.joinToString(", ")}")
+        println("🎯 Affected projects: ${resolved.joinToString(", ")}")
       }
+      resolved
+    } else {
+      emptySet()
     }
 
-    executeTaskEmbedded(projectName, projectPath, command!!, taskArgs)
+    executeTaskEmbedded(
+      projectName,
+      projectPath,
+      command!!,
+      augmentTaskArgsForExecution(command!!, taskArgs, affectedProjects),
+    )
   }
 
   /**
@@ -465,6 +513,25 @@ class ArchitectLauncher(
    */
   private fun extractProjectName(projectPath: String): String {
     return projectPath.substringAfterLast("/").substringBeforeLast(".")
+  }
+
+  internal fun augmentTaskArgsForExecution(
+      taskName: String,
+      taskArgs: List<String>,
+      affectedProjects: Set<String> = emptySet(),
+  ): List<String> {
+    if (!affected || !taskName.startsWith("nx-")) {
+      return taskArgs
+    }
+
+    val augmentedArgs = taskArgs.toMutableList()
+    if (augmentedArgs.none { it == "--architect-affected" }) {
+      augmentedArgs += "--architect-affected"
+    }
+    if (affectedProjects.isNotEmpty() && augmentedArgs.none { it.startsWith("--architect-projects=") }) {
+      augmentedArgs += "--architect-projects=${affectedProjects.sorted().joinToString(",")}"
+    }
+    return augmentedArgs
   }
 
   /**
