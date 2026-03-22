@@ -5,14 +5,10 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.project.getKey
-import io.github.architectplatform.engine.core.config.EngineConfiguration
 import io.github.architectplatform.engine.core.plugin.domain.events.PluginEvents.pluginLoaded
+import io.github.architectplatform.engine.core.plugin.infra.GitHubReleaseResolver
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
-import io.micronaut.context.annotation.Property
 import io.micronaut.context.event.ApplicationEventPublisher
-import io.micronaut.http.HttpRequest
-import io.micronaut.http.MutableHttpRequest
-import io.micronaut.http.client.HttpClient
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
 import jakarta.inject.Singleton
@@ -26,11 +22,8 @@ class ProjectPluginLoader(
     private val spiLoader: SpiPluginLoader,
     private val downloader: PluginDownloader,
     private val internalPlugins: List<CommonPlugin>,
-    private val httpClient: HttpClient,
+    private val releaseResolver: GitHubReleaseResolver,
     private val eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>,
-    
-    @Property(name = EngineConfiguration.PluginLoader.USER_AGENT, defaultValue = EngineConfiguration.PluginLoader.DEFAULT_USER_AGENT)
-    private val userAgent: String = EngineConfiguration.PluginLoader.DEFAULT_USER_AGENT
 ) : PluginLoader {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
@@ -61,7 +54,7 @@ class ProjectPluginLoader(
                     "github" -> {
                         val tag =
                             if (plugin.version == "latest") {
-                                resolveLatestTag(plugin.repo, plugin.pattern)
+                                releaseResolver.resolveLatestTag(plugin.repo, plugin.pattern).getOrThrow()
                             } else {
                                 "${plugin.name}-${plugin.version}"
                             }
@@ -89,50 +82,4 @@ class ProjectPluginLoader(
         return enabled
     }
 
-    private fun resolveLatestTag(repo: String, prefix: String): String {
-        val apiUrl = "https://api.github.com/repos/$repo/releases"
-
-        val token = System.getenv("GITHUB_TOKEN") ?: System.getProperty("GITHUB_TOKEN")
-
-        var req: MutableHttpRequest<*> = HttpRequest.GET<Any>(apiUrl)
-            .header("User-Agent", userAgent)
-
-        if (!token.isNullOrBlank()) {
-            req = req.header("Authorization", "Bearer $token")
-        }
-
-        val response = httpClient.toBlocking().retrieve(req, String::class.java)
-            ?: error("Failed to fetch tags from $apiUrl")
-
-        @Suppress("UNCHECKED_CAST")
-        val tags: List<Map<String, Any>> =
-            objectMapper.readValue(response, List::class.java) as List<Map<String, Any>>
-
-        println("Fetched ${tags.size} tags from $repo: $tags")
-
-        val matchingTags = tags.mapNotNull { it["name"] as? String }.filter { it.startsWith(prefix) }
-
-        if (matchingTags.isEmpty()) {
-            error("No tags starting with '$prefix' found in $repo")
-        }
-
-        val latestTag = matchingTags.maxWithOrNull { a, b ->
-            runCatching { compareVersions(a, b) }.getOrDefault(0)
-        } ?: matchingTags.last()
-
-        return latestTag
-    }
-
-
-    // Simple semver comparator
-    private fun compareVersions(a: String, b: String): Int {
-        val partsA = a.removePrefix("v").split(".")
-        val partsB = b.removePrefix("v").split(".")
-        for (i in 0 until maxOf(partsA.size, partsB.size)) {
-            val nA = partsA.getOrNull(i)?.toIntOrNull() ?: 0
-            val nB = partsB.getOrNull(i)?.toIntOrNull() ?: 0
-            if (nA != nB) return nA - nB
-        }
-        return 0
-    }
 }
