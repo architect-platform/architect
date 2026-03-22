@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 22/131 tasks completed (17%)
+Overall Progress: 23/131 tasks completed (18%)
 Current Phase: Phase 9 — Enhanced Config Validation & Schema
-Last Updated: 2026-03-22T13:50:57Z
+Last Updated: 2026-03-22T13:58:51Z
 
 ---
 
@@ -127,7 +127,7 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 
 ### Tasks
 
-- [ ] 9.1 Generate **JSON Schema** for `architect.yml` from the Kotlin domain model (use `jackson-module-jsonSchema` or a custom generator). Publish schema to `https://architect.dev/schema/architect.yml.json`
+- [x] 9.1 Generate **JSON Schema** for `architect.yml` from the Kotlin domain model (use `jackson-module-jsonSchema` or a custom generator). Publish schema to `https://architect.dev/schema/architect.yml.json` | Finished: 2026-03-22T13:58:51Z | Notes: Created `ArchitectSchemaGenerator` in architect-core with programmatic draft-07 JSON Schema generation covering project, plugins, tasks, all workflow phases; generated `docs/schema/architect.yml.json`; wrote 8 unit tests (all passing).
 - [ ] 9.2 Add `$schema` field support: if `architect.yml` contains `$schema:`, validate against declared schema version
 - [ ] 9.3 Extend `ConfigValidator` to validate plugin configuration sections against each loaded plugin's declared schema. Each `ArchitectPlugin` gains an optional `configSchema(): JsonNode?` method (default: null = no validation)
 - [ ] 9.4 Produce diagnostics with **YAML line numbers** — use SnakeYAML marks for precise location

@@ -1,0 +1,125 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "$id" : "https://architect.dev/schema/architect.yml.json",
+  "title" : "Architect Configuration",
+  "description" : "Configuration schema for architect.yml — the Architect Platform project descriptor.",
+  "type" : "object",
+  "properties" : {
+    "$schema" : {
+      "type" : "string",
+      "description" : "JSON Schema URL for editor validation and auto-complete"
+    },
+    "project" : {
+      "type" : "object",
+      "description" : "Project metadata.",
+      "properties" : {
+        "name" : {
+          "type" : "string",
+          "description" : "Unique project name (used as identifier)"
+        },
+        "description" : {
+          "type" : "string",
+          "description" : "Human-readable project description"
+        }
+      },
+      "required" : [ "name" ],
+      "additionalProperties" : false
+    },
+    "plugins" : {
+      "type" : "array",
+      "description" : "List of plugins to load for this project.",
+      "items" : {
+        "$ref" : "#/definitions/pluginConfig"
+      }
+    },
+    "tasks" : {
+      "type" : "object",
+      "description" : "Inline task definitions. Keys are task IDs.",
+      "additionalProperties" : {
+        "$ref" : "#/definitions/inlineTask"
+      }
+    }
+  },
+  "required" : [ "project" ],
+  "additionalProperties" : true,
+  "definitions" : {
+    "pluginConfig" : {
+      "type" : "object",
+      "description" : "Plugin source declaration.",
+      "properties" : {
+        "name" : {
+          "type" : "string",
+          "description" : "Plugin identifier (e.g. git-architected)"
+        },
+        "version" : {
+          "type" : "string",
+          "description" : "Semver constraint or 'latest'",
+          "default" : "latest"
+        },
+        "type" : {
+          "type" : "string",
+          "description" : "Plugin source type",
+          "enum" : [ "github", "local", "registry", "http", "process" ],
+          "default" : "github"
+        },
+        "repo" : {
+          "type" : "string",
+          "description" : "GitHub repository in owner/name format"
+        },
+        "owner" : {
+          "type" : "string",
+          "description" : "GitHub repository owner",
+          "default" : "architect-platform"
+        },
+        "asset" : {
+          "type" : "string",
+          "description" : "Plugin asset filename"
+        },
+        "assetType" : {
+          "type" : "string",
+          "description" : "Asset file type",
+          "enum" : [ "jar" ],
+          "default" : "jar"
+        },
+        "path" : {
+          "type" : "string",
+          "description" : "Local path to the plugin (for type: local)",
+          "default" : "."
+        },
+        "pattern" : {
+          "type" : "string",
+          "description" : "Release asset filename prefix pattern"
+        }
+      },
+      "required" : [ "name" ],
+      "additionalProperties" : false
+    },
+    "inlineTask" : {
+      "type" : "object",
+      "description" : "An inline task defined directly in architect.yml.",
+      "properties" : {
+        "description" : {
+          "type" : "string",
+          "description" : "Human-readable description of the task"
+        },
+        "run" : {
+          "type" : "string",
+          "description" : "Shell command to execute"
+        },
+        "phase" : {
+          "type" : "string",
+          "description" : "Lifecycle phase this task belongs to",
+          "enum" : [ "INIT", "LINT", "VERIFY", "BUILD", "RUN", "TEST", "RELEASE", "PUBLISH", "CODE-init", "CODE-lint", "CODE-verify", "CODE-build", "CODE-run", "CODE-test", "CODE-release", "CODE-publish", "pre-commit", "pre-push", "commit-msg" ]
+        },
+        "depends" : {
+          "type" : "array",
+          "description" : "Task IDs this task depends on",
+          "items" : {
+            "type" : "string"
+          }
+        }
+      },
+      "additionalProperties" : false
+    }
+  }
+}
