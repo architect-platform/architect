@@ -23,13 +23,19 @@ class ScriptTask(
     private val scriptName: String,
     private val config: ScriptConfig,
     private val phase: Phase?,
-    private val context: ScriptsContext
+    private val context: ScriptsContext,
+    private val additionalDependencies: List<String> = emptyList(),
 ) : Task {
     override val id: String = "scripts-$scriptName"
 
     override fun phase(): Phase? = phase
 
     override fun description(): String = config.description
+
+    override fun depends(): List<String> {
+        val phaseDependencies = phase?.depends() ?: emptyList()
+        return (phaseDependencies + additionalDependencies).distinct()
+    }
 
     /**
      * Executes the script command with the configured environment and working directory.

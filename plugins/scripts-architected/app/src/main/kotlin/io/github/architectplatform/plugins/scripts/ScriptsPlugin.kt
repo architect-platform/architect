@@ -75,19 +75,31 @@ class ScriptsPlugin : ArchitectPlugin<ScriptsContext> {
      * @param registry The task registry to add script tasks to
      */
     override fun register(registry: TaskRegistry) {
+        val lastTaskIdByPhase = mutableMapOf<String, String>()
+
         for ((scriptName, scriptConfig) in context.scripts) {
-            // Parse phase from configuration if specified
             val phase = scriptConfig.phase?.let { parsePhase(it) }
-            
-            // Register the script task
+            val phaseKey = phase?.id ?: "__standalone__"
+            val additionalDependencies =
+                if (context.sequential) {
+                    lastTaskIdByPhase[phaseKey]?.let(::listOf) ?: emptyList()
+                } else {
+                    emptyList()
+                }
+
             registry.add(
                 ScriptTask(
                     scriptName = scriptName,
                     config = scriptConfig,
                     phase = phase,
-                    context = context
+                    context = context,
+                    additionalDependencies = additionalDependencies,
                 )
             )
+
+            if (context.sequential) {
+                lastTaskIdByPhase[phaseKey] = "scripts-$scriptName"
+            }
         }
     }
 
@@ -105,9 +117,5 @@ class ScriptsPlugin : ArchitectPlugin<ScriptsContext> {
         return runCatching { CoreWorkflow.valueOf(upper) }.getOrNull()
             ?: runCatching { CodeWorkflow.valueOf(upper) }.getOrNull()
             ?: runCatching { HooksWorkflow.valueOf(upper) }.getOrNull()
-            ?: run {
-                println("Warning: Unknown phase '$phaseName' for script — script will be standalone.")
-                null
-            }
     }
 }

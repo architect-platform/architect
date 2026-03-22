@@ -11,6 +11,7 @@ class ScriptsContextTest {
 
         assertTrue(context.enabled)
         assertTrue(context.scripts.isEmpty())
+        assertFalse(context.sequential)
     }
 
     @Test
@@ -18,6 +19,13 @@ class ScriptsContextTest {
         val context = ScriptsContext(enabled = false)
 
         assertFalse(context.enabled)
+    }
+
+    @Test
+    fun `context should accept sequential execution`() {
+        val context = ScriptsContext(sequential = true)
+
+        assertTrue(context.sequential)
     }
 
     @Test

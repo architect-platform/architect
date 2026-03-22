@@ -30,7 +30,8 @@ package io.github.architectplatform.plugins.scripts
  */
 data class ScriptsContext(
     val enabled: Boolean = true,
-    val scripts: Map<String, ScriptConfig> = emptyMap()
+    val scripts: Map<String, ScriptConfig> = emptyMap(),
+    val sequential: Boolean = false
 )
 
 /**
