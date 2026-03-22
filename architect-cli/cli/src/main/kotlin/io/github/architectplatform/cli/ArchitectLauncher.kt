@@ -88,6 +88,13 @@ class ArchitectLauncher(
   )
   var noDaemon: Boolean = false
 
+    @CommandLine.Option(
+      names = ["--embedded"],
+      description = ["Run tasks in embedded mode without using the engine daemon"],
+      defaultValue = "false",
+    )
+    var embedded: Boolean = false
+
   /**
    * Main execution logic for the CLI.
    *
