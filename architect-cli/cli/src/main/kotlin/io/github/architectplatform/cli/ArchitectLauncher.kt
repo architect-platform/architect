@@ -13,12 +13,14 @@ import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.cli.engine.EngineHealthChecker
 import io.github.architectplatform.cli.graph.TaskGraphDotRenderer
+import io.github.architectplatform.cli.graph.TaskGraphHtmlRenderer
 import io.github.architectplatform.engine.core.execution.EmbeddedExecutionContext
 import io.github.architectplatform.engine.core.project.app.AffectedProjectResolver
 import io.github.architectplatform.engine.core.tasks.application.LocalOutputCache
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
+import java.awt.Desktop
 import java.io.File
 import kotlin.system.exitProcess
 import kotlinx.coroutines.runBlocking
@@ -55,6 +57,7 @@ class ArchitectLauncher(
   private val pluginDocumentationGenerator = PluginDocumentationGenerator()
   private val pluginJarValidator = PluginJarValidator()
   private val taskGraphDotRenderer = TaskGraphDotRenderer()
+  private val taskGraphHtmlRenderer = TaskGraphHtmlRenderer()
 
   @Property(name = "architect.engine.startup-timeout-seconds", defaultValue = "30")
   var startupTimeoutSeconds: Int = 30
@@ -271,13 +274,14 @@ class ArchitectLauncher(
     }
 
     if (command == "graph") {
-      if (args.getOrNull(1) != null) {
-        println("Usage: architect graph")
-        exitProcess(1)
-      }
+      val graphOptions = parseGraphOptions(args)
       val tasks = engineCommandClient.getAllTasks(projectName)
       val plans = tasks.map { engineCommandClient.planTask(projectName, it.id) }
-      printGraph(projectName, plans)
+      if (graphOptions.open) {
+        openGraph(projectName, plans)
+      } else {
+        printGraph(projectName, plans)
+      }
       return
     }
 
@@ -365,13 +369,14 @@ class ArchitectLauncher(
     }
 
     if (command == "graph") {
-      if (args.getOrNull(1) != null) {
-        println("Usage: architect graph")
-        exitProcess(1)
-      }
+      val graphOptions = parseGraphOptions(args)
       val tasks = embeddedTaskExecutor.listTasks(projectName, projectPath)
       val plans = tasks.map { embeddedTaskExecutor.plan(projectName, projectPath, it.id) }
-      printGraph(projectName, plans)
+      if (graphOptions.open) {
+        openGraph(projectName, plans)
+      } else {
+        printGraph(projectName, plans)
+      }
       return
     }
 
@@ -954,6 +959,30 @@ class ArchitectLauncher(
   private fun printGraph(projectName: String, plans: List<TaskPlanDTO>) {
     println(taskGraphDotRenderer.render(projectName, plans))
   }
+
+  private fun openGraph(projectName: String, plans: List<TaskPlanDTO>) {
+    val outputPath = taskGraphHtmlRenderer.writeTempFile(projectName, plans)
+    println("📈 Graph page: $outputPath")
+    if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+      Desktop.getDesktop().browse(outputPath.toUri())
+    } else {
+      println("Browser opening is not supported in this environment. Open the HTML file manually.")
+    }
+  }
+
+  private fun parseGraphOptions(arguments: List<String>): GraphOptions {
+    val options = arguments.drop(1)
+    val invalid = options.filter { it != "--open" }
+    if (invalid.isNotEmpty()) {
+      println("Usage: architect graph [--open]")
+      exitProcess(1)
+    }
+    return GraphOptions(open = options.contains("--open"))
+  }
+
+  private data class GraphOptions(
+    val open: Boolean,
+  )
 
   private fun printValidation(projectName: String, result: ValidationResultDTO) {
     println()

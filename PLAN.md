@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 115/131 tasks completed (87%)
+Overall Progress: 116/131 tasks completed (88%)
 Current Phase: Phase 20 — Project Graph & Visualization
-Last Updated: 2026-03-22T19:51:03Z
+Last Updated: 2026-03-22T19:53:03Z
 
 ---
 
@@ -455,7 +455,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 ### Tasks
 
 - [x] 20.1 `architect graph` — outputs a DOT format directed graph of the task DAG for the current project | Finished: 2026-03-22T19:51:03Z | Notes: added CLI `architect graph` DOT output for the full current-project task DAG by aggregating planned task dependencies and rendering them through `TaskGraphDotRenderer`; verified with focused CLI launcher tests.
-- [ ] 20.2 `architect graph --open` — renders the graph as an SVG or HTML page and opens in browser (uses D3.js or Mermaid)
+- [x] 20.2 `architect graph --open` — renders the graph as an SVG or HTML page and opens in browser (uses D3.js or Mermaid) | Finished: 2026-03-22T19:53:03Z | Notes: extended `architect graph` with `--open` to generate a temporary Mermaid-based HTML page through `TaskGraphHtmlRenderer`, print the file location, and open it through the desktop browser when supported; verified with focused renderer and launcher tests.
 - [ ] 20.3 `architect graph <task>` — subgraph for a specific task and its dependencies
 - [ ] 20.4 `architect graph --projects` — shows the monorepo project graph (project ↔ project dependency relationships)
 - [ ] 20.5 `architect plan <task> --tree` — ASCII tree rendering in the terminal (already partially done in plan mode; make it richer with batch groups and timing estimates)
