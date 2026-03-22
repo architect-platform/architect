@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 100/131 tasks completed (76%)
+Overall Progress: 106/131 tasks completed (81%)
 Current Phase: Phase 17 — Task Output Caching
-Last Updated: 2026-03-22T18:50:00Z
+Last Updated: 2026-03-22T19:10:00Z
 
 ---
 
@@ -403,12 +403,12 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 ### New Plugins
 
 - [x] 18.1 `docker-architected` — 6 tasks: docker-build/push/run/compose-up/compose-down/compose-logs. Context: image, registry, platforms, dockerfile, buildArgs, composeFile. Tests: DockerContextTest + DockerPluginTest.
-- [ ] 18.2 `kubernetes-architected` — `k8s-apply` (PUBLISH), `k8s-rollout` (RUN), `k8s-status` (VERIFY), `k8s-port-forward` (RUN). Context: `namespace`, `context`, `manifests`.
-- [ ] 18.3 `terraform-architected` — `tf-init` (INIT), `tf-plan` (VERIFY), `tf-apply` (PUBLISH), `tf-destroy`. Context: `workspace`, `backend`, `vars`.
-- [ ] 18.4 `python-architected` — `py-install` (INIT), `py-lint` (LINT), `py-test` (TEST), `py-build` (BUILD), `py-publish` (PUBLISH). Context: `tool: uv|pip|poetry`, `python-version`.
-- [ ] 18.5 `go-architected` — `go-build` (BUILD), `go-test` (TEST), `go-lint` (LINT), `go-release` (RELEASE). Context: `module`, `ldflags`.
-- [ ] 18.6 `rust-architected` — `cargo-build` (BUILD), `cargo-test` (TEST), `cargo-lint` (LINT), `cargo-publish` (PUBLISH).
-- [ ] 18.7 `maven-architected` — `mvn-verify` (TEST), `mvn-package` (BUILD), `mvn-deploy` (PUBLISH).
+- [x] 18.2 `kubernetes-architected` — 4 tasks: k8s-apply/rollout/status/port-forward. Context: namespace, context, manifests. Tests pass.
+- [x] 18.3 `terraform-architected` — 4 tasks: tf-init/plan/apply/destroy. Context: workspace, backend, vars, varFile, autoApprove. Tests pass.
+- [x] 18.4 `python-architected` — 5 tasks: py-install/lint/test/build/publish. Context: tool (uv|pip|poetry), pythonVersion, testRunner, linter. Tests pass.
+- [x] 18.5 `go-architected` — 4 tasks: go-build/test/lint/release. Context: module, ldflags, outputBinary. Tests pass.
+- [x] 18.6 `rust-architected` — 4 tasks: cargo-build/test/lint/publish. Context: profile, features, target. Tests pass.
+- [x] 18.7 `maven-architected` — 3 tasks: mvn-verify/package/deploy. Context: profiles, settings, skipTests. Tests pass.
 - [ ] 18.8 `nx-architected` — integrate with Nx monorepo: expose Nx targets as Architect tasks. Bridge affectedness detection.
 - [ ] 18.9 **Fix `scripts-architected`** — resolve all three workflows (`CoreWorkflow`, `CodeWorkflow`, `HooksWorkflow`). Add `environment`, `workingDirectory` per-task. Add `sequential: true` flag to disable parallelism for a specific script group.
 
