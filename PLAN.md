@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 25/131 tasks completed (19%)
+Overall Progress: 26/131 tasks completed (20%)
 Current Phase: Phase 9 — Enhanced Config Validation & Schema
-Last Updated: 2026-03-22T14:03:50Z
+Last Updated: 2026-03-22T14:06:32Z
 
 ---
 
@@ -130,7 +130,7 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 - [x] 9.1 Generate **JSON Schema** for `architect.yml` from the Kotlin domain model (use `jackson-module-jsonSchema` or a custom generator). Publish schema to `https://architect.dev/schema/architect.yml.json` | Finished: 2026-03-22T13:58:51Z | Notes: Created `ArchitectSchemaGenerator` in architect-core with programmatic draft-07 JSON Schema generation covering project, plugins, tasks, all workflow phases; generated `docs/schema/architect.yml.json`; wrote 8 unit tests (all passing).
 - [x] 9.2 Add `$schema` field support: if `architect.yml` contains `$schema:`, validate against declared schema version | Finished: 2026-03-22T14:00:49Z | Notes: Added `$schema` to `BASE_KNOWN_KEYS`; when present, `ConfigValidator` validates the config against the built-in JSON Schema using `networknt/json-schema-validator`; added dependency to `architect-core/core/build.gradle.kts`.
 - [x] 9.3 Extend `ConfigValidator` to validate plugin configuration sections against each loaded plugin's declared schema. Each `ArchitectPlugin` gains an optional `configSchema(): JsonNode?` method (default: null = no validation) | Finished: 2026-03-22T14:03:50Z | Notes: Added `configSchema(): Map<String, Any>? = null` to `ArchitectPlugin` interface; `ConfigValidator.validate()` now accepts `plugins` list and validates each plugin's config section against its declared schema using networknt json-schema-validator; added `includeBuild` for API in architect-core settings.
-- [ ] 9.4 Produce diagnostics with **YAML line numbers** — use SnakeYAML marks for precise location
+- [x] 9.4 Produce diagnostics with **YAML line numbers** — use SnakeYAML marks for precise location | Finished: 2026-03-22T14:06:32Z | Notes: Created `YamlLineTracker` using SnakeYAML `compose()` API to map key paths to 1-based line numbers; updated `ConfigValidator.validate()` to accept `lineMap` parameter; errors and warnings now include `line N:` prefix; `ConfigLoader.loadWithRaw()` returns raw YAML alongside parsed config; `ProjectService` wires line tracking into validation.
 - [ ] 9.5 Produce actionable error messages: not just "missing field" but "Add `project.name: your-project` to fix this"
 - [ ] 9.6 **VS Code extension** `architect-vscode`:
   - YAML language server integration for `architect.yml` auto-complete and inline error highlighting

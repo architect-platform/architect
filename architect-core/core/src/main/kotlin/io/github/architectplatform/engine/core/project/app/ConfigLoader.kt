@@ -11,12 +11,16 @@ class ConfigLoader(private val configParser: ConfigParser) {
 
   private val logger = LoggerFactory.getLogger(ConfigLoader::class.java)
 
-  fun load(path: String): Config? {
+  data class LoadResult(val config: Config, val rawYaml: String)
+
+  fun load(path: String): Config? = loadWithRaw(path)?.config
+
+  fun loadWithRaw(path: String): LoadResult? {
     val yamlContext = getExternalConfiguration(path)
     if (yamlContext.isEmpty()) {
       return null
     }
-    return configParser.parse(yamlContext)
+    return LoadResult(configParser.parse(yamlContext), yamlContext)
   }
 
   private fun getExternalConfiguration(projectPath: String = "."): String {

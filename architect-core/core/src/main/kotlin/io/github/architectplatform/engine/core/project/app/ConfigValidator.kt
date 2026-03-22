@@ -35,24 +35,28 @@ class ConfigValidator {
      * @param pluginContextKeys Context keys declared by loaded plugins (e.g. "gradle", "git", "docs").
      *   These are added to the known-key set so they do not produce false-positive warnings.
      * @param plugins Loaded plugins — used for per-plugin config schema validation.
+     * @param lineMap Optional key-path → line-number map (from [YamlLineTracker]) for precise diagnostics.
      */
     fun validate(
         config: Config,
         pluginContextKeys: Set<String> = emptySet(),
         plugins: List<ArchitectPlugin<*>> = emptyList(),
+        lineMap: Map<String, Int> = emptyMap(),
     ): ValidationResult {
         val errors = mutableListOf<String>()
         val warnings = mutableListOf<String>()
 
         val projectName = config.getKey<String>("project.name")
         if (projectName.isNullOrBlank()) {
-            errors.add("'project.name' is required but missing or blank")
+            val line = lineMap["project"] ?: lineMap["project.name"]
+            errors.add(withLine(line, "'project.name' is required but missing or blank"))
         }
 
         val knownKeys = BASE_KNOWN_KEYS + pluginContextKeys
         val unknownKeys = config.keys - knownKeys
         unknownKeys.forEach { key ->
-            warnings.add("Unknown top-level key '$key' in architect.yml — it will be ignored")
+            val line = lineMap[key]
+            warnings.add(withLine(line, "Unknown top-level key '$key' in architect.yml — it will be ignored"))
         }
 
         // If $schema is declared, validate the config against the JSON Schema
@@ -95,4 +99,7 @@ class ConfigValidator {
         val validationMessages = schema.validate(sectionNode)
         return validationMessages.map { "[$pluginId] $contextKey: ${it.message}" }
     }
+
+    private fun withLine(line: Int?, message: String): String =
+        if (line != null) "line $line: $message" else message
 }

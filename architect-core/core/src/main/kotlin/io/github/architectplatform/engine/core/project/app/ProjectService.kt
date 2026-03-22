@@ -10,6 +10,7 @@ import io.github.architectplatform.engine.core.plugin.app.PluginLoader
 import io.github.architectplatform.engine.core.project.app.repositories.ProjectRepository
 import io.github.architectplatform.engine.core.project.domain.Project
 import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTaskRegistry
+import io.github.architectplatform.engine.core.project.infra.YamlLineTracker
 import jakarta.inject.Singleton
 import java.io.File
 import java.util.Optional
@@ -48,7 +49,9 @@ class ProjectService(
 
   private fun loadProject(name: String, path: String): Project? {
     logger.info("Loading project $name from path $path")
-    val projectConfig = configLoader.load(path) ?: return null
+    val loadResult = configLoader.loadWithRaw(path) ?: return null
+    val projectConfig = loadResult.config
+    val lineMap = YamlLineTracker.trackLines(loadResult.rawYaml)
 
     val projectContext = ProjectContext(Path(path), projectConfig)
 
@@ -126,7 +129,7 @@ class ProjectService(
 
     // Validate after loading plugins so their contextKey values are known and won't produce false warnings
     val pluginContextKeys = plugins.map { it.contextKey }.toSet()
-    val validation = configValidator.validate(projectConfig, pluginContextKeys)
+    val validation = configValidator.validate(projectConfig, pluginContextKeys, plugins, lineMap)
     validation.warnings.forEach { logger.warn("Project $name: $it") }
     validation.errors.forEach { logger.error("Project $name: $it") }
 
