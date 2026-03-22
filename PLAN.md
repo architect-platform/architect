@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 7/131 tasks completed (5%)
+Overall Progress: 8/131 tasks completed (6%)
 Current Phase: Phase 7 — Bug Fixes & Tech Debt
-Last Updated: 2026-03-22T00:00:00Z
+Last Updated: 2026-03-22T00:01:00Z
 
 ---
 
@@ -65,7 +65,7 @@ Last Updated: 2026-03-22T00:00:00Z
 
 ### Tasks
 
-- [ ] 7.1 **API version mismatch** — `architect-engine/engine/build.gradle.kts` declares `api:1.2.0`; update to `2.1.0` to consume the current API contract
+- [x] 7.1 **API version mismatch** — `architect-engine/engine/build.gradle.kts` updated from `api:1.2.0` to `api:2.1.0`. Engine still compiles. | Finished: 2026-03-22T00:01:00Z
 - [ ] 7.2 **SSE stream termination** — `ExecutionApiController` terminates the flow with `error(...)` (throws exception as control flow). Replace with a proper `Flow` `takeWhile { }` or `transformWhile { }` that completes cleanly when a `COMPLETED` or `FAILED` event is received
 - [ ] 7.3 **ConfigValidator false warnings** — the validator warns on all plugin config keys (`gradle`, `docs`, `git`, etc.) as "unknown". Fix: build the known-key set dynamically from loaded plugin `contextKey` values, not a static list
 - [ ] 7.4 **`ScriptsPlugin` phase resolution** — `parsePhase()` only resolves `CodeWorkflow`. Extend to resolve `CoreWorkflow` and `HooksWorkflow` (mirrors `InlineTaskPlugin` behavior)
