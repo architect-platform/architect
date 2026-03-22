@@ -41,11 +41,18 @@ The Architect Platform consists of several core components:
 curl -sSL https://raw.githubusercontent.com/architect-platform/architect/main/architect-cli/.installers/bash | bash
 \`\`\`
 
-### Install & Run the Engine
+### Optional: Install & Run the Engine
 
 \`\`\`bash
 architect engine install
 architect engine start
+\`\`\`
+
+### Embedded Mode (No Engine Required)
+
+\`\`\`bash
+architect --embedded docs-build
+architect --no-daemon docs-build
 \`\`\`
 
 ### Your First Project

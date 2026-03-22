@@ -455,7 +455,7 @@ class ArchitectLauncher(
 
     when (arg) {
       "install" -> {
-        println("Installing Architect Engine...")
+        println("Installing Architect Engine (optional for embedded mode)...")
         val command =
             "curl -sSL https://raw.githubusercontent.com/architect-platform/architect/main/architect-cli/.installers/bash | bash"
         execute(command)

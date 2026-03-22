@@ -37,11 +37,18 @@ plugins:
 EOF
 ```
 
-### Install and Start the Engine
+### Optional: Install and Start the Engine
 
 ```bash
 architect engine install
 architect engine start
+```
+
+### Embedded Mode (No Engine Required)
+
+```bash
+architect --embedded docs-build
+architect --no-daemon docs-build
 ```
 
 ### Run Tasks
@@ -65,7 +72,7 @@ architect --plain docs-build
 ### Engine Management
 
 ```bash
-# Install the Architect Engine
+# Install the Architect Engine (optional)
 architect engine install
 
 # Start the engine

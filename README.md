@@ -72,11 +72,18 @@ Architect consists of three main components:
 curl -sSL https://raw.githubusercontent.com/architect-platform/architect/main/architect-cli/.installers/bash | bash
 ```
 
-## Install & Run the Engine
+## Optional: Install & Run the Engine
 ```bash
 architect engine install
 architect engine start
 # architect engine stop/clean
+```
+
+## Embedded Mode (No Engine Required)
+```bash
+architect --embedded build
+# or automatic fallback when daemon is unavailable
+architect --no-daemon build
 ```
 
 ### Your First Project
@@ -475,7 +482,7 @@ architect --plain <task-name>
 ### Engine Management
 
 ```bash
-# Install engine
+# Install engine (optional)
 architect engine install
 
 # Start engine

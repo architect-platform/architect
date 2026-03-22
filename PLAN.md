@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 19/131 tasks completed (15%)
+Overall Progress: 20/131 tasks completed (15%)
 Current Phase: Phase 8 — Embedded Execution Mode
-Last Updated: 2026-03-22T13:45:30Z
+Last Updated: 2026-03-22T13:47:27Z
 
 ---
 
@@ -108,7 +108,7 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 - [x] 8.5 Add `--embedded` flag to `ArchitectLauncher` | Finished: 2026-03-22T13:39:49Z | Notes: added `--embedded` Picocli option to `ArchitectLauncher` with default `false`; verified with `./gradlew -q compileKotlin` in `architect-cli/cli`.
 - [x] 8.6 When `--embedded` is set (or engine is not reachable and `--no-daemon` is set): use `EmbeddedTaskExecutor` | Finished: 2026-03-22T13:44:15Z | Notes: added CLI `EmbeddedTaskExecutor` and `JdkRemoteContentFetcher`, integrated `ArchitectLauncher` routing to embedded mode when `--embedded` is set or when `--no-daemon` is used and engine health check fails; embedded path now supports list/plan/validate/task execution with local history recording; verified via `./gradlew -q compileKotlin` in `architect-cli/cli`.
 - [x] 8.7 `EmbeddedConsoleUI` — same output contract as `ConsoleUI` but driven by in-process events | Finished: 2026-03-22T13:45:30Z | Notes: added `EmbeddedConsoleUI` delegating to `ConsoleUI` with identical completion/failure contract and wired embedded execution path to stream in-process `ArchitectEvent` objects into it; verified with `./gradlew compileKotlin --console=plain` in `architect-cli/cli`.
-- [ ] 8.8 Update `architect engine install` to make the engine optional for basic usage; document that embedded mode exists
+- [x] 8.8 Update `architect engine install` to make the engine optional for basic usage; document that embedded mode exists | Finished: 2026-03-22T13:47:27Z | Notes: updated CLI/docs guidance to present engine install as optional for basic workflows, added embedded-mode quick-start examples (`--embedded`, `--no-daemon`), and updated install command messaging in `ArchitectLauncher`; verified CLI compile via `./gradlew -q compileKotlin`.
 - [ ] 8.9 Write comprehensive tests for `EmbeddedExecutionContext` wiring
 - [ ] 8.10 Write end-to-end embedded-mode integration test: load a real plugin, run a task, assert result
 

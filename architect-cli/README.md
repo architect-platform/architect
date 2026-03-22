@@ -44,7 +44,7 @@ architect <task-name> [args...]
 ### Engine Management
 
 ```bash
-# Install the Architect Engine
+# Install the Architect Engine (optional for basic task execution)
 architect engine install
 
 # Install the Architect Engine for CI environments
@@ -58,6 +58,16 @@ architect engine stop
 
 # Clean engine data
 architect engine clean
+```
+
+### Embedded Mode (No Daemon)
+
+```bash
+# Run directly in-process (no engine required)
+architect --embedded <task-name>
+
+# Fallback to embedded mode when daemon is unavailable
+architect --no-daemon <task-name>
 ```
 
 ### Output Modes
@@ -86,9 +96,11 @@ cd cli
 
 ## Configuration
 
-The CLI requires the Architect Engine to be running and accessible. By default, it connects to:
-- URL: Configured via Micronaut's HTTP client settings
-- Expected endpoint: `/api` on the engine server
+The CLI supports two execution modes:
+- Embedded mode (default fallback): runs tasks in-process with no daemon requirement
+- Engine mode: communicates with the Architect Engine over HTTP
+
+When engine mode is used, the endpoint is configured via Micronaut HTTP client settings (`/api` by default).
 
 ## Technical Stack
 
