@@ -124,6 +124,13 @@ class ArchitectLauncher(
   )
   var version: Boolean = false
 
+  @CommandLine.Option(
+      names = ["-w", "--watch"],
+      description = ["Watch for file changes and re-execute the task"],
+      defaultValue = "false",
+  )
+  var watch: Boolean = false
+
   /**
    * Main execution logic for the CLI.
    *
@@ -211,6 +218,16 @@ class ArchitectLauncher(
 
     // Drop first arg as it's the command itself (included by PicoCLI)
     val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
+
+    // Watch mode for engine-backed execution
+    val watchTask = if (command == "watch") args.getOrNull(1) else if (watch) command else null
+    if (watchTask != null) {
+      runWatchMode(projectPath, watchTask) {
+        executeTask(projectName, watchTask, taskArgs)
+      }
+      return
+    }
+
     executeTask(projectName, command!!, taskArgs)
   }
 
@@ -250,7 +267,18 @@ class ArchitectLauncher(
       return
     }
 
+    // Drop first arg as it's the command itself (included by PicoCLI)
     val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
+
+    // Watch mode: re-run task on file changes
+    val watchTask = if (command == "watch") args.getOrNull(1) else if (watch) command else null
+    if (watchTask != null) {
+      runWatchMode(projectPath, watchTask) {
+        executeTaskEmbedded(projectName, projectPath, watchTask, taskArgs)
+      }
+      return
+    }
+
     executeTaskEmbedded(projectName, projectPath, command!!, taskArgs)
   }
 
@@ -411,6 +439,41 @@ class ArchitectLauncher(
       println("Duration: ${ConsoleUI.formatDuration(duration)}")
       exitProcess(1)
     }
+  }
+
+  /**
+   * Watch mode: monitors the project directory for file changes and re-runs the task.
+   * Handles Ctrl+C for clean exit via shutdown hook.
+   */
+  private fun runWatchMode(projectPath: String, taskName: String, executeBlock: () -> Unit) {
+    println("👀 Watch mode: $taskName")
+    println("   Watching for changes in $projectPath ...")
+    println("   Press Ctrl+C to stop")
+    println()
+
+    // First execution
+    try { executeBlock() } catch (_: Exception) { /* allow re-run on next change */ }
+
+    val watchService = io.github.architectplatform.engine.core.watch.FileWatchService(
+        rootPath = java.nio.file.Paths.get(projectPath),
+        debounceMs = 500,
+    ) { changedPath ->
+      println()
+      println("━".repeat(80))
+      println("🔄 File changed: $changedPath — re-running $taskName")
+      println("━".repeat(80))
+      println()
+      try { executeBlock() } catch (_: Exception) { /* continue watching */ }
+    }
+
+    // Clean shutdown on Ctrl+C
+    Runtime.getRuntime().addShutdownHook(Thread {
+      watchService.stop()
+      println()
+      println("👋 Watch mode stopped")
+    })
+
+    watchService.start() // blocks until stop() is called
   }
 
   private fun printPlan(plan: TaskPlanDTO) {

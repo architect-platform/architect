@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 43/131 tasks completed (33%)
-Current Phase: Phase 10 — Rich CLI Output & Developer UX
-Last Updated: 2026-03-22T14:13:00Z
+Overall Progress: 51/131 tasks completed (39%)
+Current Phase: Phase 11 — Watch Mode
+Last Updated: 2026-03-22T15:00:00Z
 
 ---
 
@@ -186,21 +186,14 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 
 ### Tasks
 
-- [ ] 11.1 Add `WatchService` to engine (or `architect-core`) using Java `WatchService` API. Recursive directory watch with configurable root.
-- [ ] 11.2 Add `watch` configuration section to `architect.yml` (per task or global):
-  ```yaml
-  tasks:
-    test:
-      watch:
-        paths: ["src/**/*.kt", "src/**/*.java"]
-        debounce-ms: 500
-  ```
-- [ ] 11.3 Default watch paths: project root with extension filter derived from loaded plugins (e.g., Gradle plugin watches `**/*.kt`, js plugin watches `**/*.ts,**/*.js`)
-- [ ] 11.4 Add `architect watch <task>` CLI command. Streams events continuously. Clears and re-renders on each re-run.
-- [ ] 11.5 Add `--watch` / `-w` flag to any task command as shorthand: `architect build --watch`
-- [ ] 11.6 On file change: debounce, cancel in-flight execution if still running, restart
-- [ ] 11.7 Ctrl+C exits watch mode cleanly
-- [ ] 11.8 Write integration test for watch debounce logic
+- [x] 11.1 Add `WatchService` to engine (or `architect-core`) using Java `WatchService` API. Recursive directory watch with configurable root. | Finished: 2026-03-22T15:00:00Z
+- [x] 11.2 Add `watch` configuration section to `architect.yml` (per task or global): `WatchConfig` with `fromMap()` parser and `resolve()` chain. | Finished: 2026-03-22T15:00:00Z
+- [x] 11.3 Default watch paths: project root with extension filter derived from loaded plugins (e.g., Gradle plugin watches `**/*.kt`, js plugin watches `**/*.ts,**/*.js`). `WatchConfig.DEFAULT_PATTERNS` map. | Finished: 2026-03-22T15:00:00Z
+- [x] 11.4 Add `architect watch <task>` CLI command. Streams events continuously. Clears and re-renders on each re-run. | Finished: 2026-03-22T15:00:00Z
+- [x] 11.5 Add `--watch` / `-w` flag to any task command as shorthand: `architect build --watch` | Finished: 2026-03-22T15:00:00Z
+- [x] 11.6 On file change: debounce, cancel in-flight execution if still running, restart | Finished: 2026-03-22T15:00:00Z
+- [x] 11.7 Ctrl+C exits watch mode cleanly via shutdown hook | Finished: 2026-03-22T15:00:00Z
+- [x] 11.8 Write integration test for watch debounce logic — 10 tests: file detection, debounce, glob filtering, stop lifecycle, hidden dir skip, WatchConfig parsing | Finished: 2026-03-22T15:00:00Z
 
 ### Acceptance Criteria
 
