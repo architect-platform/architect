@@ -28,24 +28,37 @@ class BashCommandExecutorTest {
     }
 
     @Test
-    fun `should throw exception for failed command`() {
+    fun `should enforce timeout`() {
+        val timeoutExecutor = BashCommandExecutor(timeoutSeconds = 1)
+
+        val exception = assertThrows(IllegalStateException::class.java) {
+            timeoutExecutor.execute("sleep 2")
+        }
+
+        assertTrue(exception.message!!.contains("timed out after 1 seconds"))
+    }
+
+    @Test
+    fun `should throw exception for non zero exit code`() {
         // When & Then
         val exception = assertThrows(IllegalStateException::class.java) {
-            executor.execute("exit 1")
+            executor.execute("printf 'boom' >&2; exit 7")
         }
-        assertTrue(exception.message!!.contains("Command failed with exit code 1"))
+        assertTrue(exception.message!!.contains("Command failed with exit code 7"))
+        assertTrue(exception.message!!.contains("boom"))
     }
 
     @Test
     fun `should execute command in working directory`(@TempDir tempDir: Path) {
         // Given
-        val testFile = File(tempDir.toFile(), "test.txt")
+        val workingDirFile = File(tempDir.toFile(), "cwd.txt")
         
         // When
-        executor.execute("touch test.txt", tempDir.toString())
+        executor.execute("pwd > cwd.txt", tempDir.toString())
 
         // Then
-        assertTrue(testFile.exists())
+        assertTrue(workingDirFile.exists())
+        assertEquals(File(tempDir.toString()).canonicalPath, File(workingDirFile.readText().trim()).canonicalPath)
     }
 
     @Test
@@ -86,11 +99,13 @@ class BashCommandExecutorTest {
     }
 
     @Test
-    fun `should execute command with environment variables`() {
-        // When & Then - should not throw exception
-        assertDoesNotThrow {
-            executor.execute("export TEST_VAR=value; echo \$TEST_VAR")
-        }
+    fun `should execute command with environment variables`(@TempDir tempDir: Path) {
+        val outputFile = File(tempDir.toFile(), "env.txt")
+
+        executor.execute("TEST_VAR=injected-value sh -c 'printf %s \"\$TEST_VAR\" > env.txt'", tempDir.toString())
+
+        assertTrue(outputFile.exists())
+        assertEquals("injected-value", outputFile.readText())
     }
 
     @Test
