@@ -390,14 +390,16 @@ class ArchitectLauncher(
   }
 
   /**
-   * Executes a shell command using the system's runtime.
+   * Executes a shell command using ProcessBuilder.
    *
    * @param command The shell command to execute
    * @param wait If true, waits for the command to complete before returning
    */
   private fun execute(command: String, wait: Boolean = true) {
     try {
-      val process = Runtime.getRuntime().exec(command)
+      val process = ProcessBuilder("sh", "-c", command)
+        .inheritIO()
+        .start()
       if (wait) {
         val exitCode = process.waitFor()
         if (exitCode == 0) {
