@@ -9,6 +9,7 @@ import io.github.architectplatform.cli.dto.ProjectDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.dto.TaskDTO
 import io.github.architectplatform.cli.dto.TaskPlanDTO
+import io.github.architectplatform.cli.dto.TaskPlanStepDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.cli.engine.EngineHealthChecker
 import io.github.architectplatform.cli.plugin.PluginJarValidator
@@ -225,6 +226,39 @@ class ArchitectLauncherTest {
     assertTrue(jarPath.exists())
   }
 
+  @Test
+  fun `graph command outputs DOT for current project task DAG`(@TempDir tmpDir: Path) {
+    val client = GraphEngineCommandClient()
+    val launcher = ArchitectLauncher(
+      client,
+      stubHealthChecker(running = true),
+      io.github.architectplatform.cli.history.LocalHistoryReader(),
+      io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor(io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()),
+    )
+    val originalUserDir = System.getProperty("user.dir")
+    System.setProperty("user.dir", tmpDir.toString())
+    try {
+      launcher.command = "graph"
+      launcher.args = listOf("graph")
+
+      val output = java.io.ByteArrayOutputStream()
+      val originalOut = System.out
+      System.setOut(java.io.PrintStream(output))
+      try {
+        launcher.run()
+      } finally {
+        System.setOut(originalOut)
+      }
+
+      val dot = output.toString()
+      assertTrue(dot.contains("digraph"))
+      assertTrue(dot.contains("\"build\" -> \"test\""))
+      assertTrue(dot.contains("Compile sources"))
+    } finally {
+      System.setProperty("user.dir", originalUserDir)
+    }
+  }
+
   // ─── Helpers ─────────────────────────────────────────────────────────────
 
   private fun createTestPluginJar(jarPath: Path): Path {
@@ -334,4 +368,74 @@ private class TrackingEngineCommandClient : EngineCommandClient {
     reloadedProject = projectName
     return ProjectDTO(name = projectName, path = registeredPath ?: ".", context = ProjectDTO.ProjectContextDTO(dir = registeredPath ?: ".", config = emptyMap()))
   }
+}
+
+private class GraphEngineCommandClient : EngineCommandClient {
+  override fun getAllProjects(): List<ProjectDTO> = emptyList()
+
+  override fun registerProject(request: RegisterProjectRequest): ProjectDTO =
+    ProjectDTO(name = request.name, path = request.path, context = ProjectDTO.ProjectContextDTO(dir = request.path, config = emptyMap()))
+
+  override fun getProject(name: String): ProjectDTO? = null
+
+  override fun getAllTasks(projectName: String): List<TaskDTO> = listOf(
+    TaskDTO(id = "build", description = "Compile sources", phase = "BUILD"),
+    TaskDTO(id = "test", description = "Run tests", phase = "TEST"),
+  )
+
+  override fun getTask(projectName: String, taskName: String): TaskDTO? = null
+
+  override fun planTask(projectName: String, taskName: String): TaskPlanDTO = when (taskName) {
+    "build" -> TaskPlanDTO(
+      task = taskName,
+      project = projectName,
+      totalSteps = 1,
+      parallelBatches = 1,
+      steps = listOf(
+        TaskPlanStepDTO(
+          id = "build",
+          description = "Compile sources",
+          phase = "BUILD",
+          depends = emptyList(),
+          batch = 0,
+        ),
+      ),
+    )
+    else -> TaskPlanDTO(
+      task = taskName,
+      project = projectName,
+      totalSteps = 2,
+      parallelBatches = 2,
+      steps = listOf(
+        TaskPlanStepDTO(
+          id = "build",
+          description = "Compile sources",
+          phase = "BUILD",
+          depends = emptyList(),
+          batch = 0,
+        ),
+        TaskPlanStepDTO(
+          id = "test",
+          description = "Run tests",
+          phase = "TEST",
+          depends = listOf("build"),
+          batch = 1,
+        ),
+      ),
+    )
+  }
+
+  override fun execute(projectName: String, taskName: String, args: List<String>): ExecutionId = "test-exec-id"
+
+  override fun getExecutionFlow(executionId: ExecutionId): Flow<Map<String, Any>> = emptyFlow()
+
+  override fun getHistory(): List<HistoryRecordDTO> = emptyList()
+
+  override fun getProjectHistory(project: String): List<HistoryRecordDTO> = emptyList()
+
+  override fun validateProject(projectName: String): ValidationResultDTO =
+    ValidationResultDTO(valid = true, errors = emptyList(), warnings = emptyList())
+
+  override fun reloadProjectPlugins(projectName: String): ProjectDTO =
+    ProjectDTO(name = projectName, path = ".", context = ProjectDTO.ProjectContextDTO(dir = ".", config = emptyMap()))
 }

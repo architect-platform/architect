@@ -12,6 +12,7 @@ import io.github.architectplatform.cli.plugin.PluginTemplate
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.cli.engine.EngineHealthChecker
+import io.github.architectplatform.cli.graph.TaskGraphDotRenderer
 import io.github.architectplatform.engine.core.execution.EmbeddedExecutionContext
 import io.github.architectplatform.engine.core.project.app.AffectedProjectResolver
 import io.github.architectplatform.engine.core.tasks.application.LocalOutputCache
@@ -53,6 +54,7 @@ class ArchitectLauncher(
   private val pluginScaffolder = PluginScaffolder()
   private val pluginDocumentationGenerator = PluginDocumentationGenerator()
   private val pluginJarValidator = PluginJarValidator()
+  private val taskGraphDotRenderer = TaskGraphDotRenderer()
 
   @Property(name = "architect.engine.startup-timeout-seconds", defaultValue = "30")
   var startupTimeoutSeconds: Int = 30
@@ -268,6 +270,17 @@ class ArchitectLauncher(
       return
     }
 
+    if (command == "graph") {
+      if (args.getOrNull(1) != null) {
+        println("Usage: architect graph")
+        exitProcess(1)
+      }
+      val tasks = engineCommandClient.getAllTasks(projectName)
+      val plans = tasks.map { engineCommandClient.planTask(projectName, it.id) }
+      printGraph(projectName, plans)
+      return
+    }
+
     if (command == "validate") {
       val validation = engineCommandClient.validateProject(projectName)
       printValidation(projectName, validation)
@@ -348,6 +361,17 @@ class ArchitectLauncher(
         exitProcess(1)
       }
       printPlan(embeddedTaskExecutor.plan(projectName, projectPath, taskName))
+      return
+    }
+
+    if (command == "graph") {
+      if (args.getOrNull(1) != null) {
+        println("Usage: architect graph")
+        exitProcess(1)
+      }
+      val tasks = embeddedTaskExecutor.listTasks(projectName, projectPath)
+      val plans = tasks.map { embeddedTaskExecutor.plan(projectName, projectPath, it.id) }
+      printGraph(projectName, plans)
       return
     }
 
@@ -925,6 +949,10 @@ class ArchitectLauncher(
       println("  │")
     }
     println()
+  }
+
+  private fun printGraph(projectName: String, plans: List<TaskPlanDTO>) {
+    println(taskGraphDotRenderer.render(projectName, plans))
   }
 
   private fun printValidation(projectName: String, result: ValidationResultDTO) {

@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 114/131 tasks completed (87%)
-Current Phase: Phase 19 — Plugin Authoring Toolkit
-Last Updated: 2026-03-22T19:47:33Z
+Overall Progress: 115/131 tasks completed (87%)
+Current Phase: Phase 20 — Project Graph & Visualization
+Last Updated: 2026-03-22T19:51:03Z
 
 ---
 
@@ -454,7 +454,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 
 ### Tasks
 
-- [ ] 20.1 `architect graph` — outputs a DOT format directed graph of the task DAG for the current project
+- [x] 20.1 `architect graph` — outputs a DOT format directed graph of the task DAG for the current project | Finished: 2026-03-22T19:51:03Z | Notes: added CLI `architect graph` DOT output for the full current-project task DAG by aggregating planned task dependencies and rendering them through `TaskGraphDotRenderer`; verified with focused CLI launcher tests.
 - [ ] 20.2 `architect graph --open` — renders the graph as an SVG or HTML page and opens in browser (uses D3.js or Mermaid)
 - [ ] 20.3 `architect graph <task>` — subgraph for a specific task and its dependencies
 - [ ] 20.4 `architect graph --projects` — shows the monorepo project graph (project ↔ project dependency relationships)
