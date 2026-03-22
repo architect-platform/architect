@@ -97,6 +97,33 @@ class ArchitectLauncher(
     )
     var embedded: Boolean = false
 
+  @CommandLine.Option(
+      names = ["--json"],
+      description = ["Output in JSON format for scripting"],
+      defaultValue = "false",
+  )
+  var json: Boolean = false
+
+  @CommandLine.Option(
+      names = ["--filter"],
+      description = ["Filter tasks by phase (e.g., BUILD, TEST, RELEASE)"],
+  )
+  var filter: String? = null
+
+  @CommandLine.Option(
+      names = ["--no-color"],
+      description = ["Disable colors in output"],
+      defaultValue = "false",
+  )
+  var noColor: Boolean = false
+
+  @CommandLine.Option(
+      names = ["--version", "-v"],
+      description = ["Print version information"],
+      defaultValue = "false",
+  )
+  var version: Boolean = false
+
   /**
    * Main execution logic for the CLI.
    *
@@ -109,6 +136,16 @@ class ArchitectLauncher(
    * @throws Exception if task execution fails
    */
   override fun run() {
+    // Detect color preferences
+    if (noColor || System.getenv("NO_COLOR") != null || System.getenv("CI") != null) {
+      plain = true
+    }
+
+    if (version) {
+      printVersion()
+      return
+    }
+
     if (command == "engine") {
       handleEngineCommand()
       return
@@ -144,10 +181,14 @@ class ArchitectLauncher(
     val request = RegisterProjectRequest(name = projectName, path = projectPath)
     engineCommandClient.registerProject(request)
 
-    if (command == null) {
-      val commands = engineCommandClient.getAllTasks(projectName)
-      println("🧭 Available tasks:")
-      commands.forEach { println(" - ${it.id}") }
+    if (command == null || command == "tasks") {
+      val tasks = engineCommandClient.getAllTasks(projectName)
+      printTasks(tasks)
+      return
+    }
+
+    if (command == "info") {
+      printInfo(projectName, projectPath, engineCommandClient.getAllTasks(projectName))
       return
     }
 
@@ -181,10 +222,14 @@ class ArchitectLauncher(
       println("⚙️  Using embedded mode")
     }
 
-    if (command == null) {
-      val commands = embeddedTaskExecutor.listTasks(projectName, projectPath)
-      println("🧭 Available tasks:")
-      commands.forEach { println(" - $it") }
+    if (command == null || command == "tasks") {
+      val tasks = embeddedTaskExecutor.listTasks(projectName, projectPath)
+      printTasks(tasks)
+      return
+    }
+
+    if (command == "info") {
+      printInfo(projectName, projectPath, embeddedTaskExecutor.listTasks(projectName, projectPath))
       return
     }
 
@@ -431,6 +476,73 @@ class ArchitectLauncher(
       println(fmt.format(status, when_, r.project, duration, r.task))
     }
     println()
+  }
+
+  private fun printTasks(tasks: List<io.github.architectplatform.cli.dto.TaskDTO>) {
+    var filtered = tasks
+    if (filter != null) {
+      val f = filter!!.uppercase()
+      filtered = tasks.filter { it.phase?.uppercase() == f }
+    }
+
+    if (json) {
+      val mapper = com.fasterxml.jackson.databind.ObjectMapper()
+          .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+      println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(filtered))
+      return
+    }
+
+    println()
+    println("━".repeat(80))
+    println("🧭 Available Tasks" + if (filter != null) " (phase: ${filter!!.uppercase()})" else "")
+    println("━".repeat(80))
+    val fmt = "  %-30s  %-12s  %s"
+    println(fmt.format("TASK", "PHASE", "DESCRIPTION"))
+    println("  ${"─".repeat(76)}")
+    filtered.forEach { t ->
+      println(fmt.format(t.id.take(30), (t.phase ?: "—").take(12), t.description.take(34)))
+    }
+    println()
+    println("  ${filtered.size} task(s) available")
+    println()
+  }
+
+  private fun printInfo(projectName: String, projectPath: String, tasks: List<io.github.architectplatform.cli.dto.TaskDTO>) {
+    if (json) {
+      val mapper = com.fasterxml.jackson.databind.ObjectMapper()
+          .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+      val info = mapOf(
+          "project" to projectName,
+          "path" to projectPath,
+          "taskCount" to tasks.size,
+          "tasks" to tasks,
+          "phases" to tasks.mapNotNull { it.phase }.distinct().sorted(),
+      )
+      println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(info))
+      return
+    }
+
+    println()
+    println("━".repeat(80))
+    println("ℹ️  Project Info")
+    println("━".repeat(80))
+    println("  Name:   $projectName")
+    println("  Path:   $projectPath")
+    println("  Tasks:  ${tasks.size}")
+    val phases = tasks.mapNotNull { it.phase }.distinct().sorted()
+    if (phases.isNotEmpty()) {
+      println("  Phases: ${phases.joinToString(", ")}")
+    }
+    println()
+  }
+
+  private fun printVersion() {
+    val cliVersion = javaClass.`package`?.implementationVersion ?: "dev"
+    if (json) {
+      println("""{"cli":"$cliVersion"}""")
+      return
+    }
+    println("architect $cliVersion")
   }
 
   /**

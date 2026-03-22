@@ -1,5 +1,6 @@
 package io.github.architectplatform.cli.embedded
 
+import io.github.architectplatform.cli.dto.TaskDTO
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.TaskPlanStepDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
@@ -20,12 +21,14 @@ class EmbeddedTaskExecutor(
   private fun newContext(): EmbeddedExecutionContext =
     EmbeddedExecutionContext.create(remoteContentFetcher = remoteContentFetcher)
 
-  fun listTasks(projectName: String, projectPath: String): List<String> {
+  fun listTasks(projectName: String, projectPath: String): List<TaskDTO> {
     val context = newContext()
     context.projectService.registerProject(projectName, projectPath)
     val project = context.projectService.getProject(projectName)
       ?: throw IllegalArgumentException("Project $projectName is not registered")
-    return project.taskRegistry.all().map { it.id }.sorted()
+    return project.taskRegistry.all()
+        .sortedBy { it.id }
+        .map { TaskDTO(id = it.id, description = it.description(), phase = it.phase()?.id) }
   }
 
   fun validate(projectName: String, projectPath: String): ValidationResultDTO {

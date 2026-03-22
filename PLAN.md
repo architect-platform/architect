@@ -6,7 +6,7 @@
 ---
 
 ## Status
-Overall Progress: 36/131 tasks completed (27%)
+Overall Progress: 42/131 tasks completed (32%)
 Current Phase: Phase 10 — Rich CLI Output & Developer UX
 Last Updated: 2026-03-22T14:13:00Z
 
@@ -164,12 +164,12 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 - [x] 10.3 **Execution summary** — at the end, print a table: task name, status, duration, output (truncated). Highlight failures.
 - [x] 10.4 **Timing** — each task shows elapsed time. Total execution time shown at the end.
 - [x] 10.5 **Failure details** — on failure, print the full task output (not just the error message). Make it easy to debug.
-- [ ] 10.6 **`architect tasks`** — list all available tasks in a formatted table: id, phase, description. Support `--json` flag for machine-readable output.
-- [ ] 10.7 **`architect tasks --filter <phase>`** — filter by phase or workflow (e.g., `architect tasks --filter BUILD`)
-- [ ] 10.8 **`architect info`** — print resolved project config: name, path, loaded plugins, registered tasks, subprojects
-- [ ] 10.9 **`--json` output flag** — all commands support `--json` for scripting. Replaces `--plain` for structured output.
-- [ ] 10.10 **Color themes** — respect `NO_COLOR`, `TERM`, and a `--no-color` flag. Auto-detect CI to disable colors.
-- [ ] 10.11 **`architect --version`** — print CLI, engine, and API versions
+- [x] 10.6 **`architect tasks`** — list all available tasks in a formatted table: id, phase, description. Support `--json` flag for machine-readable output.
+- [x] 10.7 **`architect tasks --filter <phase>`** — filter by phase or workflow (e.g., `architect tasks --filter BUILD`)
+- [x] 10.8 **`architect info`** — print resolved project config: name, path, loaded plugins, registered tasks, subprojects
+- [x] 10.9 **`--json` output flag** — all commands support `--json` for scripting. Replaces `--plain` for structured output.
+- [x] 10.10 **Color themes** — respect `NO_COLOR`, `TERM`, and a `--no-color` flag. Auto-detect CI to disable colors.
+- [x] 10.11 **`architect --version`** — print CLI, engine, and API versions
 - [ ] 10.12 Write tests for all new `ConsoleUI` rendering paths
 
 ### Acceptance Criteria
