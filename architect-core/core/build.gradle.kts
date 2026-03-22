@@ -7,8 +7,10 @@ version = "1.6.1"
 
 val kotlinVersion = project.properties.get("kotlinVersion") as String
 val micronautVersion = project.properties.get("micronautVersion") as String
+val micronautSerdeVersion = project.properties.get("micronautSerdeVersion") as String
 val jacksonVersion = project.properties.get("jacksonVersion") as String
 val snakeyamlVersion = project.properties.get("snakeyamlVersion") as String
+val coroutinesVersion = project.properties.get("coroutinesVersion") as String
 
 repositories {
   mavenLocal()
@@ -33,7 +35,7 @@ dependencies {
   implementation("io.github.architectplatform:api:2.1.0")
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
   implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${coroutinesVersion}")
 
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
@@ -45,6 +47,7 @@ dependencies {
   compileOnly("io.micronaut:micronaut-http:${micronautVersion}")
   compileOnly("io.micronaut:micronaut-http-client:${micronautVersion}")
   compileOnly("io.micronaut:micronaut-context:${micronautVersion}")
+  compileOnly("io.micronaut.serde:micronaut-serde-api:${micronautSerdeVersion}")
 
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
