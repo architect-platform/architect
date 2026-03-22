@@ -6,7 +6,7 @@
 ---
 
 ## Status
-Overall Progress: 30/131 tasks completed (23%)
+Overall Progress: 31/131 tasks completed (24%)
 Current Phase: Phase 9 — Enhanced Config Validation & Schema
 Last Updated: 2026-03-22T14:13:00Z
 
@@ -143,7 +143,7 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
   - Gutter icons to run tasks from `architect.yml`
   | Finished: 2026-03-22T14:13:00Z | Notes: Scaffolded `architect-intellij/` with Gradle IntelliJ Platform plugin, `plugin.xml` registering `JsonSchemaProviderFactory`, `ConfigurationType` run config, `RunLineMarkerContributor` for gutter icons on task definitions; bundled JSON Schema in resources.
 - [x] 9.8 Write `ConfigValidatorTest` — covers all error and warning cases, including per-plugin validation (18 tests)
-- [ ] 9.9 Update docs with the JSON Schema URL and IDE setup instructions
+- [x] 9.9 Update docs with the JSON Schema URL and IDE setup instructions
 
 ### Acceptance Criteria
 

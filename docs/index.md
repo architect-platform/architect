@@ -162,6 +162,63 @@ architect github-release-task
 architect github-init-pipelines
 \`\`\`
 
+## JSON Schema for `architect.yml`
+
+Architect provides a [JSON Schema](https://json-schema.org/) for `architect.yml` to give you auto-completion, inline documentation, and validation in any editor that supports YAML schemas.
+
+**Schema URL:**
+
+```
+https://architect.dev/schema/architect.yml.json
+```
+
+### Using the Schema
+
+Add `$schema` to the top of your `architect.yml`:
+
+```yaml
+$schema: https://architect.dev/schema/architect.yml.json
+
+project:
+  name: my-project
+```
+
+When the `$schema` field is present, `architect validate` will automatically validate your configuration against the schema.
+
+## IDE Setup
+
+### VS Code
+
+1. Install the **Architect Platform** extension from the VS Code Marketplace (or from `architect-vscode/`).
+2. Install the [YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) by Red Hat (installed automatically as a dependency).
+3. The extension automatically associates `architect.yml` with the JSON Schema — you get auto-completion and inline validation out of the box.
+
+**Features:**
+- Auto-completion and validation for `architect.yml`
+- Task panel showing all registered tasks with run buttons
+- Output panel for execution output
+- Commands: *Architect: Run Task*, *Architect: Validate Config*, *Architect: Refresh Tasks*
+
+### IntelliJ IDEA / JetBrains IDEs
+
+1. Install the **Architect Platform** plugin from the JetBrains Marketplace (or build from `architect-intellij/`).
+2. The plugin automatically maps `architect.yml` to the bundled JSON Schema.
+
+**Features:**
+- Auto-completion and validation for `architect.yml`
+- Run configurations for Architect tasks
+- Gutter icons to run tasks directly from `architect.yml`
+
+### Other Editors
+
+For editors that support YAML schema associations (Sublime Text, Neovim with `yaml-language-server`, etc.), point your YAML language server at:
+
+```
+https://architect.dev/schema/architect.yml.json
+```
+
+Or reference the local copy at `docs/schema/architect.yml.json`.
+
 ## Contributing
 
 We welcome contributions! Please see our [contributing guidelines](https://github.com/architect-platform/architect/blob/main/CONTRIBUTING.md).
