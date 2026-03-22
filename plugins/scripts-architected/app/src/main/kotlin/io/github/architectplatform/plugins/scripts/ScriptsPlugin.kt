@@ -1,6 +1,8 @@
 package io.github.architectplatform.plugins.scripts
 
 import io.github.architectplatform.api.components.workflows.code.CodeWorkflow
+import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
+import io.github.architectplatform.api.components.workflows.hooks.HooksWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.phase.Phase
@@ -92,21 +94,20 @@ class ScriptsPlugin : ArchitectPlugin<ScriptsContext> {
     /**
      * Parses a phase name string into a Phase object.
      *
-     * Supports phase names in various formats:
-     * - Uppercase: "BUILD", "TEST", etc.
-     * - Lowercase: "build", "test", etc.
-     * - Mixed case: "Build", "Test", etc.
+     * Resolves against CoreWorkflow, CodeWorkflow, and HooksWorkflow (in that order),
+     * matching InlineTaskPlugin behaviour.
      *
-     * @param phaseName The phase name to parse
-     * @return The corresponding Phase object, or null if the phase name is not recognized
+     * @param phaseName The phase name to parse (case-insensitive)
+     * @return The corresponding Phase object, or null if the phase name is not recognised
      */
     private fun parsePhase(phaseName: String): Phase? {
-        return try {
-            CodeWorkflow.valueOf(phaseName.uppercase())
-        } catch (e: IllegalArgumentException) {
-            // Log warning but don't fail - allow standalone scripts
-            println("Warning: Unknown phase '$phaseName' for script. Script will be standalone.")
-            null
-        }
+        val upper = phaseName.uppercase()
+        return runCatching { CoreWorkflow.valueOf(upper) }.getOrNull()
+            ?: runCatching { CodeWorkflow.valueOf(upper) }.getOrNull()
+            ?: runCatching { HooksWorkflow.valueOf(upper) }.getOrNull()
+            ?: run {
+                println("Warning: Unknown phase '$phaseName' for script — script will be standalone.")
+                null
+            }
     }
 }
