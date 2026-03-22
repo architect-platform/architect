@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 109/131 tasks completed (83%)
+Overall Progress: 110/131 tasks completed (84%)
 Current Phase: Phase 19 — Plugin Authoring Toolkit
-Last Updated: 2026-03-22T19:13:41Z
+Last Updated: 2026-03-22T19:16:18Z
 
 ---
 
@@ -429,7 +429,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
   - TypeScript template (for process plugins via npm SDK)
   - Go template (for process plugins via Go SDK)
   - `plugin.yml` manifest, test harness, README template
-- [ ] 19.2 **Plugin test harness** — `ArchitectPluginTestKit` in `architect-api`:
+- [x] 19.2 **Plugin test harness** — `ArchitectPluginTestKit` in `architect-api`: | Finished: 2026-03-22T19:16:18Z | Notes: added `ArchitectPluginTestKit` to `architect-api` with in-memory task registration, service injection, published-event capture, project-config support, and reflective `configure(mapOf(...))` context hydration via `kotlin-reflect`; verified with focused API tests covering config mapping, task execution, service access, and event capture.
   ```kotlin
   val kit = ArchitectPluginTestKit(MyPlugin())
   kit.configure(mapOf("setting" to "value"))

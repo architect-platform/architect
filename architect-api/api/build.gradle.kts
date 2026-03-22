@@ -19,6 +19,8 @@ kotlin { jvmToolchain { languageVersion.set(JavaLanguageVersion.of(17)) } }
 repositories { mavenCentral() }
 
 dependencies {
+  implementation("org.jetbrains.kotlin:kotlin-reflect")
+
   // Test dependencies
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
