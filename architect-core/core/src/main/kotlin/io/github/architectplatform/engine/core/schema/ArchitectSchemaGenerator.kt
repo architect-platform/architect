@@ -92,8 +92,12 @@ object ArchitectSchemaGenerator {
     )
     props.set<ObjectNode>("path", stringPropWithDefault("Local path to the plugin (for type: local)", "."))
     props.set<ObjectNode>("pattern", stringProp("Release asset filename prefix pattern"))
+      props.set<ObjectNode>("registry", stringProp("Registry index URL for type: registry"))
+      props.set<ObjectNode>("url", stringProp("Direct plugin asset URL for type: http"))
+    props.set<ObjectNode>("command", stringProp("Command to execute for type: process"))
 
     node.putArray("required").add("name")
+    node.set<ArrayNode>("allOf", pluginTypeRequirements())
     node.put("additionalProperties", false)
     return node
   }
@@ -146,6 +150,23 @@ object ArchitectSchemaGenerator {
     val arr = node.putArray("enum")
     listOf("github", "local", "registry", "http", "process").forEach { arr.add(it) }
     node.put("default", "github")
+    return node
+  }
+
+  private fun pluginTypeRequirements(): ArrayNode {
+    val allOf = mapper.createArrayNode()
+    allOf.add(typeRequirement(type = "local", field = "path"))
+    allOf.add(typeRequirement(type = "http", field = "url"))
+    allOf.add(typeRequirement(type = "registry", field = "registry"))
+    allOf.add(typeRequirement(type = "process", field = "command"))
+    return allOf
+  }
+
+  private fun typeRequirement(type: String, field: String): ObjectNode {
+    val node = mapper.createObjectNode()
+    val ifNode = node.putObject("if")
+    ifNode.putObject("properties").putObject("type").put("const", type)
+    node.putObject("then").putArray("required").add(field)
     return node
   }
 

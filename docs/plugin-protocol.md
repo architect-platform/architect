@@ -16,6 +16,17 @@ Architect Plugin Protocol v1 (APP v1) defines how Architect runs plugins as subp
 5. The plugin acknowledges `executeTask`, then streams task events as newline-delimited JSON.
 6. Architect sends `shutdown` before terminating the process.
 
+## Declaring a Process Plugin
+
+Use `type: process` with a required `command` field in `architect.yml`:
+
+```yaml
+plugins:
+  - name: my-go-plugin
+    type: process
+    command: "./my-go-plugin"
+```
+
 ## Requests
 
 ### `init`

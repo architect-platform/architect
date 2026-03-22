@@ -5,6 +5,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.test.assertFalse
 
 class ArchitectSchemaGeneratorTest {
 
@@ -58,6 +59,30 @@ class ArchitectSchemaGeneratorTest {
     val required = pluginDef.get("required")
     assertNotNull(required)
     assertTrue(required.any { it.asText() == "name" })
+  }
+
+  @Test
+  fun `plugin config definition includes process command property`() {
+    val schema = ArchitectSchemaGenerator.generate()
+    val pluginDef = schema.get("definitions").get("pluginConfig")
+    val props = pluginDef.get("properties")
+
+    assertNotNull(props.get("command"))
+    assertEquals("string", props.get("command").get("type").asText())
+  }
+
+  @Test
+  fun `plugin config definition requires command when type is process`() {
+    val schema = ArchitectSchemaGenerator.generate()
+    val allOf = schema.get("definitions").get("pluginConfig").get("allOf")
+
+    assertNotNull(allOf)
+    assertTrue(allOf.any {
+      val typeConst = it.get("if")?.get("properties")?.get("type")?.get("const")?.asText()
+      val requiredFields = it.get("then")?.get("required")
+      typeConst == "process" && requiredFields != null && requiredFields.any { field -> field.asText() == "command" }
+    })
+    assertFalse(allOf.isEmpty)
   }
 
   @Test

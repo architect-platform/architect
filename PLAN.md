@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 74/131 tasks completed (57%)
+Overall Progress: 75/131 tasks completed (57%)
 Current Phase: Phase 15 — Language-Agnostic Plugin Protocol
-Last Updated: 2026-03-22T15:31:00Z
+Last Updated: 2026-03-22T15:32:00Z
 
 ---
 
@@ -307,7 +307,7 @@ Engine  ←→  JSON-RPC over stdin/stdout  ←→  Plugin Process (Go, Python, 
   - `init(config: JsonObject)` → `{ ok: true }`
   - `listTasks()` → `Array<TaskDescriptor>`
   - `executeTask(id, args, env)` → streaming events via newline-delimited JSON
-- [ ] 15.2 Add `type: process` to plugin declaration:
+- [x] 15.2 Add `type: process` to plugin declaration: | Finished: 2026-03-22T15:32:00Z | Notes: added `command` to plugin declaration models, updated generated schema and IDE schema bundles to require `command` for `type: process`, documented the YAML shape, and verified with `ArchitectSchemaGeneratorTest` and `ConfigValidatorTest`.
   ```yaml
   plugins:
     - name: my-go-plugin

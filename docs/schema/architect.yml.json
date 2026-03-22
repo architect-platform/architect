@@ -89,9 +89,66 @@
         "pattern" : {
           "type" : "string",
           "description" : "Release asset filename prefix pattern"
+        },
+        "registry" : {
+          "type" : "string",
+          "description" : "Registry index URL for type: registry"
+        },
+        "url" : {
+          "type" : "string",
+          "description" : "Direct plugin asset URL for type: http"
+        },
+        "command" : {
+          "type" : "string",
+          "description" : "Command to execute for type: process"
         }
       },
       "required" : [ "name" ],
+      "allOf" : [ {
+        "if" : {
+          "properties" : {
+            "type" : {
+              "const" : "local"
+            }
+          }
+        },
+        "then" : {
+          "required" : [ "path" ]
+        }
+      }, {
+        "if" : {
+          "properties" : {
+            "type" : {
+              "const" : "http"
+            }
+          }
+        },
+        "then" : {
+          "required" : [ "url" ]
+        }
+      }, {
+        "if" : {
+          "properties" : {
+            "type" : {
+              "const" : "registry"
+            }
+          }
+        },
+        "then" : {
+          "required" : [ "registry" ]
+        }
+      }, {
+        "if" : {
+          "properties" : {
+            "type" : {
+              "const" : "process"
+            }
+          }
+        },
+        "then" : {
+          "required" : [ "command" ]
+        }
+      } ],
       "additionalProperties" : false
     },
     "inlineTask" : {

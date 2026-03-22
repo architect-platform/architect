@@ -121,6 +121,65 @@ class ConfigValidatorTest {
     assertTrue(result.warnings.isEmpty())
   }
 
+  @Test
+  fun `schema validation requires command for process plugins`() {
+    val config = mapOf(
+      "\$schema" to "https://architect.dev/schema/architect.yml.json",
+      "project" to mapOf("name" to "test"),
+      "plugins" to listOf(
+        mapOf(
+          "name" to "my-go-plugin",
+          "type" to "process",
+        ),
+      ),
+    )
+
+    val result = validator.validate(config)
+
+    assertFalse(result.valid)
+    assertTrue(result.errors.any { it.contains("command") })
+  }
+
+  @Test
+  fun `schema validation accepts process plugins with command`() {
+    val config = mapOf(
+      "\$schema" to "https://architect.dev/schema/architect.yml.json",
+      "project" to mapOf("name" to "test"),
+      "plugins" to listOf(
+        mapOf(
+          "name" to "my-go-plugin",
+          "type" to "process",
+          "command" to "./my-go-plugin",
+        ),
+      ),
+    )
+
+    val result = validator.validate(config)
+
+    assertTrue(result.valid)
+    assertTrue(result.errors.isEmpty())
+  }
+
+  @Test
+  fun `schema validation still accepts http plugins with url`() {
+    val config = mapOf(
+      "\$schema" to "https://architect.dev/schema/architect.yml.json",
+      "project" to mapOf("name" to "test"),
+      "plugins" to listOf(
+        mapOf(
+          "name" to "remote-plugin",
+          "type" to "http",
+          "url" to "https://example.com/remote-plugin.jar",
+        ),
+      ),
+    )
+
+    val result = validator.validate(config)
+
+    assertTrue(result.valid)
+    assertTrue(result.errors.isEmpty())
+  }
+
   // ── Line numbers ──────────────────────────────────────────────────
 
   @Test

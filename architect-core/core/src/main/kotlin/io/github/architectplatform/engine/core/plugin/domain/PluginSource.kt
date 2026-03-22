@@ -46,4 +46,5 @@ data class PluginSourceConfig(
     val registry: String? = null,
     val url: String? = null,
     val sha256: String? = null,
+    val command: String? = null,
 )
