@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 11/131 tasks completed (8%)
+Overall Progress: 12/131 tasks completed (9%)
 Current Phase: Phase 7 — Bug Fixes & Tech Debt
-Last Updated: 2026-03-22T00:04:00Z
+Last Updated: 2026-03-22T13:21:46Z
 
 ---
 
@@ -69,7 +69,7 @@ Last Updated: 2026-03-22T00:04:00Z
 - [x] 7.2 **SSE stream termination** — replaced `error(...)` + `try/catch` with `sharedFlow.filter { }.transformWhile { }` that completes cleanly on root COMPLETED/FAILED events. | Finished: 2026-03-22T00:02:00Z
 - [x] 7.3 **ConfigValidator false warnings** — validation now happens after plugin loading; plugin `contextKey` values are collected and passed as `pluginContextKeys` so `gradle`, `git`, `docs`, etc. no longer produce false warnings. | Finished: 2026-03-22T00:03:00Z
 - [x] 7.4 **`ScriptsPlugin` phase resolution** — `parsePhase()` now resolves all three workflows (`CoreWorkflow`, `CodeWorkflow`, `HooksWorkflow`) in priority order, matching `InlineTaskPlugin`. Replaced `println` with idiomatic `runCatching` chain. | Finished: 2026-03-22T00:04:00Z
-- [x] 7.5 **Duplicate GitHub tag resolution** — `ProjectPluginLoader` contains private `resolveLatestTag()` and `compareVersions()` methods that duplicate `GitHubPluginSource`. Extract to a shared `GitHubReleaseResolver` utility and use it from both call sites
+- [x] 7.5 **Duplicate GitHub tag resolution** — extraction verified complete: shared `GitHubReleaseResolver` is used by both `ProjectPluginLoader` and `GitHubPluginSource` in `architect-engine` and mirrored in `architect-core`; `compileKotlin` passes for engine main sources. | Finished: 2026-03-22T13:21:46Z
 - [x] 7.6 **`architect history` without engine** — `HistoryService` writes files to `~/.architect/history/`. `architect history` routes through the engine daemon unnecessarily. Add a direct `LocalHistoryReader` in the CLI that reads these files without an HTTP call, and use it as the primary path (engine endpoint as fallback for remote scenarios)
 - [x] 7.7 **Root `architect.yml` missing plugin fields** — document and fix the root config: add `type: local` and `asset` fields, or establish that the root config is a documentation-only example
 - [x] 7.8 **`ArchitectLauncher` `Runtime.exec()` fragility** — replace `Runtime.getRuntime().exec(arrayOf("architect-engine"))` with `ProcessBuilder` using the resolved binary path from task 6.2
