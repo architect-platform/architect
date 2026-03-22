@@ -71,7 +71,7 @@ Last Updated: 2026-03-22T00:04:00Z
 - [x] 7.4 **`ScriptsPlugin` phase resolution** — `parsePhase()` now resolves all three workflows (`CoreWorkflow`, `CodeWorkflow`, `HooksWorkflow`) in priority order, matching `InlineTaskPlugin`. Replaced `println` with idiomatic `runCatching` chain. | Finished: 2026-03-22T00:04:00Z
 - [x] 7.5 **Duplicate GitHub tag resolution** — `ProjectPluginLoader` contains private `resolveLatestTag()` and `compareVersions()` methods that duplicate `GitHubPluginSource`. Extract to a shared `GitHubReleaseResolver` utility and use it from both call sites
 - [x] 7.6 **`architect history` without engine** — `HistoryService` writes files to `~/.architect/history/`. `architect history` routes through the engine daemon unnecessarily. Add a direct `LocalHistoryReader` in the CLI that reads these files without an HTTP call, and use it as the primary path (engine endpoint as fallback for remote scenarios)
-- [ ] 7.7 **Root `architect.yml` missing plugin fields** — document and fix the root config: add `type: local` and `asset` fields, or establish that the root config is a documentation-only example
+- [x] 7.7 **Root `architect.yml` missing plugin fields** — document and fix the root config: add `type: local` and `asset` fields, or establish that the root config is a documentation-only example
 - [ ] 7.8 **`ArchitectLauncher` `Runtime.exec()` fragility** — replace `Runtime.getRuntime().exec(arrayOf("architect-engine"))` with `ProcessBuilder` using the resolved binary path from task 6.2
 
 ### Acceptance Criteria

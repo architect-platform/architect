@@ -4,11 +4,23 @@ project:
 
 plugins:
   - name: docs-architected
+    type: github
     repo: architect-platform/architect
+    version: latest
+    asset: docs-architected.jar
+    pattern: "docs-architected-"
   - name: git-architected
+    type: github
     repo: architect-platform/architect
+    version: latest
+    asset: git-architected.jar
+    pattern: "git-architected-"
   - name: github-architected
+    type: github
     repo: architect-platform/architect
+    version: latest
+    asset: github-architected.jar
+    pattern: "github-architected-"
 
 # Documentation configuration with auto-discovery
 docs:
