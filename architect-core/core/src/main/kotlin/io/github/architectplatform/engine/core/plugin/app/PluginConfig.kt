@@ -9,5 +9,8 @@ data class PluginConfig(
     val path: String = ".",
     val owner: String = "architect-platform",
     val repo: String = "$owner/$name",
-    val pattern: String = "$name-"
+    val pattern: String = "$name-",
+    val registry: String? = null,
+    val url: String? = null,
+    val sha256: String? = null,
 )

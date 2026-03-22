@@ -183,6 +183,11 @@ class ArchitectLauncher(
       return
     }
 
+    if (command == "plugin") {
+      handlePluginCommand()
+      return
+    }
+
     val useEmbeddedExecution = embedded || (noDaemon && !engineHealthChecker.isRunning())
     if (useEmbeddedExecution) {
       runEmbeddedMode()
@@ -486,6 +491,83 @@ class ArchitectLauncher(
     watchService.start() // blocks until stop() is called
   }
 
+  private fun handlePluginCommand() {
+    val subCommand = args.getOrNull(1)
+    when (subCommand) {
+      "search" -> {
+        val query = args.getOrNull(2)
+        if (query == null) {
+          println("Usage: architect plugin search <query>")
+          exitProcess(1)
+        }
+        val registryUrl = DEFAULT_REGISTRY_URL
+        try {
+          val fetcher = io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()
+          val mapper = com.fasterxml.jackson.databind.ObjectMapper()
+            .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+          val registryJson = fetcher.fetchText(registryUrl)
+          val registry = mapper.readValue(registryJson, io.github.architectplatform.engine.core.plugin.infra.PluginRegistry::class.java)
+          val lowerQuery = query.lowercase()
+          val results = registry.plugins.filter {
+            it.id.lowercase().contains(lowerQuery) ||
+              (it.description?.lowercase()?.contains(lowerQuery) == true)
+          }
+          if (results.isEmpty()) {
+            println("No plugins found matching '$query'")
+            return
+          }
+          if (json) {
+            println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(results))
+          } else {
+            println()
+            println("━".repeat(60))
+            println("🔍 Plugin Search: $query")
+            println("━".repeat(60))
+            val fmt = "  %-30s  %-10s  %s"
+            println(fmt.format("ID", "VERSION", "DESCRIPTION"))
+            println("  ${"─".repeat(56)}")
+            results.forEach { p ->
+              println(fmt.format(p.id.take(30), p.version.take(10), (p.description ?: "").take(20)))
+            }
+            println()
+          }
+        } catch (e: Exception) {
+          println("Failed to search registry: ${e.message}")
+          exitProcess(1)
+        }
+      }
+      "install" -> {
+        val pluginId = args.getOrNull(2)
+        if (pluginId == null) {
+          println("Usage: architect plugin install <plugin-id>")
+          exitProcess(1)
+        }
+        val projectPath = System.getProperty("user.dir")
+        val configFile = java.io.File(projectPath, "architect.yml")
+        if (!configFile.exists()) {
+          println("No architect.yml found in $projectPath")
+          exitProcess(1)
+        }
+        val content = configFile.readText()
+        val pluginEntry = "\n  - name: $pluginId"
+        if (content.contains("plugins:")) {
+          configFile.writeText(content.replaceFirst("plugins:", "plugins:$pluginEntry"))
+        } else {
+          configFile.appendText("\nplugins:$pluginEntry\n")
+        }
+        println("✅ Added plugin '$pluginId' to architect.yml")
+      }
+      else -> {
+        println("Usage: architect plugin <search|install> [args]")
+        println()
+        println("Commands:")
+        println("  search <query>       Search the plugin registry")
+        println("  install <plugin-id>  Add a plugin to architect.yml")
+        exitProcess(1)
+      }
+    }
+  }
+
   private fun printPlan(plan: TaskPlanDTO) {
     println()
     println("━".repeat(80))
@@ -697,6 +779,8 @@ class ArchitectLauncher(
   }
 
   companion object {
+    private const val DEFAULT_REGISTRY_URL = "https://registry.architect.dev/registry.json"
+
     /**
      * Application entry point.
      *

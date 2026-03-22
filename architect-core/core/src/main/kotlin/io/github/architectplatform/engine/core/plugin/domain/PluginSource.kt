@@ -42,5 +42,8 @@ data class PluginSourceConfig(
     val asset: String? = null,
     val path: String? = null,
     val pattern: String? = null,
-    val baseDir: String? = null
+    val baseDir: String? = null,
+    val registry: String? = null,
+    val url: String? = null,
+    val sha256: String? = null,
 )

@@ -6,7 +6,7 @@
 ---
 
 ## Status
-Overall Progress: 58/131 tasks completed (44%)
+Overall Progress: 68/131 tasks completed (52%)
 Current Phase: Phase 12 — Environment Profiles
 Last Updated: 2026-03-22T15:30:00Z
 
@@ -231,7 +231,7 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 
 ### Tasks
 
-- [ ] 13.1 Define `PluginRegistryProtocol` — a standard `registry.json` format hosted at any HTTP URL:
+- [x] 13.1 Define `PluginRegistryProtocol` — a standard `registry.json` format hosted at any HTTP URL:
   ```json
   {
     "plugins": [
@@ -239,7 +239,7 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
     ]
   }
   ```
-- [ ] 13.2 Add `type: registry` plugin source in `architect.yml`:
+- [x] 13.2 Add `type: registry` plugin source in `architect.yml`:
   ```yaml
   plugins:
     - name: my-plugin
@@ -247,20 +247,20 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
       registry: https://plugins.example.com/registry.json
       version: "^1.0.0"
   ```
-- [ ] 13.3 Implement `RegistryPluginSource` — fetches `registry.json`, resolves semver constraint, downloads JAR
-- [ ] 13.4 Add `type: http` for direct JAR URL resolution (no registry):
+- [x] 13.3 Implement `RegistryPluginSource` — fetches `registry.json`, resolves semver constraint, downloads JAR
+- [x] 13.4 Add `type: http` for direct JAR URL resolution (no registry):
   ```yaml
   plugins:
     - name: my-plugin
       type: http
       url: https://example.com/my-plugin-1.0.0.jar
   ```
-- [ ] 13.5 Semver constraint resolution (`^1.0.0`, `~1.2.0`, `>=1.0.0 <2.0.0`) using a pure Kotlin semver library
-- [ ] 13.6 **Plugin integrity verification** — add optional `sha256` field to plugin declaration; fail if downloaded JAR hash does not match
-- [ ] 13.7 **Default public registry** at `https://registry.architect.dev/` (to be hosted). Local stub for tests.
-- [ ] 13.8 `architect plugin search <query>` — searches the public registry
-- [ ] 13.9 `architect plugin install <plugin-id>` — adds plugin to `architect.yml`
-- [ ] 13.10 Write `RegistryPluginSourceTest`
+- [x] 13.5 Semver constraint resolution (`^1.0.0`, `~1.2.0`, `>=1.0.0 <2.0.0`) using a pure Kotlin semver library
+- [x] 13.6 **Plugin integrity verification** — add optional `sha256` field to plugin declaration; fail if downloaded JAR hash does not match
+- [x] 13.7 **Default public registry** at `https://registry.architect.dev/` (to be hosted). Local stub for tests.
+- [x] 13.8 `architect plugin search <query>` — searches the public registry
+- [x] 13.9 `architect plugin install <plugin-id>` — adds plugin to `architect.yml`
+- [x] 13.10 Write `RegistryPluginSourceTest`
 
 ### Acceptance Criteria
 

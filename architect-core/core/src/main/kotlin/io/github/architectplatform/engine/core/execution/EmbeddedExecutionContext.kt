@@ -11,7 +11,9 @@ import io.github.architectplatform.engine.core.plugin.app.SpiPluginLoader
 import io.github.architectplatform.engine.core.plugin.infra.CachedPluginDownloader
 import io.github.architectplatform.engine.core.plugin.infra.GitHubPluginSource
 import io.github.architectplatform.engine.core.plugin.infra.GitHubReleaseResolver
+import io.github.architectplatform.engine.core.plugin.infra.HttpPluginSource
 import io.github.architectplatform.engine.core.plugin.infra.LocalPluginSource
+import io.github.architectplatform.engine.core.plugin.infra.RegistryPluginSource
 import io.github.architectplatform.engine.core.project.app.ApplicationEnvironment
 import io.github.architectplatform.engine.core.project.app.ConfigLoader
 import io.github.architectplatform.engine.core.project.app.ConfigValidator
@@ -101,6 +103,8 @@ class EmbeddedExecutionContext private constructor(
           listOf(
             LocalPluginSource(),
             GitHubPluginSource(downloader, releaseResolver),
+            RegistryPluginSource(remoteContentFetcher, downloader),
+            HttpPluginSource(downloader),
           ),
         )
 
