@@ -19,6 +19,7 @@ architect-cli/build
 .idea/
 .idea
 .vscode/
+.metals/
 .project
 .settings
 .classpath
