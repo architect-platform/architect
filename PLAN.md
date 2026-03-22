@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 21/131 tasks completed (16%)
-Current Phase: Phase 8 — Embedded Execution Mode
-Last Updated: 2026-03-22T13:49:19Z
+Overall Progress: 22/131 tasks completed (17%)
+Current Phase: Phase 9 — Enhanced Config Validation & Schema
+Last Updated: 2026-03-22T13:50:57Z
 
 ---
 
@@ -110,7 +110,7 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 - [x] 8.7 `EmbeddedConsoleUI` — same output contract as `ConsoleUI` but driven by in-process events | Finished: 2026-03-22T13:45:30Z | Notes: added `EmbeddedConsoleUI` delegating to `ConsoleUI` with identical completion/failure contract and wired embedded execution path to stream in-process `ArchitectEvent` objects into it; verified with `./gradlew compileKotlin --console=plain` in `architect-cli/cli`.
 - [x] 8.8 Update `architect engine install` to make the engine optional for basic usage; document that embedded mode exists | Finished: 2026-03-22T13:47:27Z | Notes: updated CLI/docs guidance to present engine install as optional for basic workflows, added embedded-mode quick-start examples (`--embedded`, `--no-daemon`), and updated install command messaging in `ArchitectLauncher`; verified CLI compile via `./gradlew -q compileKotlin`.
 - [x] 8.9 Write comprehensive tests for `EmbeddedExecutionContext` wiring | Finished: 2026-03-22T13:49:19Z | Notes: added `EmbeddedExecutionContextTest` covering service wiring, plugin source registry wiring, environment service availability, and embedded inline-task execution with emitted events; updated context wiring to expose `CommandExecutor` for inline tasks; verified with `./gradlew test --tests '*EmbeddedExecutionContextTest'` in `architect-core/core`.
-- [ ] 8.10 Write end-to-end embedded-mode integration test: load a real plugin, run a task, assert result
+- [x] 8.10 Write end-to-end embedded-mode integration test: load a real plugin, run a task, assert result | Finished: 2026-03-22T13:50:57Z | Notes: added `EmbeddedModeIntegrationTest` that creates a real project config, verifies real `inline-tasks` plugin loading via `ProjectService`, executes an inline task through `TaskExecutor` in embedded mode, and asserts successful completion; verified with `./gradlew test --tests '*Embedded*Test'` in `architect-core/core`.
 
 ### Acceptance Criteria
 
