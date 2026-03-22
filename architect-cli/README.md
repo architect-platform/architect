@@ -39,6 +39,10 @@ architect
 
 # Execute a specific task
 architect <task-name> [args...]
+
+# Scaffold a new plugin in the current directory
+architect plugin create my-plugin
+architect plugin create my-process-plugin typescript
 ```
 
 ### Engine Management

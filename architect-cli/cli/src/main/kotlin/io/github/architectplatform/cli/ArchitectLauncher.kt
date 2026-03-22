@@ -5,6 +5,8 @@ import io.github.architectplatform.cli.dto.HistoryRecordDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.history.LocalHistoryReader
 import io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor
+import io.github.architectplatform.cli.plugin.PluginScaffolder
+import io.github.architectplatform.cli.plugin.PluginTemplate
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.cli.engine.EngineHealthChecker
@@ -46,6 +48,7 @@ class ArchitectLauncher(
     private val localHistoryReader: LocalHistoryReader,
   private val embeddedTaskExecutor: EmbeddedTaskExecutor,
 ) : Runnable {
+  private val pluginScaffolder = PluginScaffolder()
 
   @Property(name = "architect.engine.startup-timeout-seconds", defaultValue = "30")
   var startupTimeoutSeconds: Int = 30
@@ -661,6 +664,31 @@ class ArchitectLauncher(
   private fun handlePluginCommand() {
     val subCommand = args.getOrNull(1)
     when (subCommand) {
+      "create" -> {
+        val pluginName = args.getOrNull(2)
+        if (pluginName == null) {
+          println("Usage: architect plugin create <name> [template|--template <template>]")
+          exitProcess(1)
+        }
+
+        val template = resolvePluginTemplate(args)
+        if (template == null) {
+          println("Unknown template. Supported templates: kotlin, typescript, go")
+          exitProcess(1)
+        }
+
+        try {
+          val scaffoldPath = pluginScaffolder.scaffold(
+            name = pluginName,
+            template = template,
+            targetRoot = java.nio.file.Path.of(System.getProperty("user.dir")),
+          )
+          println("✅ Created ${template.id} plugin scaffold at $scaffoldPath")
+        } catch (e: Exception) {
+          println("Failed to create plugin scaffold: ${e.message}")
+          exitProcess(1)
+        }
+      }
       "search" -> {
         val query = args.getOrNull(2)
         if (query == null) {
@@ -725,14 +753,37 @@ class ArchitectLauncher(
         println("✅ Added plugin '$pluginId' to architect.yml")
       }
       else -> {
-        println("Usage: architect plugin <search|install> [args]")
+        println("Usage: architect plugin <create|search|install> [args]")
         println()
         println("Commands:")
+        println("  create <name> [template]  Scaffold a new plugin (kotlin, typescript, go)")
         println("  search <query>       Search the plugin registry")
         println("  install <plugin-id>  Add a plugin to architect.yml")
         exitProcess(1)
       }
     }
+  }
+
+  private fun resolvePluginTemplate(arguments: List<String>): PluginTemplate? {
+    var positionalTemplate: String? = null
+    var index = 3
+    while (index < arguments.size) {
+      val argument = arguments[index]
+      when {
+        argument == "--template" -> {
+          return arguments.getOrNull(index + 1)?.let(PluginTemplate::from)
+        }
+        argument.startsWith("--template=") -> {
+          return PluginTemplate.from(argument.substringAfter('='))
+        }
+        !argument.startsWith("--") && positionalTemplate == null -> {
+          positionalTemplate = argument
+        }
+      }
+      index += 1
+    }
+
+    return PluginTemplate.from(positionalTemplate ?: "kotlin")
   }
 
   private fun handleCacheCommand() {
