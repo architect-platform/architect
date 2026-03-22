@@ -123,7 +123,7 @@ class ArchitectLauncherTest {
   // ─── Helpers ─────────────────────────────────────────────────────────────
 
   private fun launcher(healthChecker: EngineHealthChecker = stubHealthChecker(running = true)): ArchitectLauncher {
-    return ArchitectLauncher(StubEngineCommandClient(), healthChecker, io.github.architectplatform.cli.history.LocalHistoryReader())
+    return ArchitectLauncher(StubEngineCommandClient(), healthChecker, io.github.architectplatform.cli.history.LocalHistoryReader(), io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor(io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()))
   }
 
   private fun stubHealthChecker(running: Boolean) = object : EngineHealthChecker() {

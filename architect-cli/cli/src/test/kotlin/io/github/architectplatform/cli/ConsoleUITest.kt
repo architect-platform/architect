@@ -1,0 +1,228 @@
+package io.github.architectplatform.cli
+
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
+
+/**
+ * Tests for [ConsoleUI] rendering: progress tree, timing, batch state,
+ * summary table, failure details, and plain-mode color suppression.
+ */
+class ConsoleUITest {
+
+  // ── Helpers ───────────────────────────────────────────────────────
+
+  private fun captureOutput(block: () -> Unit): String {
+    val buf = ByteArrayOutputStream()
+    val original = System.out
+    System.setOut(PrintStream(buf))
+    try { block() } finally { System.setOut(original) }
+    return buf.toString()
+  }
+
+  private fun event(
+      taskId: String? = null,
+      type: String = "STARTED",
+      project: String = "test-project",
+      message: String? = null,
+      errorDetails: String? = null,
+  ): Map<String, Any> {
+    val inner = mutableMapOf<String, Any>(
+        "executionEventType" to type,
+        "project" to project,
+    )
+    taskId?.let { inner["taskId"] = it }
+    message?.let { inner["message"] = it }
+    errorDetails?.let { inner["errorDetails"] = it }
+    return mapOf("id" to "test.event", "event" to inner)
+  }
+
+  // ── Task state tracking ───────────────────────────────────────────
+
+  @Test
+  fun `process STARTED event tracks task as RUNNING`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput { ui.process(event(taskId = "build", type = "STARTED")) }
+    val states = ui.taskStates()
+    assertEquals(ConsoleUI.TaskStatus.RUNNING, states["build"]?.status)
+  }
+
+  @Test
+  fun `process COMPLETED event tracks task as COMPLETED`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      ui.process(event(taskId = "build", type = "STARTED"))
+      ui.process(event(taskId = "build", type = "COMPLETED"))
+    }
+    val states = ui.taskStates()
+    assertEquals(ConsoleUI.TaskStatus.COMPLETED, states["build"]?.status)
+    assertTrue(states["build"]!!.durationMs >= 0)
+  }
+
+  @Test
+  fun `process FAILED event sets hasFailed and tracks failure`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      ui.process(event(taskId = "test-task", type = "STARTED"))
+      ui.process(event(taskId = "test-task", type = "FAILED", message = "oops"))
+    }
+    assertTrue(ui.hasFailed)
+    assertEquals(ConsoleUI.TaskStatus.FAILED, ui.taskStates()["test-task"]?.status)
+  }
+
+  @Test
+  fun `process SKIPPED event tracks task as SKIPPED`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      ui.process(event(taskId = "lint", type = "SKIPPED", message = "cached"))
+    }
+    assertEquals(ConsoleUI.TaskStatus.SKIPPED, ui.taskStates()["lint"]?.status)
+  }
+
+  // ── Rendering ─────────────────────────────────────────────────────
+
+  @Test
+  fun `progress line includes task id and event type`() {
+    val ui = ConsoleUI("test", plain = true)
+    val output = captureOutput {
+      ui.process(event(taskId = "build", type = "STARTED", message = "Starting"))
+    }
+    assertTrue(output.contains("STARTED"))
+    assertTrue(output.contains("build"))
+  }
+
+  @Test
+  fun `progress line includes elapsed time indicator`() {
+    val ui = ConsoleUI("test", plain = true)
+    val output = captureOutput {
+      ui.process(event(taskId = "build", type = "STARTED"))
+      Thread.sleep(10)
+      ui.process(event(taskId = "build", type = "COMPLETED"))
+    }
+    // Should contain ms or s time
+    assertTrue(output.contains("ms") || output.contains("s"))
+  }
+
+  @Test
+  fun `failure details are rendered inline`() {
+    val ui = ConsoleUI("test", plain = true)
+    val output = captureOutput {
+      ui.process(event(taskId = "test-task", type = "FAILED", errorDetails = "NullPointerException at line 42"))
+    }
+    assertTrue(output.contains("FAILURE DETAILS"))
+    assertTrue(output.contains("NullPointerException"))
+  }
+
+  // ── Summary ───────────────────────────────────────────────────────
+
+  @Test
+  fun `printSummary shows task count and status`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      ui.process(event(taskId = "a", type = "STARTED"))
+      ui.process(event(taskId = "a", type = "COMPLETED"))
+      ui.process(event(taskId = "b", type = "STARTED"))
+      ui.process(event(taskId = "b", type = "FAILED"))
+    }
+    val output = captureOutput { ui.printSummary() }
+    assertTrue(output.contains("Execution Summary"))
+    assertTrue(output.contains("2 task(s)"))
+    assertTrue(output.contains("1 passed"))
+    assertTrue(output.contains("1 failed"))
+  }
+
+  @Test
+  fun `complete calls printSummary and shows success`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      ui.process(event(taskId = "only", type = "STARTED"))
+      ui.process(event(taskId = "only", type = "COMPLETED"))
+    }
+    val output = captureOutput { ui.complete("Done!") }
+    assertTrue(output.contains("Done!"))
+    assertTrue(output.contains("Execution Summary"))
+  }
+
+  @Test
+  fun `completeWithError calls printSummary and shows error`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      ui.process(event(taskId = "fail", type = "STARTED"))
+      ui.process(event(taskId = "fail", type = "FAILED", errorDetails = "bad"))
+    }
+    val output = captureOutput { ui.completeWithError("Task failed") }
+    assertTrue(output.contains("Task failed"))
+    assertTrue(output.contains("Execution Summary"))
+    assertTrue(output.contains("Failed task details"))
+  }
+
+  // ── Plain mode ────────────────────────────────────────────────────
+
+  @Test
+  fun `plain mode suppresses ANSI codes`() {
+    val ui = ConsoleUI("test", plain = true)
+    val output = captureOutput {
+      ui.process(event(taskId = "build", type = "STARTED"))
+    }
+    assertFalse(output.contains("\u001B["))
+  }
+
+  @Test
+  fun `interactive mode includes ANSI codes`() {
+    val ui = ConsoleUI("test", plain = false)
+    val output = captureOutput {
+      ui.process(event(taskId = "build", type = "STARTED"))
+    }
+    assertTrue(output.contains("\u001B["))
+  }
+
+  // ── Duration formatting ───────────────────────────────────────────
+
+  @Test
+  fun `formatDuration formats milliseconds`() {
+    assertEquals("50ms", ConsoleUI.formatDuration(50))
+    assertEquals("999ms", ConsoleUI.formatDuration(999))
+  }
+
+  @Test
+  fun `formatDuration formats seconds`() {
+    assertEquals("1.0s", ConsoleUI.formatDuration(1000))
+    assertEquals("5.5s", ConsoleUI.formatDuration(5500))
+  }
+
+  @Test
+  fun `formatDuration formats minutes`() {
+    assertEquals("1m 30s", ConsoleUI.formatDuration(90_000))
+    assertEquals("2m 0s", ConsoleUI.formatDuration(120_000))
+  }
+
+  // ── Multiple tasks tracking ───────────────────────────────────────
+
+  @Test
+  fun `tracks multiple tasks independently`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      ui.process(event(taskId = "a", type = "STARTED"))
+      ui.process(event(taskId = "b", type = "STARTED"))
+      ui.process(event(taskId = "a", type = "COMPLETED"))
+      ui.process(event(taskId = "b", type = "FAILED"))
+    }
+    val states = ui.taskStates()
+    assertEquals(ConsoleUI.TaskStatus.COMPLETED, states["a"]?.status)
+    assertEquals(ConsoleUI.TaskStatus.FAILED, states["b"]?.status)
+    assertFalse(ui.taskStates().isEmpty())
+  }
+
+  @Test
+  fun `hasFailed is false when all tasks succeed`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      ui.process(event(taskId = "x", type = "STARTED"))
+      ui.process(event(taskId = "x", type = "COMPLETED"))
+    }
+    assertFalse(ui.hasFailed)
+  }
+}

@@ -6,7 +6,7 @@
 ---
 
 ## Status
-Overall Progress: 42/131 tasks completed (32%)
+Overall Progress: 43/131 tasks completed (33%)
 Current Phase: Phase 10 — Rich CLI Output & Developer UX
 Last Updated: 2026-03-22T14:13:00Z
 
@@ -170,7 +170,7 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 - [x] 10.9 **`--json` output flag** — all commands support `--json` for scripting. Replaces `--plain` for structured output.
 - [x] 10.10 **Color themes** — respect `NO_COLOR`, `TERM`, and a `--no-color` flag. Auto-detect CI to disable colors.
 - [x] 10.11 **`architect --version`** — print CLI, engine, and API versions
-- [ ] 10.12 Write tests for all new `ConsoleUI` rendering paths
+- [x] 10.12 Write tests for all new `ConsoleUI` rendering paths (17 tests)
 
 ### Acceptance Criteria
 
