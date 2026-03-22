@@ -124,6 +124,10 @@ architect docs-publish
     └──────────────┘          └──────────────┘
 \`\`\`
 
+### Language-Agnostic Plugins
+
+Architect process plugins use the versioned [Architect Plugin Protocol v1](plugin-protocol.md), a JSON-RPC 2.0 protocol over stdin/stdout that allows plugins to be implemented in TypeScript, Go, Python, or any other language that can spawn a process.
+
 ## Workflow Phases
 
 Architect organizes tasks into workflow phases:

@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 73/131 tasks completed (56%)
-Current Phase: Phase 12 — Environment Profiles
-Last Updated: 2026-03-22T15:30:00Z
+Overall Progress: 74/131 tasks completed (57%)
+Current Phase: Phase 15 — Language-Agnostic Plugin Protocol
+Last Updated: 2026-03-22T15:31:00Z
 
 ---
 
@@ -303,7 +303,7 @@ Engine  ←→  JSON-RPC over stdin/stdout  ←→  Plugin Process (Go, Python, 
 
 ### Tasks
 
-- [ ] 15.1 Define **Architect Plugin Protocol v1** (APP v1): a JSON-RPC 2.0 based protocol over stdin/stdout with methods:
+- [x] 15.1 Define **Architect Plugin Protocol v1** (APP v1): a JSON-RPC 2.0 based protocol over stdin/stdout with methods: | Finished: 2026-03-22T15:31:00Z | Notes: defined versioned APP v1 request and event contracts in `PluginProtocol.kt`, added standalone protocol reference in `docs/plugin-protocol.md`, linked it from root docs, and verified with `PluginProtocolTest`.
   - `init(config: JsonObject)` → `{ ok: true }`
   - `listTasks()` → `Array<TaskDescriptor>`
   - `executeTask(id, args, env)` → streaming events via newline-delimited JSON
