@@ -133,6 +133,10 @@ class ProjectService(
     val validation = configValidator.validate(projectConfig, pluginContextKeys)
     validation.warnings.forEach { logger.warn("Project $name: $it") }
     validation.errors.forEach { logger.error("Project $name: $it") }
+    if (validation.errors.isNotEmpty()) {
+      throw ConfigValidationException(
+          "Invalid architect.yml for project $name:\n${validation.errors.joinToString("\n")}")
+    }
 
     return Project(name, path, projectContext, plugins, subProjects, taskRegistry)
   }

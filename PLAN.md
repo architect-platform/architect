@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 127/131 tasks completed (96%)
+Overall Progress: 128/131 tasks completed (97%)
 Current Phase: Phase 21 — Testing — Coverage to >85%
-Last Updated: 2026-03-22T20:21:53Z
+Last Updated: 2026-03-22T21:00:41Z
 
 ---
 
@@ -484,7 +484,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 21.5 `HistoryServiceTest` — write record, read all (sorted), read by project, limit, directory creation, JSON round-trip | Finished: 2026-03-22T20:10:00Z | Notes: 7 tests covering single record write/read, sorted retrieval (newest first), limit enforcement, project filtering, JSON field round-trip, empty results, and non-matching project.
 - [x] 21.6 `ConfigValidatorTest` — required field missing, unknown key warning, plugin key validation, line numbers in errors | Finished: 2026-03-22T20:20:40Z | Notes: verified focused coverage for required and blank `project.name`, unknown top-level key warnings, plugin schema validation and context-key recognition, plus line-number diagnostics; confirmed with `./gradlew test --tests '*ConfigValidatorTest'` in `architect-core/core`.
 - [x] 21.7 `TaskDependencyResolverTest` — expand existing; add: children resolution, batch assignment for diamond graph, large graph performance test | Finished: 2026-03-22T20:21:53Z | Notes: added coverage for resolving child tasks and composite child ordering, explicit parallel batch assignment on a diamond dependency graph, and a bounded 1,000-task topological-sort performance check; confirmed with `./gradlew test --tests '*TaskDependencyResolverTest'` in `architect-engine/engine`.
-- [ ] 21.8 `ProjectServiceTest` — loadProject round-trip with inline tasks, subproject discovery, validation exception on invalid config
+- [x] 21.8 `ProjectServiceTest` — loadProject round-trip with inline tasks, subproject discovery, validation exception on invalid config | Finished: 2026-03-22T21:00:41Z | Notes: added core-level ProjectService coverage for inline-task plugin round-trip loading, recursive subproject discovery, and invalid-config rejection; tightened ProjectService in both core and engine to throw `ConfigValidationException` when validation errors are present; confirmed with focused `ProjectServiceTest` runs in both `architect-core/core` and `architect-engine/engine`.
 - [ ] 21.9 `BashCommandExecutorTest` — expand with: timeout enforcement, non-zero exit code, environment variable injection, working directory
 - [ ] 21.10 `ExecutionApiControllerTest` — SSE stream: verify events are received, stream terminates on COMPLETED, stream terminates on FAILED
 - [ ] 21.11 `TaskCacheTest` — expand: concurrent reads, cache invalidation, TTL expiry
