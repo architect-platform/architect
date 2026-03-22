@@ -16,6 +16,7 @@ plugins {
 repositories { mavenCentral() }
 
 dependencies {
+  implementation("io.github.architectplatform:api:2.1.0")
   implementation("io.github.architectplatform:architect-core:1.6.1")
   kapt("info.picocli:picocli-codegen")
   kapt("io.micronaut.serde:micronaut-serde-processor")

@@ -4,6 +4,7 @@ import io.github.architectplatform.cli.client.EngineCommandClient
 import io.github.architectplatform.cli.dto.HistoryRecordDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.history.LocalHistoryReader
+import io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.cli.engine.EngineHealthChecker
@@ -40,6 +41,7 @@ class ArchitectLauncher(
     private val engineCommandClient: EngineCommandClient,
     private val engineHealthChecker: EngineHealthChecker,
     private val localHistoryReader: LocalHistoryReader,
+  private val embeddedTaskExecutor: EmbeddedTaskExecutor,
 ) : Runnable {
 
   @Property(name = "architect.engine.startup-timeout-seconds", defaultValue = "30")
@@ -127,6 +129,12 @@ class ArchitectLauncher(
       return
     }
 
+    val useEmbeddedExecution = embedded || (noDaemon && !engineHealthChecker.isRunning())
+    if (useEmbeddedExecution) {
+      runEmbeddedMode()
+      return
+    }
+
     ensureEngineRunning()
 
     val projectPath = System.getProperty("user.dir")
@@ -163,6 +171,42 @@ class ArchitectLauncher(
     // Drop first arg as it's the command itself (included by PicoCLI)
     val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
     executeTask(projectName, command!!, taskArgs)
+  }
+
+  private fun runEmbeddedMode() {
+    val projectPath = System.getProperty("user.dir")
+    val projectName = extractProjectName(projectPath)
+
+    if (!plain) {
+      println("⚙️  Using embedded mode")
+    }
+
+    if (command == null) {
+      val commands = embeddedTaskExecutor.listTasks(projectName, projectPath)
+      println("🧭 Available tasks:")
+      commands.forEach { println(" - $it") }
+      return
+    }
+
+    if (command == "plan") {
+      val taskName = args.getOrNull(1)
+      if (taskName == null) {
+        println("Usage: architect plan <task>")
+        exitProcess(1)
+      }
+      printPlan(embeddedTaskExecutor.plan(projectName, projectPath, taskName))
+      return
+    }
+
+    if (command == "validate") {
+      val validation = embeddedTaskExecutor.validate(projectName, projectPath)
+      printValidation(projectName, validation)
+      if (!validation.valid) exitProcess(1)
+      return
+    }
+
+    val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
+    executeTaskEmbedded(projectName, projectPath, command!!, taskArgs)
   }
 
   /**
@@ -279,6 +323,54 @@ class ArchitectLauncher(
         println("Duration: ${"%.1f".format(duration)}s")
         exitProcess(1)
       }
+    }
+  }
+
+  private fun executeTaskEmbedded(
+      projectName: String,
+      projectPath: String,
+      taskName: String,
+      taskArgs: List<String>,
+  ) {
+    val ui = ConsoleUI(taskName, plain)
+
+    println()
+    println("━".repeat(80))
+    println("▶️  Executing task: $taskName")
+    println("📦 Project: $projectName")
+    println("━".repeat(80))
+    println()
+
+    val startTime = System.currentTimeMillis()
+    try {
+      val result = embeddedTaskExecutor.execute(
+          projectName = projectName,
+          projectPath = projectPath,
+          taskName = taskName,
+          taskArgs = taskArgs,
+      ) { event ->
+        ui.process(event)
+      }
+
+      val duration = (System.currentTimeMillis() - startTime) / 1000.0
+      if (!result.success || ui.hasFailed) {
+        ui.completeWithError("Task failed (duration: ${"%.1f".format(duration)}s)")
+        exitProcess(1)
+      } else {
+        ui.complete("Task completed successfully (duration: ${"%.1f".format(duration)}s)")
+        exitProcess(0)
+      }
+    } catch (e: Exception) {
+      val duration = (System.currentTimeMillis() - startTime) / 1000.0
+      println()
+      println("❌ Task execution aborted")
+      println("Error: ${e.message}")
+      println()
+      println("Stack Trace:")
+      println(e.stackTraceToString())
+      println()
+      println("Duration: ${"%.1f".format(duration)}s")
+      exitProcess(1)
     }
   }
 
