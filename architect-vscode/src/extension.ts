@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { TaskTreeProvider, TaskItem } from "./taskTreeProvider";
+import { GraphPanel } from "./graphPanel";
 
 let outputChannel: vscode.OutputChannel;
 
@@ -38,6 +39,10 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand("architect.refreshTasks", () => {
       taskProvider.refresh();
+    }),
+
+    vscode.commands.registerCommand("architect.showGraph", () => {
+      GraphPanel.show(context);
     }),
 
     outputChannel

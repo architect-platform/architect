@@ -57,6 +57,11 @@
         "command": "architect.refreshTasks",
         "title": "Architect: Refresh Tasks",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "architect.showGraph",
+        "title": "Architect: Show Task Graph",
+        "icon": "$(type-hierarchy)"
       }
     ],
     "viewsContainers": {
@@ -86,11 +91,20 @@
         {
           "command": "architect.planTask",
           "when": "view == architectTasks"
+        },
+        {
+          "command": "architect.showGraph",
+          "when": "view == architectTasks"
         }
       ],
       "view/title": [
         {
           "command": "architect.refreshTasks",
+          "when": "view == architectTasks",
+          "group": "navigation"
+        },
+        {
+          "command": "architect.showGraph",
           "when": "view == architectTasks",
           "group": "navigation"
         }

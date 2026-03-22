@@ -6,8 +6,8 @@
 ---
 
 ## Status
-Overall Progress: 119/131 tasks completed (91%)
-Current Phase: Phase 20 — Project Graph & Visualization
+Overall Progress: 120/131 tasks completed (92%)
+Current Phase: Phase 21 — Testing — Coverage to >85%
 Last Updated: 2026-03-22T20:05:04Z
 
 ---
@@ -459,7 +459,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 20.3 `architect graph <task>` — subgraph for a specific task and its dependencies | Finished: 2026-03-22T19:54:44Z | Notes: extended graph argument parsing so `architect graph <task>` renders only that task's dependency subgraph for both DOT and `--open` HTML output; verified with focused launcher tests using task-specific graph fixtures.
 - [x] 20.4 `architect graph --projects` — shows the monorepo project graph (project ↔ project dependency relationships) | Finished: 2026-03-22T19:58:00Z | Notes: added `--projects` graph mode backed by the existing embedded `ProjectDependencyGraph` builder, with DOT and Mermaid HTML renderers plus focused renderer and launcher test coverage.
 - [x] 20.5 `architect plan <task> --tree` — ASCII tree rendering in the terminal (already partially done in plan mode; make it richer with batch groups and timing estimates) | Finished: 2026-03-22T20:05:04Z | Notes: added `--tree` flag to plan command with `TaskPlanTreeRenderer` that renders dependency hierarchy as an indented ASCII tree with batch numbers; wired into both engine and embedded modes with `parsePlanOptions()`; verified with focused renderer and launcher tests.
-- [ ] 20.6 Integrate graph rendering into the VS Code extension (see Phase 9.6) — a panel that renders the live task graph
+- [x] 20.6 Integrate graph rendering into the VS Code extension (see Phase 9.6) — a panel that renders the live task graph | Finished: 2026-03-22T20:05:04Z | Notes: added `architect.showGraph` command with `GraphPanel` webview that runs `architect graph`, converts DOT to Mermaid, and renders in a side panel; auto-refreshes on `architect.yml` changes via file watcher; accessible from command palette and task tree view toolbar.
 
 ### Acceptance Criteria
 
