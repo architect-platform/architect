@@ -8,6 +8,8 @@ import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTask
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertTimeoutPreemptively
+import java.time.Duration
 
 /**
  * Unit tests for TaskDependencyResolver.
@@ -72,6 +74,23 @@ class TaskDependencyResolverTest {
         assertTrue(resolved.containsKey("task-a"))
         assertTrue(resolved.containsKey("task-b"))
         assertTrue(resolved.containsKey("task-c"))
+    }
+
+    @Test
+    fun `should resolve child tasks and their dependencies`() {
+        // Given
+        val setup = TestTask("setup")
+        val child = TestTask("child", dependencies = listOf("setup"))
+        val parent = TestTask("parent", children = listOf("child"))
+        registry.add(setup)
+        registry.add(child)
+        registry.add(parent)
+
+        // When
+        val resolved = resolver.resolveAllDependencies(parent, registry)
+
+        // Then
+        assertEquals(setOf("setup", "child", "parent"), resolved.keys)
     }
 
     @Test
@@ -196,16 +215,77 @@ class TaskDependencyResolverTest {
         assertTrue(taskCIndex < taskDIndex)
     }
 
+    @Test
+    fun `should assign parallel batches for diamond dependency pattern`() {
+        // Given
+        val taskA = TestTask("task-a")
+        val taskB = TestTask("task-b", dependencies = listOf("task-a"))
+        val taskC = TestTask("task-c", dependencies = listOf("task-a"))
+        val taskD = TestTask("task-d", dependencies = listOf("task-b", "task-c"))
+        val orderedTasks = resolver.topologicalSort(
+            mapOf(
+                "task-a" to taskA,
+                "task-b" to taskB,
+                "task-c" to taskC,
+                "task-d" to taskD,
+            )
+        )
+
+        // When
+        val batches = resolver.toBatches(orderedTasks)
+
+        // Then
+        assertEquals(0, batches["task-a"])
+        assertEquals(1, batches["task-b"])
+        assertEquals(1, batches["task-c"])
+        assertEquals(2, batches["task-d"])
+    }
+
+    @Test
+    fun `should resolve composite children in dependency order`() {
+        // Given
+        val prepare = TestTask("prepare")
+        val compile = TestTask("compile", dependencies = listOf("prepare"))
+        val packageTask = TestTask("package", dependencies = listOf("compile"))
+        val composite = TestTask("build", children = listOf("package", "compile"))
+        registry.add(prepare)
+        registry.add(compile)
+        registry.add(packageTask)
+        registry.add(composite)
+
+        // When
+        val children = resolver.resolveChildren(composite, registry)
+
+        // Then
+        assertEquals(listOf("prepare", "compile", "package"), children.map { it.id })
+    }
+
+    @Test
+    fun `should topologically sort large dependency graph within bounded time`() {
+        val tasks = buildLargeTaskGraph(size = 1_000)
+
+        val sorted = assertTimeoutPreemptively(Duration.ofSeconds(1)) {
+            resolver.topologicalSort(tasks)
+        }
+
+        assertEquals(1_000, sorted.size)
+        assertEquals("task-0", sorted.first().id)
+        assertEquals("task-999", sorted.last().id)
+    }
+
     /**
      * Test implementation of Task.
      */
     class TestTask(
         override val id: String,
-        private val dependencies: List<String> = emptyList()
+        private val dependencies: List<String> = emptyList(),
+        private val children: List<String> = emptyList(),
     ) : Task {
         override fun description(): String = "Test task $id"
         
         override fun depends(): List<String> = dependencies
+
+        override fun children(): List<String> = children
         
         override fun execute(
             environment: Environment,
@@ -215,4 +295,11 @@ class TaskDependencyResolverTest {
             return TaskResult.success()
         }
     }
+
+    private fun buildLargeTaskGraph(size: Int): Map<String, Task> =
+        (0 until size).associate { index ->
+            val id = "task-$index"
+            val dependencies = if (index == 0) emptyList() else listOf("task-${index - 1}")
+            id to TestTask(id, dependencies = dependencies)
+        }
 }
