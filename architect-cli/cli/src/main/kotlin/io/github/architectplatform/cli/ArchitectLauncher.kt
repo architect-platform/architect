@@ -12,10 +12,13 @@ import io.github.architectplatform.cli.plugin.PluginTemplate
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.cli.engine.EngineHealthChecker
+import io.github.architectplatform.cli.graph.ProjectGraphDotRenderer
+import io.github.architectplatform.cli.graph.ProjectGraphHtmlRenderer
 import io.github.architectplatform.cli.graph.TaskGraphDotRenderer
 import io.github.architectplatform.cli.graph.TaskGraphHtmlRenderer
 import io.github.architectplatform.engine.core.execution.EmbeddedExecutionContext
 import io.github.architectplatform.engine.core.project.app.AffectedProjectResolver
+import io.github.architectplatform.engine.core.project.domain.ProjectDependencyGraph
 import io.github.architectplatform.engine.core.tasks.application.LocalOutputCache
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
@@ -56,6 +59,8 @@ class ArchitectLauncher(
   private val pluginScaffolder = PluginScaffolder()
   private val pluginDocumentationGenerator = PluginDocumentationGenerator()
   private val pluginJarValidator = PluginJarValidator()
+  private val projectGraphDotRenderer = ProjectGraphDotRenderer()
+  private val projectGraphHtmlRenderer = ProjectGraphHtmlRenderer()
   private val taskGraphDotRenderer = TaskGraphDotRenderer()
   private val taskGraphHtmlRenderer = TaskGraphHtmlRenderer()
 
@@ -275,6 +280,15 @@ class ArchitectLauncher(
 
     if (command == "graph") {
       val graphOptions = parseGraphOptions(args)
+      if (graphOptions.showProjects) {
+        val graph = loadProjectDependencyGraph(projectName, projectPath)
+        if (graphOptions.open) {
+          openProjectGraph(projectName, graph)
+        } else {
+          printProjectGraph(projectName, graph)
+        }
+        return
+      }
       val plans = graphOptions.taskName?.let { listOf(engineCommandClient.planTask(projectName, it)) }
         ?: engineCommandClient.getAllTasks(projectName).map { engineCommandClient.planTask(projectName, it.id) }
       if (graphOptions.open) {
@@ -370,6 +384,15 @@ class ArchitectLauncher(
 
     if (command == "graph") {
       val graphOptions = parseGraphOptions(args)
+      if (graphOptions.showProjects) {
+        val graph = loadProjectDependencyGraph(projectName, projectPath)
+        if (graphOptions.open) {
+          openProjectGraph(projectName, graph)
+        } else {
+          printProjectGraph(projectName, graph)
+        }
+        return
+      }
       val plans = graphOptions.taskName?.let { listOf(embeddedTaskExecutor.plan(projectName, projectPath, it)) }
         ?: embeddedTaskExecutor.listTasks(projectName, projectPath).map {
           embeddedTaskExecutor.plan(projectName, projectPath, it.id)
@@ -962,6 +985,10 @@ class ArchitectLauncher(
     println(taskGraphDotRenderer.render(projectName, plans))
   }
 
+  private fun printProjectGraph(projectName: String, graph: ProjectDependencyGraph) {
+    println(projectGraphDotRenderer.render("$projectName-projects", graph))
+  }
+
   private fun openGraph(projectName: String, plans: List<TaskPlanDTO>) {
     val outputPath = taskGraphHtmlRenderer.writeTempFile(projectName, plans)
     println("📈 Graph page: $outputPath")
@@ -972,30 +999,52 @@ class ArchitectLauncher(
     }
   }
 
+  private fun openProjectGraph(projectName: String, graph: ProjectDependencyGraph) {
+    val outputPath = projectGraphHtmlRenderer.writeTempFile("$projectName-projects", graph)
+    println("📈 Project graph page: $outputPath")
+    if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+      Desktop.getDesktop().browse(outputPath.toUri())
+    } else {
+      println("Browser opening is not supported in this environment. Open the HTML file manually.")
+    }
+  }
+
+  private fun loadProjectDependencyGraph(projectName: String, projectPath: String): ProjectDependencyGraph {
+    val context = EmbeddedExecutionContext.create(
+      remoteContentFetcher = io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher(),
+      activeProfile = embeddedTaskExecutor.activeProfile,
+    )
+    context.projectService.registerProject(projectName, projectPath)
+    return context.projectService.buildDependencyGraph(projectName)
+  }
+
   private fun parseGraphOptions(arguments: List<String>): GraphOptions {
     var open = false
+    var showProjects = false
     val positional = mutableListOf<String>()
     arguments.drop(1).forEach { argument ->
       when (argument) {
         "--open" -> open = true
+        "--projects" -> showProjects = true
         else -> if (argument.startsWith("--")) {
-          println("Usage: architect graph [task] [--open]")
+          println("Usage: architect graph [task] [--projects] [--open]")
           exitProcess(1)
         } else {
           positional += argument
         }
       }
     }
-    if (positional.size > 1) {
-      println("Usage: architect graph [task] [--open]")
+    if (positional.size > 1 || (showProjects && positional.isNotEmpty())) {
+      println("Usage: architect graph [task] [--projects] [--open]")
       exitProcess(1)
     }
-    return GraphOptions(open = open, taskName = positional.singleOrNull())
+    return GraphOptions(open = open, taskName = positional.singleOrNull(), showProjects = showProjects)
   }
 
   private data class GraphOptions(
     val open: Boolean,
     val taskName: String?,
+    val showProjects: Boolean,
   )
 
   private fun printValidation(projectName: String, result: ValidationResultDTO) {

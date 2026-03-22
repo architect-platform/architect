@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 117/131 tasks completed (89%)
+Overall Progress: 118/131 tasks completed (90%)
 Current Phase: Phase 20 — Project Graph & Visualization
-Last Updated: 2026-03-22T19:54:44Z
+Last Updated: 2026-03-22T19:58:00Z
 
 ---
 
@@ -457,7 +457,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 20.1 `architect graph` — outputs a DOT format directed graph of the task DAG for the current project | Finished: 2026-03-22T19:51:03Z | Notes: added CLI `architect graph` DOT output for the full current-project task DAG by aggregating planned task dependencies and rendering them through `TaskGraphDotRenderer`; verified with focused CLI launcher tests.
 - [x] 20.2 `architect graph --open` — renders the graph as an SVG or HTML page and opens in browser (uses D3.js or Mermaid) | Finished: 2026-03-22T19:53:03Z | Notes: extended `architect graph` with `--open` to generate a temporary Mermaid-based HTML page through `TaskGraphHtmlRenderer`, print the file location, and open it through the desktop browser when supported; verified with focused renderer and launcher tests.
 - [x] 20.3 `architect graph <task>` — subgraph for a specific task and its dependencies | Finished: 2026-03-22T19:54:44Z | Notes: extended graph argument parsing so `architect graph <task>` renders only that task's dependency subgraph for both DOT and `--open` HTML output; verified with focused launcher tests using task-specific graph fixtures.
-- [ ] 20.4 `architect graph --projects` — shows the monorepo project graph (project ↔ project dependency relationships)
+- [x] 20.4 `architect graph --projects` — shows the monorepo project graph (project ↔ project dependency relationships) | Finished: 2026-03-22T19:58:00Z | Notes: added `--projects` graph mode backed by the existing embedded `ProjectDependencyGraph` builder, with DOT and Mermaid HTML renderers plus focused renderer and launcher test coverage.
 - [ ] 20.5 `architect plan <task> --tree` — ASCII tree rendering in the terminal (already partially done in plan mode; make it richer with batch groups and timing estimates)
 - [ ] 20.6 Integrate graph rendering into the VS Code extension (see Phase 9.6) — a panel that renders the live task graph
 
