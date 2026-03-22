@@ -12,7 +12,6 @@ import io.micronaut.context.event.ApplicationEventPublisher
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
 import jakarta.inject.Singleton
-import java.net.URLClassLoader
 import kotlin.io.path.exists
 import org.slf4j.LoggerFactory
 
@@ -24,6 +23,7 @@ class ProjectPluginLoader(
     private val internalPlugins: List<CommonPlugin>,
     private val releaseResolver: GitHubReleaseResolver,
     private val eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>,
+    private val classloaderDebug: Boolean = false,
 ) : PluginLoader {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
@@ -73,7 +73,11 @@ class ProjectPluginLoader(
                     }
                     else -> throw IllegalArgumentException("Unsupported plugin type: ${plugin.type}")
                 }
-            val loader = URLClassLoader(arrayOf(jar.toURI().toURL()), this::class.java.classLoader)
+            val loader = IsolatedPluginClassLoader(
+              arrayOf(jar.toURI().toURL()),
+              this::class.java.classLoader,
+              debug = classloaderDebug,
+            )
             val loaded = spiLoader.loadFrom(loader)
             eventPublisher.publishEvent(pluginLoaded(plugin.name))
             enabled += loaded

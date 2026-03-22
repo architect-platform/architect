@@ -52,6 +52,7 @@ class EmbeddedExecutionContext private constructor(
       taskCacheEnabled: Boolean = false,
       parallelExecutionEnabled: Boolean = EngineConfiguration.TaskExecution.DEFAULT_PARALLEL_ENABLED,
       activeProfile: String = "default",
+      classloaderDebug: Boolean = false,
     ): EmbeddedExecutionContext {
       val eventBus = EmbeddedEventBus<ArchitectEvent<*>>()
       val historyService = HistoryService()
@@ -85,6 +86,7 @@ class EmbeddedExecutionContext private constructor(
           internalPlugins = internalPlugins,
           releaseResolver = releaseResolver,
           eventBus = eventBus::invoke,
+          classloaderDebug = classloaderDebug,
         )
 
       val projectService =

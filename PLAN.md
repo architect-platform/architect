@@ -6,7 +6,7 @@
 ---
 
 ## Status
-Overall Progress: 68/131 tasks completed (52%)
+Overall Progress: 73/131 tasks completed (56%)
 Current Phase: Phase 12 — Environment Profiles
 Last Updated: 2026-03-22T15:30:00Z
 
@@ -276,11 +276,11 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 
 ### Tasks
 
-- [ ] 14.1 Create `IsolatedPluginClassLoader` — child-first classloader. Each plugin gets its own isolated instance with no JAR sharing.
-- [ ] 14.2 Define `shared-api` classloader: only `architect-api` classes are shared via the parent (bridge classloader). All other classes are isolated.
-- [ ] 14.3 Handle cross-plugin type compatibility via API interfaces (not concrete classes).
-- [ ] 14.4 Add `classloader.debug: true` config flag that logs classloader resolution decisions.
-- [ ] 14.5 Write `ClassloaderIsolationTest` — two plugins declaring conflicting versions of a library both function correctly.
+- [x] 14.1 Create `IsolatedPluginClassLoader` — child-first classloader. Each plugin gets its own isolated instance with no JAR sharing.
+- [x] 14.2 Define `shared-api` classloader: only `architect-api` classes are shared via the parent (bridge classloader). All other classes are isolated.
+- [x] 14.3 Handle cross-plugin type compatibility via API interfaces (not concrete classes).
+- [x] 14.4 Add `classloader.debug: true` config flag that logs classloader resolution decisions.
+- [x] 14.5 Write `ClassloaderIsolationTest` — two plugins declaring conflicting versions of a library both function correctly.
 
 ### Acceptance Criteria
 

@@ -10,7 +10,6 @@ import io.github.architectplatform.engine.core.plugin.domain.events.PluginEvents
 import io.github.architectplatform.engine.core.plugin.infra.GitHubReleaseResolver
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import jakarta.inject.Singleton
-import java.net.URLClassLoader
 import kotlin.io.path.exists
 import org.slf4j.LoggerFactory
 
@@ -21,6 +20,7 @@ class ProjectPluginLoader(
     private val internalPlugins: List<CommonPlugin>,
     private val releaseResolver: GitHubReleaseResolver,
     private val eventBus: EventBus<ArchitectEvent<*>>,
+    private val classloaderDebug: Boolean = false,
 ) : PluginLoader {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
@@ -70,7 +70,11 @@ class ProjectPluginLoader(
                     }
                     else -> throw IllegalArgumentException("Unsupported plugin type: ${plugin.type}")
                 }
-            val loader = URLClassLoader(arrayOf(jar.toURI().toURL()), this::class.java.classLoader)
+            val loader = IsolatedPluginClassLoader(
+              arrayOf(jar.toURI().toURL()),
+              this::class.java.classLoader,
+              debug = classloaderDebug,
+            )
             val loaded = spiLoader.loadFrom(loader)
             eventBus(pluginLoaded(plugin.name))
             enabled += loaded
