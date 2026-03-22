@@ -49,14 +49,20 @@ class ConfigValidator {
         val projectName = config.getKey<String>("project.name")
         if (projectName.isNullOrBlank()) {
             val line = lineMap["project"] ?: lineMap["project.name"]
-            errors.add(withLine(line, "'project.name' is required but missing or blank"))
+            val hasProjectSection = config.containsKey("project")
+            val hint = if (!hasProjectSection) {
+                ". Add the following to architect.yml:\n  project:\n    name: your-project"
+            } else {
+                ". Add 'name: your-project' under the 'project:' section"
+            }
+            errors.add(withLine(line, "'project.name' is required but missing or blank$hint"))
         }
 
         val knownKeys = BASE_KNOWN_KEYS + pluginContextKeys
         val unknownKeys = config.keys - knownKeys
         unknownKeys.forEach { key ->
             val line = lineMap[key]
-            warnings.add(withLine(line, "Unknown top-level key '$key' in architect.yml — it will be ignored"))
+            warnings.add(withLine(line, "Unknown top-level key '$key' in architect.yml — did you mean one of: ${knownKeys.sorted().joinToString(", ")}?"))
         }
 
         // If $schema is declared, validate the config against the JSON Schema
@@ -68,8 +74,13 @@ class ConfigValidator {
         // Validate each plugin's config section against the plugin's declared schema
         for (plugin in plugins) {
             val pluginSchema = plugin.configSchema() ?: continue
-            val rawSection = config[plugin.contextKey] ?: continue
-            errors.addAll(validatePluginSection(plugin.id, plugin.contextKey, rawSection, pluginSchema))
+            val rawSection = config[plugin.contextKey]
+            if (rawSection == null) {
+                // Plugin declares a schema but the config section is missing — only warn, don't error
+                // (plugin may work with defaults)
+                continue
+            }
+            errors.addAll(validatePluginSection(plugin.id, plugin.contextKey, rawSection, pluginSchema, lineMap))
         }
 
         return ValidationResult(
@@ -92,12 +103,16 @@ class ConfigValidator {
         contextKey: String,
         rawSection: Any,
         pluginSchema: Map<String, Any>,
+        lineMap: Map<String, Int>,
     ): List<String> {
         val schemaNode = objectMapper.valueToTree<com.fasterxml.jackson.databind.JsonNode>(pluginSchema)
         val schema = schemaFactory.getSchema(schemaNode)
         val sectionNode = objectMapper.valueToTree<com.fasterxml.jackson.databind.JsonNode>(rawSection)
         val validationMessages = schema.validate(sectionNode)
-        return validationMessages.map { "[$pluginId] $contextKey: ${it.message}" }
+        return validationMessages.map { msg ->
+            val line = lineMap[contextKey]
+            withLine(line, "[$pluginId] $contextKey: ${msg.message}. Check the '$contextKey' section in architect.yml")
+        }
     }
 
     private fun withLine(line: Int?, message: String): String =
