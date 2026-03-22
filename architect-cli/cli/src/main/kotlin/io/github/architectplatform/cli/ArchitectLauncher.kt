@@ -3,6 +3,7 @@ package io.github.architectplatform.cli
 import io.github.architectplatform.cli.client.EngineCommandClient
 import io.github.architectplatform.cli.dto.HistoryRecordDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
+import io.github.architectplatform.cli.history.LocalHistoryReader
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.cli.engine.EngineHealthChecker
@@ -38,6 +39,7 @@ import picocli.CommandLine.Parameters
 class ArchitectLauncher(
     private val engineCommandClient: EngineCommandClient,
     private val engineHealthChecker: EngineHealthChecker,
+    private val localHistoryReader: LocalHistoryReader,
 ) : Runnable {
 
   @Property(name = "architect.engine.startup-timeout-seconds", defaultValue = "30")
@@ -103,6 +105,21 @@ class ArchitectLauncher(
       return
     }
 
+    if (command == "history") {
+      val project = args.getOrNull(1)
+      val records = if (project != null) {
+        localHistoryReader.getByProject(project).ifEmpty {
+          runCatching { engineCommandClient.getProjectHistory(project) }.getOrElse { emptyList() }
+        }
+      } else {
+        localHistoryReader.getAll().ifEmpty {
+          runCatching { engineCommandClient.getHistory() }.getOrElse { emptyList() }
+        }
+      }
+      printHistory(records)
+      return
+    }
+
     ensureEngineRunning()
 
     val projectPath = System.getProperty("user.dir")
@@ -126,16 +143,6 @@ class ArchitectLauncher(
         exitProcess(1)
       }
       printPlan(engineCommandClient.planTask(projectName, taskName))
-      return
-    }
-
-    if (command == "history") {
-      val records = if (args.getOrNull(1) != null) {
-        engineCommandClient.getProjectHistory(args[1])
-      } else {
-        engineCommandClient.getHistory()
-      }
-      printHistory(records)
       return
     }
 
