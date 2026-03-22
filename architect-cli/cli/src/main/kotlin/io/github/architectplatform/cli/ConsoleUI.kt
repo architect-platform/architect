@@ -6,12 +6,8 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.architectplatform.cli.client.ExecutionId
 
 /**
- * Simple console user interface for task execution.
- *
- * Provides straightforward output showing:
- * - Current project and task being executed
- * - Events as they happen in real-time
- * - Error details with full stack traces
+ * Console user interface for task execution with progress-tree rendering, batch grouping,
+ * timing, failure detail capture, and an execution summary table.
  *
  * Supports two modes:
  * - Interactive: Output with ANSI colors
@@ -32,23 +28,44 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
     const val YELLOW = "\u001B[33m"
     const val CYAN = "\u001B[36m"
     const val BOLD = "\u001B[1m"
+    const val DIM = "\u001B[2m"
   }
+
+  // ── Task state tracking ─────────────────────────────────────────
+
+  enum class TaskStatus { RUNNING, COMPLETED, FAILED, SKIPPED }
+
+  data class TaskState(
+      val taskId: String,
+      val status: TaskStatus,
+      val startTimeMs: Long = System.currentTimeMillis(),
+      val endTimeMs: Long? = null,
+      val message: String? = null,
+      val errorDetails: String? = null,
+      val batch: Int = 0,
+  ) {
+    val durationMs: Long
+      get() = (endTimeMs ?: System.currentTimeMillis()) - startTimeMs
+  }
+
+  private val taskStates = linkedMapOf<String, TaskState>()
+  private var currentBatch = 0
+  private var batchTaskCount = 0
 
   private var currentProject: String? = null
   private var currentSubProject: String? = null
   private var currentTask: String? = null
   private var failed = false
+  private val executionStartMs = System.currentTimeMillis()
 
-  /**
-   * Indicates whether the task execution has failed.
-   */
   val hasFailed: Boolean
     get() = failed
 
-
   /**
-   * Represents an execution event received from the engine.
+   * Returns snapshot of all tracked task states (for testing / summary).
    */
+  fun taskStates(): Map<String, TaskState> = taskStates.toMap()
+
   data class ExecutionEvent(
       val executionId: ExecutionId,
       val executionEventType: ExecutionEventType,
@@ -75,14 +92,12 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
   /**
    * Applies color to text if not in plain mode.
    */
-  private fun colorize(text: String, color: String): String {
+  internal fun colorize(text: String, color: String): String {
     return if (plain) text else "$color$text${AnsiColors.RESET}"
   }
 
   /**
-   * Processes an execution event and displays it.
-   *
-   * @param eventMap Raw event data from the engine
+   * Processes an execution event, updates internal state, and renders the progress line.
    */
   fun process(eventMap: Map<String, Any>) {
     val event = objectMapper.convertValue<ArchitectEvent>(eventMap)
@@ -93,97 +108,192 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
     val errorDetails = event.event["errorDetails"] as? String
     val subProject = event.event["subProject"] as? String
 
-    // Update current state - preserve parent project when we have subproject
+    // Update project context
     if (subProject != null) {
-      // This is a subproject event, use subProject as the parent context
       currentSubProject = project
-      // Keep currentProject as is (it should be the main project)
     } else if (project != null) {
-      // This is a main project event
       currentProject = project
       currentSubProject = null
     }
-    
     if (taskId != null) currentTask = taskId
 
-    // Determine icon and handle failures
-    val icon = when (executionEventType) {
-      "STARTED" -> "▶️"
-      "COMPLETED" -> "✅"
-      "FAILED" -> {
-        failed = true
-        "❌"
+    // ── Update task state tracking ─────────────────────────────
+    if (taskId != null) {
+      when (executionEventType) {
+        "STARTED" -> {
+          // Detect batch boundary: if all previous tasks in current batch are done, bump batch
+          if (taskStates.isNotEmpty()) {
+            val batchTasks = taskStates.values.filter { it.batch == currentBatch }
+            if (batchTasks.isNotEmpty() && batchTasks.all { it.status != TaskStatus.RUNNING }) {
+              currentBatch++
+              batchTaskCount = 0
+            }
+          }
+          batchTaskCount++
+          taskStates[taskId] = TaskState(taskId, TaskStatus.RUNNING, batch = currentBatch, message = message)
+        }
+        "COMPLETED" -> {
+          val prev = taskStates[taskId]
+          taskStates[taskId] = (prev ?: TaskState(taskId, TaskStatus.COMPLETED, batch = currentBatch))
+              .copy(status = TaskStatus.COMPLETED, endTimeMs = System.currentTimeMillis(), message = message)
+        }
+        "FAILED" -> {
+          failed = true
+          val prev = taskStates[taskId]
+          taskStates[taskId] = (prev ?: TaskState(taskId, TaskStatus.FAILED, batch = currentBatch))
+              .copy(status = TaskStatus.FAILED, endTimeMs = System.currentTimeMillis(), message = message, errorDetails = errorDetails)
+        }
+        "SKIPPED" -> {
+          val prev = taskStates[taskId]
+          taskStates[taskId] = (prev ?: TaskState(taskId, TaskStatus.SKIPPED, batch = currentBatch))
+              .copy(status = TaskStatus.SKIPPED, endTimeMs = System.currentTimeMillis(), message = message)
+        }
       }
-      "SKIPPED" -> "⏭️"
-      "OUTPUT" -> "📝"
-      else -> "ℹ️"
     }
 
-    // Build the output line
-    val parts = mutableListOf<String>()
-    
-    // Event type with icon (no extra space after emoji)
-    parts.add("$icon$executionEventType")
-    
-    // Project context - show parent → subproject if we have both
+    // ── Render progress line ───────────────────────────────────
+    val icon = when (executionEventType) {
+      "STARTED" -> "▶"
+      "COMPLETED" -> "✓"
+      "FAILED" -> "✗"
+      "SKIPPED" -> "⏭"
+      "OUTPUT" -> "│"
+      else -> "·"
+    }
+
+    val statusColor = when (executionEventType) {
+      "STARTED" -> AnsiColors.CYAN
+      "COMPLETED" -> AnsiColors.GREEN
+      "FAILED" -> AnsiColors.RED
+      "SKIPPED" -> AnsiColors.YELLOW
+      else -> ""
+    }
+
+    val elapsed = if (taskId != null) {
+      val state = taskStates[taskId]
+      if (state != null) " ${colorize(formatDuration(state.durationMs), AnsiColors.DIM)}" else ""
+    } else ""
+
     val projectContext = buildString {
       if (subProject != null) {
-        // Subproject event: show parent → subproject
         append(colorize(subProject, AnsiColors.CYAN))
         project?.let { append(" → ${colorize(it, AnsiColors.YELLOW)}") }
       } else {
-        // Main project event
         currentProject?.let { append(colorize(it, AnsiColors.CYAN)) }
       }
     }
-    if (projectContext.isNotEmpty()) {
-      parts.add("[${projectContext}]")
-    }
-    
-    // Task context
-    currentTask?.let {
-      parts.add("${colorize("Task:", AnsiColors.BOLD)} $it")
-    }
-    
-    // Message
-    message?.let {
-      parts.add("- $it")
-    }
-    
-    println(parts.joinToString(" "))
-    
-    // Display error details immediately if present
+
+    val parts = mutableListOf<String>()
+    parts.add(colorize("$icon ${executionEventType ?: "EVENT"}", statusColor))
+    if (projectContext.isNotEmpty()) parts.add("[${projectContext}]")
+    if (taskId != null) parts.add(colorize(taskId, AnsiColors.BOLD))
+    message?.let { parts.add("- $it") }
+    parts.add(elapsed)
+
+    println(parts.joinToString(" ").trimEnd())
+
+    // ── Failure details ────────────────────────────────────────
     if (!errorDetails.isNullOrEmpty()) {
       println()
-      println(colorize("ERROR DETAILS:", "${AnsiColors.BOLD}${AnsiColors.RED}"))
-      println(colorize("─".repeat(80), AnsiColors.RED))
+      println(colorize("  FAILURE DETAILS ($taskId):", "${AnsiColors.BOLD}${AnsiColors.RED}"))
+      println(colorize("  ${"─".repeat(76)}", AnsiColors.RED))
       errorDetails.lines().forEach { line ->
-        println(colorize(line, AnsiColors.RED))
+        println(colorize("  $line", AnsiColors.RED))
       }
-      println(colorize("─".repeat(80), AnsiColors.RED))
+      println(colorize("  ${"─".repeat(76)}", AnsiColors.RED))
       println()
+    }
+  }
+
+  /**
+   * Prints the execution summary table and overall result.
+   */
+  fun printSummary() {
+    if (taskStates.isEmpty()) return
+    println()
+    println("━".repeat(80))
+    println(colorize("  Execution Summary", AnsiColors.BOLD))
+    println("━".repeat(80))
+
+    val fmt = "  %-6s  %-30s  %-10s  %s"
+    println(fmt.format("STATUS", "TASK", "DURATION", "MESSAGE"))
+    println("  ${"─".repeat(76)}")
+
+    for ((_, state) in taskStates) {
+      val statusIcon = when (state.status) {
+        TaskStatus.COMPLETED -> colorize("✓", AnsiColors.GREEN)
+        TaskStatus.FAILED -> colorize("✗", AnsiColors.RED)
+        TaskStatus.SKIPPED -> colorize("⏭", AnsiColors.YELLOW)
+        TaskStatus.RUNNING -> colorize("…", AnsiColors.CYAN)
+      }
+      val duration = formatDuration(state.durationMs)
+      val msg = state.message?.take(40) ?: ""
+      println(fmt.format(statusIcon, state.taskId.take(30), duration, msg))
+    }
+
+    val totalDuration = System.currentTimeMillis() - executionStartMs
+    println("  ${"─".repeat(76)}")
+    val taskCount = taskStates.size
+    val failedCount = taskStates.values.count { it.status == TaskStatus.FAILED }
+    val skippedCount = taskStates.values.count { it.status == TaskStatus.SKIPPED }
+    val successCount = taskStates.values.count { it.status == TaskStatus.COMPLETED }
+
+    val summary = buildString {
+      append("  $taskCount task(s): ")
+      append(colorize("$successCount passed", AnsiColors.GREEN))
+      if (failedCount > 0) append(", ${colorize("$failedCount failed", AnsiColors.RED)}")
+      if (skippedCount > 0) append(", ${colorize("$skippedCount skipped", AnsiColors.YELLOW)}")
+      append("  Total: ${formatDuration(totalDuration)}")
+    }
+    println(summary)
+    println()
+
+    // Print full failure details at the end
+    val failedTasks = taskStates.values.filter { it.status == TaskStatus.FAILED && !it.errorDetails.isNullOrEmpty() }
+    if (failedTasks.isNotEmpty()) {
+      println(colorize("  Failed task details:", "${AnsiColors.BOLD}${AnsiColors.RED}"))
+      println()
+      for (ft in failedTasks) {
+        println(colorize("  ✗ ${ft.taskId}", "${AnsiColors.BOLD}${AnsiColors.RED}"))
+        println(colorize("  ${"─".repeat(76)}", AnsiColors.RED))
+        ft.errorDetails?.lines()?.forEach { line ->
+          println(colorize("  $line", AnsiColors.RED))
+        }
+        println(colorize("  ${"─".repeat(76)}", AnsiColors.RED))
+        println()
+      }
     }
   }
 
   /**
    * Marks the execution as complete with a success message.
-   *
-   * @param finalMessage Success message to display
    */
   fun complete(finalMessage: String) {
-    println()
-    println(colorize("✅ $finalMessage", "${AnsiColors.BOLD}${AnsiColors.GREEN}"))
+    printSummary()
+    println(colorize("✓ $finalMessage", "${AnsiColors.BOLD}${AnsiColors.GREEN}"))
   }
 
   /**
    * Marks the execution as failed with an error message.
-   *
-   * @param errorMessage Error message to display
    */
   fun completeWithError(errorMessage: String) {
-    println()
-    println(colorize("❌ $errorMessage", "${AnsiColors.BOLD}${AnsiColors.RED}"))
+    printSummary()
+    println(colorize("✗ $errorMessage", "${AnsiColors.BOLD}${AnsiColors.RED}"))
     failed = true
+  }
+
+  companion object {
+    fun formatDuration(ms: Long): String {
+      return when {
+        ms < 1000 -> "${ms}ms"
+        ms < 60_000 -> "${"%.1f".format(ms / 1000.0)}s"
+        else -> {
+          val mins = ms / 60_000
+          val secs = (ms % 60_000) / 1000
+          "${mins}m ${secs}s"
+        }
+      }
+    }
   }
 }
 

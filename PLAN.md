@@ -6,8 +6,8 @@
 ---
 
 ## Status
-Overall Progress: 31/131 tasks completed (24%)
-Current Phase: Phase 9 — Enhanced Config Validation & Schema
+Overall Progress: 36/131 tasks completed (27%)
+Current Phase: Phase 10 — Rich CLI Output & Developer UX
 Last Updated: 2026-03-22T14:13:00Z
 
 ---
@@ -159,11 +159,11 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 
 ### Tasks
 
-- [ ] 10.1 **Task execution progress tree** — during execution, render a live updating tree showing tasks with status icons and elapsed time (like Gradle's task list or Cargo's build output)
-- [ ] 10.2 **Batch grouping in output** — group events by parallel batch with a header "Batch 1 — running 3 tasks in parallel"
-- [ ] 10.3 **Execution summary** — at the end, print a table: task name, status, duration, output (truncated). Highlight failures.
-- [ ] 10.4 **Timing** — each task shows elapsed time. Total execution time shown at the end.
-- [ ] 10.5 **Failure details** — on failure, print the full task output (not just the error message). Make it easy to debug.
+- [x] 10.1 **Task execution progress tree** — during execution, render a live updating tree showing tasks with status icons and elapsed time (like Gradle's task list or Cargo's build output)
+- [x] 10.2 **Batch grouping in output** — group events by parallel batch with a header "Batch 1 — running 3 tasks in parallel"
+- [x] 10.3 **Execution summary** — at the end, print a table: task name, status, duration, output (truncated). Highlight failures.
+- [x] 10.4 **Timing** — each task shows elapsed time. Total execution time shown at the end.
+- [x] 10.5 **Failure details** — on failure, print the full task output (not just the error message). Make it easy to debug.
 - [ ] 10.6 **`architect tasks`** — list all available tasks in a formatted table: id, phase, description. Support `--json` flag for machine-readable output.
 - [ ] 10.7 **`architect tasks --filter <phase>`** — filter by phase or workflow (e.g., `architect tasks --filter BUILD`)
 - [ ] 10.8 **`architect info`** — print resolved project config: name, path, loaded plugins, registered tasks, subprojects

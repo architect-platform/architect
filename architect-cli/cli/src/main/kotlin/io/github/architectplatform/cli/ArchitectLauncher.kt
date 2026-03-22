@@ -291,7 +291,7 @@ class ArchitectLauncher(
 
     println()
     println("━".repeat(80))
-    println("▶️  Executing task: $taskName")
+    println("▶  Executing task: $taskName")
     println("📦 Project: $projectName")
     println("━".repeat(80))
     println()
@@ -303,24 +303,21 @@ class ArchitectLauncher(
         val flow = engineCommandClient.getExecutionFlow(executionId)
         flow.collect { ui.process(it) }
 
-        val duration = (System.currentTimeMillis() - startTime) / 1000.0
+        val duration = System.currentTimeMillis() - startTime
         if (ui.hasFailed) {
-          ui.completeWithError("Task failed (duration: ${"%.1f".format(duration)}s)")
+          ui.completeWithError("Task failed (${ConsoleUI.formatDuration(duration)})")
           exitProcess(1)
         } else {
-          ui.complete("Task completed successfully (duration: ${"%.1f".format(duration)}s)")
+          ui.complete("Task completed successfully (${ConsoleUI.formatDuration(duration)})")
           exitProcess(0)
         }
       } catch (e: Exception) {
-        val duration = (System.currentTimeMillis() - startTime) / 1000.0
+        val duration = System.currentTimeMillis() - startTime
         println()
         println("❌ Task execution aborted")
         println("Error: ${e.message}")
         println()
-        println("Stack Trace:")
-        println(e.stackTraceToString())
-        println()
-        println("Duration: ${"%.1f".format(duration)}s")
+        println("Duration: ${ConsoleUI.formatDuration(duration)}")
         exitProcess(1)
       }
     }
@@ -336,7 +333,7 @@ class ArchitectLauncher(
 
     println()
     println("━".repeat(80))
-    println("▶️  Executing task: $taskName")
+    println("▶  Executing task: $taskName")
     println("📦 Project: $projectName")
     println("━".repeat(80))
     println()
@@ -352,24 +349,21 @@ class ArchitectLauncher(
         ui.process(event)
       }
 
-      val duration = (System.currentTimeMillis() - startTime) / 1000.0
+      val duration = System.currentTimeMillis() - startTime
       if (!result.success || ui.hasFailed) {
-        ui.completeWithError("Task failed (duration: ${"%.1f".format(duration)}s)")
+        ui.completeWithError("Task failed (${ConsoleUI.formatDuration(duration)})")
         exitProcess(1)
       } else {
-        ui.complete("Task completed successfully (duration: ${"%.1f".format(duration)}s)")
+        ui.complete("Task completed successfully (${ConsoleUI.formatDuration(duration)})")
         exitProcess(0)
       }
     } catch (e: Exception) {
-      val duration = (System.currentTimeMillis() - startTime) / 1000.0
+      val duration = System.currentTimeMillis() - startTime
       println()
       println("❌ Task execution aborted")
       println("Error: ${e.message}")
       println()
-      println("Stack Trace:")
-      println(e.stackTraceToString())
-      println()
-      println("Duration: ${"%.1f".format(duration)}s")
+      println("Duration: ${ConsoleUI.formatDuration(duration)}")
       exitProcess(1)
     }
   }
@@ -381,12 +375,15 @@ class ArchitectLauncher(
     println("📦 Project: ${plan.project}")
     println("━".repeat(80))
     println()
-    println("  ${plan.totalSteps} tasks across ${plan.parallelBatches} parallel batch(es)")
+    println("  ${plan.totalSteps} task(s) across ${plan.parallelBatches} parallel batch(es)")
     println()
 
     val byBatch = plan.steps.groupBy { it.batch }.toSortedMap()
     byBatch.forEach { (batchIdx, tasks) ->
-      val batchLabel = if (tasks.size > 1) "Batch $batchIdx — ${tasks.size} tasks (run in parallel)" else "Batch $batchIdx"
+      val batchLabel = if (tasks.size > 1)
+        "Batch $batchIdx — running ${tasks.size} tasks in parallel"
+      else
+        "Batch $batchIdx"
       println("  ┌─ $batchLabel")
       tasks.forEachIndexed { i, step ->
         val connector = if (i == tasks.size - 1) "└──" else "├──"
