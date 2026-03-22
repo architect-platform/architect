@@ -6,7 +6,7 @@
 ---
 
 ## Status
-Overall Progress: 123/131 tasks completed (94%)
+Overall Progress: 124/131 tasks completed (95%)
 Current Phase: Phase 21 — Testing — Coverage to >85%
 Last Updated: 2026-03-22T20:10:00Z
 
@@ -480,7 +480,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 
 ### architect-core / architect-engine
 
-- [ ] 21.4 `TaskExecutorTest` — parallel batch execution with mock tasks, sequential fallback, failure propagation, child task execution
+- [x] 21.4 `TaskExecutorTest` — parallel batch execution with mock tasks, sequential fallback, failure propagation, child task execution | Finished: 2026-03-22T20:10:00Z | Notes: 6 tests covering single task success, parallel batch with independent tasks, sequential fallback ordering, failure propagation stopping remaining batches, CompositeTask child execution, and exception handling.
 - [ ] 21.5 `HistoryServiceTest` — write record, read all (sorted), read by project, limit, directory creation, JSON round-trip
 - [ ] 21.6 `ConfigValidatorTest` — required field missing, unknown key warning, plugin key validation, line numbers in errors
 - [ ] 21.7 `TaskDependencyResolverTest` — expand existing; add: children resolution, batch assignment for diamond graph, large graph performance test
