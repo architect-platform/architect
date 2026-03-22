@@ -40,6 +40,9 @@ class TaskExecutor(
     private val eventBus: EventBus<ArchitectEvent<*>>,
     private val dependencyResolver: TaskDependencyResolver = TaskDependencyResolver(),
     private val parallelExecutionEnabled: Boolean = EngineConfiguration.TaskExecution.DEFAULT_PARALLEL_ENABLED,
+    private val outputCache: LocalOutputCache? = null,
+    private val outputCacheEnabled: Boolean = false,
+    private val remoteOutputCache: RemoteOutputCache? = null,
 ) {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
@@ -133,6 +136,28 @@ class TaskExecutor(
       }
     }
 
+    // Content-hash output cache: check LocalOutputCache, then remote, before executing
+    if (outputCacheEnabled && outputCache != null) {
+      val descriptor = currentTask.cacheDescriptor()
+      if (descriptor != null) {
+        val cacheKey = CacheKeyComputer.compute(descriptor, projectContext.dir.toString(), projectContext.config)
+        val cachedResult = outputCache.get(cacheKey)
+          ?: remoteOutputCache?.fetchResult(cacheKey)?.let { remote ->
+            // Populate local cache from remote hit
+            val tr = remote.toTaskResult()
+            outputCache.store(cacheKey, tr, stdout = remote.stdout)
+            LocalOutputCache.CachedResult(success = remote.success, message = remote.message, stdout = remote.stdout)
+          }
+        if (cachedResult != null) {
+          val taskResult = cachedResult.toTaskResult()
+          taskCache.store(currentTask.id, taskResult)
+          eventBus(taskSkippedEvent(projectName, executionId, currentTask.id, message = "Task ${currentTask.id} skipped (output cache hit)", subProject = parentProject))
+          eventBus(taskCompletedEvent(projectName, executionId, currentTask.id, message = "Task ${currentTask.id} completed (output cache hit)", subProject = parentProject))
+          return taskResult
+        }
+      }
+    }
+
     eventBus(taskStartedEvent(projectName, executionId, currentTask.id, message = "Starting task: ${currentTask.id}", subProject = parentProject))
     return try {
       val result = currentTask.execute(environment, projectContext, args)
@@ -169,6 +194,17 @@ class TaskExecutor(
         eventBus(taskFailedEvent(projectName, executionId, currentTask.id, message = errMsg, errorDetails = errMsg, parentProject = parentProject))
       }
       taskCache.store(currentTask.id, finalResult)
+
+      // Store in content-hash output cache on success
+      if (outputCacheEnabled && outputCache != null && finalResult.success) {
+        val descriptor = currentTask.cacheDescriptor()
+        if (descriptor != null) {
+          val cacheKey = CacheKeyComputer.compute(descriptor, projectContext.dir.toString(), projectContext.config)
+          outputCache.store(cacheKey, finalResult, stdout = finalResult.message)
+          remoteOutputCache?.storeResult(cacheKey, finalResult, stdout = finalResult.message)
+        }
+      }
+
       finalResult
     } catch (e: Exception) {
       val errMsg = e.message ?: "Unknown error"

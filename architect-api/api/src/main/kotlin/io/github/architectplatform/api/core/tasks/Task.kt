@@ -1,6 +1,7 @@
 package io.github.architectplatform.api.core.tasks
 
 import io.github.architectplatform.api.core.project.ProjectContext
+import io.github.architectplatform.api.core.tasks.cache.CacheDescriptor
 import io.github.architectplatform.api.core.tasks.phase.Phase
 
 /**
@@ -101,6 +102,16 @@ interface Task {
    * @return true if the task requires confirmation, false otherwise
    */
   fun requiresConfirmation(): Boolean = false
+
+  /**
+   * Returns a cache descriptor declaring this task's cacheable inputs and outputs.
+   *
+   * When non-null, the executor computes a deterministic cache key from all inputs.
+   * If a matching cached result exists, the task execution is skipped.
+   *
+   * @return A [CacheDescriptor] describing inputs and outputs, or null if caching is not supported
+   */
+  fun cacheDescriptor(): CacheDescriptor? = null
 
   /**
    * Executes the task's work.

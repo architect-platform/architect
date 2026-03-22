@@ -51,7 +51,19 @@ object ArchitectSchemaGenerator {
     val props = node.putObject("properties")
     props.set<ObjectNode>("name", stringProp("Unique project name (used as identifier)"))
     props.set<ObjectNode>("description", stringProp("Human-readable project description"))
+    props.set<ObjectNode>("affected", affectedSchema())
     node.putArray("required").add("name")
+    node.put("additionalProperties", false)
+    return node
+  }
+
+  private fun affectedSchema(): ObjectNode {
+    val node = mapper.createObjectNode()
+    node.put("type", "object")
+    node.put("description", "Configuration for affected project detection in monorepos.")
+    val props = node.putObject("properties")
+    props.set<ObjectNode>("always-include", stringArrayProp("Projects to always include in affected runs, regardless of changes"))
+    props.set<ObjectNode>("never-include", stringArrayProp("Projects to always exclude from affected runs"))
     node.put("additionalProperties", false)
     return node
   }

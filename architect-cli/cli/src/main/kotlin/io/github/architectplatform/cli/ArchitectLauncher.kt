@@ -8,6 +8,8 @@ import io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.cli.engine.EngineHealthChecker
+import io.github.architectplatform.engine.core.execution.EmbeddedExecutionContext
+import io.github.architectplatform.engine.core.project.app.AffectedProjectResolver
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
@@ -137,6 +139,19 @@ class ArchitectLauncher(
   )
   var envProfile: String? = null
 
+  @CommandLine.Option(
+      names = ["--affected"],
+      description = ["Execute tasks only for projects affected by changes since base ref"],
+      defaultValue = "false",
+  )
+  var affected: Boolean = false
+
+  @CommandLine.Option(
+      names = ["--base"],
+      description = ["Base git ref for affected detection (default: HEAD~1)"],
+  )
+  var baseRef: String? = null
+
   /**
    * Main execution logic for the CLI.
    *
@@ -185,6 +200,14 @@ class ArchitectLauncher(
 
     if (command == "plugin") {
       handlePluginCommand()
+      return
+    }
+
+    if (command == "affected") {
+      val projectPath = System.getProperty("user.dir")
+      val projectName = extractProjectName(projectPath)
+      val affectedProjects = resolveAffectedProjects(projectName, projectPath)
+      printAffected(affectedProjects)
       return
     }
 
@@ -243,6 +266,17 @@ class ArchitectLauncher(
       return
     }
 
+    if (affected) {
+      val affectedProjects = resolveAffectedProjects(projectName, projectPath)
+      if (affectedProjects.isEmpty()) {
+        println("✅ No projects affected — nothing to run.")
+        return
+      }
+      if (!plain) {
+        println("🎯 Affected projects: ${affectedProjects.joinToString(", ")}")
+      }
+    }
+
     executeTask(projectName, command!!, taskArgs)
   }
 
@@ -294,7 +328,43 @@ class ArchitectLauncher(
       return
     }
 
+    if (affected) {
+      val affectedProjects = resolveAffectedProjects(projectName, projectPath)
+      if (affectedProjects.isEmpty()) {
+        println("✅ No projects affected — nothing to run.")
+        return
+      }
+      if (!plain) {
+        println("🎯 Affected projects: ${affectedProjects.joinToString(", ")}")
+      }
+    }
+
     executeTaskEmbedded(projectName, projectPath, command!!, taskArgs)
+  }
+
+  /**
+   * Resolves which projects are affected by changes since the configured base ref.
+   */
+  private fun resolveAffectedProjects(projectName: String, projectPath: String): Set<String> {
+    val context = EmbeddedExecutionContext.create(
+      remoteContentFetcher = io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher(),
+      activeProfile = embeddedTaskExecutor.activeProfile,
+    )
+    context.projectService.registerProject(projectName, projectPath)
+    val project = context.projectService.getProject(projectName)
+      ?: return emptySet()
+
+    val graph = context.projectService.buildDependencyGraph(projectName)
+    val affectedConfig = AffectedProjectResolver.parseConfig(
+      project.context.config["project"] as? Map<String, Any>
+    )
+    val resolver = AffectedProjectResolver()
+    return resolver.resolve(
+      root = project,
+      graph = graph,
+      baseRef = baseRef ?: "HEAD~1",
+      config = affectedConfig,
+    )
   }
 
   /**
@@ -698,6 +768,27 @@ class ArchitectLauncher(
       return
     }
     println("architect $cliVersion")
+  }
+
+  private fun printAffected(affectedProjects: Set<String>) {
+    if (json) {
+      val mapper = com.fasterxml.jackson.databind.ObjectMapper()
+          .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+      println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(affectedProjects))
+      return
+    }
+    if (affectedProjects.isEmpty()) {
+      println("✅ No projects affected.")
+      return
+    }
+    println()
+    println("━".repeat(80))
+    println("🎯 Affected Projects (base: ${baseRef ?: "HEAD~1"})")
+    println("━".repeat(80))
+    affectedProjects.sorted().forEach { println("  • $it") }
+    println()
+    println("  ${affectedProjects.size} project(s) affected")
+    println()
   }
 
   /**

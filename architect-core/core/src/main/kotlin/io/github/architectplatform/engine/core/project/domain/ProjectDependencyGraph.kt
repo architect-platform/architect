@@ -13,4 +13,22 @@ data class ProjectDependencyGraph(
     dependencies
       .filterValues { project in it }
       .keys
+
+  /**
+   * Returns all projects that transitively depend on the given project.
+   */
+  fun transitiveDependentsOf(project: String): Set<String> {
+    val result = mutableSetOf<String>()
+    val queue = ArrayDeque(listOf(project))
+    while (queue.isNotEmpty()) {
+      val current = queue.removeFirst()
+      val directDependents = dependentsOf(current)
+      for (dep in directDependents) {
+        if (result.add(dep)) {
+          queue.addLast(dep)
+        }
+      }
+    }
+    return result
+  }
 }

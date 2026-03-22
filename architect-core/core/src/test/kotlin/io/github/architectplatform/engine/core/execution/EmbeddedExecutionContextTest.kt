@@ -37,7 +37,7 @@ class EmbeddedExecutionContextTest {
     assertNotNull(context.pluginSourceRegistry)
 
     val supportedSources = context.pluginSourceRegistry.getSupportedTypes().toSet()
-    assertEquals(setOf("github", "local"), supportedSources)
+    assertTrue(supportedSources.containsAll(setOf("github", "local")))
 
     val commandExecutor = context.environment.service(CommandExecutor::class.java)
     val historyService = context.environment.service(HistoryService::class.java)

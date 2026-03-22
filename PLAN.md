@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 83/131 tasks completed (63%)
-Current Phase: Phase 16 — Affected Task Detection
-Last Updated: 2026-03-22T16:33:37Z
+Overall Progress: 95/131 tasks completed (73%)
+Current Phase: Phase 17 — Task Output Caching
+Last Updated: 2026-03-22T18:25:00Z
 
 ---
 
@@ -344,21 +344,22 @@ Engine  ←→  JSON-RPC over stdin/stdout  ←→  Plugin Process (Go, Python, 
 ### Tasks
 
 - [x] 16.1 Build **project dependency graph** from `architect.yml` `subprojects` declarations and inferred relationships (plugin shared config, shared `build.gradle.kts`, etc.) | Finished: 2026-03-22T16:33:37Z | Notes: added `ProjectDependencyGraph` model and `ProjectDependencyGraphBuilder` in `architect-core` with support for declared `subprojects` entries (`name`/`path` and `dependsOn`/`dependencies`) plus inferred parent-child and shared-build-file relationships; exposed graph construction through `ProjectService.buildDependencyGraph(...)`; added `ProjectDependencyGraphBuilderTest` (4 tests) and verified with `./gradlew -q test --tests '*ProjectDependencyGraphBuilderTest'` and `./gradlew -q compileKotlin`.
-- [ ] 16.2 **`git diff` integration** — compare against a base ref (default: `HEAD~1`, configurable to `origin/main`):
+- [x] 16.2 **`git diff` integration** — compare against a base ref (default: `HEAD~1`, configurable to `origin/main`):
   - Map changed files to source roots
   - Walk the dependency graph to find all transitively affected projects
-- [ ] 16.3 Add `architect build --affected` — executes tasks only for affected projects
-- [ ] 16.4 Add `architect build --affected --base origin/main` — compare against base branch (ideal for PR workflows)
-- [ ] 16.5 Add `affected` configuration to `architect.yml`:
+  | Finished: 2026-03-22T17:00:00Z | Notes: added `AffectedProjectResolver` in architect-core with git diff integration, file-to-project mapping via longest-prefix matching, transitive dependent expansion via BFS, `AffectedConfig` with always-include/never-include support, and `parseConfig()` for YAML parsing; added `transitiveDependentsOf()` to `ProjectDependencyGraph`; verified with `./gradlew -q compileKotlin`.
+- [x] 16.3 Add `architect build --affected` — executes tasks only for affected projects | Finished: 2026-03-22T17:10:00Z | Notes: added `--affected` flag to `ArchitectLauncher` with affected project resolution in both embedded and engine execution paths; prints affected project list before execution; skips execution when no projects are affected.
+- [x] 16.4 Add `architect build --affected --base origin/main` — compare against base branch (ideal for PR workflows) | Finished: 2026-03-22T17:10:00Z | Notes: added `--base` flag to `ArchitectLauncher` (default: `HEAD~1`); passed to `AffectedProjectResolver.resolve()` for configurable base ref comparison.
+- [x] 16.5 Add `affected` configuration to `architect.yml`: | Finished: 2026-03-22T17:15:00Z | Notes: added `affected` section (`always-include`, `never-include`) to project schema in `ArchitectSchemaGenerator`, updated bundled JSON schemas in `docs/schema/` and `architect-intellij/`; `AffectedProjectResolver.parseConfig()` parses from config map; all schema tests pass.
   ```yaml
   project:
     affected:
       always-include: ["shared-lib"]   # always run these regardless
       never-include: ["docs"]          # never run these in affected mode
   ```
-- [ ] 16.6 `architect affected` — prints the list of affected projects without running anything
+- [x] 16.6 `architect affected` — prints the list of affected projects without running anything | Finished: 2026-03-22T17:20:00Z | Notes: added `architect affected` command to `ArchitectLauncher` with `printAffected()` rendering (formatted table and JSON output support via `--json`); uses `resolveAffectedProjects()` with `--base` flag support; verified with `./gradlew -q compileKotlin`.
 - [ ] 16.7 **Cache invalidation integration**: if task output cache is enabled, a project is not "affected" if its cached outputs are valid even if files changed (requires Phase 17)
-- [ ] 16.8 Write `AffectedProjectResolverTest` — covers: no changes, root-only change, transitive dependency chain, always-include, never-include
+- [x] 16.8 Write `AffectedProjectResolverTest` — covers: no changes, root-only change, transitive dependency chain, always-include, never-include | Finished: 2026-03-22T18:00:00Z | Notes: 16 tests covering: no changes, git failure, root-only changes (with/without dependents), direct child changes, transitive dependency chain, diamond dependency, always-include (valid and nonexistent), never-include, never-include overriding always-include, parseConfig (null/missing/valid), longest-prefix file mapping, root fallback, cacheValidator identity.
 
 ### Acceptance Criteria
 
@@ -377,12 +378,12 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 
 ### Tasks
 
-- [ ] 17.1 Add `TaskCacheDescriptor` to `architect-api`: tasks optionally return `CacheDescriptor(inputs: List<CacheInput>, outputs: List<CacheOutput>)`
-- [ ] 17.2 `CacheInput` types: `FileSet(glob)`, `ConfigValue(key)`, `EnvVar(name)`, `CommandOutput(cmd)` — each produces a deterministic hash
-- [ ] 17.3 `LocalOutputCache` — stores serialized task states in `~/.architect/cache/{cacheKey}/`. Stores stdout, exit code, output files.
-- [ ] 17.4 `TaskExecutor` cache integration: compute key → check cache → skip if hit → execute and store on miss
-- [ ] 17.5 `RemoteOutputCache` interface — `storeResult(key, result)`, `fetchResult(key): Result?`. Writable provider: HTTP cache server.
-- [ ] 17.6 Implement HTTP remote cache backend (simple REST API: `GET /cache/{key}`, `PUT /cache/{key}`). Can be self-hosted or use architect-cloud.
+- [x] 17.1 Add `TaskCacheDescriptor` to `architect-api`: tasks optionally return `CacheDescriptor(inputs: List<CacheInput>, outputs: List<CacheOutput>)` | Finished: 2026-03-22T18:05:00Z | Notes: Created `CacheDescriptor`, `CacheInput` (sealed: FileSet, ConfigValue, EnvVar, CommandOutput), `CacheOutput` (sealed: FileSet, Stdout) in `api/core/tasks/cache/`; added `cacheDescriptor(): CacheDescriptor? = null` to `Task` interface.
+- [x] 17.2 `CacheInput` types: `FileSet(glob)`, `ConfigValue(key)`, `EnvVar(name)`, `CommandOutput(cmd)` — each produces a deterministic hash | Finished: 2026-03-22T18:05:00Z | Notes: Implemented as sealed class hierarchy in CacheDescriptor.kt; CacheOutput types also defined (FileSet, Stdout).
+- [x] 17.3 `LocalOutputCache` — stores serialized task states in `~/.architect/cache/{cacheKey}/`. Stores stdout, exit code, output files. | Finished: 2026-03-22T18:10:00Z | Notes: Created `LocalOutputCache` with file-system storage (result.json + stdout.txt per cache key), get/store/contains/clear/sizeBytes/entryCount API; created `CacheKeyComputer` with SHA-256 hashing over FileSet (glob walk), ConfigValue, EnvVar, CommandOutput inputs.
+- [x] 17.4 `TaskExecutor` cache integration: compute key → check cache → skip if hit → execute and store on miss | Finished: 2026-03-22T18:15:00Z | Notes: Added `outputCache` and `outputCacheEnabled` params to TaskExecutor; integrated CacheKeyComputer + LocalOutputCache into executeSingleTask: checks output cache before execution using cacheDescriptor(), stores on successful miss; fixed pre-existing EmbeddedExecutionContextTest assertion for expanded plugin source types.
+- [x] 17.5 `RemoteOutputCache` interface — `storeResult(key, result)`, `fetchResult(key): Result?`. Writable provider: HTTP cache server. | Finished: 2026-03-22T18:20:00Z | Notes: Defined `RemoteOutputCache` interface with `fetchResult`/`storeResult` methods and `CachedTaskResult` transport type; integrated into TaskExecutor with local→remote fallback on cache miss and remote push on store.
+- [x] 17.6 Implement HTTP remote cache backend (simple REST API: `GET /cache/{key}`, `PUT /cache/{key}`). Can be self-hosted or use architect-cloud. | Finished: 2026-03-22T18:25:00Z | Notes: Created `HttpRemoteOutputCache` implementing `RemoteOutputCache` using `RemoteContentFetcher`; uses simple text-based protocol (success flag + message + stdout separated by `---`).
 - [ ] 17.7 `architect cache clear` — wipes local cache. `architect cache info` — shows cache size, hit rate from last session.
 - [ ] 17.8 `--no-cache` flag to bypass cache for a run
 - [ ] 17.9 Write `TaskOutputCacheTest` — hit, miss, invalidation, remote fallback

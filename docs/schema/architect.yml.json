@@ -20,6 +20,27 @@
         "description" : {
           "type" : "string",
           "description" : "Human-readable project description"
+        },
+        "affected" : {
+          "type" : "object",
+          "description" : "Configuration for affected project detection in monorepos.",
+          "properties" : {
+            "always-include" : {
+              "type" : "array",
+              "description" : "Projects to always include in affected runs, regardless of changes",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "never-include" : {
+              "type" : "array",
+              "description" : "Projects to always exclude from affected runs",
+              "items" : {
+                "type" : "string"
+              }
+            }
+          },
+          "additionalProperties" : false
         }
       },
       "required" : [ "name" ],
