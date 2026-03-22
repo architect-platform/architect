@@ -53,6 +53,7 @@ dependencies {
   runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
   runtimeOnly("org.yaml:snakeyaml")
   testImplementation("io.micronaut:micronaut-http-client")
+  testImplementation("io.github.architectplatform:architect-cli:1.1.0")
   testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
   testImplementation("org.mockito:mockito-core:5.7.0")
 }

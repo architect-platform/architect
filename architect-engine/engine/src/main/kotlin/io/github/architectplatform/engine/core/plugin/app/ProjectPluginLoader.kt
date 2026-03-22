@@ -8,6 +8,7 @@ import io.github.architectplatform.api.core.project.getKey
 import io.github.architectplatform.engine.core.plugin.domain.events.PluginEvents.pluginLoaded
 import io.github.architectplatform.engine.core.plugin.infra.GitHubReleaseResolver
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
+import io.micronaut.context.annotation.Property
 import io.micronaut.context.event.ApplicationEventPublisher
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
@@ -23,6 +24,7 @@ class ProjectPluginLoader(
     private val internalPlugins: List<CommonPlugin>,
     private val releaseResolver: GitHubReleaseResolver,
     private val eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>,
+    @Property(name = "architect.plugins.classloader.debug", defaultValue = "false")
     private val classloaderDebug: Boolean = false,
 ) : PluginLoader {
 

@@ -1,3 +1,7 @@
 micronaut:
   server:
     port: 9293
+  http:
+    services:
+      engine:
+        url: http://localhost:9293

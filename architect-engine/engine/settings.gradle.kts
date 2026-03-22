@@ -7,6 +7,12 @@ includeBuild("../../architect-core/core") {
 	}
 }
 
+includeBuild("../../architect-cli/cli") {
+	dependencySubstitution {
+		substitute(module("io.github.architectplatform:architect-cli")).using(project(":"))
+	}
+}
+
 /*
                       includeBuild("../../architect-api/api") {
                       	dependencySubstitution {

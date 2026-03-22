@@ -37,8 +37,11 @@ class ExecutionApiController(private val taskService: TaskService) {
         emit(eventWrapper)
         val event = eventWrapper.event as ExecutionEvent
         logger.debug("SSE event for execution {}: type={}", executionId, event.executionEventType)
-        // Continue while the event is NOT a terminal root-level event
+        // Continue while the event is NOT a terminal root-level execution event.
+        // Task-level failures should still flow through so clients receive the final
+        // execution.failed event that summarizes the overall run.
         !(event.parentProject == null &&
+          (eventWrapper.id == "execution.completed" || eventWrapper.id == "execution.failed") &&
           (event.executionEventType == ExecutionEventType.COMPLETED ||
             event.executionEventType == ExecutionEventType.FAILED))
       }

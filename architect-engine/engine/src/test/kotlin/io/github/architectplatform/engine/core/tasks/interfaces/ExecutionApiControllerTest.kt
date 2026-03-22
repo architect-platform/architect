@@ -76,6 +76,33 @@ class ExecutionApiControllerTest {
     assertEquals(ExecutionEventType.FAILED, events.last().event?.executionEventType)
   }
 
+  @Test
+  fun `should continue streaming after task failure until execution failed event`() = runBlocking {
+    val executionId = "exec-task-failed"
+    whenever(taskService.getExecutionFlow(executionId)).thenReturn(
+      eventFlow(
+        executionStartedEvent("demo", executionId, message = "started"),
+        taskCompletedEvent("demo", executionId, "prepare", message = "prepare done"),
+        io.github.architectplatform.engine.core.tasks.domain.events.TaskEvents.taskFailedEvent(
+          "demo",
+          executionId,
+          "build",
+          message = "build failed",
+          errorDetails = "boom",
+        ),
+        executionFailedEvent("demo", executionId, message = "execution failed", errorDetails = "boom"),
+      )
+    )
+
+    val events = controller.getExecutionFlow(executionId).toList()
+
+    assertEquals(
+      listOf("execution.started", "task.completed", "task.failed", "execution.failed"),
+      events.map { it.id },
+    )
+    assertEquals(ExecutionEventType.FAILED, events.last().event?.executionEventType)
+  }
+
   private fun eventFlow(vararg events: ArchitectEvent<out ExecutionEvent>): Flow<ArchitectEvent<ExecutionEvent>> {
     @Suppress("UNCHECKED_CAST")
     return flowOf(*events) as Flow<ArchitectEvent<ExecutionEvent>>
