@@ -275,8 +275,8 @@ class ArchitectLauncher(
 
     if (command == "graph") {
       val graphOptions = parseGraphOptions(args)
-      val tasks = engineCommandClient.getAllTasks(projectName)
-      val plans = tasks.map { engineCommandClient.planTask(projectName, it.id) }
+      val plans = graphOptions.taskName?.let { listOf(engineCommandClient.planTask(projectName, it)) }
+        ?: engineCommandClient.getAllTasks(projectName).map { engineCommandClient.planTask(projectName, it.id) }
       if (graphOptions.open) {
         openGraph(projectName, plans)
       } else {
@@ -370,8 +370,10 @@ class ArchitectLauncher(
 
     if (command == "graph") {
       val graphOptions = parseGraphOptions(args)
-      val tasks = embeddedTaskExecutor.listTasks(projectName, projectPath)
-      val plans = tasks.map { embeddedTaskExecutor.plan(projectName, projectPath, it.id) }
+      val plans = graphOptions.taskName?.let { listOf(embeddedTaskExecutor.plan(projectName, projectPath, it)) }
+        ?: embeddedTaskExecutor.listTasks(projectName, projectPath).map {
+          embeddedTaskExecutor.plan(projectName, projectPath, it.id)
+        }
       if (graphOptions.open) {
         openGraph(projectName, plans)
       } else {
@@ -971,17 +973,29 @@ class ArchitectLauncher(
   }
 
   private fun parseGraphOptions(arguments: List<String>): GraphOptions {
-    val options = arguments.drop(1)
-    val invalid = options.filter { it != "--open" }
-    if (invalid.isNotEmpty()) {
-      println("Usage: architect graph [--open]")
+    var open = false
+    val positional = mutableListOf<String>()
+    arguments.drop(1).forEach { argument ->
+      when (argument) {
+        "--open" -> open = true
+        else -> if (argument.startsWith("--")) {
+          println("Usage: architect graph [task] [--open]")
+          exitProcess(1)
+        } else {
+          positional += argument
+        }
+      }
+    }
+    if (positional.size > 1) {
+      println("Usage: architect graph [task] [--open]")
       exitProcess(1)
     }
-    return GraphOptions(open = options.contains("--open"))
+    return GraphOptions(open = open, taskName = positional.singleOrNull())
   }
 
   private data class GraphOptions(
     val open: Boolean,
+    val taskName: String?,
   )
 
   private fun printValidation(projectName: String, result: ValidationResultDTO) {

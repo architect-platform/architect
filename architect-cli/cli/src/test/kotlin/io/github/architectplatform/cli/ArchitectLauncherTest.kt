@@ -253,7 +253,40 @@ class ArchitectLauncherTest {
       val dot = output.toString()
       assertTrue(dot.contains("digraph"))
       assertTrue(dot.contains("\"build\" -> \"test\""))
+      assertTrue(dot.contains("\"test\" -> \"deploy\""))
       assertTrue(dot.contains("Compile sources"))
+    } finally {
+      System.setProperty("user.dir", originalUserDir)
+    }
+  }
+
+  @Test
+  fun `graph command with task outputs only that task subgraph`(@TempDir tmpDir: Path) {
+    val client = GraphEngineCommandClient()
+    val launcher = ArchitectLauncher(
+      client,
+      stubHealthChecker(running = true),
+      io.github.architectplatform.cli.history.LocalHistoryReader(),
+      io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor(io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()),
+    )
+    val originalUserDir = System.getProperty("user.dir")
+    System.setProperty("user.dir", tmpDir.toString())
+    try {
+      launcher.command = "graph"
+      launcher.args = listOf("graph", "test")
+
+      val output = java.io.ByteArrayOutputStream()
+      val originalOut = System.out
+      System.setOut(java.io.PrintStream(output))
+      try {
+        launcher.run()
+      } finally {
+        System.setOut(originalOut)
+      }
+
+      val dot = output.toString()
+      assertTrue(dot.contains("\"build\" -> \"test\""))
+      assertTrue(!dot.contains("deploy"))
     } finally {
       System.setProperty("user.dir", originalUserDir)
     }
@@ -381,6 +414,7 @@ private class GraphEngineCommandClient : EngineCommandClient {
   override fun getAllTasks(projectName: String): List<TaskDTO> = listOf(
     TaskDTO(id = "build", description = "Compile sources", phase = "BUILD"),
     TaskDTO(id = "test", description = "Run tests", phase = "TEST"),
+    TaskDTO(id = "deploy", description = "Ship release", phase = "PUBLISH"),
   )
 
   override fun getTask(projectName: String, taskName: String): TaskDTO? = null
@@ -401,7 +435,7 @@ private class GraphEngineCommandClient : EngineCommandClient {
         ),
       ),
     )
-    else -> TaskPlanDTO(
+    "test" -> TaskPlanDTO(
       task = taskName,
       project = projectName,
       totalSteps = 2,
@@ -420,6 +454,35 @@ private class GraphEngineCommandClient : EngineCommandClient {
           phase = "TEST",
           depends = listOf("build"),
           batch = 1,
+        ),
+      ),
+    )
+    else -> TaskPlanDTO(
+      task = taskName,
+      project = projectName,
+      totalSteps = 3,
+      parallelBatches = 3,
+      steps = listOf(
+        TaskPlanStepDTO(
+          id = "build",
+          description = "Compile sources",
+          phase = "BUILD",
+          depends = emptyList(),
+          batch = 0,
+        ),
+        TaskPlanStepDTO(
+          id = "test",
+          description = "Run tests",
+          phase = "TEST",
+          depends = listOf("build"),
+          batch = 1,
+        ),
+        TaskPlanStepDTO(
+          id = "deploy",
+          description = "Ship release",
+          phase = "PUBLISH",
+          depends = listOf("test"),
+          batch = 2,
         ),
       ),
     )
