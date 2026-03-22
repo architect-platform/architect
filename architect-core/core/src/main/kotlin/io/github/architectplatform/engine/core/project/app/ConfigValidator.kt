@@ -1,7 +1,12 @@
 package io.github.architectplatform.engine.core.project.app
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.networknt.schema.JsonSchemaFactory
+import com.networknt.schema.SpecVersion
 import io.github.architectplatform.api.core.project.Config
 import io.github.architectplatform.api.core.project.getKey
+import io.github.architectplatform.engine.core.schema.ArchitectSchemaGenerator
 import jakarta.inject.Singleton
 
 data class ValidationResult(
@@ -16,8 +21,10 @@ class ConfigValidationException(message: String) : RuntimeException(message)
 class ConfigValidator {
 
     companion object {
-        private val BASE_KNOWN_KEYS = setOf("project", "plugins", "tasks")
+        private val BASE_KNOWN_KEYS = setOf("project", "plugins", "tasks", "\$schema")
     }
+
+    private val objectMapper = ObjectMapper().registerKotlinModule()
 
     /**
      * Validates the project config.
@@ -41,10 +48,25 @@ class ConfigValidator {
             warnings.add("Unknown top-level key '$key' in architect.yml — it will be ignored")
         }
 
+        // If $schema is declared, validate the config against the JSON Schema
+        val schemaUrl = config.getKey<String>("\$schema")
+        if (schemaUrl != null) {
+            errors.addAll(validateAgainstSchema(config))
+        }
+
         return ValidationResult(
             valid = errors.isEmpty(),
             errors = errors,
             warnings = warnings,
         )
+    }
+
+    private fun validateAgainstSchema(config: Config): List<String> {
+        val schemaNode = ArchitectSchemaGenerator.generate()
+        val factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)
+        val schema = factory.getSchema(schemaNode)
+        val configNode = objectMapper.valueToTree<com.fasterxml.jackson.databind.JsonNode>(config)
+        val validationMessages = schema.validate(configNode)
+        return validationMessages.map { it.message }
     }
 }

@@ -39,6 +39,7 @@ dependencies {
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
   implementation("org.yaml:snakeyaml:${snakeyamlVersion}")
   implementation("org.slf4j:slf4j-api:2.0.13")
+  implementation("com.networknt:json-schema-validator:1.5.6")
 
   compileOnly("jakarta.inject:jakarta.inject-api:2.0.1")
 
