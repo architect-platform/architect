@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 9/131 tasks completed (7%)
+Overall Progress: 10/131 tasks completed (8%)
 Current Phase: Phase 7 — Bug Fixes & Tech Debt
-Last Updated: 2026-03-22T00:02:00Z
+Last Updated: 2026-03-22T00:03:00Z
 
 ---
 
@@ -67,7 +67,7 @@ Last Updated: 2026-03-22T00:02:00Z
 
 - [x] 7.1 **API version mismatch** — `architect-engine/engine/build.gradle.kts` updated from `api:1.2.0` to `api:2.1.0`. Engine still compiles. | Finished: 2026-03-22T00:01:00Z
 - [x] 7.2 **SSE stream termination** — replaced `error(...)` + `try/catch` with `sharedFlow.filter { }.transformWhile { }` that completes cleanly on root COMPLETED/FAILED events. | Finished: 2026-03-22T00:02:00Z
-- [ ] 7.3 **ConfigValidator false warnings** — the validator warns on all plugin config keys (`gradle`, `docs`, `git`, etc.) as "unknown". Fix: build the known-key set dynamically from loaded plugin `contextKey` values, not a static list
+- [x] 7.3 **ConfigValidator false warnings** — validation now happens after plugin loading; plugin `contextKey` values are collected and passed as `pluginContextKeys` so `gradle`, `git`, `docs`, etc. no longer produce false warnings. | Finished: 2026-03-22T00:03:00Z
 - [ ] 7.4 **`ScriptsPlugin` phase resolution** — `parsePhase()` only resolves `CodeWorkflow`. Extend to resolve `CoreWorkflow` and `HooksWorkflow` (mirrors `InlineTaskPlugin` behavior)
 - [ ] 7.5 **Duplicate GitHub tag resolution** — `ProjectPluginLoader` contains private `resolveLatestTag()` and `compareVersions()` methods that duplicate `GitHubPluginSource`. Extract to a shared `GitHubReleaseResolver` utility and use it from both call sites
 - [ ] 7.6 **`architect history` without engine** — `HistoryService` writes files to `~/.architect/history/`. `architect history` routes through the engine daemon unnecessarily. Add a direct `LocalHistoryReader` in the CLI that reads these files without an HTTP call, and use it as the primary path (engine endpoint as fallback for remote scenarios)

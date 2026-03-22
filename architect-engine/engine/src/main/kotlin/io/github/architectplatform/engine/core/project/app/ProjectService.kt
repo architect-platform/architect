@@ -54,10 +54,6 @@ class ProjectService(
     logger.info("Loading project $name from path $path")
     val projectConfig = configLoader.load(path) ?: return null
 
-    val validation = configValidator.validate(projectConfig)
-    validation.warnings.forEach { logger.warn("Project $name: $it") }
-    validation.errors.forEach { logger.error("Project $name: $it") }
-
     val projectContext = ProjectContext(Path(path), projectConfig)
 
     // Call this method for every subfolder and build the subProjects list
@@ -131,6 +127,13 @@ class ProjectService(
 
     logger.info(
         "Loaded project $name at path $path with ${plugins.size} plugins and ${subProjects.size} subprojects")
+
+    // Validate after loading plugins so their contextKey values are known and won't produce false warnings
+    val pluginContextKeys = plugins.map { it.contextKey }.toSet()
+    val validation = configValidator.validate(projectConfig, pluginContextKeys)
+    validation.warnings.forEach { logger.warn("Project $name: $it") }
+    validation.errors.forEach { logger.error("Project $name: $it") }
+
     return Project(name, path, projectContext, plugins, subProjects, taskRegistry)
   }
 
@@ -203,6 +206,7 @@ class ProjectService(
   fun validateProject(name: String): ValidationResult {
     val project = getProject(name)
         ?: throw IllegalArgumentException("Project $name is not registered")
-    return configValidator.validate(project.context.config)
+    val pluginContextKeys = project.plugins.map { it.contextKey }.toSet()
+    return configValidator.validate(project.context.config, pluginContextKeys)
   }
 }

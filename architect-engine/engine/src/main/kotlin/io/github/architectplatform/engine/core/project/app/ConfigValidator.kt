@@ -16,10 +16,17 @@ class ConfigValidationException(message: String) : RuntimeException(message)
 class ConfigValidator {
 
     companion object {
-        private val KNOWN_TOP_LEVEL_KEYS = setOf("project", "plugins", "tasks")
+        private val BASE_KNOWN_KEYS = setOf("project", "plugins", "tasks")
     }
 
-    fun validate(config: Config): ValidationResult {
+    /**
+     * Validates the project config.
+     *
+     * @param config The raw project config map.
+     * @param pluginContextKeys Context keys declared by loaded plugins (e.g. "gradle", "git", "docs").
+     *   These are added to the known-key set so they do not produce false-positive warnings.
+     */
+    fun validate(config: Config, pluginContextKeys: Set<String> = emptySet()): ValidationResult {
         val errors = mutableListOf<String>()
         val warnings = mutableListOf<String>()
 
@@ -28,7 +35,8 @@ class ConfigValidator {
             errors.add("'project.name' is required but missing or blank")
         }
 
-        val unknownKeys = config.keys - KNOWN_TOP_LEVEL_KEYS
+        val knownKeys = BASE_KNOWN_KEYS + pluginContextKeys
+        val unknownKeys = config.keys - knownKeys
         unknownKeys.forEach { key ->
             warnings.add("Unknown top-level key '$key' in architect.yml — it will be ignored")
         }
