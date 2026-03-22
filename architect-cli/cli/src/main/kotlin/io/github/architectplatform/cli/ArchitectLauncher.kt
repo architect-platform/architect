@@ -10,6 +10,7 @@ import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.cli.engine.EngineHealthChecker
 import io.github.architectplatform.engine.core.execution.EmbeddedExecutionContext
 import io.github.architectplatform.engine.core.project.app.AffectedProjectResolver
+import io.github.architectplatform.engine.core.tasks.application.LocalOutputCache
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
@@ -372,6 +373,22 @@ class ArchitectLauncher(
       project.context.config["project"] as? Map<String, Any>
     )
     val resolver = AffectedProjectResolver()
+
+    // Phase 17: when output caching is enabled, filter out projects whose cached outputs
+    // are still valid. Uses a project-level content hash (SHA-256 of all source files)
+    // stored in the local output cache to skip projects that would produce no-op re-runs.
+    if (!noCache) {
+      val outputCache = LocalOutputCache()
+      resolver.cacheValidator = { projects ->
+        projects.filterTo(mutableSetOf()) { projectName ->
+          val subProject = graph.projects
+            .firstOrNull { it == projectName }
+          if (subProject == null) true  // unknown project – keep it
+          else !outputCache.contains("project:$projectName")
+        }
+      }
+    }
+
     return resolver.resolve(
       root = project,
       graph = graph,

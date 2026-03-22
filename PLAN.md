@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 98/131 tasks completed (75%)
+Overall Progress: 99/131 tasks completed (76%)
 Current Phase: Phase 17 — Task Output Caching
-Last Updated: 2026-03-22T18:42:00Z
+Last Updated: 2026-03-22T18:50:00Z
 
 ---
 
@@ -358,7 +358,7 @@ Engine  ←→  JSON-RPC over stdin/stdout  ←→  Plugin Process (Go, Python, 
       never-include: ["docs"]          # never run these in affected mode
   ```
 - [x] 16.6 `architect affected` — prints the list of affected projects without running anything | Finished: 2026-03-22T17:20:00Z | Notes: added `architect affected` command to `ArchitectLauncher` with `printAffected()` rendering (formatted table and JSON output support via `--json`); uses `resolveAffectedProjects()` with `--base` flag support; verified with `./gradlew -q compileKotlin`.
-- [ ] 16.7 **Cache invalidation integration**: if task output cache is enabled, a project is not "affected" if its cached outputs are valid even if files changed (requires Phase 17)
+- [x] 16.7 **Cache invalidation integration**: cacheValidator hook applied in AffectedProjectResolver.resolve(), wired in CLI with LocalOutputCache to filter out projects with valid cached outputs when --no-cache is not set
 - [x] 16.8 Write `AffectedProjectResolverTest` — covers: no changes, root-only change, transitive dependency chain, always-include, never-include | Finished: 2026-03-22T18:00:00Z | Notes: 16 tests covering: no changes, git failure, root-only changes (with/without dependents), direct child changes, transitive dependency chain, diamond dependency, always-include (valid and nonexistent), never-include, never-include overriding always-include, parseConfig (null/missing/valid), longest-prefix file mapping, root fallback, cacheValidator identity.
 
 ### Acceptance Criteria

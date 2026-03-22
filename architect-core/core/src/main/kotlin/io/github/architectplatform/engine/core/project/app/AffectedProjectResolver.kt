@@ -59,7 +59,9 @@ class AffectedProjectResolver(
     val result = transitivelyAffected.toMutableSet()
     result += config.alwaysInclude.filter { it in graph.projects }
     result -= config.neverInclude
-    return result
+
+    // Phase 17 integration: filter out projects whose cached outputs are still valid
+    return cacheValidator(result)
   }
 
   /**
