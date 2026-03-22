@@ -1,0 +1,41 @@
+{
+  "name": "@architect-platform/plugin-sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for Architect Plugin Protocol v1 process plugins",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/architect-platform/architect.git",
+    "directory": "sdk/typescript/plugin-sdk"
+  },
+  "homepage": "https://github.com/architect-platform/architect/tree/main/sdk/typescript/plugin-sdk",
+  "bugs": {
+    "url": "https://github.com/architect-platform/architect/issues"
+  },
+  "keywords": [
+    "architect",
+    "plugin",
+    "json-rpc",
+    "typescript",
+    "sdk"
+  ],
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "test": "npm run build && node --test dist/test/**/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.15",
+    "typescript": "^5.6.3"
+  }
+}
