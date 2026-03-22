@@ -6,8 +6,6 @@ group = "io.github.architectplatform"
 version = "1.6.1"
 
 val kotlinVersion = project.properties.get("kotlinVersion") as String
-val micronautVersion = project.properties.get("micronautVersion") as String
-val micronautSerdeVersion = project.properties.get("micronautSerdeVersion") as String
 val jacksonVersion = project.properties.get("jacksonVersion") as String
 val snakeyamlVersion = project.properties.get("snakeyamlVersion") as String
 val coroutinesVersion = project.properties.get("coroutinesVersion") as String
@@ -43,11 +41,6 @@ dependencies {
   implementation("org.slf4j:slf4j-api:2.0.13")
 
   compileOnly("jakarta.inject:jakarta.inject-api:2.0.1")
-  compileOnly("io.micronaut:micronaut-runtime:${micronautVersion}")
-  compileOnly("io.micronaut:micronaut-http:${micronautVersion}")
-  compileOnly("io.micronaut:micronaut-http-client:${micronautVersion}")
-  compileOnly("io.micronaut:micronaut-context:${micronautVersion}")
-  compileOnly("io.micronaut.serde:micronaut-serde-api:${micronautSerdeVersion}")
 
   testImplementation("org.jetbrains.kotlin:kotlin-test")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")

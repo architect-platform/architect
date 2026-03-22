@@ -4,11 +4,9 @@ import io.github.architectplatform.engine.core.plugin.domain.events.ArchitectEve
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import io.github.architectplatform.engine.domain.events.ExecutionEvent
 import io.github.architectplatform.engine.domain.events.ExecutionEventType
-import io.micronaut.serde.annotation.Serdeable
 
 object ExecutionEvents {
 
-  @Serdeable
   data class ExecutionEventDTO(
 	  override val project: String,
 	  override val executionId: String,

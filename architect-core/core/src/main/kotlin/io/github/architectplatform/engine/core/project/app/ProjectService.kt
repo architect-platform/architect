@@ -10,7 +10,6 @@ import io.github.architectplatform.engine.core.plugin.app.PluginLoader
 import io.github.architectplatform.engine.core.project.app.repositories.ProjectRepository
 import io.github.architectplatform.engine.core.project.domain.Project
 import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTaskRegistry
-import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
 import java.io.File
 import java.util.Optional
@@ -39,12 +38,10 @@ class ProjectService(
     private val pluginLoader: PluginLoader,
   private val projectReporter: Optional<ProjectRegistrationReporter>,
     private val configValidator: ConfigValidator,
+    private val cacheEnabled: Boolean = EngineConfiguration.Project.DEFAULT_CACHE_ENABLED,
 ) {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
-
-  @Property(name = EngineConfiguration.Project.CACHE_ENABLED, defaultValue = "${EngineConfiguration.Project.DEFAULT_CACHE_ENABLED}")
-  var cacheEnabled: Boolean = true
 
   private val objectMapper =
       ObjectMapper().registerKotlinModule().apply { disable(FAIL_ON_UNKNOWN_PROPERTIES) }

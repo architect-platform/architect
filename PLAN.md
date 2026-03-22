@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 12/131 tasks completed (9%)
+Overall Progress: 13/131 tasks completed (10%)
 Current Phase: Phase 8 — Embedded Execution Mode
-Last Updated: 2026-03-22T13:28:34Z
+Last Updated: 2026-03-22T13:34:40Z
 
 ---
 
@@ -101,7 +101,7 @@ The engine becomes optional, not required. The same `TaskExecutor`, `TaskDepende
 
 ### Tasks
 
-- [~] 8.1 Extract `architect-engine` execution domain into a separate Gradle sub-project `architect-core` (no Micronaut, no HTTP). Depends on `architect-api`. Contains: `TaskExecutor`, `TaskDependencyResolver`, `ProjectService`, `PluginLoader`, `HistoryService`, `ConfigValidator`, `BashCommandExecutor`, `InlineTaskPlugin`, `CorePlugin`, etc. | Progress: standalone Gradle scaffolding added; coroutine/version alignment fixed; missing `Serdeable` imports corrected; `ProjectService` decoupled from cloud module via new `ProjectRegistrationReporter` interface; `TaskExecutor` fixed to use core `EventBus`; `architect-core/core` now compiles with `./gradlew compileKotlin`. | Remaining: eliminate Micronaut/HTTP imports (17 references) and replace with core-owned abstractions to satisfy "no Micronaut, no HTTP" completion criteria.
+- [x] 8.1 Extract `architect-engine` execution domain into a separate Gradle sub-project `architect-core` (no Micronaut, no HTTP). Depends on `architect-api`. Contains: `TaskExecutor`, `TaskDependencyResolver`, `ProjectService`, `PluginLoader`, `HistoryService`, `ConfigValidator`, `BashCommandExecutor`, `InlineTaskPlugin`, `CorePlugin`, etc. | Finished: 2026-03-22T13:34:40Z | Notes: Completed standalone `architect-core/core` Gradle project and extraction of core execution domain classes; removed all `io.micronaut` imports and direct HTTP usage from core by introducing core abstractions (`EventBus`, `ProjectRegistrationReporter`, `RemoteContentFetcher`); verified with `./gradlew -q compileKotlin`.
 - [ ] 8.2 `architect-engine` and `architect-cli` both depend on `architect-core`
 - [ ] 8.3 Add `EmbeddedEventBus` — an in-process event publisher that replaces Micronaut's `ApplicationEventPublisher` for embedded mode
 - [ ] 8.4 Add `EmbeddedExecutionContext` — wires core services without a Micronaut container

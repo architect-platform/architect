@@ -6,11 +6,9 @@ import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import io.github.architectplatform.engine.domain.events.ExecutionEventType
 import io.github.architectplatform.engine.domain.events.ExecutionId
 import io.github.architectplatform.engine.domain.events.ExecutionTaskEvent
-import io.micronaut.serde.annotation.Serdeable
 
 object TaskEvents {
 
-  @Serdeable
   data class TaskEventDTO(
       override val project: String,
       override val executionId: ExecutionId,
