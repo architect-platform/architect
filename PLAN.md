@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 121/131 tasks completed (92%)
+Overall Progress: 122/131 tasks completed (93%)
 Current Phase: Phase 21 — Testing — Coverage to >85%
-Last Updated: 2026-03-22T20:08:26Z
+Last Updated: 2026-03-22T20:10:00Z
 
 ---
 
@@ -475,7 +475,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 ### architect-api
 
 - [x] 21.1 All existing tests verified passing | Finished: 2026-03-22T20:08:26Z | Notes: All 10 API test files pass — ConfigTest, CompositeTaskTest, TaskResultTest, ConfigurableTaskTest, SimpleTaskTest, TaskWithArgsTest, ArchitectPluginTestKitTest, HooksWorkflowTest, CodeWorkflowTest, CoreWorkflowTest.
-- [ ] 21.2 Add `ProjectContextTest` — getKey extension, missing key, nested key, wrong type
+- [x] 21.2 Add `ProjectContextTest` — getKey extension, missing key, nested key, wrong type | Finished: 2026-03-22T20:08:26Z | Notes: 8 tests covering dir/config access, missing key, nested traversal, partial path, type erasure behavior, primitive traversal error, list element access, and data class equality.
 - [ ] 21.3 Add `TaskRegistryTest` — register, get, all, duplicate id handling
 
 ### architect-core / architect-engine
