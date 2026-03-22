@@ -66,4 +66,12 @@ interface ArchitectPlugin<C> {
    * @param registry The task registry where tasks should be registered
    */
   fun register(registry: TaskRegistry)
+
+  /**
+   * Returns a JSON Schema (as a nested Map) for this plugin's configuration section.
+   *
+   * When non-null, the validator will check the plugin's config block in `architect.yml`
+   * against this schema. Return `null` (the default) to skip per-plugin schema validation.
+   */
+  fun configSchema(): Map<String, Any>? = null
 }
