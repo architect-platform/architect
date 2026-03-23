@@ -58,6 +58,18 @@ class ArchitectPluginTestKitTest {
     assertEquals(listOf("event-fired"), kit.publishedEvents())
   }
 
+  @Test
+  fun `withSecret exposes secrets to task execution`() {
+    val plugin = SecretPlugin()
+    val kit = ArchitectPluginTestKit(plugin)
+      .withSecret("API_TOKEN", "super-secret")
+
+    val result = kit.executeTask("secret-task")
+
+    assertTrue(result.success)
+    assertEquals("super-secret", result.message)
+  }
+
   data class ExampleContext(
     val greeting: String = "hi",
     val enabled: Boolean = true,
@@ -114,6 +126,24 @@ class ArchitectPluginTestKitTest {
         ) { environment, _ ->
           environment.publish("event-fired")
           TaskResult.success("done")
+        }
+      )
+    }
+  }
+
+  private class SecretPlugin : ArchitectPlugin<Unit> {
+    override val id: String = "secret-plugin"
+    override val contextKey: String = "secrets"
+    override val ctxClass: Class<Unit> = Unit::class.java
+    override var context: Unit = Unit
+
+    override fun register(registry: TaskRegistry) {
+      registry.add(
+        SimpleTask(
+          id = "secret-task",
+          description = "Reads a secret",
+        ) { environment, _ ->
+          TaskResult.success(environment.secret("API_TOKEN"))
         }
       )
     }

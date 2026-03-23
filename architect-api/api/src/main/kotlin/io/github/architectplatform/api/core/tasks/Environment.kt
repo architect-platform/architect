@@ -44,6 +44,17 @@ interface Environment {
   fun publish(event: Any)
 
   /**
+   * Resolves a named secret from the active runtime environment.
+   *
+   * Implementations may source secrets from environment variables, local `.env` files,
+   * or external secret managers.
+   *
+   * @param name The secret identifier
+   * @return The resolved secret value, or null when it is unavailable
+   */
+  fun secret(name: String): String? = null
+
+  /**
    * Returns the active environment profile name.
    *
    * Profiles allow different configurations for dev, staging, production, CI, etc.

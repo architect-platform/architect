@@ -19,6 +19,7 @@ class ArchitectPluginTestKit<C : Any>(
 ) {
   private val taskRegistry = InMemoryTaskRegistry()
   private val services = mutableMapOf<Class<*>, Any>()
+  private val secrets = mutableMapOf<String, String>()
   private val publishedEvents = mutableListOf<Any>()
   private val projectConfig = mutableMapOf<String, Any>()
   private var registered = false
@@ -40,6 +41,11 @@ class ArchitectPluginTestKit<C : Any>(
     return this
   }
 
+  fun withSecret(name: String, value: String): ArchitectPluginTestKit<C> {
+    secrets[name] = value
+    return this
+  }
+
   fun tasks(): List<Task> {
     ensureRegistered()
     return taskRegistry.all()
@@ -55,7 +61,7 @@ class ArchitectPluginTestKit<C : Any>(
     val task = taskRegistry.get(id)
       ?: throw IllegalArgumentException("Task '$id' not found for plugin ${plugin.id}")
     return task.execute(
-      TestEnvironment(services, publishedEvents, activeProfile),
+      TestEnvironment(services, secrets, publishedEvents, activeProfile),
       ProjectContext(projectDir, projectConfig.toMap()),
       args,
     )
@@ -171,6 +177,7 @@ class ArchitectPluginTestKit<C : Any>(
 
   private class TestEnvironment(
     private val services: Map<Class<*>, Any>,
+    private val secrets: Map<String, String>,
     private val publishedEvents: MutableList<Any>,
     private val activeProfile: String,
   ) : Environment {
@@ -184,6 +191,8 @@ class ArchitectPluginTestKit<C : Any>(
     override fun publish(event: Any) {
       publishedEvents += event
     }
+
+    override fun secret(name: String): String? = secrets[name]
 
     override fun profile(): String = activeProfile
   }

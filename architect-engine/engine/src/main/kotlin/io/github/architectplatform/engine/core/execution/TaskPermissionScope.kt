@@ -2,10 +2,12 @@ package io.github.architectplatform.engine.core.execution
 
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskPermission
+import java.nio.file.Path
 
 internal data class TaskPermissionContext(
   val taskId: String,
   val permissions: Set<TaskPermission>,
+  val projectDir: Path? = null,
 )
 
 internal object TaskPermissionScope {
@@ -13,12 +15,17 @@ internal object TaskPermissionScope {
 
   fun current(): TaskPermissionContext? = current.get()
 
-  fun <T> withTask(task: Task, block: () -> T): T =
-    withPermissions(task.id, task.requiredPermissions(), block)
+  fun <T> withTask(task: Task, projectDir: Path? = null, block: () -> T): T =
+    withPermissions(task.id, task.requiredPermissions(), projectDir, block)
 
-  fun <T> withPermissions(taskId: String, permissions: Set<TaskPermission>, block: () -> T): T {
+  fun <T> withPermissions(
+    taskId: String,
+    permissions: Set<TaskPermission>,
+    projectDir: Path? = null,
+    block: () -> T,
+  ): T {
     val previous = current.get()
-    current.set(TaskPermissionContext(taskId, permissions))
+    current.set(TaskPermissionContext(taskId, permissions, projectDir))
     return try {
       block()
     } finally {

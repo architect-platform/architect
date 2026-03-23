@@ -161,13 +161,13 @@ class TaskExecutor(
 
     eventBus(taskStartedEvent(projectName, executionId, currentTask.id, message = "Starting task: ${currentTask.id}", subProject = parentProject))
     return try {
-      val result = TaskPermissionScope.withTask(currentTask) {
+      val result = TaskPermissionScope.withTask(currentTask, projectContext.dir) {
         currentTask.execute(environment, projectContext, args)
       }
       val childResults = if (currentTask.children().isNotEmpty()) {
         dependencyResolver.resolveChildren(currentTask, taskRegistry).map { child ->
           eventBus(taskStartedEvent(projectName, executionId, child.id, message = "Starting child task: ${child.id} (parent: ${currentTask.id})", subProject = parentProject))
-          val childResult = TaskPermissionScope.withTask(child) {
+          val childResult = TaskPermissionScope.withTask(child, projectContext.dir) {
             child.execute(environment, projectContext, args)
           }
           if (childResult.success) {
