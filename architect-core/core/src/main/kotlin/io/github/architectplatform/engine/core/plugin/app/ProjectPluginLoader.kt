@@ -10,6 +10,10 @@ import io.github.architectplatform.engine.core.plugin.domain.events.PluginEvents
 import io.github.architectplatform.engine.core.plugin.infra.GitHubReleaseResolver
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import jakarta.inject.Singleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import kotlin.io.path.exists
 import org.slf4j.LoggerFactory
 
@@ -28,91 +32,97 @@ class ProjectPluginLoader(
   private val objectMapper = ObjectMapper().registerKotlinModule()
 
     override fun load(context: ProjectContext): List<ArchitectPlugin<*>> {
-        val enabled = mutableListOf<ArchitectPlugin<*>>()
-        // 1) Always include internal plugins
-        enabled += internalPlugins.map { it.getPlugin() }
-
         val rawContext = context.config.getKey<Any>("plugins") ?: emptyList<PluginConfig>()
         val plugins: List<PluginConfig> =
             when (rawContext) {
-                is List<*> -> {
-                    // Config contains a list, so we deserialize as List<ctxClass>
-                    rawContext.map { item -> objectMapper.convertValue(item, PluginConfig::class.java) }
-                }
+                is List<*> -> rawContext.map { item -> objectMapper.convertValue(item, PluginConfig::class.java) }
                 else -> {
                     throw IllegalArgumentException(
                         "Invalid plugins context format: expected list, got ${rawContext::class.qualifiedName}")
                 }
             }
-        // 2) Download & load each project-declared plugin JAR
-        plugins.forEach { plugin ->
-            if (plugin.type == "process") {
-                val cmd = plugin.command
-                    ?: throw IllegalArgumentException("Plugin '${plugin.name}' type 'process' requires 'command' field")
-                val adapter = io.github.architectplatform.engine.core.plugin.protocol.ProcessPluginAdapter(
-                    pluginId = plugin.name,
-                    command = cmd,
-                    workingDir = context.dir.toString(),
-                )
-                eventBus(pluginLoaded(plugin.name))
-                enabled += adapter
-                return@forEach
-            }
 
-            if (plugin.type == "npm") {
-                val packageName = plugin.packageName
-                    ?: throw IllegalArgumentException("Plugin '${plugin.name}' type 'npm' requires 'package' field")
-                val packageSpec =
-                    if (plugin.version.isBlank() || plugin.version == "latest") {
-                        packageName
-                    } else {
-                        "$packageName@${plugin.version}"
+        val loadedPlugins =
+            runBlocking {
+                plugins.mapIndexed { index, plugin ->
+                    async(Dispatchers.IO) {
+                        index to loadConfiguredPlugin(plugin, context)
                     }
-                val adapter = io.github.architectplatform.engine.core.plugin.protocol.ProcessPluginAdapter(
-                    pluginId = plugin.name,
-                    command = "npx --yes ${shellQuote(packageSpec)}",
-                    workingDir = context.dir.toString(),
-                )
-                eventBus(pluginLoaded(plugin.name))
-                enabled += adapter
-                return@forEach
-            }
+                }.awaitAll()
+            }.sortedBy { it.first }
+                .flatMap { it.second }
 
-            val jar =
-                when (plugin.type) {
-                    "github" -> {
-                        val tag =
-                            if (plugin.version == "latest") {
-                                releaseResolver.resolveLatestTag(plugin.repo, plugin.pattern).getOrThrow()
-                            } else {
-                                "${plugin.name}-${plugin.version}"
-                            }
-                        val url =
-                            "https://github.com/${plugin.repo}/releases/download/$tag/${plugin.asset}"
-                        downloader.download(url)
-                    }
-                    "local" -> {
-                        // Local plugin, assume the asset is a local path
-                        val localPath = context.dir.resolve(plugin.path)
-                        if (!localPath.exists()) {
-                            throw IllegalArgumentException(
-                                "Local plugin asset not found: ${localPath.toAbsolutePath()}")
-                        }
-                        localPath.toFile()
-                    }
-                    else -> throw IllegalArgumentException("Unsupported plugin type: ${plugin.type}")
-                }
-            val loader = IsolatedPluginClassLoader(
-              arrayOf(jar.toURI().toURL()),
-              this::class.java.classLoader,
-              debug = classloaderDebug,
+        return buildList {
+            addAll(internalPlugins.map { it.getPlugin() })
+            addAll(loadedPlugins)
+        }
+    }
+
+    private fun loadConfiguredPlugin(
+        plugin: PluginConfig,
+        context: ProjectContext,
+    ): List<ArchitectPlugin<*>> {
+        if (plugin.type == "process") {
+            val cmd = plugin.command
+                ?: throw IllegalArgumentException("Plugin '${plugin.name}' type 'process' requires 'command' field")
+            val adapter = io.github.architectplatform.engine.core.plugin.protocol.ProcessPluginAdapter(
+                pluginId = plugin.name,
+                command = cmd,
+                workingDir = context.dir.toString(),
             )
-            val loaded = spiLoader.loadFrom(loader)
             eventBus(pluginLoaded(plugin.name))
-            enabled += loaded
+            return listOf(adapter)
         }
 
-        return enabled
+        if (plugin.type == "npm") {
+            val packageName = plugin.packageName
+                ?: throw IllegalArgumentException("Plugin '${plugin.name}' type 'npm' requires 'package' field")
+            val packageSpec =
+                if (plugin.version.isBlank() || plugin.version == "latest") {
+                    packageName
+                } else {
+                    "$packageName@${plugin.version}"
+                }
+            val adapter = io.github.architectplatform.engine.core.plugin.protocol.ProcessPluginAdapter(
+                pluginId = plugin.name,
+                command = "npx --yes ${shellQuote(packageSpec)}",
+                workingDir = context.dir.toString(),
+            )
+            eventBus(pluginLoaded(plugin.name))
+            return listOf(adapter)
+        }
+
+        val jar =
+            when (plugin.type) {
+                "github" -> {
+                    val tag =
+                        if (plugin.version == "latest") {
+                            releaseResolver.resolveLatestTag(plugin.repo, plugin.pattern).getOrThrow()
+                        } else {
+                            "${plugin.name}-${plugin.version}"
+                        }
+                    val url =
+                        "https://github.com/${plugin.repo}/releases/download/$tag/${plugin.asset}"
+                    downloader.download(url)
+                }
+                "local" -> {
+                    val localPath = context.dir.resolve(plugin.path)
+                    if (!localPath.exists()) {
+                        throw IllegalArgumentException(
+                            "Local plugin asset not found: ${localPath.toAbsolutePath()}")
+                    }
+                    localPath.toFile()
+                }
+                else -> throw IllegalArgumentException("Unsupported plugin type: ${plugin.type}")
+            }
+        val loader = IsolatedPluginClassLoader(
+            arrayOf(jar.toURI().toURL()),
+            this::class.java.classLoader,
+            debug = classloaderDebug,
+        )
+        val loaded = spiLoader.loadFrom(loader)
+        eventBus(pluginLoaded(plugin.name))
+        return loaded
     }
 
     private fun shellQuote(value: String): String =

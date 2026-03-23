@@ -5,8 +5,8 @@ import jakarta.inject.Singleton
 import java.util.*
 
 @Singleton
-class SpiPluginLoader {
+open class SpiPluginLoader {
   /** Discover plugins in the given ClassLoader via `META-INF/services`. */
-  fun loadFrom(classLoader: ClassLoader): List<ArchitectPlugin<*>> =
+  open fun loadFrom(classLoader: ClassLoader): List<ArchitectPlugin<*>> =
       ServiceLoader.load(ArchitectPlugin::class.java, classLoader).toList()
 }
