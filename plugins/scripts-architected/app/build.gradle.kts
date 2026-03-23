@@ -31,7 +31,7 @@ repositories {
 }
 
 dependencies {
-  implementation("io.github.architectplatform:api:1.1.3")
+  implementation("io.github.architectplatform:api:2.1.0")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
