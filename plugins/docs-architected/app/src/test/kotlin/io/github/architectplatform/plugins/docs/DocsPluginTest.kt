@@ -3,9 +3,12 @@ package io.github.architectplatform.plugins.docs
 import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
+import io.github.architectplatform.plugins.docs.builders.MkDocsBuilder
+import io.github.architectplatform.plugins.docs.builders.VuePressBuilder
 import io.github.architectplatform.plugins.docs.builders.DocumentationBuilderFactory
 import io.github.architectplatform.plugins.docs.dto.BuildContext
 import io.github.architectplatform.plugins.docs.dto.DocsContext
+import io.github.architectplatform.plugins.docs.dto.PublishContext
 import io.github.architectplatform.plugins.docs.utils.SecurityUtils
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -127,14 +130,20 @@ class DocsPluginTest {
   }
 
   @Test
-  fun `MkDocs builder sanitizes output directory in build command`() {
+  fun `MkDocs builder rejects output directory that escapes repo root`() {
     val executor = RecordingCommandExecutor()
-    val ctx = BuildContext(framework = "mkdocs", outputDir = "../../../etc/evil")
-    val builder = DocumentationBuilderFactory.createBuilder(ctx, executor)
-    // MkDocsBuilder.build() calls SecurityUtils.sanitizePath on outputDir
-    val sanitized = SecurityUtils.sanitizePath(ctx.outputDir)
-    assertFalse(sanitized.contains(".."))
-    assertFalse(sanitized.startsWith("/"))
+    val builder = MkDocsBuilder(BuildContext(framework = "mkdocs", outputDir = "../outside"), executor)
+    val workingDir = Files.createTempDirectory("mkdocs-builder-test")
+
+    try {
+      val result = builder.build(workingDir.toFile())
+
+      assertFalse(result.success)
+      assertTrue(result.message!!.contains("Invalid MkDocs output directory"))
+      assertTrue(executor.commands.isEmpty())
+    } finally {
+      workingDir.toFile().deleteRecursively()
+    }
   }
 
   @Test
@@ -193,6 +202,77 @@ class DocsPluginTest {
       assertEquals("Auto-discovered 1 components with documentation", result.results!![0].message)
     } finally {
       repoDir.toFile().deleteRecursively()
+    }
+  }
+
+  @Test
+  fun `docs-init fails when source directory escapes repo root`() {
+    val repoDir = Files.createTempDirectory("docs-init-invalid-source")
+    Files.createDirectories(repoDir.resolve(".git"))
+
+    try {
+      val plugin = DocsPlugin()
+      plugin.init(DocsContext(build = BuildContext(sourceDir = "../outside")))
+      val registry = TestTaskRegistry()
+      plugin.register(registry)
+      val task = registry.get("docs-init")!!
+
+      val result = task.execute(
+        TestEnvironment(RecordingCommandExecutor()),
+        ProjectContext(repoDir, emptyMap()),
+        emptyList()
+      )
+
+      assertFalse(result.success)
+      assertTrue(result.message!!.contains("Invalid documentation source directory"))
+    } finally {
+      repoDir.toFile().deleteRecursively()
+    }
+  }
+
+  @Test
+  fun `docs-publish fails when output directory escapes repo root`() {
+    val repoDir = Files.createTempDirectory("docs-publish-invalid-output")
+    Files.createDirectories(repoDir.resolve(".git"))
+
+    try {
+      val plugin = DocsPlugin()
+      plugin.init(
+        DocsContext(
+          build = BuildContext(outputDir = "../outside"),
+          publish = PublishContext(enabled = true, githubPages = true)
+        )
+      )
+      val registry = TestTaskRegistry()
+      plugin.register(registry)
+      val task = registry.get("docs-publish")!!
+
+      val result = task.execute(
+        TestEnvironment(RecordingCommandExecutor()),
+        ProjectContext(repoDir, emptyMap()),
+        emptyList()
+      )
+
+      assertFalse(result.success)
+      assertTrue(result.message!!.contains("Invalid documentation output directory"))
+    } finally {
+      repoDir.toFile().deleteRecursively()
+    }
+  }
+
+  @Test
+  fun `VuePress builder rejects source directory that escapes repo root`() {
+    val executor = RecordingCommandExecutor()
+    val builder = VuePressBuilder(BuildContext(framework = "vuepress", sourceDir = "../outside"), executor)
+    val workingDir = Files.createTempDirectory("vuepress-builder-test")
+
+    try {
+      val result = builder.generateConfiguration(workingDir.toFile(), emptyList())
+
+      assertFalse(result.success)
+      assertTrue(result.message!!.contains("Invalid VuePress source directory"))
+    } finally {
+      workingDir.toFile().deleteRecursively()
     }
   }
 

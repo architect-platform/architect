@@ -107,7 +107,16 @@ class MkDocsBuilder(
      * Builds documentation using mkdocs build command.
      */
     override fun build(workingDir: File): TaskResult {
-        val sanitizedOutputDir = SecurityUtils.sanitizePath(context.outputDir)
+        val sanitizedOutputDir = if (context.outputDir.isNotEmpty()) {
+            try {
+                resolvePathWithinRoot(workingDir.toPath(), context.outputDir, "Docs output directory")
+                SecurityUtils.sanitizePath(context.outputDir)
+            } catch (e: IllegalArgumentException) {
+                return TaskResult.failure("Invalid MkDocs output directory: ${e.message}")
+            }
+        } else {
+            ""
+        }
         
         return try {
             // Use mkdocs from virtual environment

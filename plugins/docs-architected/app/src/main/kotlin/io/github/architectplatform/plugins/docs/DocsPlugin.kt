@@ -386,15 +386,18 @@ extra:
    */
   private fun aggregateComponentDocs(gitDir: File, components: List<ComponentDocs>, tempDocsDir: File) {
     // Copy root docs
-    val rootDocsDir = File(gitDir, context.build.sourceDir)
+    val rootDocsDir = resolvePathWithinRoot(gitDir.toPath(), context.build.sourceDir, "Docs source directory").toFile()
     if (rootDocsDir.exists()) {
       rootDocsDir.copyRecursively(tempDocsDir, overwrite = true)
     }
     
     // Copy component docs
     for (component in components) {
-      val componentDocsSource = File(gitDir, "${component.path}/${component.docsPath}")
-      val componentDocsTarget = File(tempDocsDir, "${component.path}/${component.docsPath}")
+      val componentPath = "${component.path}/${component.docsPath}"
+      val componentDocsSource =
+          resolvePathWithinRoot(gitDir.toPath(), componentPath, "Component docs source").toFile()
+      val componentDocsTarget =
+          resolvePathWithinRoot(tempDocsDir.toPath(), componentPath, "Component docs target").toFile()
       
       if (componentDocsSource.exists()) {
         componentDocsTarget.parentFile.mkdirs()
@@ -425,7 +428,11 @@ extra:
     val results = mutableListOf<TaskResult>()
 
     // Create documentation directory if it doesn't exist
-    val docsDir = File(gitDir, context.build.sourceDir)
+    val docsDir = try {
+      resolvePathWithinRoot(gitDir.toPath(), context.build.sourceDir, "Docs source directory").toFile()
+    } catch (e: IllegalArgumentException) {
+      return TaskResult.failure("Invalid documentation source directory: ${e.message}")
+    }
     if (!docsDir.exists()) {
       docsDir.mkdirs()
       results.add(TaskResult.success("Created documentation directory: ${context.build.sourceDir}"))
@@ -535,7 +542,11 @@ extra:
             ?: return TaskResult.failure("Git directory not found in project hierarchy.")
 
     val commandExecutor = environment.service(CommandExecutor::class.java)
-    val outputDir = File(gitDir, context.build.outputDir)
+    val outputDir = try {
+      resolvePathWithinRoot(gitDir.toPath(), context.build.outputDir, "Docs output directory").toFile()
+    } catch (e: IllegalArgumentException) {
+      return TaskResult.failure("Invalid documentation output directory: ${e.message}")
+    }
     
     // Create publisher and execute publish
     return try {

@@ -2,12 +2,13 @@ package io.github.architectplatform.engine.plugins.commits.tasks
 
 import io.github.architectplatform.api.components.workflows.hooks.HooksWorkflow
 import io.github.architectplatform.api.core.project.ProjectContext
+import io.github.architectplatform.api.core.project.resolvePathWithinRoot
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.engine.plugins.commits.context.CommitsContext
 import java.nio.file.Files
-import java.nio.file.Paths
+import java.nio.file.Path
 import java.util.regex.Pattern
 import org.slf4j.LoggerFactory
 
@@ -19,17 +20,16 @@ class VerifyCommitMessageTask(
 
   override fun phase(): HooksWorkflow = HooksWorkflow.COMMIT_MSG
 
-    private fun findRootDir(projectContext: ProjectContext): String {
-        var currentDir = projectContext.dir.toString()
-        while (true) {
-            if (Files.exists(Paths.get(currentDir, ".git"))) {
-                return currentDir
-            }
-            val parentDir = Paths.get(currentDir).parent ?: break
-            currentDir = parentDir.toString()
-        }
-        return projectContext.dir.toString()
+  private fun findRootDir(projectContext: ProjectContext): Path {
+    var currentDir = projectContext.dir.toAbsolutePath().normalize()
+    while (true) {
+      if (Files.exists(currentDir.resolve(".git"))) {
+        return currentDir
+      }
+      currentDir = currentDir.parent ?: break
     }
+    return projectContext.dir.toAbsolutePath().normalize()
+  }
 
   override fun execute(
       environment: Environment,
@@ -41,8 +41,13 @@ class VerifyCommitMessageTask(
     val commitFilePath =
         args.getOrNull(0) ?: return TaskResult.failure("No commit message file path provided")
 
-      val rootDir = findRootDir(projectContext)
-        val commitFileFullPath = Paths.get(rootDir, commitFilePath)
+    val rootDir = findRootDir(projectContext)
+    val commitFileFullPath =
+        try {
+          resolvePathWithinRoot(rootDir, commitFilePath, "Commit message file")
+        } catch (e: IllegalArgumentException) {
+          return TaskResult.failure("Invalid commit message file path: ${e.message}")
+        }
     val commitMessage: String =
         try {
           Files.readString(commitFileFullPath)

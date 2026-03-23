@@ -1,6 +1,7 @@
 package io.github.architectplatform.plugins.docs.builders
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
+import io.github.architectplatform.api.core.project.resolvePathWithinRoot
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.plugins.docs.dto.BuildContext
 import io.github.architectplatform.plugins.docs.dto.ComponentDocs
@@ -26,7 +27,12 @@ class VuePressBuilder(
      * Generates .vuepress/config.js configuration if it doesn't exist.
      */
     override fun generateConfiguration(workingDir: File, components: List<ComponentDocs>): TaskResult {
-        val vuepressDir = File(workingDir, "${context.sourceDir}/.vuepress")
+        val sourceDir = try {
+            resolvePathWithinRoot(workingDir.toPath(), context.sourceDir, "Docs source directory").toFile()
+        } catch (e: IllegalArgumentException) {
+            return TaskResult.failure("Invalid VuePress source directory: ${e.message}")
+        }
+        val vuepressDir = File(sourceDir, ".vuepress")
         val configFile = File(vuepressDir, "config.js")
         
         return if (configFile.exists()) {

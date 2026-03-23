@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 157/217 tasks completed (72%)
+Overall Progress: 158/217 tasks completed (73%)
 Current Phase: Phase 24 — Security Hardening
-Last Updated: 2026-03-23T16:25:00Z
+Last Updated: 2026-03-23T16:31:24Z
 
 ---
 
@@ -574,7 +574,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 24.2 **Task permission model** — tasks declare required permissions in their descriptor: `file-system:read`, `file-system:write`, `network:outbound`, `process:exec`. Engine enforces via a Java SecurityManager replacement (process-level sandboxing). | Finished: 2026-03-23T15:45:00Z | Notes: added shared `TaskPermission` declarations in `architect-api` with permission-aware task constructors/defaults, propagated `permissions` through inline tasks plus APP v1 `TaskDescriptor`/SDKs/docs, and enforced task-scoped subprocess launches in both core and engine via `TaskPermissionScope` plus `SandboxedProcessLauncher`; focused API/core/engine regression suites now cover explicit permission metadata and `process:exec` denial paths.
 - [x] 24.3 **Secrets management** — tasks access secrets via `Environment.secret("MY_SECRET")` which resolves from: environment variable, `.env` file, HashiCorp Vault, AWS Secrets Manager, GCP Secret Manager. Secrets are never logged. | Finished: 2026-03-23T16:05:00Z | Notes: added `Environment.secret(name)` to the shared API plus `ArchitectPluginTestKit.withSecret(...)`, implemented default secret resolver chains in both core and engine (`env` → project `.env` → Vault HTTP API → AWS CLI → GCP CLI), threaded project directories through task execution scope so `.env` resolution stays task-local, and added focused API/core/engine tests for secret access, resolver precedence, and engine environment delegation without logging secret values.
 - [x] 24.4 **Audit logging** — every task execution is audit-logged with: timestamp, user, project, task, args, result, duration. Stored locally and optionally synced to `architect-cloud`. | Finished: 2026-03-23T16:25:00Z | Notes: enriched `ExecutionRecord`/CLI history DTOs with `user`, `args`, and `result`, updated both engine and embedded CLI execution paths to persist the fuller audit record locally, added optional cloud audit sync through `CloudReporterService.reportAuditRecord(...)` and a new `CloudClient` audit endpoint, and verified the behavior with focused engine `TaskServiceTest` plus CLI history compatibility tests.
-- [ ] 24.5 **Path traversal prevention** — all user-provided paths are validated against the project root (already partially done in `SecurityUtils`; apply uniformly).
+- [x] 24.5 **Path traversal prevention** — all user-provided paths are validated against the project root (already partially done in `SecurityUtils`; apply uniformly). | Finished: 2026-03-23T16:31:24Z | Notes: routed commit hook message paths through `resolvePathWithinRoot(...)` in both core and engine, hardened docs source/output directory handling in `DocsPlugin`, `MkDocsBuilder`, and `VuePressBuilder`, and added focused regressions covering traversal rejection plus valid in-root commit files; docs plugin tests and core commit-task tests pass, while the engine module remains blocked by an unrelated pre-existing `ProjectPluginLoader.kt` compile error in the dirty worktree.
 - [ ] 24.6 **Shell injection prevention** — all user-provided values passed to shell commands are escaped (already done in `GitUtils`; apply uniformly to `BashCommandExecutor.buildCommand()`).
 - [ ] 24.7 **Dependency vulnerability scanning** — add `trivy` or OWASP Dependency Check to CI for all components
 - [ ] 24.8 **CI security review** — replace `curl | bash` installer in CI workflows with a checksummed binary download
