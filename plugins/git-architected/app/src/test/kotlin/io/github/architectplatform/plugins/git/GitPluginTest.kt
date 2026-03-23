@@ -107,6 +107,115 @@ class GitPluginTest {
     assertEquals("git push ", executor.command)
   }
 
+  // --- Adversarial escaping tests ---
+
+  @Test
+  fun `git-config rejects key with semicolon injection`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(GitContext(config = mapOf("user.name; rm -rf /" to "val")), "git-config")
+
+    val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
+
+    assertFalse(result.success)
+    assertTrue(executor.commands.isEmpty())
+  }
+
+  @Test
+  fun `git-config rejects key with command substitution`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(GitContext(config = mapOf("user.\$(whoami)" to "val")), "git-config")
+
+    val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
+
+    assertFalse(result.success)
+    assertTrue(executor.commands.isEmpty())
+  }
+
+  @Test
+  fun `git-config rejects key with backtick injection`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(GitContext(config = mapOf("user.`id`" to "val")), "git-config")
+
+    val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
+
+    assertFalse(result.success)
+    assertTrue(executor.commands.isEmpty())
+  }
+
+  @Test
+  fun `git-config rejects key starting with hyphen`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(GitContext(config = mapOf("--include" to "val")), "git-config")
+
+    val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
+
+    assertFalse(result.success)
+    assertTrue(executor.commands.isEmpty())
+  }
+
+  @Test
+  fun `git-config escapes value with single quotes`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(GitContext(config = mapOf("user.name" to "O'Reilly")), "git-config")
+
+    val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
+
+    assertTrue(result.success)
+    val cmd = executor.commands[0]
+    assertTrue(cmd.contains("git config --local"))
+    // Value must be escaped — raw O'Reilly would break shell quoting
+    assertFalse(cmd.contains("O'Reilly"))
+  }
+
+  @Test
+  fun `git-config escapes value with semicolon injection`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(GitContext(config = mapOf("user.name" to "val; rm -rf /")), "git-config")
+
+    val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
+
+    assertTrue(result.success)
+    val cmd = executor.commands[0]
+    // Semicolon must be inside quotes: 'val; rm -rf /'
+    assertTrue(cmd.contains("'val; rm -rf /'"))
+  }
+
+  @Test
+  fun `git-config escapes value with command substitution`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(GitContext(config = mapOf("user.name" to "\$(whoami)")), "git-config")
+
+    val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
+
+    assertTrue(result.success)
+    val cmd = executor.commands[0]
+    // Must be single-quoted to prevent expansion
+    assertTrue(cmd.contains("'\$(whoami)'"))
+  }
+
+  @Test
+  fun `git-commit escapes args with semicolon injection`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(GitContext(), "git-commit")
+
+    task.execute(TestEnvironment(executor), projectContext(), listOf("-m", "fix; rm -rf /"))
+
+    val cmd = executor.command!!
+    assertTrue(cmd.contains("'fix; rm -rf /'"))
+  }
+
+  @Test
+  fun `git-commit escapes args with backtick injection`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(GitContext(), "git-commit")
+
+    task.execute(TestEnvironment(executor), projectContext(), listOf("-m", "`rm -rf /`"))
+
+    val cmd = executor.command!!
+    // Backtick-containing args must be quoted
+    assertTrue(cmd.contains("'`rm -rf /`'"))
+  }
+
   private fun registerAndGet(ctx: GitContext, taskId: String): io.github.architectplatform.api.core.tasks.Task {
     val plugin = GitPlugin()
     plugin.init(ctx)
