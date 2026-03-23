@@ -8,7 +8,7 @@ import java.net.ServerSocket
 /**
  * Unit tests for [EngineHealthChecker].
  *
- * Covers: HTTP 200 success path, connection refused, and read timeout.
+ * Covers: HTTP 200 success path, HTTP 500 server error, connection refused, and read timeout.
  */
 class EngineHealthCheckerTest {
 
@@ -30,6 +30,24 @@ class EngineHealthCheckerTest {
 
     // Act & Assert
     assertTrue(checker.isRunning())
+  }
+
+  @Test
+  fun `should return false when engine responds with HTTP 500`() {
+    val server = ServerSocket(0)
+    val port = server.localPort
+    val checker = EngineHealthChecker()
+    checker.engineUrl = "http://localhost:$port"
+
+    Thread {
+      val conn = server.accept()
+      val response = "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+      conn.getOutputStream().write(response.toByteArray())
+      conn.close()
+      server.close()
+    }.apply { isDaemon = true }.start()
+
+    assertFalse(checker.isRunning())
   }
 
   @Test
