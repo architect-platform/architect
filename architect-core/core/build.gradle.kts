@@ -2,6 +2,7 @@ plugins {
   kotlin("jvm") version "1.9.25"
   jacoco
   id("info.solidsoft.pitest") version "1.15.0"
+  id("me.champeau.jmh") version "0.7.2"
 }
 
 group = "io.github.architectplatform"
@@ -49,6 +50,9 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+
+  jmhImplementation("org.openjdk.jmh:jmh-core:1.37")
+  jmhAnnotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.37")
 }
 
 kotlin {
@@ -94,6 +98,14 @@ tasks.jacocoTestCoverageVerification {
 
 tasks.check {
   dependsOn(tasks.jacocoTestCoverageVerification)
+}
+
+jmh {
+  warmupIterations.set(1)
+  iterations.set(1)
+  fork.set(1)
+  benchmarkMode.set(listOf("avgt"))
+  timeOnIteration.set("200ms")
 }
 
 pitest {
