@@ -506,7 +506,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 
 - [x] 21.19 `EngineServiceTest`, `ProjectServiceTest`, `ExecutionServiceTest` — all use case operations
 - [x] 21.20 `ExecutionEventServiceTest` — event broadcasting via Reactor Sink
-- [ ] 21.21 `EventsWebSocketServerTest` — WebSocket event delivery
+- [x] 21.21 `EventsWebSocketServerTest` — WebSocket event delivery
 - [ ] 21.22 Add persistence adapter integration tests with H2
 
 ### Coverage Gates
