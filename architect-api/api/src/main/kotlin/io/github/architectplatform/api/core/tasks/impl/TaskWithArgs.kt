@@ -3,6 +3,7 @@ package io.github.architectplatform.api.core.tasks.impl
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
+import io.github.architectplatform.api.core.tasks.TaskPermission
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
 
@@ -48,6 +49,7 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
  * @param description Human-readable description of what this task does
  * @param phase The lifecycle phase this task belongs to (optional, null for standalone tasks)
  * @param customDependencies Additional dependencies beyond phase dependencies (optional)
+ * @param permissions Permissions required to execute the task (defaults to full access)
  * @param task Lambda function containing the task logic, receives arguments as a list
  */
 class TaskWithArgs(
@@ -55,11 +57,14 @@ class TaskWithArgs(
   val description: String,
   private val phase: Phase? = null,
   private val customDependencies: List<String> = emptyList(),
+  private val permissions: Set<TaskPermission> = TaskPermission.all(),
   private val task: (Environment, ProjectContext, List<String>) -> TaskResult,
 ) : Task {
   override fun phase(): Phase? = phase
 
   override fun description(): String = description
+
+  override fun requiredPermissions(): Set<TaskPermission> = permissions
 
   override fun depends(): List<String> {
     // Combine phase dependencies with custom dependencies

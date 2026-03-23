@@ -94,6 +94,7 @@ Successful response:
       "description": "Build the project",
       "phase": "BUILD",
       "dependencies": ["init"],
+      "permissions": ["file-system:read", "process:exec"],
       "requires_confirmation": false
     }
   ]
@@ -188,6 +189,7 @@ Plugins report request failures using standard JSON-RPC error objects.
 - `description`: human-readable summary
 - `phase`: optional Architect workflow phase name
 - `dependencies`: optional task IDs that must run first
+- `permissions`: optional capability list. Supported values are `file-system:read`, `file-system:write`, `network:outbound`, and `process:exec`
 - `requires_confirmation`: optional boolean for destructive tasks
 
 ## Execution Contract

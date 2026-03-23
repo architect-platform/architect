@@ -17,6 +17,7 @@ class TaskDescriptor:
     description: str | None = None
     phase: str | None = None
     dependencies: list[str] | None = None
+    permissions: list[str] | None = None
     requires_confirmation: bool = False
 
 

@@ -56,6 +56,7 @@ type TaskDescriptor struct {
 	Description          string   `json:"description,omitempty"`
 	Phase                string   `json:"phase,omitempty"`
 	Dependencies         []string `json:"dependencies,omitempty"`
+	Permissions          []string `json:"permissions,omitempty"`
 	RequiresConfirmation bool     `json:"requires_confirmation,omitempty"`
 }
 

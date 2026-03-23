@@ -3,6 +3,7 @@ package io.github.architectplatform.api.core.tasks.impl
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
+import io.github.architectplatform.api.core.tasks.TaskPermission
 import io.github.architectplatform.api.core.tasks.TaskResult
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -140,5 +141,31 @@ class SimpleTaskTest {
 
     assertTrue(argsReceived)
     assertTrue(result.success)
+  }
+
+  @Test
+  fun `SimpleTask defaults to full permissions`() {
+    val task =
+      SimpleTask(
+        id = "test-task",
+        description = "A test task",
+      ) { _, _ -> TaskResult.success() }
+
+    assertEquals(TaskPermission.all(), task.requiredPermissions())
+  }
+
+  @Test
+  fun `SimpleTask exposes explicit permissions`() {
+    val task =
+      SimpleTask(
+        id = "test-task",
+        description = "A test task",
+        permissions = setOf(TaskPermission.FILE_SYSTEM_READ, TaskPermission.PROCESS_EXEC),
+      ) { _, _ -> TaskResult.success() }
+
+    assertEquals(
+      setOf(TaskPermission.FILE_SYSTEM_READ, TaskPermission.PROCESS_EXEC),
+      task.requiredPermissions(),
+    )
   }
 }

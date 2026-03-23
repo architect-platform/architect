@@ -7,6 +7,7 @@ import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.engine.core.config.EngineConfiguration
+import io.github.architectplatform.engine.core.execution.TaskPermissionScope
 import io.github.architectplatform.engine.core.events.EventBus
 import io.github.architectplatform.engine.core.project.domain.Project
 import io.github.architectplatform.engine.core.tasks.domain.TaskDependencyResolver
@@ -160,11 +161,15 @@ class TaskExecutor(
 
     eventBus(taskStartedEvent(projectName, executionId, currentTask.id, message = "Starting task: ${currentTask.id}", subProject = parentProject))
     return try {
-      val result = currentTask.execute(environment, projectContext, args)
+      val result = TaskPermissionScope.withTask(currentTask) {
+        currentTask.execute(environment, projectContext, args)
+      }
       val childResults = if (currentTask.children().isNotEmpty()) {
         dependencyResolver.resolveChildren(currentTask, taskRegistry).map { child ->
           eventBus(taskStartedEvent(projectName, executionId, child.id, message = "Starting child task: ${child.id} (parent: ${currentTask.id})", subProject = parentProject))
-          val childResult = child.execute(environment, projectContext, args)
+          val childResult = TaskPermissionScope.withTask(child) {
+            child.execute(environment, projectContext, args)
+          }
           if (childResult.success) {
             eventBus(taskCompletedEvent(projectName, executionId, child.id, message = childResult.message ?: "Child task ${child.id} completed", subProject = parentProject))
           } else {

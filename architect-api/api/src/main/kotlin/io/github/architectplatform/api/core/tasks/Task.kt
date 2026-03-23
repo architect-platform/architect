@@ -104,6 +104,16 @@ interface Task {
   fun requiresConfirmation(): Boolean = false
 
   /**
+   * Returns the permissions required to execute this task.
+   *
+   * The default remains full access so existing tasks continue to work until they opt in to a
+   * narrower permission set.
+   *
+   * @return Set of declared execution permissions
+   */
+  fun requiredPermissions(): Set<TaskPermission> = TaskPermission.all()
+
+  /**
    * Returns a cache descriptor declaring this task's cacheable inputs and outputs.
    *
    * When non-null, the executor computes a deterministic cache key from all inputs.

@@ -6,10 +6,12 @@ import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
+import io.github.architectplatform.api.core.tasks.TaskPermission
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
+import io.github.architectplatform.engine.core.execution.SandboxedProcessLauncher
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -177,10 +179,8 @@ class ProcessPluginAdapter(
   }
 
   private fun <T> withProcess(block: (BufferedReader, OutputStreamWriter) -> T): T {
-    val pb = ProcessBuilder(command)
-    workingDir?.let { pb.directory(java.io.File(it)) }
-    pb.redirectErrorStream(false)
-    val process = pb.start()
+    val launchedProcess = SandboxedProcessLauncher.launch(command, workingDir, redirectErrorStream = false)
+    val process = launchedProcess.process
     val stderrDrainer = thread(name = "process-plugin-${pluginId}-stderr", isDaemon = true) {
       process.errorStream.bufferedReader().useLines { lines ->
         lines.forEach { logger.warn("[{}] {}", pluginId, it) }
@@ -197,6 +197,7 @@ class ProcessPluginAdapter(
         process.waitFor(5, java.util.concurrent.TimeUnit.SECONDS)
       }
       stderrDrainer.join(1000)
+      launchedProcess.cleanup()
     }
   }
 
@@ -249,6 +250,8 @@ internal class ProcessBridgeTask(
 
   override fun requiresConfirmation(): Boolean = descriptor.requiresConfirmation
 
+  override fun requiredPermissions(): Set<TaskPermission> = TaskPermission.fromWireNames(descriptor.permissions)
+
   override fun execute(
     environment: Environment,
     projectContext: ProjectContext,
@@ -257,6 +260,7 @@ internal class ProcessBridgeTask(
     val envVars = mutableMapOf<String, String>()
     envVars["ARCHITECT_PROJECT_DIR"] = projectContext.dir.toString()
     envVars["ARCHITECT_PROFILE"] = environment.profile()
+    envVars["ARCHITECT_TASK_PERMISSIONS"] = requiredPermissions().joinToString(",") { it.wireName }
     return adapter.executeTask(id, args, envVars)
   }
 }

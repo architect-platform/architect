@@ -42,6 +42,7 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
  * @property phase The lifecycle phase this task belongs to (optional)
  * @property config Configuration map with task-specific settings
  * @property customDependencies Additional dependencies beyond phase dependencies (optional)
+ * @property permissions Permissions required to execute the task (defaults to full access)
  * @property task Lambda function containing the task logic with access to configuration
  */
 class ConfigurableTask(
@@ -50,11 +51,14 @@ class ConfigurableTask(
   private val phase: Phase? = null,
   private val config: Map<String, String> = emptyMap(),
   private val customDependencies: List<String> = emptyList(),
+  private val permissions: Set<TaskPermission> = TaskPermission.all(),
   private val task: (Environment, ProjectContext, Map<String, String>, List<String>) -> TaskResult,
 ) : Task {
   override fun description(): String = description
 
   override fun phase(): Phase? = phase
+
+  override fun requiredPermissions(): Set<TaskPermission> = permissions
 
   override fun depends(): List<String> {
     // Combine phase dependencies with custom dependencies

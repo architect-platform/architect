@@ -1,5 +1,6 @@
 package io.github.architectplatform.engine.core.execution
 
+import io.github.architectplatform.api.core.tasks.TaskPermission
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -159,5 +160,16 @@ class BashCommandExecutorTest {
         assertDoesNotThrow {
             executor.execute("for i in 1 2 3; do echo \$i; done")
         }
+    }
+
+    @Test
+    fun `should reject process execution when task lacks permission`() {
+        val exception = assertThrows(IllegalStateException::class.java) {
+            TaskPermissionScope.withPermissions("forbidden-task", setOf(TaskPermission.FILE_SYSTEM_READ)) {
+                executor.execute("echo 'blocked'")
+            }
+        }
+
+        assertTrue(exception.message!!.contains("process:exec"))
     }
 }

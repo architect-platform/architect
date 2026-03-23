@@ -1,6 +1,7 @@
 package io.github.architectplatform.engine.plugins.inline
 
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
+import io.github.architectplatform.api.core.tasks.TaskPermission
 import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTaskRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -103,5 +104,24 @@ class InlineTaskPluginTest {
 
         // Assert
         assertEquals(0, registry.all().size)
+    }
+
+    @Test
+    fun `should expose declared permissions on inline tasks`() {
+        val plugin = InlineTaskPlugin()
+        plugin.init(mapOf(
+            "deploy" to mapOf(
+                "run" to "kubectl apply -f k8s/",
+                "permissions" to listOf("file-system:read", "network:outbound", "process:exec"),
+            ),
+        ))
+        val registry = InMemoryTaskRegistry()
+
+        plugin.register(registry)
+
+        assertEquals(
+            setOf(TaskPermission.FILE_SYSTEM_READ, TaskPermission.NETWORK_OUTBOUND, TaskPermission.PROCESS_EXEC),
+            registry.get("deploy")!!.requiredPermissions(),
+        )
     }
 }

@@ -41,6 +41,7 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
  * @property phase The lifecycle phase this task belongs to (optional)
  * @property children List of child task IDs to execute
  * @property customDependencies Additional dependencies beyond phase dependencies (optional)
+ * @property permissions Permissions required to execute the task (defaults to full access)
  * @property beforeChildren Optional hook executed before child tasks (optional)
  * @property afterChildren Optional hook executed after the parent task completes (optional)
  * Note: afterChildren runs before child tasks are executed, as it's part of parent's execute()
@@ -51,12 +52,15 @@ class CompositeTask(
   private val phase: Phase? = null,
   private val children: List<String> = emptyList(),
   private val customDependencies: List<String> = emptyList(),
+  private val permissions: Set<TaskPermission> = TaskPermission.all(),
   private val beforeChildren: ((Environment, ProjectContext) -> TaskResult)? = null,
   private val afterChildren: ((Environment, ProjectContext, List<TaskResult>) -> TaskResult)? = null,
 ) : Task {
   override fun description(): String = description
 
   override fun phase(): Phase? = phase
+
+  override fun requiredPermissions(): Set<TaskPermission> = permissions
 
   override fun depends(): List<String> {
     // Combine phase dependencies with custom dependencies

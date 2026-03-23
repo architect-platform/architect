@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 154/217 tasks completed (71%)
+Overall Progress: 155/217 tasks completed (71%)
 Current Phase: Phase 24 — Security Hardening
-Last Updated: 2026-03-23T15:28:00Z
+Last Updated: 2026-03-23T15:45:00Z
 
 ---
 
@@ -571,7 +571,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
       verify-signature: true
       trusted-keys: ["0xABCD1234"]
   ```
-- [ ] 24.2 **Task permission model** — tasks declare required permissions in their descriptor: `file-system:read`, `file-system:write`, `network:outbound`, `process:exec`. Engine enforces via a Java SecurityManager replacement (process-level sandboxing).
+- [x] 24.2 **Task permission model** — tasks declare required permissions in their descriptor: `file-system:read`, `file-system:write`, `network:outbound`, `process:exec`. Engine enforces via a Java SecurityManager replacement (process-level sandboxing). | Finished: 2026-03-23T15:45:00Z | Notes: added shared `TaskPermission` declarations in `architect-api` with permission-aware task constructors/defaults, propagated `permissions` through inline tasks plus APP v1 `TaskDescriptor`/SDKs/docs, and enforced task-scoped subprocess launches in both core and engine via `TaskPermissionScope` plus `SandboxedProcessLauncher`; focused API/core/engine regression suites now cover explicit permission metadata and `process:exec` denial paths.
 - [ ] 24.3 **Secrets management** — tasks access secrets via `Environment.secret("MY_SECRET")` which resolves from: environment variable, `.env` file, HashiCorp Vault, AWS Secrets Manager, GCP Secret Manager. Secrets are never logged.
 - [ ] 24.4 **Audit logging** — every task execution is audit-logged with: timestamp, user, project, task, args, result, duration. Stored locally and optionally synced to `architect-cloud`.
 - [ ] 24.5 **Path traversal prevention** — all user-provided paths are validated against the project root (already partially done in `SecurityUtils`; apply uniformly).

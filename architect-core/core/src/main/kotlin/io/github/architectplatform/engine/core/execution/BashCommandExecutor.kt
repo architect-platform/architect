@@ -32,12 +32,12 @@ open class BashCommandExecutor(
    * @return Pair of exit code and command output
    */
   private fun executeCommand(command: String, workingDir: String? = null): Pair<Int, String> {
-    val processBuilder = ProcessBuilder("sh", "-c", command)
-    workingDir?.let { processBuilder.directory(File(it)) }
-
-    processBuilder.redirectErrorStream(redirectErrorStream)
-
-    val process = processBuilder.start()
+    val launchedProcess = SandboxedProcessLauncher.launch(
+      command = listOf("sh", "-c", command),
+      workingDir = workingDir,
+      redirectErrorStream = redirectErrorStream,
+    )
+    val process = launchedProcess.process
 
     val output = StringBuilder()
     val reader = process.inputStream.bufferedReader()
@@ -52,20 +52,23 @@ open class BashCommandExecutor(
     outputThread.start()
     val completed = process.waitFor(timeoutSeconds, TimeUnit.SECONDS)
     
-    if (!completed) {
-      process.destroyForcibly()
-      outputThread.interrupt()
-      // Wait for thread to finish with timeout
-      outputThread.join(1000)
-      throw IllegalStateException(
-        "Command timed out after $timeoutSeconds seconds: $command"
-      )
-    }
-    
-    outputThread.join()
-    val exitCode = process.exitValue()
+    try {
+      if (!completed) {
+        process.destroyForcibly()
+        outputThread.interrupt()
+        outputThread.join(1000)
+        throw IllegalStateException(
+          "Command timed out after $timeoutSeconds seconds: $command"
+        )
+      }
 
-    return exitCode to output.toString().trim()
+      outputThread.join()
+      val exitCode = process.exitValue()
+
+      return exitCode to output.toString().trim()
+    } finally {
+      launchedProcess.cleanup()
+    }
   }
 
   override fun execute(command: String, workingDir: String?) {

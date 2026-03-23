@@ -70,6 +70,7 @@ data class TaskDescriptor(
   val description: String = "",
   val phase: String? = null,
   val dependencies: List<String> = emptyList(),
+  val permissions: List<String> = emptyList(),
   @JsonProperty("requires_confirmation")
   val requiresConfirmation: Boolean = false,
 )

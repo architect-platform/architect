@@ -133,6 +133,7 @@ object ArchitectSchemaGenerator {
     props.set<ObjectNode>("run", stringProp("Shell command to execute"))
     props.set<ObjectNode>("phase", phaseEnum())
     props.set<ObjectNode>("depends", stringArrayProp("Task IDs this task depends on"))
+    props.set<ObjectNode>("permissions", permissionArrayProp("Permissions required to execute the task"))
 
     node.put("additionalProperties", false)
     return node
@@ -154,6 +155,22 @@ object ArchitectSchemaGenerator {
     node.put("type", "array")
     node.put("description", description)
     node.putObject("items").put("type", "string")
+    return node
+  }
+
+  private fun permissionArrayProp(description: String): ObjectNode {
+    val node = mapper.createObjectNode()
+    node.put("type", "array")
+    node.put("description", description)
+    val items = node.putObject("items")
+    items.put("type", "string")
+    val values = items.putArray("enum")
+    listOf(
+      "file-system:read",
+      "file-system:write",
+      "network:outbound",
+      "process:exec",
+    ).forEach(values::add)
     return node
   }
 

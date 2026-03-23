@@ -64,16 +64,18 @@ class ProcessPluginAdapterTest {
     assertEquals("A test task", descriptor.description)
     assertNull(descriptor.phase)
     assertTrue(descriptor.dependencies.isEmpty())
+    assertTrue(descriptor.permissions.isEmpty())
     assertFalse(descriptor.requiresConfirmation)
   }
 
   @Test
   fun `TaskDescriptor deserializes with all fields`() {
-    val json = """{"id":"build","description":"Build project","phase":"BUILD","dependencies":["init"],"requires_confirmation":true}"""
+    val json = """{"id":"build","description":"Build project","phase":"BUILD","dependencies":["init"],"permissions":["process:exec","network:outbound"],"requires_confirmation":true}"""
     val descriptor = objectMapper.readValue(json, TaskDescriptor::class.java)
     assertEquals("build", descriptor.id)
     assertEquals("BUILD", descriptor.phase)
     assertEquals(listOf("init"), descriptor.dependencies)
+    assertEquals(listOf("process:exec", "network:outbound"), descriptor.permissions)
     assertTrue(descriptor.requiresConfirmation)
   }
 

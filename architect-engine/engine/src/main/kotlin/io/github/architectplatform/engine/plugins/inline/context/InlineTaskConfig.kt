@@ -18,4 +18,5 @@ data class InlineTaskConfig(
     val run: String = "",
     val phase: String? = null,
     val depends: List<String> = emptyList(),
+    val permissions: List<String> = emptyList(),
 )

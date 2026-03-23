@@ -36,12 +36,13 @@ class PluginProtocolTest {
   @Test
   fun `task descriptor uses requires confirmation wire name`() {
     val descriptor = objectMapper.readValue(
-      """{"id":"deploy","requires_confirmation":true}""",
+      """{"id":"deploy","requires_confirmation":true,"permissions":["process:exec"]}""",
       TaskDescriptor::class.java,
     )
 
     assertEquals("deploy", descriptor.id)
     assertTrue(descriptor.requiresConfirmation)
+    assertEquals(listOf("process:exec"), descriptor.permissions)
   }
 
   @Test

@@ -58,6 +58,7 @@ export interface TaskDescriptor {
   description?: string;
   phase?: string;
   dependencies?: string[];
+  permissions?: string[];
   requires_confirmation?: boolean;
 }
 

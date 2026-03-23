@@ -112,6 +112,7 @@ class ArchitectSchemaGeneratorTest {
     assertNotNull(props.get("run"))
     assertNotNull(props.get("phase"))
     assertNotNull(props.get("depends"))
+    assertNotNull(props.get("permissions"))
     assertNotNull(props.get("description"))
   }
 

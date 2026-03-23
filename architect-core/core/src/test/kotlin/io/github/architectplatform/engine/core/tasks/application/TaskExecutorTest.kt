@@ -4,8 +4,10 @@ import io.github.architectplatform.api.core.project.Config
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.CompositeTask
 import io.github.architectplatform.api.core.tasks.Environment
+import io.github.architectplatform.api.core.tasks.TaskPermission
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.impl.SimpleTask
+import io.github.architectplatform.engine.core.execution.TaskPermissionScope
 import io.github.architectplatform.engine.core.events.EmbeddedEventBus
 import io.github.architectplatform.engine.core.project.app.ApplicationEnvironment
 import io.github.architectplatform.engine.core.project.domain.Project
@@ -166,6 +168,46 @@ class TaskExecutorTest {
     val result = runBlocking { deferred.await() }
     assertFalse(result.success)
     assertTrue(result.message!!.contains("kaboom"))
+  }
+
+  @Test
+  fun `task without process exec permission fails when launching command`(@TempDir tmpDir: Path) {
+    val commandExecutor = object : io.github.architectplatform.api.components.execution.CommandExecutor {
+      override fun execute(command: String, workingDir: String?) {
+        TaskPermissionScope.current()?.let { context ->
+          if (TaskPermission.PROCESS_EXEC !in context.permissions) {
+            throw IllegalStateException("Task '${context.taskId}' requires permission 'process:exec' to launch subprocesses")
+          }
+        }
+      }
+    }
+    val environment = ApplicationEnvironment(
+      services = mapOf(io.github.architectplatform.api.components.execution.CommandExecutor::class.java to commandExecutor),
+    )
+    val eventBus = EmbeddedEventBus<ArchitectEvent<*>>()
+    val executor = TaskExecutor(
+      environment = environment,
+      taskCache = TaskCache(cacheEnabled = false),
+      eventBus = eventBus::invoke,
+      parallelExecutionEnabled = true,
+    )
+    val registry = InMemoryTaskRegistry()
+    val task = SimpleTask(
+      id = "exec",
+      description = "Execute command",
+      permissions = setOf(TaskPermission.FILE_SYSTEM_READ),
+    ) { env, _ ->
+      env.service(io.github.architectplatform.api.components.execution.CommandExecutor::class.java).execute("echo hello")
+      TaskResult.success()
+    }
+    registry.add(task)
+
+    val project = project(tmpDir, registry)
+    val (_, deferred) = executor.execute(project, task, project.context, emptyList())
+
+    val result = runBlocking { deferred.await() }
+    assertFalse(result.success)
+    assertTrue(result.message!!.contains("process:exec"))
   }
 
   // ─── helpers ──────────────────────────────────────────────────────────────

@@ -8,6 +8,7 @@ import io.github.architectplatform.api.components.workflows.code.CodeWorkflow
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.components.workflows.hooks.HooksWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
+import io.github.architectplatform.api.core.tasks.TaskPermission
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.impl.SimpleTask
@@ -65,6 +66,11 @@ class InlineTaskPlugin : ArchitectPlugin<HashMap<String, Any>> {
 
             val phase = config.phase?.let { resolvePhase(it) }
             val command = config.run
+            val permissions = try {
+                TaskPermission.fromWireNames(config.permissions)
+            } catch (_: IllegalArgumentException) {
+                continue
+            }
 
             registry.add(
                 SimpleTask(
@@ -72,6 +78,7 @@ class InlineTaskPlugin : ArchitectPlugin<HashMap<String, Any>> {
                     description = config.description.ifBlank { "Inline task: $taskId" },
                     phase = phase,
                     customDependencies = config.depends,
+                    permissions = permissions,
                     task = { environment, projectContext ->
                         try {
                             val executor = environment.service(CommandExecutor::class.java)
