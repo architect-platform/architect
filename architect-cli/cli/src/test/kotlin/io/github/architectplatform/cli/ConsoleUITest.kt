@@ -225,4 +225,97 @@ class ConsoleUITest {
     }
     assertFalse(ui.hasFailed)
   }
+
+  // ── Batch grouping ────────────────────────────────────────────────
+
+  @Test
+  fun `tasks started simultaneously are assigned to same batch`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      ui.process(event(taskId = "lint", type = "STARTED"))
+      ui.process(event(taskId = "check", type = "STARTED"))
+    }
+    val states = ui.taskStates()
+    assertEquals(states["lint"]?.batch, states["check"]?.batch)
+  }
+
+  @Test
+  fun `batch boundary detected when all batch tasks complete before next starts`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      // Batch 0
+      ui.process(event(taskId = "compile", type = "STARTED"))
+      ui.process(event(taskId = "compile", type = "COMPLETED"))
+      // Batch 1 — started after batch 0 all done
+      ui.process(event(taskId = "test", type = "STARTED"))
+    }
+    val states = ui.taskStates()
+    assertTrue(states["test"]!!.batch > states["compile"]!!.batch,
+      "Expected test batch (${states["test"]?.batch}) > compile batch (${states["compile"]?.batch})")
+  }
+
+  @Test
+  fun `batch does not advance while a task in current batch is still running`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      ui.process(event(taskId = "a", type = "STARTED"))
+      ui.process(event(taskId = "b", type = "STARTED"))
+      // Only 'a' completes, 'b' still running
+      ui.process(event(taskId = "a", type = "COMPLETED"))
+      // 'c' starts while 'b' is still running
+      ui.process(event(taskId = "c", type = "STARTED"))
+    }
+    val states = ui.taskStates()
+    // c should be in same batch as a/b since b hasn't finished
+    assertEquals(states["a"]?.batch, states["c"]?.batch)
+  }
+
+  // ── Summary rendering ─────────────────────────────────────────────
+
+  @Test
+  fun `summary includes total duration`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      ui.process(event(taskId = "build", type = "STARTED"))
+      ui.process(event(taskId = "build", type = "COMPLETED"))
+    }
+    val output = captureOutput { ui.printSummary() }
+    assertTrue(output.contains("Total:"), "Expected 'Total:' in summary output")
+  }
+
+  @Test
+  fun `summary shows skipped count when tasks are skipped`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      ui.process(event(taskId = "lint", type = "SKIPPED", message = "cached"))
+      ui.process(event(taskId = "build", type = "STARTED"))
+      ui.process(event(taskId = "build", type = "COMPLETED"))
+    }
+    val output = captureOutput { ui.printSummary() }
+    assertTrue(output.contains("1 skipped"), "Expected '1 skipped' in summary output")
+    assertTrue(output.contains("1 passed"), "Expected '1 passed' in summary output")
+  }
+
+  @Test
+  fun `summary includes each task with status icon and duration`() {
+    val ui = ConsoleUI("test", plain = true)
+    captureOutput {
+      ui.process(event(taskId = "compile", type = "STARTED"))
+      ui.process(event(taskId = "compile", type = "COMPLETED"))
+      ui.process(event(taskId = "test", type = "STARTED"))
+      ui.process(event(taskId = "test", type = "FAILED", message = "assertion fail"))
+    }
+    val output = captureOutput { ui.printSummary() }
+    assertTrue(output.contains("compile"))
+    assertTrue(output.contains("test"))
+    assertTrue(output.contains("ms") || output.contains("s"))
+    assertTrue(output.contains("assertion fail"))
+  }
+
+  @Test
+  fun `printSummary does nothing when no tasks processed`() {
+    val ui = ConsoleUI("test", plain = true)
+    val output = captureOutput { ui.printSummary() }
+    assertEquals("", output)
+  }
 }
