@@ -1,4 +1,4 @@
-package io.github.architectplatform.plugins.python
+package io.github.architectplatform.plugins.javascriptarchitected
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.api.core.project.ProjectContext
@@ -7,109 +7,100 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
 
-class PythonPluginTest {
+class JavaScriptPluginTest {
   @Test
   fun `plugin id and context key`() {
-    val plugin = PythonPlugin()
-    assertEquals("python-plugin", plugin.id)
-    assertEquals("python", plugin.contextKey)
-  }
-
-  @Test
-  fun `default context uses uv`() {
-    val ctx = PythonContext()
-    assertEquals("uv", ctx.tool)
-    assertEquals("pytest", ctx.testRunner)
-    assertEquals("ruff", ctx.linter)
-    assertTrue(ctx.enabled)
+    val plugin = JavaScriptPlugin()
+    assertEquals("javascript-plugin", plugin.id)
+    assertEquals("javascript", plugin.contextKey)
   }
 
   @Test
   fun `registers all expected tasks`() {
-    val plugin = PythonPlugin()
+    val plugin = JavaScriptPlugin()
     val registry = TestTaskRegistry()
     plugin.register(registry)
     val ids = registry.taskIds()
-    assertTrue("py-install" in ids)
-    assertTrue("py-lint" in ids)
-    assertTrue("py-test" in ids)
-    assertTrue("py-build" in ids)
-    assertTrue("py-publish" in ids)
+    assertTrue("javascript-install" in ids)
+    assertTrue("javascript-build" in ids)
+    assertTrue("javascript-test" in ids)
+    assertTrue("javascript-lint" in ids)
+    assertTrue("javascript-dev" in ids)
     assertEquals(5, ids.size)
   }
 
   @Test
-  fun `init applies context`() {
-    val plugin = PythonPlugin()
-    plugin.init(PythonContext(tool = "poetry", pythonVersion = "3.12"))
-    assertEquals("poetry", plugin.context.tool)
-    assertEquals("3.12", plugin.context.pythonVersion)
-  }
-
-  @Test
-  fun `py-install uses uv sync by default`() {
+  fun `javascript-install uses npm by default`() {
     val executor = RecordingCommandExecutor()
-    val task = registerAndGet(PythonContext(tool = "uv"), "py-install")
+    val task = registerAndGet(JavaScriptContext(packageManager = "npm"), "javascript-install")
 
     val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
     assertTrue(result.success)
-    assertEquals("uv sync", executor.command)
+    assertEquals("npm install", executor.command)
   }
 
   @Test
-  fun `py-install uses poetry when configured`() {
+  fun `javascript-build uses yarn when configured`() {
     val executor = RecordingCommandExecutor()
-    val task = registerAndGet(PythonContext(tool = "poetry"), "py-install")
+    val task = registerAndGet(JavaScriptContext(packageManager = "yarn"), "javascript-build")
 
     task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
-    assertEquals("poetry install", executor.command)
+    assertEquals("yarn build", executor.command)
   }
 
   @Test
-  fun `py-install falls back to pip`() {
+  fun `javascript-test uses pnpm when configured`() {
     val executor = RecordingCommandExecutor()
-    val task = registerAndGet(PythonContext(tool = "pip"), "py-install")
+    val task = registerAndGet(JavaScriptContext(packageManager = "pnpm"), "javascript-test")
 
     task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
-    assertEquals("pip install -r requirements.txt", executor.command)
+    assertEquals("pnpm test", executor.command)
   }
 
   @Test
-  fun `py-test uses pytest by default`() {
+  fun `javascript-lint uses npm run lint`() {
     val executor = RecordingCommandExecutor()
-    val task = registerAndGet(PythonContext(), "py-test")
+    val task = registerAndGet(JavaScriptContext(packageManager = "npm"), "javascript-lint")
 
     task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
-    assertEquals("pytest", executor.command)
+    assertEquals("npm run lint", executor.command)
   }
 
   @Test
-  fun `py-lint uses ruff by default`() {
+  fun `javascript-dev uses pnpm dev`() {
     val executor = RecordingCommandExecutor()
-    val task = registerAndGet(PythonContext(linter = "ruff"), "py-lint")
+    val task = registerAndGet(JavaScriptContext(packageManager = "pnpm"), "javascript-dev")
 
     task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
-    assertEquals("ruff check .", executor.command)
+    assertEquals("pnpm dev", executor.command)
   }
 
   @Test
-  fun `disabled task skips execution`() {
+  fun `task passes extra args`() {
     val executor = RecordingCommandExecutor()
-    val task = registerAndGet(PythonContext(enabled = false), "py-build")
+    val task = registerAndGet(JavaScriptContext(packageManager = "npm"), "javascript-test")
 
-    val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
+    task.execute(TestEnvironment(executor), projectContext(), listOf("--coverage"))
 
-    assertTrue(result.success)
-    assertNull(executor.command)
+    assertEquals("npm test --coverage", executor.command)
   }
 
-  private fun registerAndGet(ctx: PythonContext, taskId: String): io.github.architectplatform.api.core.tasks.Task {
-    val plugin = PythonPlugin()
+  @Test
+  fun `task returns failure on executor exception`() {
+    val task = registerAndGet(JavaScriptContext(), "javascript-build")
+
+    val result = task.execute(TestEnvironment(FailingCommandExecutor()), projectContext(), emptyList())
+
+    assertFalse(result.success)
+  }
+
+  private fun registerAndGet(ctx: JavaScriptContext, taskId: String): io.github.architectplatform.api.core.tasks.Task {
+    val plugin = JavaScriptPlugin()
     plugin.init(ctx)
     val registry = TestTaskRegistry()
     plugin.register(registry)
@@ -135,13 +126,19 @@ class PythonPluginTest {
     }
   }
 
+  private class FailingCommandExecutor : CommandExecutor {
+    override fun execute(command: String, workingDir: String?) {
+      throw RuntimeException("Command failed")
+    }
+  }
+
   private class TestEnvironment(private val commandExecutor: CommandExecutor) : Environment {
     override fun <T> service(type: Class<T>): T {
       if (type == CommandExecutor::class.java) {
         @Suppress("UNCHECKED_CAST")
         return commandExecutor as T
       }
-      throw IllegalArgumentException("Unsupported service: \${type.name}")
+      throw IllegalArgumentException("Unsupported service: ${type.name}")
     }
     override fun publish(event: Any) {}
   }

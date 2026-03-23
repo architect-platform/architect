@@ -1,9 +1,29 @@
 package io.github.architectplatform.plugins.architecture
 
+import io.github.architectplatform.api.testing.ArchitectPluginContract
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class ArchitecturePluginTest {
+
+    @Test
+    fun `plugin satisfies shared architect plugin contract`() {
+        ArchitectPluginContract { ArchitecturePlugin() }
+            .verify(
+                ArchitectPluginContract.Verification(
+                    config = mapOf(
+                        "enabled" to false,
+                        "rulesets" to emptyMap<String, Any>(),
+                        "customRules" to emptyList<Any>(),
+                        "onViolation" to "warn",
+                        "reportFormat" to "text",
+                        "strict" to false,
+                    ),
+                    expectedTaskIds = setOf("architecture-validate"),
+                    executableTaskIds = listOf("architecture-validate"),
+                )
+            )
+    }
 
     @Test
     fun `test plugin id and context key`() {

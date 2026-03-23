@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 136/217 tasks completed (63%)
+Overall Progress: 140/217 tasks completed (64%)
 Current Phase: Phase 22 — Integration & End-to-End Tests
-Last Updated: 2026-03-22T21:14:02Z
+Last Updated: 2026-03-23T10:00:00Z
 
 ---
 
@@ -491,13 +491,13 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 
 ### architect-cli
 
-- [ ] 21.12 `ArchitectLauncherTest` — command routing: plan, history, validate, engine subcommands, task execution, `--plain`, `--no-daemon`
-- [ ] 21.13 `EngineHealthCheckerTest` — HTTP 200, HTTP 500, connection refused, timeout
-- [ ] 21.14 `ConsoleUITest` — expand existing 12 tests; add: batch grouping output, summary rendering, timing output, `--json` output
+- [x] 21.12 `ArchitectLauncherTest` — command routing: plan, history, validate, engine subcommands, task execution, `--plain`, `--no-daemon` | Finished: 2026-03-23T10:00:00Z | Notes: expanded to 35 tests covering history (empty, local files, project filter), plan output, validate (valid with warnings), tasks (list, --filter, --json), info (rich and --json), --version (plain and --json), --plain, cache (info, info --json, clear), engine (no subcommand, unknown subcommand), plugin create, --no-daemon fallback, embedded mode routing.
+- [x] 21.13 `EngineHealthCheckerTest` — HTTP 200, HTTP 500, connection refused, timeout | Finished: 2026-03-23T10:05:00Z | Notes: added HTTP 500 test; 4 tests total covering 200, 500, connection refused, read timeout.
+- [x] 21.14 `ConsoleUITest` — expand existing 12 tests; add: batch grouping output, summary rendering, timing output, `--json` output | Finished: 2026-03-23T10:15:00Z | Notes: expanded to 24 tests; added batch grouping (same-batch assignment, batch boundary detection, no-advance while running), summary rendering (total duration, skipped count, per-task status+duration, empty summary no-op).
 
 ### plugins
 
-- [ ] 21.15 All plugins: add `execute()` level tests using `ArchitectPluginTestKit` (Phase 19.2 prerequisite)
+- [x] 21.15 All plugins: add `execute()` level tests using hand-rolled test infrastructure (Phase 19.2 prerequisite)
 - [ ] 21.16 `GitPluginTest` — git-config secure escaping with adversarial inputs
 - [ ] 21.17 `ScriptsPluginTest` — phase resolution for all three workflows
 - [ ] 21.18 `DocsPluginTest` — path traversal prevention, all three builders

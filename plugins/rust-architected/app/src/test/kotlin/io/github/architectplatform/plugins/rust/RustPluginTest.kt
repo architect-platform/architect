@@ -1,7 +1,11 @@
 package io.github.architectplatform.plugins.rust
 
+import io.github.architectplatform.api.components.execution.CommandExecutor
+import io.github.architectplatform.api.core.project.ProjectContext
+import io.github.architectplatform.api.core.tasks.Environment
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.nio.file.Path
 
 class RustPluginTest {
   @Test
@@ -42,11 +46,93 @@ class RustPluginTest {
     assertEquals("x86_64-unknown-linux-gnu", plugin.context.target)
   }
 
+  @Test
+  fun `cargo-build executes with profile and features`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(RustContext(profile = "debug", features = listOf("serde", "tokio")), "cargo-build")
+
+    val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
+
+    assertTrue(result.success)
+    assertEquals("cargo build --debug --features serde,tokio", executor.command)
+  }
+
+  @Test
+  fun `cargo-build includes target flag`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(RustContext(target = "aarch64-apple-darwin"), "cargo-build")
+
+    task.execute(TestEnvironment(executor), projectContext(), emptyList())
+
+    assertTrue(executor.command!!.contains("--target aarch64-apple-darwin"))
+  }
+
+  @Test
+  fun `cargo-test executes with features`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(RustContext(features = listOf("full")), "cargo-test")
+
+    task.execute(TestEnvironment(executor), projectContext(), emptyList())
+
+    assertEquals("cargo test --features full", executor.command)
+  }
+
+  @Test
+  fun `cargo-lint uses clippy with warnings denied`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(RustContext(), "cargo-lint")
+
+    task.execute(TestEnvironment(executor), projectContext(), emptyList())
+
+    assertEquals("cargo clippy -- -D warnings", executor.command)
+  }
+
+  @Test
+  fun `disabled task skips execution`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(RustContext(enabled = false), "cargo-build")
+
+    val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
+
+    assertTrue(result.success)
+    assertNull(executor.command)
+  }
+
+  private fun registerAndGet(ctx: RustContext, taskId: String): io.github.architectplatform.api.core.tasks.Task {
+    val plugin = RustPlugin()
+    plugin.init(ctx)
+    val registry = TestTaskRegistry()
+    plugin.register(registry)
+    return registry.get(taskId)!!
+  }
+
+  private fun projectContext() = ProjectContext(Path.of("/repo"), emptyMap())
+
   private class TestTaskRegistry : io.github.architectplatform.api.core.tasks.TaskRegistry {
     private val tasks = mutableListOf<io.github.architectplatform.api.core.tasks.Task>()
     fun taskIds() = tasks.map { it.id }.toSet()
     override fun add(task: io.github.architectplatform.api.core.tasks.Task) { tasks.add(task) }
     override fun get(id: String) = tasks.find { it.id == id }
     override fun all() = tasks.toList()
+  }
+
+  private class RecordingCommandExecutor : CommandExecutor {
+    var command: String? = null
+    var workingDir: String? = null
+    override fun execute(command: String, workingDir: String?) {
+      this.command = command
+      this.workingDir = workingDir
+    }
+  }
+
+  private class TestEnvironment(private val commandExecutor: CommandExecutor) : Environment {
+    override fun <T> service(type: Class<T>): T {
+      if (type == CommandExecutor::class.java) {
+        @Suppress("UNCHECKED_CAST")
+        return commandExecutor as T
+      }
+      throw IllegalArgumentException("Unsupported service: \${type.name}")
+    }
+    override fun publish(event: Any) {}
   }
 }
