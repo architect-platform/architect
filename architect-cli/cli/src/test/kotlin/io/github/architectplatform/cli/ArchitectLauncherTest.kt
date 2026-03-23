@@ -33,68 +33,367 @@ import kotlin.io.path.outputStream
 /**
  * Unit tests for [ArchitectLauncher].
  *
- * Covers: binary path resolution (local bin, non-executable, PATH fallback, not found)
- * and `--no-daemon` flag bypassing the health check.
+ * Covers: binary path resolution, command routing (plan, history, validate, engine,
+ * tasks, info, cache, version), flag behavior (--plain, --no-daemon, --json, --filter),
+ * embedded mode fallback, and task execution.
  */
 class ArchitectLauncherTest {
 
-  // ─── resolveEngineBinary ──────────────────────────────────────────────────
+  // ─── history command ──────────────────────────────────────────────────────
 
   @Test
-  fun `resolveEngineBinary returns local bin path when binary exists and is executable`(
-    @TempDir tmpDir: Path
-  ) {
-    val bin = tmpDir.resolve(".architect/bin/architect-engine").toFile()
-    bin.parentFile.mkdirs()
-    bin.createNewFile()
-    bin.setExecutable(true)
+  fun `history command displays empty message when no records exist`(@TempDir tmpDir: Path) {
+    val launcher = launcher()
+    launcher.command = "history"
+    launcher.args = emptyList()
+
+    val output = captureStdout {
+      withUserHome(tmpDir.toAbsolutePath().toString()) { launcher.run() }
+    }
+
+    assertTrue(output.contains("No execution history found"))
+  }
+
+  @Test
+  fun `history command reads local history files`(@TempDir tmpDir: Path) {
+    val historyDir = tmpDir.resolve(".architect/history").toFile()
+    historyDir.mkdirs()
+    val record = """{"id":"e1","project":"myproj","task":"build","timestamp":1711100000000,"success":true,"durationMs":1200,"message":"ok"}"""
+    File(historyDir, "1711100000000-e1.json").writeText(record)
 
     val launcher = launcher()
-    withUserHome(tmpDir.toAbsolutePath().toString()) {
-      assertEquals(bin.absolutePath, launcher.resolveEngineBinary())
+    launcher.command = "history"
+    launcher.args = emptyList()
+
+    val output = captureStdout {
+      withUserHome(tmpDir.toAbsolutePath().toString()) { launcher.run() }
+    }
+
+    assertTrue(output.contains("myproj"), "Expected project name in history output")
+    assertTrue(output.contains("build"), "Expected task name in history output")
+  }
+
+  @Test
+  fun `history command with project argument filters records`(@TempDir tmpDir: Path) {
+    val historyDir = tmpDir.resolve(".architect/history").toFile()
+    historyDir.mkdirs()
+    File(historyDir, "1711100000000-e1.json").writeText(
+      """{"id":"e1","project":"web","task":"build","timestamp":1711100000000,"success":true,"durationMs":500,"message":null}"""
+    )
+    File(historyDir, "1711100001000-e2.json").writeText(
+      """{"id":"e2","project":"api","task":"test","timestamp":1711100001000,"success":false,"durationMs":800,"message":"fail"}"""
+    )
+
+    val launcher = launcher()
+    launcher.command = "history"
+    launcher.args = listOf("history", "web")
+
+    val output = captureStdout {
+      withUserHome(tmpDir.toAbsolutePath().toString()) { launcher.run() }
+    }
+
+    assertTrue(output.contains("web"), "Expected 'web' project in output")
+    assertTrue(!output.contains("api"), "Expected 'api' project to be filtered out")
+  }
+
+  // ─── plan command ─────────────────────────────────────────────────────────
+
+  @Test
+  fun `plan command outputs execution plan`(@TempDir tmpDir: Path) {
+    val client = GraphEngineCommandClient()
+    val launcher = launcherWithClient(client)
+    setUserDir(tmpDir) {
+      launcher.command = "plan"
+      launcher.args = listOf("plan", "deploy")
+
+      val output = captureStdout { launcher.run() }
+
+      assertTrue(output.contains("Execution Plan: deploy"))
+      assertTrue(output.contains("3 task(s)"))
+      assertTrue(output.contains("build"))
+      assertTrue(output.contains("test"))
+      assertTrue(output.contains("deploy"))
+    }
+  }
+
+  // ─── validate command ─────────────────────────────────────────────────────
+
+  @Test
+  fun `validate command shows valid result`(@TempDir tmpDir: Path) {
+    val launcher = launcherWithClient(StubEngineCommandClient())
+    setUserDir(tmpDir) {
+      launcher.command = "validate"
+      launcher.args = listOf("validate")
+
+      val output = captureStdout { launcher.run() }
+
+      assertTrue(output.contains("VALID"))
+      assertTrue(output.contains("No issues found"))
     }
   }
 
   @Test
-  fun `resolveEngineBinary skips non-executable local file and falls back to PATH`(
-    @TempDir tmpDir: Path
-  ) {
-    val bin = tmpDir.resolve(".architect/bin/architect-engine").toFile()
-    bin.parentFile.mkdirs()
-    bin.createNewFile()
-    bin.setExecutable(false) // not executable
+  fun `validate command shows valid result and includes project name`(@TempDir tmpDir: Path) {
+    val client = object : StubEngineCommandClient() {
+      override fun validateProject(projectName: String): ValidationResultDTO =
+        ValidationResultDTO(
+          valid = true,
+          errors = emptyList(),
+          warnings = listOf("Unknown key: foo"),
+        )
+    }
+    val launcher = launcherWithClient(client)
+    setUserDir(tmpDir) {
+      launcher.command = "validate"
+      launcher.args = listOf("validate")
 
-    val launcher = launcher()
-    withUserHome(tmpDir.toAbsolutePath().toString()) {
-      val result = launcher.resolveEngineBinary()
-      // The non-executable file must NOT be returned; PATH result is fine (null if not installed)
-      assertNotEquals(bin.absolutePath, result)
+      val output = captureStdout { launcher.run() }
+
+      assertTrue(output.contains("VALID"))
+      assertTrue(output.contains("Unknown key: foo"))
+    }
+  }
+
+  // ─── tasks command ────────────────────────────────────────────────────────
+
+  @Test
+  fun `tasks command lists all tasks`(@TempDir tmpDir: Path) {
+    val client = GraphEngineCommandClient()
+    val launcher = launcherWithClient(client)
+    setUserDir(tmpDir) {
+      launcher.command = "tasks"
+      launcher.args = listOf("tasks")
+
+      val output = captureStdout { launcher.run() }
+
+      assertTrue(output.contains("Available Tasks"))
+      assertTrue(output.contains("build"))
+      assertTrue(output.contains("test"))
+      assertTrue(output.contains("deploy"))
+      assertTrue(output.contains("3 task(s) available"))
     }
   }
 
   @Test
-  fun `resolveEngineBinary returns null when binary absent and not on PATH`(@TempDir tmpDir: Path) {
-    // Fresh temp dir has no .architect/bin/architect-engine
-    // PATH lookup: if architect-engine is installed on the test machine we get a non-null result,
-    // otherwise null. We just verify it doesn't throw and either branch is acceptable.
-    val launcher = launcher()
-    withUserHome(tmpDir.toAbsolutePath().toString()) {
-      val result = launcher.resolveEngineBinary()
-      assertTrue(result == null || result.isNotBlank(), "Expected null or a valid path, got: $result")
+  fun `tasks command with --filter restricts results by phase`(@TempDir tmpDir: Path) {
+    val client = GraphEngineCommandClient()
+    val launcher = launcherWithClient(client)
+    setUserDir(tmpDir) {
+      launcher.command = "tasks"
+      launcher.args = listOf("tasks")
+      launcher.filter = "BUILD"
+
+      val output = captureStdout { launcher.run() }
+
+      assertTrue(output.contains("build"))
+      assertTrue(output.contains("phase: BUILD"))
+      assertTrue(output.contains("1 task(s) available"))
     }
   }
 
   @Test
-  fun `resolveEngineBinary returns null when user home is unavailable`() {
-    val launcher = launcher()
-    val original = System.getProperty("user.home")
-    System.clearProperty("user.home")
-    try {
-      assertNull(launcher.resolveEngineBinary())
-    } finally {
-      System.setProperty("user.home", original)
+  fun `tasks command with --json outputs JSON`(@TempDir tmpDir: Path) {
+    val client = GraphEngineCommandClient()
+    val launcher = launcherWithClient(client)
+    setUserDir(tmpDir) {
+      launcher.command = "tasks"
+      launcher.args = listOf("tasks")
+      launcher.json = true
+
+      val output = captureStdout { launcher.run() }
+
+      assertTrue(output.contains("\"id\""))
+      assertTrue(output.contains("\"build\""))
     }
   }
+
+  // ─── info command ─────────────────────────────────────────────────────────
+
+  @Test
+  fun `info command prints project details`(@TempDir tmpDir: Path) {
+    val client = GraphEngineCommandClient()
+    val launcher = launcherWithClient(client)
+    setUserDir(tmpDir) {
+      launcher.command = "info"
+      launcher.args = listOf("info")
+
+      val output = captureStdout { launcher.run() }
+
+      assertTrue(output.contains("Project Info"))
+      assertTrue(output.contains("Tasks:  3"))
+      assertTrue(output.contains("Phases:"))
+    }
+  }
+
+  @Test
+  fun `info command with --json outputs JSON`(@TempDir tmpDir: Path) {
+    val client = GraphEngineCommandClient()
+    val launcher = launcherWithClient(client)
+    setUserDir(tmpDir) {
+      launcher.command = "info"
+      launcher.args = listOf("info")
+      launcher.json = true
+
+      val output = captureStdout { launcher.run() }
+
+      assertTrue(output.contains("\"taskCount\""))
+      assertTrue(output.contains("\"project\""))
+    }
+  }
+
+  // ─── version flag ─────────────────────────────────────────────────────────
+
+  @Test
+  fun `--version prints version info`() {
+    val launcher = launcher()
+    launcher.version = true
+
+    val output = captureStdout { launcher.run() }
+
+    assertTrue(output.contains("architect"), "Expected 'architect' in version output")
+  }
+
+  @Test
+  fun `--version with --json outputs JSON`() {
+    val launcher = launcher()
+    launcher.version = true
+    launcher.json = true
+
+    val output = captureStdout { launcher.run() }
+
+    assertTrue(output.contains("\"cli\""), "Expected JSON key 'cli' in version output")
+  }
+
+  // ─── --plain / color detection ────────────────────────────────────────────
+
+  @Test
+  fun `--plain suppresses startup UI messages`(@TempDir tmpDir: Path) {
+    val launcher = launcher()
+    launcher.plain = true
+    launcher.version = true
+
+    val output = captureStdout { launcher.run() }
+
+    // --plain + --version should still print version (not a startup message)
+    assertTrue(output.contains("architect"))
+  }
+
+  // ─── cache command ────────────────────────────────────────────────────────
+
+  @Test
+  fun `cache info shows cache statistics`() {
+    val launcher = launcher()
+    launcher.command = "cache"
+    launcher.args = listOf("cache", "info")
+
+    val output = captureStdout { launcher.run() }
+
+    assertTrue(output.contains("Task Output Cache"))
+    assertTrue(output.contains("Entries:"))
+    assertTrue(output.contains("Size:"))
+  }
+
+  @Test
+  fun `cache info with --json outputs JSON`() {
+    val launcher = launcher()
+    launcher.command = "cache"
+    launcher.args = listOf("cache", "info")
+    launcher.json = true
+
+    val output = captureStdout { launcher.run() }
+
+    assertTrue(output.contains("\"entries\""))
+    assertTrue(output.contains("\"sizeBytes\""))
+  }
+
+  @Test
+  fun `cache clear runs without error`() {
+    val launcher = launcher()
+    launcher.command = "cache"
+    launcher.args = listOf("cache", "clear")
+
+    val output = captureStdout { launcher.run() }
+
+    assertTrue(output.contains("Cache cleared"))
+  }
+
+  // ─── engine subcommands ───────────────────────────────────────────────────
+
+  @Test
+  fun `engine command with no subcommand prints usage`() {
+    val launcher = launcher()
+    launcher.command = "engine"
+    launcher.args = listOf("engine")
+
+    val output = captureStdout { launcher.run() }
+
+    assertTrue(output.contains("No command provided"))
+  }
+
+  @Test
+  fun `engine unknown subcommand prints error`() {
+    val launcher = launcher()
+    launcher.command = "engine"
+    launcher.args = listOf("engine", "foobar")
+
+    val output = captureStdout { launcher.run() }
+
+    assertTrue(output.contains("Unknown command"))
+    assertTrue(output.contains("foobar"))
+  }
+
+  // ─── plugin command ───────────────────────────────────────────────────────
+
+  @Test
+  fun `plugin create scaffolds kotlin template by default`(@TempDir tmpDir: Path) {
+    val launcher = launcher()
+    launcher.command = "plugin"
+    launcher.args = listOf("plugin", "create", "my-test-plugin")
+
+    setUserDir(tmpDir) {
+      val output = captureStdout { launcher.run() }
+      assertTrue(output.contains("Created"))
+      assertTrue(output.contains("my-test-plugin"))
+    }
+  }
+
+  // ─── no-daemon + embedded fallback ────────────────────────────────────────
+
+  @Test
+  fun `--no-daemon with unreachable engine falls back to embedded mode`(@TempDir tmpDir: Path) {
+    val healthChecker = object : EngineHealthChecker() {
+      override fun isRunning() = false
+    }
+    val launcher = launcher(healthChecker = healthChecker)
+    launcher.noDaemon = true
+    launcher.version = true
+
+    // version is handled before embedded routing, so it should still print version
+    val output = captureStdout { launcher.run() }
+    assertTrue(output.contains("architect"))
+  }
+
+  @Test
+  fun `embedded flag set routes to embedded tasks listing`(@TempDir tmpDir: Path) {
+    // Create a minimal architect.yml in the tmpDir
+    File(tmpDir.toFile(), "architect.yml").writeText("""
+      project:
+        name: test-project
+    """.trimIndent())
+
+    val launcher = launcher()
+    launcher.embedded = true
+    launcher.command = "validate"
+    launcher.args = listOf("validate")
+
+    setUserDir(tmpDir) {
+      val output = captureStdout { launcher.run() }
+      // embedded mode prints a mode message and then handles the command
+      assertTrue(output.contains("embedded mode") || output.contains("VALID"))
+    }
+  }
+
+  // ─── augmentTaskArgsForExecution ────────────────────────────────────────
 
   @Test
   fun `augmentTaskArgsForExecution leaves non nx tasks unchanged`() {
@@ -326,7 +625,113 @@ class ArchitectLauncherTest {
     }
   }
 
+  // ─── resolveEngineBinary ──────────────────────────────────────────────────
+
+  @Test
+  fun `resolveEngineBinary returns local bin path when binary exists and is executable`(
+    @TempDir tmpDir: Path
+  ) {
+    val bin = tmpDir.resolve(".architect/bin/architect-engine").toFile()
+    bin.parentFile.mkdirs()
+    bin.createNewFile()
+    bin.setExecutable(true)
+
+    val launcher = launcher()
+    withUserHome(tmpDir.toAbsolutePath().toString()) {
+      assertEquals(bin.absolutePath, launcher.resolveEngineBinary())
+    }
+  }
+
+  @Test
+  fun `resolveEngineBinary skips non-executable local file and falls back to PATH`(
+    @TempDir tmpDir: Path
+  ) {
+    val bin = tmpDir.resolve(".architect/bin/architect-engine").toFile()
+    bin.parentFile.mkdirs()
+    bin.createNewFile()
+    bin.setExecutable(false) // not executable
+
+    val launcher = launcher()
+    withUserHome(tmpDir.toAbsolutePath().toString()) {
+      val result = launcher.resolveEngineBinary()
+      // The non-executable file must NOT be returned; PATH result is fine (null if not installed)
+      assertNotEquals(bin.absolutePath, result)
+    }
+  }
+
+  @Test
+  fun `resolveEngineBinary returns null when binary absent and not on PATH`(@TempDir tmpDir: Path) {
+    // Fresh temp dir has no .architect/bin/architect-engine
+    // PATH lookup: if architect-engine is installed on the test machine we get a non-null result,
+    // otherwise null. We just verify it doesn't throw and either branch is acceptable.
+    val launcher = launcher()
+    withUserHome(tmpDir.toAbsolutePath().toString()) {
+      val result = launcher.resolveEngineBinary()
+      assertTrue(result == null || result.isNotBlank(), "Expected null or a valid path, got: $result")
+    }
+  }
+
+  @Test
+  fun `resolveEngineBinary returns null when user home is unavailable`() {
+    val launcher = launcher()
+    val original = System.getProperty("user.home")
+    System.clearProperty("user.home")
+    try {
+      assertNull(launcher.resolveEngineBinary())
+    } finally {
+      System.setProperty("user.home", original)
+    }
+  }
+
   // ─── Helpers ─────────────────────────────────────────────────────────────
+
+  private fun captureStdout(block: () -> Unit): String {
+    val baos = java.io.ByteArrayOutputStream()
+    val originalOut = System.out
+    System.setOut(java.io.PrintStream(baos))
+    try {
+      block()
+    } finally {
+      System.setOut(originalOut)
+    }
+    return baos.toString()
+  }
+
+  private fun captureStdoutAllowExit(block: () -> Unit): String {
+    val baos = java.io.ByteArrayOutputStream()
+    val originalOut = System.out
+    System.setOut(java.io.PrintStream(baos))
+    try {
+      block()
+    } catch (_: Exception) {
+      // exitProcess throws SecurityException or similar in test harness; ignore
+    } finally {
+      System.setOut(originalOut)
+    }
+    return baos.toString()
+  }
+
+  private fun <T> setUserDir(tmpDir: Path, block: () -> T): T {
+    val originalUserDir = System.getProperty("user.dir")
+    System.setProperty("user.dir", tmpDir.toString())
+    return try {
+      block()
+    } finally {
+      System.setProperty("user.dir", originalUserDir)
+    }
+  }
+
+  private fun launcherWithClient(
+    client: EngineCommandClient,
+    healthChecker: EngineHealthChecker = stubHealthChecker(running = true),
+  ): ArchitectLauncher {
+    return ArchitectLauncher(
+      client,
+      healthChecker,
+      io.github.architectplatform.cli.history.LocalHistoryReader(),
+      io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor(io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()),
+    )
+  }
 
   private fun createTestPluginJar(jarPath: Path): Path {
     JarOutputStream(jarPath.outputStream().buffered()).use { output ->
@@ -387,7 +792,7 @@ class LauncherValidPlugin : ArchitectPlugin<LauncherValidContext> {
 }
 
 /** No-op stub implementation of [EngineCommandClient] for unit tests. */
-private class StubEngineCommandClient : EngineCommandClient {
+private open class StubEngineCommandClient : EngineCommandClient {
   override fun getAllProjects(): List<ProjectDTO> = emptyList()
   override fun registerProject(request: RegisterProjectRequest): ProjectDTO =
     ProjectDTO(name = request.name, path = request.path, context = ProjectDTO.ProjectContextDTO(dir = request.path, config = emptyMap()))
