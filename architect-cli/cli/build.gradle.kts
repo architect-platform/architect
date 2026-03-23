@@ -42,6 +42,14 @@ application { mainClass = "io.github.architectplatform.cli.ArchitectLauncher" }
 
 graalvmNative.toolchainDetection.set(false)
 
+graalvmNative {
+  binaries {
+    named("main") {
+      buildArgs.add("-J-Xmx4g")
+    }
+  }
+}
+
 micronaut {
   testRuntime("junit5")
   processing {

@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 146/217 tasks completed (67%)
+Overall Progress: 147/217 tasks completed (68%)
 Current Phase: Phase 23 — Performance Optimization
-Last Updated: 2026-03-23T11:12:05Z
+Last Updated: 2026-03-23T13:38:00Z
 
 ---
 
@@ -546,7 +546,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 
 ### Tasks
 
-- [~] 23.1 **GraalVM Native Image for CLI** — compile `architect-cli` to a native binary. Eliminates JVM startup (~200ms saving). Requires Micronaut AOT compatibility. | Blockers: `architect-cli/cli` already wires Micronaut AOT and the Gradle `nativeCompile` path, but the current environment is using a non-GraalVM JDK and `/Users/alessandromazzoli/.sdkman/candidates/java/current/bin/native-image` is missing. Next step: install GraalVM with `native-image` or point `JAVA_HOME`/`GRAALVM_HOME` to a GraalVM distribution, then rerun `./gradlew nativeCompile` in `architect-cli/cli`.
+- [x] 23.1 **GraalVM Native Image for CLI** — compile `architect-cli` to a native binary. Eliminates JVM startup (~200ms saving). Requires Micronaut AOT compatibility. | Finished: 2026-03-23T13:38:00Z | Notes: installed GraalVM CE 17 with `native-image`, configured CLI native builds with `-J-Xmx4g` to avoid native-image OOMs, added Micronaut bean factories/fixes for `HttpClient` and embedded executor startup, and verified `architect-cli/cli:./gradlew nativeCompile` plus native `./build/native/nativeCompile/architect-cli --version` startup.
 - [ ] 23.2 **Lazy plugin loading** — load plugin JARs only when a plugin's tasks are actually needed (not at project registration time)
 - [ ] 23.3 **Parallel plugin loading** — load independent plugins concurrently (coroutine-based, already feasible)
 - [ ] 23.4 **Project config caching** — `ProjectService` project cache is already implemented but disabled. Enable by default with file-system watcher invalidation.
