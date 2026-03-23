@@ -100,10 +100,13 @@ class EmbeddedTaskExecutor(
           id = executionId,
           project = projectName,
           task = taskName,
-          timestamp = System.currentTimeMillis(),
+          timestamp = start,
           success = result.success,
           durationMs = System.currentTimeMillis() - start,
           message = result.message,
+          user = System.getProperty("user.name"),
+          args = taskArgs,
+          result = if (result.success) "SUCCESS" else "FAILURE",
         )
       )
       return result

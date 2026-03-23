@@ -2,6 +2,7 @@ package io.github.architectplatform.engine.core.tasks.application
 
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
+import io.github.architectplatform.engine.cloud.CloudReporterService
 import io.github.architectplatform.engine.core.history.app.HistoryService
 import io.github.architectplatform.engine.core.history.domain.ExecutionRecord
 import io.github.architectplatform.engine.core.project.app.ProjectService
@@ -47,6 +48,7 @@ class TaskService(
     private val eventCollector: ExecutionEventCollector,
     private val eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>,
     private val historyService: HistoryService,
+    private val cloudReporter: Optional<CloudReporterService> = Optional.empty(),
 ) {
 
   /**
@@ -144,7 +146,7 @@ class TaskService(
           )
         val result = executeRecursivelyOverSubprojectsFirst(project, taskId, args, executionId = executionId)
         val durationMs = System.currentTimeMillis() - startTime
-        historyService.record(ExecutionRecord(
+        val record = ExecutionRecord(
             id = executionId,
             project = projectName,
             task = taskId,
@@ -152,7 +154,12 @@ class TaskService(
             success = result.success,
             durationMs = durationMs,
             message = result.message,
-        ))
+            user = System.getProperty("user.name"),
+            args = args,
+            result = if (result.success) "SUCCESS" else "FAILURE",
+        )
+        historyService.record(record)
+        cloudReporter.ifPresent { reporter -> reporter.reportAuditRecord(record) }
         if (!result.success) {
             eventPublisher.publishEvent(
                 executionFailedEvent(

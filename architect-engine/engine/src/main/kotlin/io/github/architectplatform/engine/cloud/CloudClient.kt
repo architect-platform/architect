@@ -21,6 +21,9 @@ interface CloudClient {
     
     @Post("/api/executions")
     fun reportExecution(@Body request: ReportExecutionRequest)
+
+    @Post("/api/audit-records")
+    fun reportAuditRecord(@Body request: ReportAuditRequest)
     
     @Post("/api/executions/events")
     fun reportEvent(@Body request: ReportEventRequest)

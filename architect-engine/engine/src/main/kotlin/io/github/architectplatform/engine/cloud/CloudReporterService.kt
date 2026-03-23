@@ -1,5 +1,6 @@
 package io.github.architectplatform.engine.cloud
 
+import io.github.architectplatform.engine.core.history.domain.ExecutionRecord
 import io.github.architectplatform.engine.core.startup.StartupProfileRecorder
 import io.github.architectplatform.engine.domain.events.*
 import io.micronaut.context.annotation.Property
@@ -128,6 +129,33 @@ class CloudReporterService(
                 logger.debug("Reported execution $executionId to cloud")
             } catch (e: Exception) {
                 logger.warn("Failed to report execution to cloud: ${e.message}")
+            }
+        }
+    }
+
+    fun reportAuditRecord(record: ExecutionRecord) {
+        scope.launch {
+            try {
+                val projectId = generateProjectId(record.project, "")
+                cloudClient.reportAuditRecord(
+                    ReportAuditRequest(
+                        id = record.id,
+                        projectId = projectId,
+                        engineId = engineId,
+                        projectName = record.project,
+                        taskId = record.task,
+                        timestamp = record.timestamp,
+                        user = record.user,
+                        args = record.args,
+                        result = record.result,
+                        durationMs = record.durationMs,
+                        success = record.success,
+                        message = record.message,
+                    )
+                )
+                logger.debug("Reported audit record {} to cloud", record.id)
+            } catch (e: Exception) {
+                logger.warn("Failed to report audit record to cloud: ${e.message}")
             }
         }
     }

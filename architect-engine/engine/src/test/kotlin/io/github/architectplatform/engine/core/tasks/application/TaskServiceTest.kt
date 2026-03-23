@@ -4,19 +4,29 @@ import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
+import io.github.architectplatform.engine.cloud.CloudReporterService
 import io.github.architectplatform.engine.core.history.app.HistoryService
+import io.github.architectplatform.engine.core.history.domain.ExecutionRecord
 import io.github.architectplatform.engine.core.project.app.ProjectService
 import io.github.architectplatform.engine.core.project.domain.Project
 import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTaskRegistry
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import io.micronaut.context.event.ApplicationEventPublisher
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import kotlinx.coroutines.CompletableDeferred
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.timeout
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import kotlin.io.path.Path
+import java.util.Optional
 
 /**
  * Unit tests for TaskService.
@@ -29,6 +39,7 @@ class TaskServiceTest {
     private lateinit var eventCollector: ExecutionEventCollector
     private lateinit var eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>
     private lateinit var historyService: HistoryService
+    private lateinit var cloudReporter: CloudReporterService
     private lateinit var taskService: TaskService
 
     @BeforeEach
@@ -38,7 +49,8 @@ class TaskServiceTest {
         eventCollector = mock()
         eventPublisher = mock()
         historyService = mock()
-        taskService = TaskService(projectService, taskExecutor, eventCollector, eventPublisher, historyService)
+        cloudReporter = mock()
+        taskService = TaskService(projectService, taskExecutor, eventCollector, eventPublisher, historyService, Optional.of(cloudReporter))
     }
 
     @Test
@@ -126,6 +138,34 @@ class TaskServiceTest {
         assertEquals("a-task", tasks[0].id)
         assertEquals("m-task", tasks[1].id)
         assertEquals("z-task", tasks[2].id)
+    }
+
+    @Test
+    fun `should record audit metadata and sync to cloud on execution`() {
+        val projectName = "test-project"
+        val taskId = "test-task"
+        val args = listOf("--flag", "value")
+        val taskRegistry = InMemoryTaskRegistry()
+        val testTask = TestTask(taskId)
+        taskRegistry.add(testTask)
+        val project = createTestProject(projectName, taskRegistry)
+        whenever(projectService.getProject(projectName)).thenReturn(project)
+        whenever(taskExecutor.execute(eq(project), eq(testTask), eq(project.context), eq(args), anyOrNull(), any())).thenReturn(
+            "execution-123" to CompletableDeferred(TaskResult.success("done"))
+        )
+
+        taskService.executeTask(projectName, taskId, args)
+
+        val captor = argumentCaptor<ExecutionRecord>()
+        verify(historyService, timeout(2000)).record(captor.capture())
+        val record = captor.firstValue
+        assertTrue(record.id.isNotBlank())
+        assertEquals(projectName, record.project)
+        assertEquals(taskId, record.task)
+        assertEquals(args, record.args)
+        assertEquals("SUCCESS", record.result)
+        assertEquals(System.getProperty("user.name"), record.user)
+        verify(cloudReporter, timeout(2000)).reportAuditRecord(any())
     }
 
     private fun createTestProject(

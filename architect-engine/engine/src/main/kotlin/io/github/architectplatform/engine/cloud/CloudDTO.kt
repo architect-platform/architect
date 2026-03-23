@@ -31,6 +31,22 @@ data class ReportExecutionRequest(
 )
 
 @Serdeable
+data class ReportAuditRequest(
+    val id: String,
+    val projectId: String,
+    val engineId: String,
+    val projectName: String,
+    val taskId: String,
+    val timestamp: Long,
+    val user: String? = null,
+    val args: List<String> = emptyList(),
+    val result: String? = null,
+    val durationMs: Long,
+    val success: Boolean,
+    val message: String? = null,
+)
+
+@Serdeable
 data class ReportEventRequest(
     val id: String,
     val executionId: String,

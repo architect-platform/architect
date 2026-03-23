@@ -11,4 +11,7 @@ data class ExecutionRecord(
     val success: Boolean,
     val durationMs: Long,
     val message: String?,
+    val user: String? = null,
+    val args: List<String> = emptyList(),
+    val result: String? = null,
 )
