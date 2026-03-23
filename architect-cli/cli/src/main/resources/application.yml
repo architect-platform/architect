@@ -9,6 +9,8 @@ micronaut:
         read-timeout: 300s
         connect-timeout: 300s
         exception-on-error-status: false
+        pool:
+          enabled: true
 
 architect:
   engine:
