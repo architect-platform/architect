@@ -13,9 +13,11 @@ import io.github.architectplatform.engine.core.project.domain.ProjectDependencyG
 import io.github.architectplatform.engine.core.project.domain.Project
 import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTaskRegistry
 import io.github.architectplatform.engine.core.project.infra.YamlLineTracker
+import io.github.architectplatform.engine.core.watch.FileWatchService
 import jakarta.inject.Singleton
 import java.io.File
 import java.util.Optional
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.Path
 import org.slf4j.LoggerFactory
 
@@ -43,10 +45,14 @@ class ProjectService(
     private val configValidator: ConfigValidator,
     private val cacheEnabled: Boolean = EngineConfiguration.Project.DEFAULT_CACHE_ENABLED,
     private val activeProfile: String = "default",
+    private val projectWatchDebounceMs: Long = 250,
 ) {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
   private val dependencyGraphBuilder = ProjectDependencyGraphBuilder()
+  private val registeredProjectPaths = ConcurrentHashMap<String, String>()
+  private val invalidatedProjects = ConcurrentHashMap.newKeySet<String>()
+  private val projectWatchers = ConcurrentHashMap<String, FileWatchService>()
 
   private val objectMapper =
       ObjectMapper().registerKotlinModule().apply { disable(FAIL_ON_UNKNOWN_PROPERTIES) }
@@ -181,8 +187,16 @@ class ProjectService(
    * @throws IllegalArgumentException if the project cannot be loaded from the given path
    */
   fun registerProject(name: String, path: String) {
+    registeredProjectPaths[name] = path
     val project = projectRepository.get(name)
     if (project != null) {
+      if (cacheEnabled && invalidatedProjects.remove(name)) {
+        logger.debug("Project $name cache invalidated, reloading project state")
+        val reloadedProject =
+          loadProject(name, path)
+            ?: throw IllegalArgumentException("Failed to load project $name from path $path")
+        projectRepository.save(name, reloadedProject)
+      }
       logger.debug("Project $name already registered at path ${project.path}")
       return
     }
@@ -190,6 +204,7 @@ class ProjectService(
         loadProject(name, path)
             ?: throw IllegalArgumentException("Failed to load project $name from path $path")
     projectRepository.save(name, newProject)
+    startProjectWatcher(name, path)
     
     // Report project if an optional reporter is configured by the host runtime
     projectReporter.ifPresent { reporter ->
@@ -210,14 +225,36 @@ class ProjectService(
   fun getProject(name: String): Project? {
     val project = projectRepository.get(name)
     if (project != null) {
-      if (!cacheEnabled) {
+      if (!cacheEnabled || invalidatedProjects.remove(name)) {
         logger.debug("Cache is disabled, reloading project $name")
-        return loadProject(name, project.path)
+        val reloaded = loadProject(name, project.path) ?: return null
+        projectRepository.save(name, reloaded)
+        return reloaded
       } else {
         return project
       }
     }
     return null
+  }
+
+  private fun startProjectWatcher(name: String, path: String) {
+    if (!cacheEnabled || projectWatchers.containsKey(name)) {
+      return
+    }
+
+    val watcher =
+      FileWatchService(
+        rootPath = Path(path),
+        debounceMs = projectWatchDebounceMs,
+      ) { changedPath ->
+        logger.debug("Detected change for project $name at $changedPath, invalidating cache entry")
+        invalidatedProjects.add(name)
+      }
+
+    val existing = projectWatchers.putIfAbsent(name, watcher)
+    if (existing == null) {
+      watcher.startAsync()
+    }
   }
 
   /**

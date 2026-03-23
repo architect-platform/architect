@@ -12,10 +12,12 @@ import io.github.architectplatform.engine.core.project.domain.LoadedProjectPlugi
 import io.github.architectplatform.engine.core.project.app.repositories.ProjectRepository
 import io.github.architectplatform.engine.core.project.domain.Project
 import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTaskRegistry
+import io.github.architectplatform.engine.core.watch.FileWatchService
 import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
 import java.io.File
 import java.util.Optional
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.Path
 import org.slf4j.LoggerFactory
 
@@ -44,9 +46,14 @@ class ProjectService(
 ) {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
+  private val registeredProjectPaths = ConcurrentHashMap<String, String>()
+  private val invalidatedProjects = ConcurrentHashMap.newKeySet<String>()
+  private val projectWatchers = ConcurrentHashMap<String, FileWatchService>()
 
   @Property(name = EngineConfiguration.Project.CACHE_ENABLED, defaultValue = "${EngineConfiguration.Project.DEFAULT_CACHE_ENABLED}")
   var cacheEnabled: Boolean = true
+
+  var projectWatchDebounceMs: Long = 250
 
   private val objectMapper =
       ObjectMapper().registerKotlinModule().apply { disable(FAIL_ON_UNKNOWN_PROPERTIES) }
@@ -172,10 +179,14 @@ class ProjectService(
    * @throws IllegalArgumentException if the project cannot be loaded from the given path
    */
   fun registerProject(name: String, path: String) {
+    registeredProjectPaths[name] = path
     val project = projectRepository.get(name)
     if (project != null) {
       if (hasLocalPlugins(project.context.config)) {
         logger.debug("Project $name uses local plugins, reloading project state")
+        reloadProject(name)
+      } else if (cacheEnabled && invalidatedProjects.remove(name)) {
+        logger.debug("Project $name cache invalidated, reloading project state")
         reloadProject(name)
       }
       logger.debug("Project $name already registered at path ${project.path}")
@@ -185,6 +196,7 @@ class ProjectService(
         loadProject(name, path)
             ?: throw IllegalArgumentException("Failed to load project $name from path $path")
     projectRepository.save(name, newProject)
+    startProjectWatcher(name, path)
     
     // Report project to cloud if cloud reporting is enabled
     cloudReporter.ifPresent { reporter ->
@@ -199,6 +211,7 @@ class ProjectService(
     val reloadedProject = loadProject(name, existingProject.path)
       ?: throw IllegalArgumentException("Failed to reload project $name from path ${existingProject.path}")
     projectRepository.save(name, reloadedProject)
+    invalidatedProjects.remove(name)
     return reloadedProject
   }
 
@@ -214,9 +227,11 @@ class ProjectService(
   fun getProject(name: String): Project? {
     val project = projectRepository.get(name)
     if (project != null) {
-      if (!cacheEnabled) {
+      if (!cacheEnabled || invalidatedProjects.remove(name)) {
         logger.debug("Cache is disabled, reloading project $name")
-        return loadProject(name, project.path)
+        val reloaded = loadProject(name, project.path) ?: return null
+        projectRepository.save(name, reloaded)
+        return reloaded
       } else {
         return project
       }
@@ -250,6 +265,26 @@ class ProjectService(
     val plugins = config["plugins"] as? List<*> ?: return false
     return plugins.filterIsInstance<Map<*, *>>().any { plugin ->
       plugin["type"] == "local"
+    }
+  }
+
+  private fun startProjectWatcher(name: String, path: String) {
+    if (!cacheEnabled || projectWatchers.containsKey(name)) {
+      return
+    }
+
+    val watcher =
+      FileWatchService(
+        rootPath = Path(path),
+        debounceMs = projectWatchDebounceMs,
+      ) { changedPath ->
+        logger.debug("Detected change for project $name at $changedPath, invalidating cache entry")
+        invalidatedProjects.add(name)
+      }
+
+    val existing = projectWatchers.putIfAbsent(name, watcher)
+    if (existing == null) {
+      watcher.startAsync()
     }
   }
 }

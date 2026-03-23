@@ -10,6 +10,7 @@ import java.nio.file.Path
 import java.util.Optional
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
+import kotlin.time.Duration.Companion.seconds
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -135,6 +136,46 @@ class ProjectServiceTest {
     assertTrue(exception.message.orEmpty().contains("project.name"))
   }
 
+  @Test
+  fun `should invalidate cached project when architect config changes`() {
+    val projectDir = tempDir.resolve("watched-project")
+    projectDir.createDirectories()
+    projectDir.resolve("architect.yml").writeText(
+      """
+      project:
+        name: watched-project
+      tasks:
+        build:
+          run: echo build
+      """.trimIndent()
+    )
+
+    val projectService = ProjectService(
+      projectRepository = InMemoryProjectRepository(),
+      configLoader = ConfigLoader(YamlConfigParser()),
+      pluginLoader = InlineTaskPluginLoader(),
+      projectReporter = Optional.empty(),
+      configValidator = ConfigValidator(),
+      projectWatchDebounceMs = 50,
+    )
+
+    projectService.registerProject("watched-project", projectDir.toString())
+    assertNotNull(projectService.getProject("watched-project")!!.taskRegistry.get("build"))
+
+    projectDir.resolve("architect.yml").writeText(
+      """
+      project:
+        name: watched-project
+      tasks:
+        test:
+          run: echo test
+      """.trimIndent()
+    )
+
+    val reloaded = waitForProjectReload(projectService, "watched-project", "test")
+    assertNotNull(reloaded.taskRegistry.get("test"))
+  }
+
   private fun createProjectService(pluginLoader: PluginLoader): ProjectService =
     ProjectService(
       projectRepository = InMemoryProjectRepository(),
@@ -159,5 +200,21 @@ class ProjectServiceTest {
 
   private class EmptyPluginLoader : PluginLoader {
     override fun load(context: ProjectContext): List<ArchitectPlugin<*>> = emptyList()
+  }
+
+  private fun waitForProjectReload(
+    projectService: ProjectService,
+    projectName: String,
+    expectedTaskId: String,
+  ): io.github.architectplatform.engine.core.project.domain.Project {
+    val deadline = System.currentTimeMillis() + 3.seconds.inWholeMilliseconds
+    while (System.currentTimeMillis() < deadline) {
+      val project = projectService.getProject(projectName)
+      if (project != null && project.taskRegistry.get(expectedTaskId) != null) {
+        return project
+      }
+      Thread.sleep(50)
+    }
+    error("Timed out waiting for cached project reload of $projectName")
   }
 }

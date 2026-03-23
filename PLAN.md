@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 149/217 tasks completed (69%)
+Overall Progress: 150/217 tasks completed (69%)
 Current Phase: Phase 23 — Performance Optimization
-Last Updated: 2026-03-23T14:18:00Z
+Last Updated: 2026-03-23T14:29:00Z
 
 ---
 
@@ -549,7 +549,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 23.1 **GraalVM Native Image for CLI** — compile `architect-cli` to a native binary. Eliminates JVM startup (~200ms saving). Requires Micronaut AOT compatibility. | Finished: 2026-03-23T13:38:00Z | Notes: installed GraalVM CE 17 with `native-image`, configured CLI native builds with `-J-Xmx4g` to avoid native-image OOMs, added Micronaut bean factories/fixes for `HttpClient` and embedded executor startup, and verified `architect-cli/cli:./gradlew nativeCompile` plus native `./build/native/nativeCompile/architect-cli --version` startup.
 - [x] 23.2 **Lazy plugin loading** — load plugin JARs only when a plugin's tasks are actually needed (not at project registration time) | Finished: 2026-03-23T14:05:00Z | Notes: `ProjectService` in both `architect-core` and `architect-engine` now registers projects with deferred plugin loading, and `Project` wraps plugin state behind a lazy task registry so plugin download/init/register only happens on first task access or explicit validation; added focused project-service regressions plus embedded and monorepo execution verification to confirm registration stays cheap without breaking execution.
 - [x] 23.3 **Parallel plugin loading** — load independent plugins concurrently (coroutine-based, already feasible) | Finished: 2026-03-23T14:18:00Z | Notes: `ProjectPluginLoader` now fans out configured plugin resolution with ordered coroutines on `Dispatchers.IO`, preserving config order in the returned plugin list while overlapping independent downloads/classloading; added `ProjectPluginLoaderTest` to prove concurrent download overlap and reran embedded execution context coverage with the real loader.
-- [ ] 23.4 **Project config caching** — `ProjectService` project cache is already implemented but disabled. Enable by default with file-system watcher invalidation.
+- [x] 23.4 **Project config caching** — `ProjectService` project cache is already implemented but disabled. Enable by default with file-system watcher invalidation. | Finished: 2026-03-23T14:29:00Z | Notes: wired `FileWatchService` into both core and engine `ProjectService` implementations so registered projects keep cached state until filesystem changes mark them stale; the next `getProject()` transparently reloads config and tasks, and focused watcher-driven cache invalidation tests now cover both modules.
 - [ ] 23.5 **Build benchmarks** — `jmh` micro-benchmarks for `TaskDependencyResolver.topologicalSort()` and `ConfigValidator` on large configs
 - [ ] 23.6 **Startup profiling** — instrument engine startup and identify top-3 bottlenecks
 - [ ] 23.7 **Connection pooling** — CLI ↔ Engine HTTP keep-alive connections (already in Micronaut HTTP client; verify active)

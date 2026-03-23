@@ -13,6 +13,7 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.nio.file.Path
 import java.util.Optional
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Unit tests for ProjectService.
@@ -160,6 +161,35 @@ class ProjectServiceTest {
         }
     }
 
+    @Test
+    fun `should invalidate cached project when architect config changes`() {
+        val projectName = "watched-project"
+        val projectPath = tempDir.toString()
+        createTaskProjectStructure(projectPath)
+
+        val configLoader = ConfigLoader(YamlConfigParser())
+        val pluginLoader = CountingInlineTaskPluginLoader()
+        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty(), ConfigValidator())
+        projectService.projectWatchDebounceMs = 50
+
+        projectService.registerProject(projectName, projectPath)
+        assertNotNull(projectService.getProject(projectName)!!.taskRegistry.get("build"))
+
+        File(projectPath, "architect.yml").writeText(
+            """
+            project:
+              name: test-project
+            tasks:
+              test:
+                description: Reloaded task
+                run: echo testing
+            """.trimIndent() + "\n"
+        )
+
+        val reloaded = waitForProjectReload(projectService, projectName, "test")
+        assertNotNull(reloaded.taskRegistry.get("test"))
+    }
+
     private fun createTestProjectStructure(path: String, includeLocalPlugin: Boolean = false) {
         val architectFile = File(path, "architect.yml")
         val pluginsSection = if (includeLocalPlugin) {
@@ -229,5 +259,21 @@ class ProjectServiceTest {
             loadCalls += 1
             return listOf(InlineTaskPlugin())
         }
+    }
+
+    private fun waitForProjectReload(
+        projectService: ProjectService,
+        projectName: String,
+        expectedTaskId: String,
+    ): io.github.architectplatform.engine.core.project.domain.Project {
+        val deadline = System.currentTimeMillis() + 3.seconds.inWholeMilliseconds
+        while (System.currentTimeMillis() < deadline) {
+            val project = projectService.getProject(projectName)
+            if (project != null && project.taskRegistry.get(expectedTaskId) != null) {
+                return project
+            }
+            Thread.sleep(50)
+        }
+        error("Timed out waiting for cached project reload of $projectName")
     }
 }
