@@ -7,12 +7,14 @@ import io.github.architectplatform.api.components.execution.ResourceExtractor
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
+import io.github.architectplatform.api.core.project.resolvePathWithinRoot
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
 import java.io.File
+import java.nio.file.Path
 
 /**
  * Architect plugin for managing and executing pipelines of Architect tasks.
@@ -252,8 +254,24 @@ class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
     private fun resolveWorkflow(workflow: WorkflowDefinition, projectContext: ProjectContext): WorkflowDefinition {
         val extendsTemplate = workflow.extends ?: return workflow
 
-        // Try to load template from .architect/pipelines
-        val templateFile = File(projectContext.dir.toFile(), ".architect/pipelines/$extendsTemplate.yml")
+        // Validate template name — only simple names allowed, no path traversal
+        val safeTemplateName = extendsTemplate.replace(Regex("[^a-zA-Z0-9._-]"), "")
+        if (safeTemplateName != extendsTemplate || safeTemplateName.contains("..")) {
+            System.err.println("Warning: Unsafe pipeline template name '$extendsTemplate', skipping.")
+            return workflow
+        }
+
+        // Try to load template from .architect/pipelines (validated against project root)
+        val templateFile = try {
+            resolvePathWithinRoot(
+                projectContext.dir,
+                Path.of(".architect", "pipelines", "$safeTemplateName.yml"),
+                "Pipeline template path"
+            ).toFile()
+        } catch (e: IllegalArgumentException) {
+            System.err.println("Warning: Template path traversal detected for '$extendsTemplate', skipping.")
+            return workflow
+        }
         if (templateFile.exists()) {
             try {
                 val template = yamlMapper.readValue(templateFile, WorkflowDefinition::class.java)
@@ -267,7 +285,7 @@ class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
         // Try to load from embedded resources
         try {
             val content = this.javaClass.classLoader.getResourceAsStream(
-                "workflows/templates/$extendsTemplate.yml"
+                "workflows/templates/$safeTemplateName.yml"
             )?.bufferedReader()?.use { it.readText() }
 
             if (content == null) {

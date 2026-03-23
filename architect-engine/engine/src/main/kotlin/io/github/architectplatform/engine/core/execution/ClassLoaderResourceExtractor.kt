@@ -59,7 +59,12 @@ class ClassLoaderResourceExtractor : ResourceExtractor {
           .filter { it.name.startsWith(resourceRoot) && !it.isDirectory }
           .forEach { entry ->
             val relativePath = entry.name.removePrefix("$resourceRoot/")
-            val targetPath = targetDirectory.resolve(relativePath)
+            val normalizedTarget = targetDirectory.toAbsolutePath().normalize()
+            val targetPath = normalizedTarget.resolve(relativePath).normalize()
+            // zip-slip guard
+            require(targetPath.startsWith(normalizedTarget)) {
+              "Zip-slip prevented: JAR entry '${entry.name}' would escape target directory"
+            }
 
             classLoader.getResourceAsStream(entry.name)?.use { input ->
               copyExecutable(input, targetPath)

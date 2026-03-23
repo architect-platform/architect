@@ -231,6 +231,30 @@ class ScriptsPluginTest {
         assertEquals(Path.of("/repo", "scripts").toAbsolutePath().toString(), commandExecutor.workingDir)
     }
 
+    @Test
+    fun `script task rejects working directory traversal`() {
+        val commandExecutor = RecordingCommandExecutor()
+        val task = ScriptTask(
+            scriptName = "deploy",
+            config = ScriptConfig(
+                command = "./deploy.sh",
+                workingDirectory = "../outside"
+            ),
+            phase = null,
+            context = ScriptsContext()
+        )
+
+        val result = task.execute(
+            environment = TestEnvironment(commandExecutor),
+            projectContext = ProjectContext(Path.of("/repo"), emptyMap()),
+            args = emptyList()
+        )
+
+        assertFalse(result.success)
+        assertNull(commandExecutor.command)
+        assertTrue(result.message!!.contains("invalid working directory"))
+    }
+
     private class TestTaskRegistry : io.github.architectplatform.api.core.tasks.TaskRegistry {
         private val tasks = mutableListOf<io.github.architectplatform.api.core.tasks.Task>()
 

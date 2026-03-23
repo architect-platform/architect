@@ -4,6 +4,7 @@ import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.plugins.docs.dto.BuildContext
 import io.github.architectplatform.plugins.docs.dto.ComponentDocs
+import io.github.architectplatform.api.core.project.resolvePathWithinRoot
 import io.github.architectplatform.plugins.docs.utils.SecurityUtils
 import java.io.File
 
@@ -223,15 +224,28 @@ extra:
      */
     private fun aggregateComponentDocs(gitDir: File, components: List<ComponentDocs>, tempDocsDir: File) {
         // Copy root docs
-        val rootDocsDir = File(gitDir, context.sourceDir)
+        val rootDocsDir = try {
+            resolvePathWithinRoot(gitDir.toPath(), context.sourceDir, "Docs source directory").toFile()
+        } catch (e: IllegalArgumentException) {
+            return
+        }
         if (rootDocsDir.exists()) {
             rootDocsDir.copyRecursively(tempDocsDir, overwrite = true)
         }
         
         // Copy component docs
         for (component in components) {
-            val componentDocsSource = File(gitDir, "${component.path}/${component.docsPath}")
-            val componentDocsTarget = File(tempDocsDir, "${component.path}/${component.docsPath}")
+            val componentPath = "${component.path}/${component.docsPath}"
+            val componentDocsSource = try {
+                resolvePathWithinRoot(gitDir.toPath(), componentPath, "Component docs source").toFile()
+            } catch (e: IllegalArgumentException) {
+                continue  // skip components with traversal paths
+            }
+            val componentDocsTarget = try {
+                resolvePathWithinRoot(tempDocsDir.toPath(), componentPath, "Component docs target").toFile()
+            } catch (e: IllegalArgumentException) {
+                continue
+            }
             
             if (componentDocsSource.exists()) {
                 componentDocsTarget.parentFile.mkdirs()

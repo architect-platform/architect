@@ -9,6 +9,7 @@ import io.github.architectplatform.plugins.docs.dto.DocsContext
 import io.github.architectplatform.plugins.docs.utils.SecurityUtils
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.nio.file.Files
 import java.nio.file.Path
 
 /**
@@ -156,6 +157,43 @@ class DocsPluginTest {
 
     assertTrue(result.success)
     assertTrue(result.message!!.contains("disabled"))
+  }
+
+  @Test
+  fun `docs-build ignores component search paths that escape repo root`() {
+    val repoDir = Files.createTempDirectory("docs-plugin-test")
+    Files.createDirectories(repoDir.resolve(".git"))
+    Files.createDirectories(repoDir.resolve("docs"))
+    Files.createDirectories(repoDir.resolve("service/docs"))
+    Files.writeString(repoDir.resolve("service/docs/index.md"), "# Service")
+    Files.writeString(repoDir.resolve("docs/index.md"), "# Root")
+
+    try {
+      val plugin = DocsPlugin()
+      plugin.init(
+        DocsContext(
+          build = BuildContext(
+            framework = "manual",
+            componentPaths = listOf(".", "../outside"),
+            autoDiscoverComponents = true
+          )
+        )
+      )
+      val registry = TestTaskRegistry()
+      plugin.register(registry)
+      val task = registry.get("docs-build")!!
+
+      val result = task.execute(
+        TestEnvironment(RecordingCommandExecutor()),
+        ProjectContext(repoDir, emptyMap()),
+        emptyList()
+      )
+
+      assertTrue(result.success)
+      assertEquals("Auto-discovered 1 components with documentation", result.results!![0].message)
+    } finally {
+      repoDir.toFile().deleteRecursively()
+    }
   }
 
   @Test

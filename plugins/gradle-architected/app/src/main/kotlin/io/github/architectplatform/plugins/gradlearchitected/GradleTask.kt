@@ -2,11 +2,11 @@ package io.github.architectplatform.plugins.gradlearchitected
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.api.core.project.ProjectContext
+import io.github.architectplatform.api.core.project.resolvePath
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
-import kotlin.io.path.Path
 
 /**
  * Task implementation for executing Gradle commands.
@@ -78,8 +78,12 @@ class GradleTask(
           "Gradle task: $id not enabled on gradle project: $gradleProjectContext. Skipping...")
     }
     val commandExecutor = environment.service(CommandExecutor::class.java)
-    val gradleProjectDir =
-        Path(projectContext.dir.toString(), gradleProjectContext.path).toAbsolutePath()
+    val gradleProjectDir = try {
+      projectContext.resolvePath(gradleProjectContext.path, "Gradle project path")
+    } catch (e: IllegalArgumentException) {
+      return TaskResult.failure(
+          "Gradle task: $id has invalid project path '${gradleProjectContext.path}': ${e.message}")
+    }
 
     try {
       commandExecutor.execute(

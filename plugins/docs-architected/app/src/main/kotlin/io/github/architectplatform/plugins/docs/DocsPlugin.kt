@@ -13,6 +13,7 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
 import io.github.architectplatform.plugins.docs.builders.DocumentationBuilderFactory
 import io.github.architectplatform.plugins.docs.dto.ComponentDocs
 import io.github.architectplatform.plugins.docs.dto.DocsContext
+import io.github.architectplatform.api.core.project.resolvePathWithinRoot
 import io.github.architectplatform.plugins.docs.publishers.GitHubPagesPublisher
 import java.io.File
 import java.nio.file.Files
@@ -251,7 +252,11 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
     val excludedDirs = setOf(".", ".git", ".github", "build", "target", "node_modules", ".gradle", "site")
     
     for (searchPath in context.build.componentPaths) {
-      val searchDir = File(gitDir, searchPath)
+      val searchDir = try {
+        resolvePathWithinRoot(gitDir.toPath(), searchPath, "Component search path").toFile()
+      } catch (e: IllegalArgumentException) {
+        continue  // skip paths that would escape the repo root
+      }
       if (!searchDir.exists() || !searchDir.isDirectory) continue
       
       // For root directory, look for direct subdirectories with docs

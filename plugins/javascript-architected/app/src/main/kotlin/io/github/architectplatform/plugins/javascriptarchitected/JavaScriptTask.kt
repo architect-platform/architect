@@ -2,11 +2,11 @@ package io.github.architectplatform.plugins.javascriptarchitected
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.api.core.project.ProjectContext
+import io.github.architectplatform.api.core.project.resolvePath
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
-import kotlin.io.path.Path
 
 /**
  * Task implementation for executing JavaScript/Node.js commands via package managers.
@@ -40,8 +40,12 @@ class JavaScriptTask(
       args: List<String>
   ): TaskResult {
     val commandExecutor = environment.service(CommandExecutor::class.java)
-    val workingDir =
-        Path(projectContext.dir.toString(), context.workingDirectory).toAbsolutePath()
+    val workingDir = try {
+      projectContext.resolvePath(context.workingDirectory, "JavaScript working directory")
+    } catch (e: IllegalArgumentException) {
+      return TaskResult.failure(
+          "JavaScript task: $id failed with invalid working directory: ${e.message}")
+    }
 
     val fullCommand = buildCommand(command, args)
 

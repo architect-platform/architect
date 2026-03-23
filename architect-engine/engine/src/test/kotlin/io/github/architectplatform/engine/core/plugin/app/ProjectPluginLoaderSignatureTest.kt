@@ -8,6 +8,7 @@ import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import io.micronaut.http.client.HttpClient
 import io.micronaut.context.event.ApplicationEventPublisher
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -65,6 +66,42 @@ class ProjectPluginLoaderSignatureTest {
     assertEquals(listOf("signed-plugin"), plugins.map { it.id })
     assertTrue(downloader.downloadedUrls.any { it.endsWith("signed-plugin.jar.asc") })
     assertEquals(listOf("signed-plugin"), verifier.verifiedPluginNames)
+  }
+
+  @Test
+  fun `should reject local plugin paths outside project root`() {
+    val spiLoader = mock<SpiPluginLoader>()
+    val loader =
+      ProjectPluginLoader(
+        spiLoader = spiLoader,
+        downloader = TrackingDownloader(tempDir),
+        signatureVerifier = RecordingSignatureVerifier(),
+        internalPlugins = emptyList(),
+        releaseResolver = GitHubReleaseResolver(mock<HttpClient>()),
+        eventPublisher = ApplicationEventPublisher<ArchitectEvent<*>> { },
+        classloaderDebug = false,
+      )
+    val context =
+      ProjectContext(
+        dir = tempDir,
+        config =
+          mapOf(
+            "plugins" to
+              listOf(
+                mapOf(
+                  "name" to "escape-plugin",
+                  "type" to "local",
+                  "path" to "../escape-plugin.jar",
+                ),
+              ),
+          ),
+      )
+
+    val error = assertThrows(IllegalArgumentException::class.java) {
+      loader.load(context)
+    }
+
+    assertTrue(error.message!!.contains("project root"))
   }
 
   private class TrackingDownloader(

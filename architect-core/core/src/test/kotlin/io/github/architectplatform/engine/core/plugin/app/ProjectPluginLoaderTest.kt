@@ -17,6 +17,7 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.io.TempDir
 
@@ -98,6 +99,36 @@ class ProjectPluginLoaderTest {
     assertEquals(listOf("signed-plugin"), plugins.map { it.id })
     assertTrue(downloader.downloadedUrls.any { it.endsWith("signed-plugin.jar.asc") })
     assertEquals("signed-plugin", verifier.verifiedPluginNames.single())
+  }
+
+  @Test
+  fun `should reject local plugin paths outside project root`() {
+    val loader = ProjectPluginLoader(
+      spiLoader = TrackingSpiPluginLoader(),
+      downloader = TrackingDownloader(tempDir),
+      signatureVerifier = RecordingSignatureVerifier(),
+      internalPlugins = emptyList(),
+      releaseResolver = GitHubReleaseResolver(NoOpRemoteContentFetcher()),
+      eventBus = { },
+    )
+    val context = ProjectContext(
+      dir = tempDir,
+      config = mapOf(
+        "plugins" to listOf(
+          mapOf(
+            "name" to "escape-plugin",
+            "type" to "local",
+            "path" to "../escape-plugin.jar",
+          ),
+        ),
+      ),
+    )
+
+    val error = assertFailsWith<IllegalArgumentException> {
+      loader.load(context)
+    }
+
+    assertTrue(error.message!!.contains("project root"))
   }
 
   private class TrackingDownloader(

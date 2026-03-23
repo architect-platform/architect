@@ -97,6 +97,21 @@ class GradlePluginTest {
     assertFalse(result.success)
   }
 
+  @Test
+  fun `gradle-build rejects project path traversal`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(
+      GradleContext(projects = listOf(GradleProjectContext(name = "api", path = "../outside"))),
+      "gradle-build"
+    )
+
+    val result = task.execute(TestEnvironment(executor), ProjectContext(Path.of("/repo"), emptyMap()), emptyList())
+
+    assertFalse(result.success)
+    assertTrue(executor.commands.isEmpty())
+    assertTrue(result.message!!.contains("invalid project path"))
+  }
+
   private fun registerAndGet(ctx: GradleContext, taskId: String): io.github.architectplatform.api.core.tasks.Task {
     val plugin = GradlePlugin()
     plugin.init(ctx)

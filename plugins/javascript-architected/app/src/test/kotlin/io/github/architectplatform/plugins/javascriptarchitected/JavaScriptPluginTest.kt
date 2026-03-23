@@ -99,6 +99,18 @@ class JavaScriptPluginTest {
     assertFalse(result.success)
   }
 
+  @Test
+  fun `task rejects working directory traversal`() {
+    val executor = RecordingCommandExecutor()
+    val task = registerAndGet(JavaScriptContext(workingDirectory = "../outside"), "javascript-build")
+
+    val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
+
+    assertFalse(result.success)
+    assertNull(executor.command)
+    assertTrue(result.message!!.contains("invalid working directory"))
+  }
+
   private fun registerAndGet(ctx: JavaScriptContext, taskId: String): io.github.architectplatform.api.core.tasks.Task {
     val plugin = JavaScriptPlugin()
     plugin.init(ctx)

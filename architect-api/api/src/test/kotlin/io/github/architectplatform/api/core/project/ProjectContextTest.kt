@@ -95,4 +95,31 @@ class ProjectContextTest {
     assertEquals(a, b)
     assertEquals(a.hashCode(), b.hashCode())
   }
+
+  @Test
+  fun `resolvePath keeps paths within project root`(@TempDir tmpDir: Path) {
+    val ctx = ProjectContext(dir = tmpDir, config = emptyMap())
+
+    val resolved = ctx.resolvePath("nested/project")
+
+    assertEquals(tmpDir.resolve("nested/project").toAbsolutePath().normalize(), resolved)
+  }
+
+  @Test
+  fun `resolvePath rejects absolute paths`(@TempDir tmpDir: Path) {
+    val ctx = ProjectContext(dir = tmpDir, config = emptyMap())
+
+    assertThrows(IllegalArgumentException::class.java) {
+      ctx.resolvePath("/tmp/outside")
+    }
+  }
+
+  @Test
+  fun `resolvePath rejects traversal outside project root`(@TempDir tmpDir: Path) {
+    val ctx = ProjectContext(dir = tmpDir, config = emptyMap())
+
+    assertThrows(IllegalArgumentException::class.java) {
+      ctx.resolvePath("../outside")
+    }
+  }
 }

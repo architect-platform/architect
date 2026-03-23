@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.project.getKey
+import io.github.architectplatform.api.core.project.resolvePath
 import io.github.architectplatform.engine.core.plugin.domain.events.PluginEvents.pluginLoaded
 import io.github.architectplatform.engine.core.plugin.infra.GitHubReleaseResolver
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
@@ -78,13 +79,13 @@ class ProjectPluginLoader(
                     }
                     "local" -> {
                         // Local plugin, assume the asset is a local path
-                        val localPath = context.dir.resolve(plugin.path)
+                        val localPath = context.resolvePath(plugin.path, "Local plugin path")
                         if (!localPath.exists()) {
                             throw IllegalArgumentException(
                                 "Local plugin asset not found: ${localPath.toAbsolutePath()}")
                         }
                         if (plugin.verifySignature) {
-                            signatureFile = context.dir.resolve("${plugin.path}.asc").toFile()
+                            signatureFile = context.resolvePath("${plugin.path}.asc", "Local plugin signature path").toFile()
                         }
                         localPath.toFile()
                     }

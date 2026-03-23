@@ -1,12 +1,13 @@
 package io.github.architectplatform.engine.core.plugin.infra
 
+import io.github.architectplatform.api.core.project.resolvePathWithinRoot
 import io.github.architectplatform.engine.core.common.Result
 import io.github.architectplatform.engine.core.plugin.domain.PluginSource
 import io.github.architectplatform.engine.core.plugin.domain.PluginSourceConfig
 import jakarta.inject.Singleton
 import java.io.File
-import kotlin.io.path.Path
 import kotlin.io.path.exists
+import java.nio.file.Path
 import org.slf4j.LoggerFactory
 
 /**
@@ -27,7 +28,7 @@ class LocalPluginSource : PluginSource {
         
         return Result.catching {
             val baseDir = config.baseDir ?: "."
-            val localPath = Path(baseDir).resolve(path)
+            val localPath = resolvePathWithinRoot(Path.of(baseDir), path, "Local plugin path")
             
             logger.debug("Resolving local plugin from path: ${localPath.toAbsolutePath()}")
             

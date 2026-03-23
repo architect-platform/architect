@@ -92,6 +92,27 @@ class PipelinesPluginTest {
     assertTrue(result.message!!.contains("skipped"))
   }
 
+  @Test
+  fun `pipelines-execute ignores unsafe template traversal names`() {
+    val task = registerAndGet(
+      PipelinesContext(
+        workflows = listOf(
+          WorkflowDefinition(
+            name = "ci",
+            extends = "../../secrets",
+            steps = emptyList()
+          )
+        )
+      ),
+      "pipelines-execute"
+    )
+
+    val result = task.execute(TestEnvironment(), projectContext(), listOf("ci"))
+
+    assertTrue(result.success)
+    assertTrue(result.message!!.contains("completed successfully"))
+  }
+
   private fun registerAndGet(ctx: PipelinesContext, taskId: String): io.github.architectplatform.api.core.tasks.Task {
     val plugin = PipelinesPlugin()
     plugin.init(ctx)

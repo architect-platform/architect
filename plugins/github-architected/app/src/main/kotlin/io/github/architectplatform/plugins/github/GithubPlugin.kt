@@ -7,6 +7,7 @@ import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.project.getKey
+import io.github.architectplatform.api.core.project.resolvePathWithinRoot
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskRegistry
@@ -249,8 +250,13 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
     val gitDir =
         findRepoRoot(projectContext.dir.toFile())
             ?: return TaskResult.failure("Git directory not found in project hierarchy.")
+    val safeType = pipeline.type.replace(Regex("[^a-zA-Z0-9._-]"), "")
+    val safeName = pipeline.name.replace(Regex("[^a-zA-Z0-9._-]"), "")
+    if (safeName.isBlank() || safeName.contains("..")) {
+      return TaskResult.failure("Invalid pipeline name: '${pipeline.name}'")
+    }
     val resourceRoot = "pipelines/"
-    val resourceFile = resourceRoot + pipeline.type + ".yml"
+    val resourceFile = resourceRoot + safeType + ".yml"
     val pipelinesDir = File(gitDir, ".github/workflows")
 
     if (!pipelinesDir.exists()) {
@@ -260,7 +266,11 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
     val resourceExtractor = environment.service(ResourceExtractor::class.java)
     resourceExtractor.getResourceFileContent(this.javaClass.classLoader, resourceFile).let { content
       ->
-      val filePath = File(pipelinesDir, "${pipeline.name}.yml")
+      val filePath = try {
+        resolvePathWithinRoot(pipelinesDir.toPath(), "$safeName.yml", "Pipeline file path").toFile()
+      } catch (e: IllegalArgumentException) {
+        return TaskResult.failure("Pipeline name '${pipeline.name}' would escape the workflows directory.")
+      }
       filePath.writeText(
           content
               .replace("{{name}}", pipeline.name)

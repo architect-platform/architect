@@ -2,11 +2,11 @@ package io.github.architectplatform.plugins.scripts
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.api.core.project.ProjectContext
+import io.github.architectplatform.api.core.project.resolvePath
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
-import kotlin.io.path.Path
 
 /**
  * Task implementation for executing custom shell scripts.
@@ -60,8 +60,13 @@ class ScriptTask(
         }
 
         val commandExecutor = environment.service(CommandExecutor::class.java)
-        val workingDir =
-            Path(projectContext.dir.toString(), config.workingDirectory).toAbsolutePath()
+        val workingDir = try {
+            projectContext.resolvePath(config.workingDirectory, "Script working directory")
+        } catch (e: IllegalArgumentException) {
+            return TaskResult.failure(
+                "Script task: $id failed with invalid working directory: ${e.message}"
+            )
+        }
 
         // Escape all arguments to prevent command injection
         val escapedArgs = args.map { ScriptUtils.escapeShellArg(it) }
