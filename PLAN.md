@@ -6,7 +6,7 @@
 ---
 
 ## Status
-Overall Progress: 142/217 tasks completed (65%)
+Overall Progress: 143/217 tasks completed (66%)
 Current Phase: Phase 22 — Integration & End-to-End Tests
 Last Updated: 2026-03-23T10:00:00Z
 
@@ -500,7 +500,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 21.15 All plugins: add `execute()` level tests using hand-rolled test infrastructure (Phase 19.2 prerequisite)
 - [x] 21.16 `GitPluginTest` — git-config secure escaping with adversarial inputs
 - [x] 21.17 `ScriptsPluginTest` — phase resolution for all three workflows
-- [ ] 21.18 `DocsPluginTest` — path traversal prevention, all three builders
+- [x] 21.18 `DocsPluginTest` — path traversal prevention, all three builders
 
 ### architect-cloud
 
