@@ -71,6 +71,10 @@ class ArchitectSchemaGeneratorTest {
     assertEquals("string", props.get("command").get("type").asText())
     assertNotNull(props.get("package"))
     assertEquals("string", props.get("package").get("type").asText())
+    assertNotNull(props.get("verify-signature"))
+    assertEquals("boolean", props.get("verify-signature").get("type").asText())
+    assertNotNull(props.get("trusted-keys"))
+    assertEquals("array", props.get("trusted-keys").get("type").asText())
   }
 
   @Test

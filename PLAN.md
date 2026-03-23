@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 153/217 tasks completed (71%)
-Current Phase: Phase 23 — Performance Optimization
-Last Updated: 2026-03-23T15:05:00Z
+Overall Progress: 154/217 tasks completed (71%)
+Current Phase: Phase 24 — Security Hardening
+Last Updated: 2026-03-23T15:28:00Z
 
 ---
 
@@ -562,7 +562,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 
 ### Tasks
 
-- [ ] 24.1 **Plugin signing** — plugins can be signed with a GPG key. Engine verifies signature before loading. `architect.yml`:
+- [x] 24.1 **Plugin signing** — plugins can be signed with a GPG key. Engine verifies signature before loading. `architect.yml`: | Finished: 2026-03-23T15:28:00Z | Notes: added `verify-signature` and `trusted-keys` support to plugin declarations, wired detached `.asc` signature downloads/sidecar lookup into both core and engine plugin loaders, and verify signatures through `gpg --verify` before classloading, matching signer fingerprints against configured trusted key IDs; covered with focused core loader/schema/verifier tests and an engine-side loader regression.
   ```yaml
   plugins:
     - name: my-plugin

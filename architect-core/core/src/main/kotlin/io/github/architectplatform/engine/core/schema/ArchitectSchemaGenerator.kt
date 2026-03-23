@@ -104,10 +104,18 @@ object ArchitectSchemaGenerator {
     )
     props.set<ObjectNode>("path", stringPropWithDefault("Local path to the plugin (for type: local)", "."))
     props.set<ObjectNode>("pattern", stringProp("Release asset filename prefix pattern"))
-      props.set<ObjectNode>("registry", stringProp("Registry index URL for type: registry"))
-      props.set<ObjectNode>("url", stringProp("Direct plugin asset URL for type: http"))
+    props.set<ObjectNode>("registry", stringProp("Registry index URL for type: registry"))
+    props.set<ObjectNode>("url", stringProp("Direct plugin asset URL for type: http"))
+    props.set<ObjectNode>(
+      "verify-signature",
+      booleanPropWithDefault("Require a detached GPG signature before loading the plugin", false),
+    )
+    props.set<ObjectNode>(
+      "trusted-keys",
+      stringArrayProp("Trusted GPG key IDs or fingerprints accepted for this plugin"),
+    )
     props.set<ObjectNode>("command", stringProp("Command to execute for type: process"))
-      props.set<ObjectNode>("package", stringProp("npm package name for type: npm"))
+    props.set<ObjectNode>("package", stringProp("npm package name for type: npm"))
 
     node.putArray("required").add("name")
     node.set<ArrayNode>("allOf", pluginTypeRequirements())
@@ -137,6 +145,9 @@ object ArchitectSchemaGenerator {
 
   private fun stringPropWithDefault(description: String, default: String): ObjectNode =
     stringProp(description).put("default", default)
+
+  private fun booleanPropWithDefault(description: String, default: Boolean): ObjectNode =
+    mapper.createObjectNode().put("type", "boolean").put("description", description).put("default", default)
 
   private fun stringArrayProp(description: String): ObjectNode {
     val node = mapper.createObjectNode()

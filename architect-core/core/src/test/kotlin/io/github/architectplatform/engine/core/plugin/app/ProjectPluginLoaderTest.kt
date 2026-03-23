@@ -31,6 +31,7 @@ class ProjectPluginLoaderTest {
     val loader = ProjectPluginLoader(
       spiLoader = TrackingSpiPluginLoader(),
       downloader = downloader,
+      signatureVerifier = RecordingSignatureVerifier(),
       internalPlugins = emptyList(),
       releaseResolver = GitHubReleaseResolver(NoOpRemoteContentFetcher()),
       eventBus = { },
@@ -63,14 +64,52 @@ class ProjectPluginLoaderTest {
     assertTrue(downloader.maxConcurrent.get() >= 2)
   }
 
+  @Test
+  fun `should download and verify detached signature for signed github plugin`() {
+    val downloader = TrackingDownloader(tempDir)
+    val verifier = RecordingSignatureVerifier()
+    val loader = ProjectPluginLoader(
+      spiLoader = TrackingSpiPluginLoader(),
+      downloader = downloader,
+      signatureVerifier = verifier,
+      internalPlugins = emptyList(),
+      releaseResolver = GitHubReleaseResolver(NoOpRemoteContentFetcher()),
+      eventBus = { },
+    )
+    val context = ProjectContext(
+      dir = tempDir,
+      config = mapOf(
+        "plugins" to listOf(
+          mapOf(
+            "name" to "signed-plugin",
+            "type" to "github",
+            "repo" to "owner/signed-plugin",
+            "version" to "1.0.0",
+            "asset" to "signed-plugin.jar",
+            "verify-signature" to true,
+            "trusted-keys" to listOf("0xABCD1234"),
+          ),
+        ),
+      ),
+    )
+
+    val plugins = loader.load(context)
+
+    assertEquals(listOf("signed-plugin"), plugins.map { it.id })
+    assertTrue(downloader.downloadedUrls.any { it.endsWith("signed-plugin.jar.asc") })
+    assertEquals("signed-plugin", verifier.verifiedPluginNames.single())
+  }
+
   private class TrackingDownloader(
     private val tempDir: Path,
   ) : PluginDownloader {
     private val active = AtomicInteger(0)
     val maxConcurrent = AtomicInteger(0)
+    val downloadedUrls = mutableListOf<String>()
     private val started = CountDownLatch(2)
 
     override fun download(url: String): File {
+      downloadedUrls += url
       val current = active.incrementAndGet()
       maxConcurrent.getAndUpdate { maxOf(it, current) }
       started.countDown()
@@ -83,6 +122,16 @@ class ProjectPluginLoaderTest {
 
       active.decrementAndGet()
       return file.toFile()
+    }
+  }
+
+  private class RecordingSignatureVerifier : PluginSignatureVerifier {
+    val verifiedPluginNames = mutableListOf<String>()
+
+    override fun verify(plugin: PluginConfig, pluginFile: File, signatureFile: File) {
+      verifiedPluginNames += plugin.name
+      assertTrue(signatureFile.exists())
+      assertTrue(plugin.verifySignature)
     }
   }
 

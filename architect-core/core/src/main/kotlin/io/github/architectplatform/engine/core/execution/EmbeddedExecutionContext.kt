@@ -4,6 +4,8 @@ import io.github.architectplatform.engine.core.config.EngineConfiguration
 import io.github.architectplatform.engine.core.events.EmbeddedEventBus
 import io.github.architectplatform.engine.core.history.app.HistoryService
 import io.github.architectplatform.engine.core.plugin.app.CommonPlugin
+import io.github.architectplatform.engine.core.plugin.app.GpgCommandRunner
+import io.github.architectplatform.engine.core.plugin.app.GpgPluginSignatureVerifier
 import io.github.architectplatform.engine.core.plugin.app.PluginSourceRegistry
 import io.github.architectplatform.engine.core.plugin.app.ProjectPluginLoader
 import io.github.architectplatform.engine.core.plugin.app.RemoteContentFetcher
@@ -81,11 +83,13 @@ class EmbeddedExecutionContext private constructor(
       val configValidator = ConfigValidator()
       val releaseResolver = GitHubReleaseResolver(remoteContentFetcher)
       val downloader = CachedPluginDownloader(remoteContentFetcher, eventBus::invoke)
+      val signatureVerifier = GpgPluginSignatureVerifier(GpgCommandRunner())
       val spiLoader = SpiPluginLoader()
       val pluginLoader =
         ProjectPluginLoader(
           spiLoader = spiLoader,
           downloader = downloader,
+          signatureVerifier = signatureVerifier,
           internalPlugins = internalPlugins,
           releaseResolver = releaseResolver,
           eventBus = eventBus::invoke,

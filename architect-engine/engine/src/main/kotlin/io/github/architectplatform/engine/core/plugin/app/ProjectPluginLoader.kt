@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory
 class ProjectPluginLoader(
     private val spiLoader: SpiPluginLoader,
     private val downloader: PluginDownloader,
+    private val signatureVerifier: PluginSignatureVerifier,
     private val internalPlugins: List<CommonPlugin>,
     private val releaseResolver: GitHubReleaseResolver,
     private val eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>,
@@ -51,6 +52,14 @@ class ProjectPluginLoader(
             }
         // 2) Download & load each project-declared plugin JAR
         plugins.forEach { plugin ->
+            if (plugin.verifySignature) {
+                when (plugin.type) {
+                    "process", "npm" -> throw IllegalArgumentException(
+                        "Plugin '${plugin.name}' type '${plugin.type}' does not support detached signature verification")
+                }
+            }
+
+            var signatureFile: java.io.File? = null
             val jar =
                 when (plugin.type) {
                     "github" -> {
@@ -62,6 +71,9 @@ class ProjectPluginLoader(
                             }
                         val url =
                             "https://github.com/${plugin.repo}/releases/download/$tag/${plugin.asset}"
+                        if (plugin.verifySignature) {
+                            signatureFile = downloader.download("$url.asc")
+                        }
                         downloader.download(url)
                     }
                     "local" -> {
@@ -71,10 +83,16 @@ class ProjectPluginLoader(
                             throw IllegalArgumentException(
                                 "Local plugin asset not found: ${localPath.toAbsolutePath()}")
                         }
+                        if (plugin.verifySignature) {
+                            signatureFile = context.dir.resolve("${plugin.path}.asc").toFile()
+                        }
                         localPath.toFile()
                     }
                     else -> throw IllegalArgumentException("Unsupported plugin type: ${plugin.type}")
                 }
+            if (plugin.verifySignature) {
+                signatureVerifier.verify(plugin, jar, signatureFile!!)
+            }
             val loader = IsolatedPluginClassLoader(
               arrayOf(jar.toURI().toURL()),
               this::class.java.classLoader,

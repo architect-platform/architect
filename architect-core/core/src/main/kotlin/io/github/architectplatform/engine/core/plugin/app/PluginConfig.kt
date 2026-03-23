@@ -15,6 +15,10 @@ data class PluginConfig(
     val registry: String? = null,
     val url: String? = null,
     val sha256: String? = null,
+    @JsonProperty("verify-signature")
+    val verifySignature: Boolean = false,
+    @JsonProperty("trusted-keys")
+    val trustedKeys: List<String> = emptyList(),
     val command: String? = null,
     @JsonProperty("package")
     val packageName: String? = null,

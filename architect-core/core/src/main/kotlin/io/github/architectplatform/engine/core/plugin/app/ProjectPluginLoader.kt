@@ -10,6 +10,7 @@ import io.github.architectplatform.engine.core.plugin.domain.events.PluginEvents
 import io.github.architectplatform.engine.core.plugin.infra.GitHubReleaseResolver
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import jakarta.inject.Singleton
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory
 class ProjectPluginLoader(
     private val spiLoader: SpiPluginLoader,
     private val downloader: PluginDownloader,
+    private val signatureVerifier: PluginSignatureVerifier,
     private val internalPlugins: List<CommonPlugin>,
     private val releaseResolver: GitHubReleaseResolver,
     private val eventBus: EventBus<ArchitectEvent<*>>,
@@ -62,6 +64,11 @@ class ProjectPluginLoader(
         plugin: PluginConfig,
         context: ProjectContext,
     ): List<ArchitectPlugin<*>> {
+        if (plugin.verifySignature && (plugin.type == "process" || plugin.type == "npm")) {
+            throw IllegalArgumentException(
+                "Plugin '${plugin.name}' type '${plugin.type}' does not support detached signature verification")
+        }
+
         if (plugin.type == "process") {
             val cmd = plugin.command
                 ?: throw IllegalArgumentException("Plugin '${plugin.name}' type 'process' requires 'command' field")
@@ -92,6 +99,7 @@ class ProjectPluginLoader(
             return listOf(adapter)
         }
 
+        var signatureFile: File? = null
         val jar =
             when (plugin.type) {
                 "github" -> {
@@ -103,6 +111,9 @@ class ProjectPluginLoader(
                         }
                     val url =
                         "https://github.com/${plugin.repo}/releases/download/$tag/${plugin.asset}"
+                    if (plugin.verifySignature) {
+                        signatureFile = downloader.download("$url.asc")
+                    }
                     downloader.download(url)
                 }
                 "local" -> {
@@ -111,10 +122,16 @@ class ProjectPluginLoader(
                         throw IllegalArgumentException(
                             "Local plugin asset not found: ${localPath.toAbsolutePath()}")
                     }
+                    if (plugin.verifySignature) {
+                        signatureFile = context.dir.resolve("${plugin.path}.asc").toFile()
+                    }
                     localPath.toFile()
                 }
                 else -> throw IllegalArgumentException("Unsupported plugin type: ${plugin.type}")
             }
+        if (plugin.verifySignature) {
+            signatureVerifier.verify(plugin, jar, signatureFile!!)
+        }
         val loader = IsolatedPluginClassLoader(
             arrayOf(jar.toURI().toURL()),
             this::class.java.classLoader,
