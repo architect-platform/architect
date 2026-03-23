@@ -11,6 +11,7 @@ plugins {
   id("com.github.johnrengelman.shadow") version "8.1.1"
   id("io.micronaut.application") version "4.6.1"
   id("io.micronaut.aot") version "4.6.1"
+  jacoco
 }
 
 repositories { mavenCentral() }
@@ -88,4 +89,28 @@ configurations.all {
       useVersion("1.8.1") // coroutines version compatible with Kotlin 1.9.x
     }
   }
+}
+
+jacoco { toolVersion = "0.8.12" }
+
+tasks.jacocoTestReport {
+  dependsOn(tasks.test)
+  reports {
+    xml.required.set(true)
+    html.required.set(true)
+  }
+}
+
+tasks.jacocoTestCoverageVerification {
+  violationRules {
+    rule {
+      limit {
+        minimum = "0.50".toBigDecimal()
+      }
+    }
+  }
+}
+
+tasks.check {
+  dependsOn(tasks.jacocoTestCoverageVerification)
 }

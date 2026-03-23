@@ -1,4 +1,7 @@
-plugins { kotlin("jvm") version "1.9.25" }
+plugins {
+  kotlin("jvm") version "1.9.25"
+  jacoco
+}
 
 group = "io.github.architectplatform.plugins"
 
@@ -35,4 +38,28 @@ dependencies {
 
 tasks.test {
   useJUnitPlatform()
+}
+
+jacoco { toolVersion = "0.8.12" }
+
+tasks.jacocoTestReport {
+  dependsOn(tasks.test)
+  reports {
+    xml.required.set(true)
+    html.required.set(true)
+  }
+}
+
+tasks.jacocoTestCoverageVerification {
+  violationRules {
+    rule {
+      limit {
+        minimum = "0.50".toBigDecimal()
+      }
+    }
+  }
+}
+
+tasks.check {
+  dependsOn(tasks.jacocoTestCoverageVerification)
 }

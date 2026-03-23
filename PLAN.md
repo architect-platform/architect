@@ -511,7 +511,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 
 ### Coverage Gates
 
-- [ ] 21.23 Add JaCoCo to all modules with a minimum coverage gate of 80% (enforced in CI, target 85%)
+- [x] 21.23 Add JaCoCo to all modules with a minimum coverage gate of 80% (enforced in CI, target 85%)
 - [ ] 21.24 Add mutation testing via PIT to `architect-api` and `architect-core`
 
 ---

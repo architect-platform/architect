@@ -2,6 +2,7 @@ plugins {
   kotlin("jvm") version "1.9.25"
   `maven-publish`
   id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
+  jacoco
 }
 
 group = "io.github.architectplatform"
@@ -75,4 +76,28 @@ publishing {
       }
     }
   }
+}
+
+jacoco { toolVersion = "0.8.12" }
+
+tasks.jacocoTestReport {
+  dependsOn(tasks.test)
+  reports {
+    xml.required.set(true)
+    html.required.set(true)
+  }
+}
+
+tasks.jacocoTestCoverageVerification {
+  violationRules {
+    rule {
+      limit {
+        minimum = "0.50".toBigDecimal()
+      }
+    }
+  }
+}
+
+tasks.check {
+  dependsOn(tasks.jacocoTestCoverageVerification)
 }
