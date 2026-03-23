@@ -684,37 +684,6 @@ docs/
 
 ---
 
-## Phase 28: Enterprise Features
-
-**Goal:** Architect scales to large organizations with security, compliance, and admin requirements.
-
-### Tasks
-
-- [ ] 28.1 **Multi-engine coordination** — `architect-cloud` can route task requests to multiple engine instances. Enables distributed monorepo builds.
-- [ ] 28.2 **RBAC** — users have roles (`developer`, `lead`, `admin`). Roles govern which tasks can be executed and which projects can be accessed. Configured in `architect-cloud`.
-- [ ] 28.3 **SSO integration** — OIDC/SAML authentication for `architect-cloud`. CLI authenticates via device flow.
-- [ ] 28.4 **Centralized audit log** — all execution events shipped to `architect-cloud`. Queryable with time/user/project filters. Export to SIEM.
-- [ ] 28.5 **Org-level plugin policy** — admin declares approved plugins and versions. Engine enforces; unapproved plugins are rejected.
-- [ ] 28.6 **Secrets management integration** (extends Phase 24.3) — centralized secrets from cloud, with rotation support.
-- [ ] 28.7 **Usage analytics** — team dashboards: most-run tasks, failure rates, average durations, cache hit rates.
-- [ ] 28.8 **architect-cloud REST API v2** — fully documented, versioned API for integrations. OpenAPI spec published.
-
----
-
-## Phase 29: SaaS Platform Foundation
-
-**Goal:** Lay the foundation for architect-cloud to become a real SaaS product.
-
-### Tasks
-
-- [ ] 29.1 **`architect-data`** — define schema with Flyway migrations: `engines`, `projects`, `executions`, `events`, `users`, `orgs`, `roles`, `plugins`, `audit_log`. Replace in-memory/H2 with PostgreSQL as primary.
-- [ ] 29.2 **`architect-server`** — API gateway that: authenticates requests, routes to engines, handles multi-tenancy, enforces rate limits, serves the OpenAPI spec.
-- [ ] 29.3 **`architect-x`** — advanced daemon features: file watcher (for watch mode via daemon), distributed cache coordinator, plugin pre-fetch service.
-- [ ] 29.4 **architect-cloud frontend** — Vue.js dashboard: execution timeline, task graph view, plugin marketplace, org settings, audit log viewer, usage analytics.
-- [ ] 29.5 **Tenant isolation** — each org has isolated execution scope. Engine instances are org-scoped.
-- [ ] 29.6 **Billing integration hooks** — usage metering API for SaaS billing.
-
----
 
 ## Phase 30: Code Quality Pass
 
@@ -732,19 +701,6 @@ docs/
 
 ---
 
-## Phase 31: Release Engineering
-
-**Goal:** Releasing a new version of Architect is a single command.
-
-### Tasks
-
-- [ ] 31.1 **Unified versioning** — all modules share a single version number, bumped once per release (currently each module is versioned independently, causing drift like the `api:1.2.0` vs `2.1.0` issue)
-- [ ] 31.2 **Release automation** — tag `vX.Y.Z` on `main` triggers: build all modules, run all tests, build native binaries for all platforms, publish to GitHub Packages, Homebrew, apt/yum, Docker Hub, GitHub Releases
-- [ ] 31.3 **Changelog automation** — `CHANGELOG.md` generated from Conventional Commits using `git-cliff` or semantic-release
-- [ ] 31.4 **Release candidate process** — `vX.Y.Z-rc.N` tags publish to a `--pre` channel. Users opt in with `brew install architect --HEAD`.
-- [ ] 31.5 **Backwards compatibility tests** — on each release, run the integration suite against projects using the previous version of the API (plugin compatibility guarantee)
-
----
 
 ## Roadmap Summary
 
