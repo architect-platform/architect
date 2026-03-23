@@ -505,7 +505,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 ### architect-cloud
 
 - [x] 21.19 `EngineServiceTest`, `ProjectServiceTest`, `ExecutionServiceTest` — all use case operations
-- [ ] 21.20 `ExecutionEventServiceTest` — event broadcasting via Reactor Sink
+- [x] 21.20 `ExecutionEventServiceTest` — event broadcasting via Reactor Sink
 - [ ] 21.21 `EventsWebSocketServerTest` — WebSocket event delivery
 - [ ] 21.22 Add persistence adapter integration tests with H2
 
