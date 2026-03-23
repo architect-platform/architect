@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 151/217 tasks completed (70%)
+Overall Progress: 152/217 tasks completed (70%)
 Current Phase: Phase 23 — Performance Optimization
-Last Updated: 2026-03-23T14:41:00Z
+Last Updated: 2026-03-23T14:56:00Z
 
 ---
 
@@ -551,7 +551,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 23.3 **Parallel plugin loading** — load independent plugins concurrently (coroutine-based, already feasible) | Finished: 2026-03-23T14:18:00Z | Notes: `ProjectPluginLoader` now fans out configured plugin resolution with ordered coroutines on `Dispatchers.IO`, preserving config order in the returned plugin list while overlapping independent downloads/classloading; added `ProjectPluginLoaderTest` to prove concurrent download overlap and reran embedded execution context coverage with the real loader.
 - [x] 23.4 **Project config caching** — `ProjectService` project cache is already implemented but disabled. Enable by default with file-system watcher invalidation. | Finished: 2026-03-23T14:29:00Z | Notes: wired `FileWatchService` into both core and engine `ProjectService` implementations so registered projects keep cached state until filesystem changes mark them stale; the next `getProject()` transparently reloads config and tasks, and focused watcher-driven cache invalidation tests now cover both modules.
 - [x] 23.5 **Build benchmarks** — `jmh` micro-benchmarks for `TaskDependencyResolver.topologicalSort()` and `ConfigValidator` on large configs | Finished: 2026-03-23T14:41:00Z | Notes: added JMH support to `architect-core/core` with a small default harness, created `ProjectCoreBenchmarks` covering `TaskDependencyResolver.topologicalSort()` on a 100-task graph and `ConfigValidator` on a large synthetic config, and verified the suite with `./gradlew jmh`, which produced initial results of roughly `0.006 ms/op` and `0.395 ms/op` respectively.
-- [ ] 23.6 **Startup profiling** — instrument engine startup and identify top-3 bottlenecks
+- [x] 23.6 **Startup profiling** — instrument engine startup and identify top-3 bottlenecks | Finished: 2026-03-23T14:56:00Z | Notes: added `StartupProfileRecorder` plus Micronaut lifecycle listeners for bootstrap, server-startup, and service-ready checkpoints, wrapped cloud registration timing in the recorder, verified ranking coverage with `StartupProfileRecorderTest`, and confirmed live engine startup logs reported the top bottlenecks as `service-ready` (~2.772 ms), `server-startup` (~0.312 ms), and `micronaut-bootstrap` (~0.042 ms) during a `487 ms` startup.
 - [ ] 23.7 **Connection pooling** — CLI ↔ Engine HTTP keep-alive connections (already in Micronaut HTTP client; verify active)
 
 ---

@@ -1,5 +1,6 @@
 package io.github.architectplatform.engine.cloud
 
+import io.github.architectplatform.engine.core.startup.StartupProfileRecorder
 import io.github.architectplatform.engine.domain.events.*
 import io.micronaut.context.annotation.Property
 import io.micronaut.context.annotation.Requires
@@ -26,6 +27,7 @@ import java.util.UUID
 @Requires(property = "architect.cloud.enabled", value = "true")
 class CloudReporterService(
     private val cloudClient: CloudClient,
+    private val startupProfileRecorder: StartupProfileRecorder,
     @Property(name = "micronaut.server.port", defaultValue = "9292")
     private val serverPort: Int,
     @Property(name = "architect.cloud.engine-id")
@@ -56,15 +58,18 @@ class CloudReporterService(
         scope.launch {
             try {
                 logger.info("Registering engine with cloud: $engineId")
-                cloudClient.registerEngine(
-                    RegisterEngineRequest(
-                        id = engineId,
-                        hostname = hostname,
-                        port = serverPort,
-                        version = this::class.java.`package`?.implementationVersion
+                startupProfileRecorder.measure("cloud-engine-registration") {
+                    cloudClient.registerEngine(
+                        RegisterEngineRequest(
+                            id = engineId,
+                            hostname = hostname,
+                            port = serverPort,
+                            version = this::class.java.`package`?.implementationVersion
+                        )
                     )
-                )
+                }
                 logger.info("Engine registered successfully with cloud")
+                startupProfileRecorder.logTopBottlenecks()
             } catch (e: Exception) {
                 logger.warn("Failed to register engine with cloud: ${e.message}")
             }
