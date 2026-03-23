@@ -3,6 +3,7 @@ plugins {
   `maven-publish`
   id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
   jacoco
+  id("info.solidsoft.pitest") version "1.15.0"
 }
 
 group = "io.github.architectplatform"
@@ -100,4 +101,14 @@ tasks.jacocoTestCoverageVerification {
 
 tasks.check {
   dependsOn(tasks.jacocoTestCoverageVerification)
+}
+
+pitest {
+  junit5PluginVersion.set("1.2.1")
+  targetClasses.set(listOf("io.github.architectplatform.api.*"))
+  targetTests.set(listOf("io.github.architectplatform.api.*"))
+  mutators.set(listOf("DEFAULTS"))
+  outputFormats.set(listOf("HTML", "XML"))
+  timestampedReports.set(false)
+  threads.set(Runtime.getRuntime().availableProcessors())
 }

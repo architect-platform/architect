@@ -1,6 +1,7 @@
 plugins {
   kotlin("jvm") version "1.9.25"
   jacoco
+  id("info.solidsoft.pitest") version "1.15.0"
 }
 
 group = "io.github.architectplatform"
@@ -93,4 +94,16 @@ tasks.jacocoTestCoverageVerification {
 
 tasks.check {
   dependsOn(tasks.jacocoTestCoverageVerification)
+}
+
+pitest {
+  junit5PluginVersion.set("1.2.1")
+  targetClasses.set(listOf("io.github.architectplatform.engine.*"))
+  targetTests.set(listOf("io.github.architectplatform.engine.*"))
+  mutators.set(listOf("DEFAULTS"))
+  outputFormats.set(listOf("HTML", "XML"))
+  timestampedReports.set(false)
+  threads.set(Runtime.getRuntime().availableProcessors())
+  timeoutConstInMillis.set(10000)
+  excludedClasses.set(listOf("*Test", "*Test\$*"))
 }
