@@ -49,6 +49,35 @@ class ProjectServiceTest {
   }
 
   @Test
+  fun `should defer plugin loading until task access`() {
+    val projectDir = tempDir.resolve("lazy-project")
+    projectDir.createDirectories()
+    projectDir.resolve("architect.yml").writeText(
+      """
+      project:
+        name: lazy-project
+      tasks:
+        build:
+          description: Build lazily
+          run: echo building
+      """.trimIndent()
+    )
+
+    val pluginLoader = CountingInlineTaskPluginLoader()
+    val projectService = createProjectService(pluginLoader)
+
+    projectService.registerProject("lazy-project", projectDir.toString())
+
+    assertEquals(0, pluginLoader.loadCalls)
+
+    val project = projectService.getProject("lazy-project")
+
+    assertNotNull(project)
+    assertNotNull(project.taskRegistry.get("build"))
+    assertEquals(1, pluginLoader.loadCalls)
+  }
+
+  @Test
   fun `should discover nested subprojects when loading root project`() {
     val rootDir = tempDir.resolve("workspace")
     rootDir.createDirectories()
@@ -117,6 +146,15 @@ class ProjectServiceTest {
 
   private class InlineTaskPluginLoader : PluginLoader {
     override fun load(context: ProjectContext): List<ArchitectPlugin<*>> = listOf(InlineTaskPlugin())
+  }
+
+  private class CountingInlineTaskPluginLoader : PluginLoader {
+    var loadCalls: Int = 0
+
+    override fun load(context: ProjectContext): List<ArchitectPlugin<*>> {
+      loadCalls += 1
+      return listOf(InlineTaskPlugin())
+    }
   }
 
   private class EmptyPluginLoader : PluginLoader {

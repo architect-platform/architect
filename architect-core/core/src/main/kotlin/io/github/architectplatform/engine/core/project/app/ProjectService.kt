@@ -7,6 +7,7 @@ import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.project.getKey
 import io.github.architectplatform.engine.core.config.EngineConfiguration
 import io.github.architectplatform.engine.core.plugin.app.PluginLoader
+import io.github.architectplatform.engine.core.project.domain.LoadedProjectPlugins
 import io.github.architectplatform.engine.core.project.app.repositories.ProjectRepository
 import io.github.architectplatform.engine.core.project.domain.ProjectDependencyGraph
 import io.github.architectplatform.engine.core.project.domain.Project
@@ -64,6 +65,12 @@ class ProjectService(
 
     val projectContext = ProjectContext(Path(path), projectConfig)
 
+    val registrationValidation = configValidator.validate(projectConfig)
+    if (registrationValidation.errors.isNotEmpty()) {
+      throw ConfigValidationException(
+        "Invalid architect.yml for project $name:\n${registrationValidation.errors.joinToString("\n")}")
+    }
+
     // Call this method for every subfolder and build the subProjects list
     val subProjects = mutableListOf<Project>()
     val dir = File(path)
@@ -80,7 +87,28 @@ class ProjectService(
       }
     }
 
-    logger.debug("Loading plugins for project $name at path $path")
+    logger.debug("Deferring plugin loading for project $name at path $path until task access")
+    val lazyPluginLoader = {
+      loadPluginsForProject(
+        projectName = name,
+        projectConfig = projectConfig,
+        projectContext = projectContext,
+        lineMap = lineMap,
+      )
+    }
+    logger.info(
+        "Loaded project $name at path $path with deferred plugins and ${subProjects.size} subprojects")
+
+    return Project(name, path, projectContext, subProjects = subProjects, lazyPluginLoader = lazyPluginLoader)
+  }
+
+  private fun loadPluginsForProject(
+    projectName: String,
+    projectConfig: Map<String, Any>,
+    projectContext: ProjectContext,
+    lineMap: Map<String, Int>,
+  ): LoadedProjectPlugins {
+    logger.debug("Loading plugins for project $projectName on first task access")
     val plugins = pluginLoader.load(projectContext)
     val taskRegistry = InMemoryTaskRegistry()
     plugins.forEach {
@@ -89,64 +117,57 @@ class ProjectService(
             try {
               if (projectConfig.containsKey(it.contextKey)) {
                 logger.debug(
-                    "Project: $name, plugin ${it.id} - Context key ${it.contextKey} " +
+                    "Project: $projectName, plugin ${it.id} - Context key ${it.contextKey} " +
                         "found in project config: ${projectConfig[it.contextKey]}")
                 projectConfig[it.contextKey]
               } else {
                 logger.debug(
-                    "Project: $name, plugin ${it.id} - " +
+                    "Project: $projectName, plugin ${it.id} - " +
                         "Context key ${it.contextKey} not found in project config, using default context")
                 it.context
               }
             } catch (e: Exception) {
               logger.debug(
-                  "Project: $name, plugin ${it.id} - " +
+                  "Project: $projectName, plugin ${it.id} - " +
                       "Error retrieving context for key ${it.contextKey}: ${e.message}")
               null
             }
 
         logger.debug(
-            "Project: $name, plugin ${it.id} - " + "Raw context for plugin ${it.id}: $rawContext")
+            "Project: $projectName, plugin ${it.id} - Raw context for plugin ${it.id}: $rawContext")
         if (rawContext != null) {
           val pluginContext: Any =
               when (rawContext) {
-                is List<*> -> {
-                  // Config contains a list, so we deserialize as List<ctxClass>
-                  rawContext.map { item -> objectMapper.convertValue(item, it.ctxClass) }
-                }
-                else -> {
-                  // Config contains a single object (map), deserialize as ctxClass
-                  objectMapper.convertValue(rawContext, it.ctxClass)
-                }
+                is List<*> -> rawContext.map { item -> objectMapper.convertValue(item, it.ctxClass) }
+                else -> objectMapper.convertValue(rawContext, it.ctxClass)
               }
                   ?: throw IllegalArgumentException(
-                      "Invalid context format for plugin ${it.id}: " +
-                          "expected object or list, got ${rawContext::class.qualifiedName}")
+                      "Invalid context format for plugin ${it.id}: expected object or list, got ${rawContext::class.qualifiedName}")
 
           logger.debug(
-              "Initializing plugin ${it.id} for project $name with context: $pluginContext")
+              "Initializing plugin ${it.id} for project $projectName with context: $pluginContext")
           it.init(pluginContext)
         }
         it.register(taskRegistry)
       } catch (e: Exception) {
-        logger.error("Failed to initialize plugin ${it.id} for project $name: ${e.message}", e)
+        logger.error("Failed to initialize plugin ${it.id} for project $projectName: ${e.message}", e)
       }
     }
 
-    logger.info(
-        "Loaded project $name at path $path with ${plugins.size} plugins and ${subProjects.size} subprojects")
-
-    // Validate after loading plugins so their contextKey values are known and won't produce false warnings
     val pluginContextKeys = plugins.map { it.contextKey }.toSet()
     val validation = configValidator.validate(projectConfig, pluginContextKeys, plugins, lineMap)
-    validation.warnings.forEach { logger.warn("Project $name: $it") }
-    validation.errors.forEach { logger.error("Project $name: $it") }
+    validation.warnings.forEach { logger.warn("Project $projectName: $it") }
+    validation.errors.forEach { logger.error("Project $projectName: $it") }
     if (validation.errors.isNotEmpty()) {
       throw ConfigValidationException(
-          "Invalid architect.yml for project $name:\n${validation.errors.joinToString("\n")}")
+          "Invalid architect.yml for project $projectName:\n${validation.errors.joinToString("\n")}")
     }
 
-    return Project(name, path, projectContext, plugins, subProjects, taskRegistry)
+    return LoadedProjectPlugins(
+      plugins = plugins,
+      taskRegistry = taskRegistry,
+      pluginContextKeys = pluginContextKeys,
+    )
   }
 
   /**
@@ -218,8 +239,7 @@ class ProjectService(
   fun validateProject(name: String): ValidationResult {
     val project = getProject(name)
         ?: throw IllegalArgumentException("Project $name is not registered")
-    val pluginContextKeys = project.plugins.map { it.contextKey }.toSet()
-    return configValidator.validate(project.context.config, pluginContextKeys)
+    return configValidator.validate(project.context.config, project.pluginContextKeys(), project.plugins)
   }
 
   /**

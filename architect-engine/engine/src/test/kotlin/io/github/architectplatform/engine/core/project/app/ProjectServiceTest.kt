@@ -3,11 +3,10 @@ package io.github.architectplatform.engine.core.project.app
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.engine.core.plugin.app.PluginLoader
-import io.github.architectplatform.engine.core.project.app.repositories.ProjectRepository
 import io.github.architectplatform.engine.core.project.infra.InMemoryProjectRepository
 import io.github.architectplatform.engine.core.project.infra.YamlConfigParser
+import io.github.architectplatform.engine.plugins.inline.InlineTaskPlugin
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
-import jakarta.inject.Inject
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -21,9 +20,6 @@ import java.util.Optional
 @MicronautTest
 class ProjectServiceTest {
 
-    @Inject
-    lateinit var projectRepository: ProjectRepository
-
     @TempDir
     lateinit var tempDir: Path
 
@@ -36,7 +32,7 @@ class ProjectServiceTest {
 
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = TestPluginLoader()
-        val projectService = ProjectService(projectRepository, configLoader, pluginLoader, Optional.empty(), ConfigValidator())
+        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty(), ConfigValidator())
 
         // When
         projectService.registerProject(projectName, projectPath)
@@ -57,7 +53,7 @@ class ProjectServiceTest {
 
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = TestPluginLoader()
-        val projectService = ProjectService(projectRepository, configLoader, pluginLoader, Optional.empty(), ConfigValidator())
+        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty(), ConfigValidator())
 
         // When
         projectService.registerProject(projectName, projectPath)
@@ -79,12 +75,38 @@ class ProjectServiceTest {
 
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = CountingPluginLoader()
-        val projectService = ProjectService(projectRepository, configLoader, pluginLoader, Optional.empty(), ConfigValidator())
+    val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty(), ConfigValidator())
 
         projectService.registerProject(projectName, projectPath)
         projectService.registerProject(projectName, projectPath)
 
-        assertEquals(2, pluginLoader.loadCalls)
+        assertEquals(0, pluginLoader.loadCalls)
+
+        val project = projectService.getProject(projectName)
+        assertNotNull(project)
+        project!!.plugins
+
+        assertEquals(1, pluginLoader.loadCalls)
+    }
+
+    @Test
+    fun `should defer plugin loading until task access`() {
+        val projectName = "lazy-project"
+        val projectPath = tempDir.toString()
+        createTaskProjectStructure(projectPath)
+
+        val configLoader = ConfigLoader(YamlConfigParser())
+        val pluginLoader = CountingInlineTaskPluginLoader()
+    val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty(), ConfigValidator())
+
+        projectService.registerProject(projectName, projectPath)
+
+        assertEquals(0, pluginLoader.loadCalls)
+
+        val project = projectService.getProject(projectName)
+        assertNotNull(project)
+        assertNotNull(project!!.taskRegistry.get("build"))
+        assertEquals(1, pluginLoader.loadCalls)
     }
 
     @Test
@@ -169,6 +191,19 @@ class ProjectServiceTest {
         return dir.absolutePath
     }
 
+        private fun createTaskProjectStructure(path: String) {
+                File(path, "architect.yml").writeText(
+                        """
+                        project:
+                            name: test-project
+                        tasks:
+                            build:
+                                description: Build lazily
+                                run: echo building
+                        """.trimIndent() + "\n"
+                )
+        }
+
     /**
      * Test implementation of PluginLoader that returns an empty list.
      */
@@ -184,6 +219,15 @@ class ProjectServiceTest {
         override fun load(context: ProjectContext): List<ArchitectPlugin<*>> {
             loadCalls += 1
             return emptyList()
+        }
+    }
+
+    class CountingInlineTaskPluginLoader : PluginLoader {
+        var loadCalls: Int = 0
+
+        override fun load(context: ProjectContext): List<ArchitectPlugin<*>> {
+            loadCalls += 1
+            return listOf(InlineTaskPlugin())
         }
     }
 }

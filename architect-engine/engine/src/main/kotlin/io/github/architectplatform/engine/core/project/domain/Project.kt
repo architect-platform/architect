@@ -9,7 +9,19 @@ class Project(
     val name: String,
     val path: String,
     val context: ProjectContext,
-    val plugins: List<ArchitectPlugin<*>>,
+    plugins: List<ArchitectPlugin<*>> = emptyList(),
     val subProjects: List<Project> = emptyList(),
-    val taskRegistry: TaskRegistry = InMemoryTaskRegistry()
-)
+    taskRegistry: TaskRegistry = InMemoryTaskRegistry(),
+    lazyPluginLoader: (() -> LoadedProjectPlugins)? = null,
+) {
+    private val pluginState =
+        lazyPluginLoader?.let { LazyProjectLoadState(it) }
+            ?: LazyProjectLoadState.eager(plugins, taskRegistry)
+
+    val plugins: List<ArchitectPlugin<*>>
+        get() = pluginState.get().plugins
+
+    val taskRegistry: TaskRegistry = LazyTaskRegistry(pluginState)
+
+    fun pluginContextKeys(): Set<String> = pluginState.get().pluginContextKeys
+}
