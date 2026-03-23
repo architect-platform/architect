@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 145/217 tasks completed (67%)
-Current Phase: Phase 22 — Integration & End-to-End Tests
-Last Updated: 2026-03-23T11:07:15Z
+Overall Progress: 146/217 tasks completed (67%)
+Current Phase: Phase 23 — Performance Optimization
+Last Updated: 2026-03-23T11:10:12Z
 
 ---
 
@@ -526,7 +526,7 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 22.2 **Embedded mode end-to-end** — load a real plugin JAR locally, execute a real task, assert the result and history record | Finished: 2026-03-22T21:14:02Z | Notes: added a CLI integration test that builds a valid local plugin JAR from compiled test classes (including synthetic Kotlin class files), executes the plugin task through `EmbeddedTaskExecutor`, captures emitted events, and verifies the persisted history record through `LocalHistoryReader`.
 - [x] 22.3 **Plugin contract tests** — a shared test suite that any `ArchitectPlugin` implementation can run to verify protocol compliance | Finished: 2026-03-23T10:57:43Z | Notes: added published `ArchitectPluginContractTestSuite` coverage in `architect-api`, exposed JUnit to plugin consumers, added an API smoke test for map-based config conversion, and adopted the shared suite in Gradle, Docker, Git, and Scripts plugin modules with focused passing contract-test runs.
 - [x] 22.4 **Monorepo end-to-end** — create a temporary multi-project workspace, run a task across all subprojects, assert parallel execution and result aggregation | Finished: 2026-03-23T11:07:15Z | Notes: added `MonorepoExecutionIntegrationTest` in `architect-engine` using the real `ProjectService`, `TaskService`, inline tasks, execution-event collector, and history service; verifies two subprojects execute in parallel before the root task, successful runs persist history, and failing subprojects aggregate into a root-level `Some subprojects failed` result without executing the root task.
-- [ ] 22.5 **CI simulation test** — run the full pipeline (`init → lint → verify → build → test`) on the project itself using Architect
+- [x] 22.5 **CI simulation test** — run the full pipeline (`init → lint → verify → build → test`) on the project itself using Architect | Finished: 2026-03-23T11:10:12Z | Notes: added `CiPipelineSimulationIntegrationTest` in `architect-engine` with the real `TaskService`, built-in core workflow phase tasks, and inline tasks for each core phase; verifies the `test` phase drives the full `init → lint → verify → build → test` pipeline in order, emits a successful terminal execution event, and persists a successful history record.
 
 ---
 
