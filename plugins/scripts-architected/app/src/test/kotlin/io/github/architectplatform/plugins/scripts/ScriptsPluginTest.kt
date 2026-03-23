@@ -115,6 +115,78 @@ class ScriptsPluginTest {
     }
 
     @Test
+    fun `plugin resolves all CoreWorkflow phases`() {
+        val corePhases = listOf("INIT", "LINT", "VERIFY", "BUILD", "TEST", "RUN", "RELEASE", "PUBLISH")
+        val plugin = ScriptsPlugin()
+        plugin.context = ScriptsContext(
+            scripts = corePhases.associateWith { ScriptConfig(command = "echo $it", phase = it) }.let { linkedMapOf(*it.entries.map { e -> e.key to e.value }.toTypedArray()) }
+        )
+        val registry = TestTaskRegistry()
+
+        plugin.register(registry)
+
+        assertEquals(CoreWorkflow.INIT, registry.get("scripts-INIT")?.phase())
+        assertEquals(CoreWorkflow.LINT, registry.get("scripts-LINT")?.phase())
+        assertEquals(CoreWorkflow.VERIFY, registry.get("scripts-VERIFY")?.phase())
+        assertEquals(CoreWorkflow.BUILD, registry.get("scripts-BUILD")?.phase())
+        assertEquals(CoreWorkflow.TEST, registry.get("scripts-TEST")?.phase())
+        assertEquals(CoreWorkflow.RUN, registry.get("scripts-RUN")?.phase())
+        assertEquals(CoreWorkflow.RELEASE, registry.get("scripts-RELEASE")?.phase())
+        assertEquals(CoreWorkflow.PUBLISH, registry.get("scripts-PUBLISH")?.phase())
+    }
+
+    @Test
+    fun `plugin resolves all HooksWorkflow phases`() {
+        val plugin = ScriptsPlugin()
+        plugin.context = ScriptsContext(
+            scripts = linkedMapOf(
+                "pre-commit" to ScriptConfig(command = "lint", phase = "PRE_COMMIT"),
+                "pre-push" to ScriptConfig(command = "test", phase = "PRE_PUSH"),
+                "commit-msg" to ScriptConfig(command = "validate", phase = "COMMIT_MSG"),
+            )
+        )
+        val registry = TestTaskRegistry()
+
+        plugin.register(registry)
+
+        assertEquals(HooksWorkflow.PRE_COMMIT, registry.get("scripts-pre-commit")?.phase())
+        assertEquals(HooksWorkflow.PRE_PUSH, registry.get("scripts-pre-push")?.phase())
+        assertEquals(HooksWorkflow.COMMIT_MSG, registry.get("scripts-commit-msg")?.phase())
+    }
+
+    @Test
+    fun `plugin resolves phase names case-insensitively`() {
+        val plugin = ScriptsPlugin()
+        plugin.context = ScriptsContext(
+            scripts = linkedMapOf(
+                "lower" to ScriptConfig(command = "echo 1", phase = "build"),
+                "mixed" to ScriptConfig(command = "echo 2", phase = "Pre_Commit"),
+            )
+        )
+        val registry = TestTaskRegistry()
+
+        plugin.register(registry)
+
+        assertEquals(CoreWorkflow.BUILD, registry.get("scripts-lower")?.phase())
+        assertEquals(HooksWorkflow.PRE_COMMIT, registry.get("scripts-mixed")?.phase())
+    }
+
+    @Test
+    fun `plugin returns null phase for unknown phase name`() {
+        val plugin = ScriptsPlugin()
+        plugin.context = ScriptsContext(
+            scripts = linkedMapOf(
+                "unknown" to ScriptConfig(command = "echo", phase = "NONEXISTENT_PHASE"),
+            )
+        )
+        val registry = TestTaskRegistry()
+
+        plugin.register(registry)
+
+        assertNull(registry.get("scripts-unknown")?.phase())
+    }
+
+    @Test
     fun `plugin chains script tasks within the same phase when sequential is enabled`() {
         val plugin = ScriptsPlugin()
         plugin.context = ScriptsContext(
