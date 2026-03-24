@@ -61,6 +61,32 @@ plugins/<plugin>/
     └── src/test/kotlin/
 ```
 
+## Internal Code Layout Convention
+
+All plugin source lives under `io.github.architectplatform.plugins.<name>`. The
+canonical three-file minimum is:
+
+```text
+src/main/kotlin/io/github/architectplatform/plugins/<name>/
+├── <Name>Context.kt     — Plugin configuration / context data class
+├── <Name>Plugin.kt      — ArchitectPlugin implementation; calls register()
+└── <Name>Task.kt        — Default task implementation (top-level class)
+```
+
+**Rules:**
+
+- Tasks must live in a dedicated top-level `<Name>Task.kt` file, not as inner
+  classes of `<Name>Plugin.kt`.
+- When a plugin registers multiple distinct task classes, each gets its own file
+  (e.g. `<Name>BuildTask.kt`, `<Name>PublishTask.kt`).
+- Utility/helper logic is extracted to `<Name>Utils.kt` when it is reusable
+  across tasks. Do not create a generic `Utils.kt`.
+- Sub-packages (`builders/`, `dto/`, `publishers/`) are only introduced when a
+  plugin is complex enough that a flat layout hurts readability. Incubating
+  plugins stay flat.
+- File and class names follow the plugin prefix precisely, matching the plugin
+  directory name (e.g. `docs-architected` → `Docs` prefix throughout).
+
 ## Maturity Rules
 
 For `active` tier:

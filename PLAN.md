@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 66/350 tasks completed (18.9%)
+Overall Progress: 67/350 tasks completed (19.1%)
 Current Phase: Phase 5 — Standardize the plugin platform
-Last Updated: 2026-03-24T17:55:08Z
+Last Updated: 2026-03-24T18:10:00Z
 
 ## Standards and Principles Gaps
 
@@ -276,7 +276,7 @@ Last Updated: 2026-03-24T17:55:08Z
     - [ ] remove from official set
   - [x] Extract common plugin build/test conventions. | Finished: 2026-03-24T17:42:44Z | Notes: Extended `gradle/architect-plugin-conventions.gradle.kts` to own the shared Java 17 toolchain plus common plugin API/JUnit dependencies, then removed those duplicate lines from every `plugins/*/app/build.gradle.kts` file while preserving plugin-specific repositories and extra dependencies. Validation passed for `docs-architected` and `pipelines-architected`; `go-architected` still fails to compile because of unresolved `ShellUtils`, and `gradle-architected` still has a failing functional test (`GradlePluginTest` path-traversal case), both appearing unrelated to the convention extraction itself.
   - [x] Standardize resource layout and task registration patterns. | Finished: 2026-03-24T17:55:08Z | Notes: Normalized the `gradle-architected` and `javascript-architected` package/layout to `io.github.architectplatform.plugins.gradle|javascript`, moved `DocsContext` and `GithubContext` into their root plugin packages, extracted `DocsTask`, `GithubTask`, and `PipelinesTask` into standalone files, and moved GitHub workflow templates under `resources/workflows/github` while making workflow type lookup accept slash-delimited template paths. Validation passed with `gradle-architected` compile/resources checks, `javascript-architected` compile checks, and full test runs for `docs-architected`, `github-architected`, and `pipelines-architected`.
-  - [ ] Standardize plugin internal package/layout patterns so plugin code is easy to scan and compare across the ecosystem.
+  - [x] Standardize plugin internal package/layout patterns so plugin code is easy to scan and compare across the ecosystem. | Finished: 2026-03-24T18:10:00Z | Notes: Extracted `ArchitectureValidateTask` inner class from `ArchitecturePlugin.kt` into a top-level `ArchitectureTask.kt` following the standard three-file layout (Context/Plugin/Task). Added `ArchitecturePluginContractTest.kt` using `ArchitectPluginContractTestSuite`. Updated `docs/guides/plugin-standard.md` with an explicit "Internal Code Layout Convention" section documenting the canonical three-file minimum, rules about top-level task files, sub-package thresholds, and naming conventions. Validated with `architecture-architected` full test run (9 tasks, BUILD SUCCESSFUL).
 
 - [ ] Validation
   - [ ] Run plugin tests in batches by maturity tier.
