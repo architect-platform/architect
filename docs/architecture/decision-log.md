@@ -290,3 +290,40 @@ intended destination layout for later phases.
 	`sdk`, `docs`).
 - **Con**: Documentation and tooling will temporarily describe both current and
 	target layouts until migration actually happens.
+
+---
+
+## ADR-012: Ownership metadata is defined by bounded-area stewardship groups
+
+**Status**: Accepted  
+**Date**: 2026-03
+
+### Context
+
+The repository has no `CODEOWNERS` file and no explicit ownership registry for
+major bounded areas. That leaves architecture, review, and maintenance
+responsibility implicit even after the target taxonomy and placement rules are
+defined.
+
+### Decision
+
+Define ownership metadata in `docs/architecture/ownership-map.md` using a small
+set of stewardship groups:
+
+- Platform Runtime
+- Product Surfaces
+- Plugin Ecosystem
+- SDK Ecosystem
+- Docs and Governance
+
+Each bounded area maps to exactly one primary stewardship group, even if work
+often requires cross-group review.
+
+### Consequences
+
+- **Pro**: Gives the repository an explicit ownership model before any GitHub
+	team automation exists.
+- **Pro**: Aligns ownership with architectural boundaries instead of ad hoc file
+	paths.
+- **Con**: Still requires a later decision if the project wants enforceable
+	CODEOWNERS rules or named team assignments.
