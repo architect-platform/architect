@@ -1,0 +1,101 @@
+site_name: Architect Platform Documentation
+site_description: "Architect — a plugin-based task execution framework for developer workflows"
+site_author: Architect Platform contributors
+repo_url: https://github.com/architect-platform/architect
+repo_name: architect-platform/architect
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+    - content.action.edit
+
+plugins:
+  - search:
+      lang: en
+  - monorepo
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - First Project: getting-started/first-project.md
+    - Adding Plugins: getting-started/adding-plugins.md
+    - Inline Tasks: getting-started/inline-tasks.md
+
+  - Reference:
+    - architect.yml: reference/architect-yml.md
+    - CLI Commands: reference/cli-commands.md
+    - Plugins:
+      - Overview: reference/plugins/index.md
+      - git-architected: reference/plugins/git-architected.md
+      - github-architected: reference/plugins/github-architected.md
+      - gradle-architected: reference/plugins/gradle-architected.md
+      - javascript-architected: reference/plugins/javascript-architected.md
+      - docker-architected: reference/plugins/docker-architected.md
+      - kubernetes-architected: reference/plugins/kubernetes-architected.md
+      - docs-architected: reference/plugins/docs-architected.md
+      - scripts-architected: reference/plugins/scripts-architected.md
+      - terraform-architected: reference/plugins/terraform-architected.md
+      - maven-architected: reference/plugins/maven-architected.md
+      - go-architected: reference/plugins/go-architected.md
+      - rust-architected: reference/plugins/rust-architected.md
+      - python-architected: reference/plugins/python-architected.md
+      - nx-architected: reference/plugins/nx-architected.md
+      - architecture-architected: reference/plugins/architecture-architected.md
+      - pipelines-architected: reference/plugins/pipelines-architected.md
+    - API Reference: reference/api/index.md
+    - Plugin Protocol: plugin-protocol.md
+    - Schema: schema/architect.yml.json
+
+  - Guides:
+    - Plugin Authoring: guides/authoring-plugins.md
+    - CI/CD Integration: guides/ci-cd-integration.md
+    - Migrating from Make: guides/migrating-from-make.md
+    - Migrating from Nx: guides/migrating-from-nx.md
+
+  - Architecture:
+    - Decision Log: architecture/decision-log.md
+
+  - Components:
+    - Architect API: "!include ./architect-api/docs/mkdocs.yml"
+    - Architect Engine: "!include ./architect-engine/docs/mkdocs.yml"
+    - Architect CLI: "!include ./architect-cli/docs/mkdocs.yml"

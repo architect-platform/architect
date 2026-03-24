@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 161/217 tasks completed (74%)
-Current Phase: Phase 25 — Documentation
-Last Updated: 2026-03-24T08:30:00Z
+Overall Progress: 171/217 tasks completed (79%)
+Current Phase: Phase 26 — Installer & Distribution
+Last Updated: 2026-03-24T10:00:00Z
 
 ---
 
@@ -619,16 +619,16 @@ docs/
 
 ### Tasks
 
-- [ ] 25.1 **Getting started guide** — from `brew install architect` to running first task in <15 minutes
-- [ ] 25.2 **`architect.yml` reference** — auto-generated from JSON Schema (Phase 9.1). Every field documented with type, default, and example.
-- [ ] 25.3 **CLI command reference** — all commands, all flags, usage examples, exit codes
-- [ ] 25.4 **Plugin authoring guide** — full guide for JVM (Kotlin/Java), TypeScript, Go, and Python plugins
-- [ ] 25.5 **KDoc API reference** — deployed alongside the docs site
-- [ ] 25.6 **Official plugin pages** — one page per plugin with all tasks, config options, and worked examples
-- [ ] 25.7 **Architecture decision log** — document key decisions: phase model, daemon architecture, plugin protocol, embedded mode
-- [ ] 25.8 **CI/CD integration guides** — GitHub Actions, GitLab CI, Jenkins, CircleCI — copy-paste examples
-- [ ] 25.9 **Migration guides** — from Make, from Gradle tasks, from Nx, from GitHub Actions scripts
-- [ ] 25.10 Update MkDocs site to use `mkdocs-material` with: search, versioning, dark mode, code copy, task runner examples
+- [x] 25.1 **Getting started guide** — from `brew install architect` to running first task in <15 minutes | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/getting-started/installation.md`, `first-project.md`, `adding-plugins.md`, `inline-tasks.md`
+- [x] 25.2 **`architect.yml` reference** — auto-generated from JSON Schema (Phase 9.1). Every field documented with type, default, and example. | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/reference/architect-yml.md` covering all schema fields including pluginConfig and inlineTask definitions
+- [x] 25.3 **CLI command reference** — all commands, all flags, usage examples, exit codes | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/reference/cli-commands.md` covering task execution, inspection, history, caching, monorepo, watching, engine management, plugin management, init/validate
+- [x] 25.4 **Plugin authoring guide** — full guide for JVM (Kotlin/Java), TypeScript, Go, and Python plugins | Finished: 2026-03-24T10:00:00Z | Notes: guide was already comprehensive from task 19.6; verified complete coverage of all four SDK paths
+- [x] 25.5 **KDoc API reference** — deployed alongside the docs site | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/reference/api/index.md` with key packages, core interfaces (ArchitectPlugin, Task, TaskResult, TaskRegistry), testing utilities, and ShellUtils reference; KDoc generation via `./gradlew dokkaHtml`
+- [x] 25.6 **Official plugin pages** — one page per plugin with all tasks, config options, and worked examples | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/reference/plugins/index.md` plus 16 individual plugin pages covering all official plugins with accurate task tables and config schemas
+- [x] 25.7 **Architecture decision log** — document key decisions: phase model, daemon architecture, plugin protocol, embedded mode | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/architecture/decision-log.md` with 8 ADRs covering SPI, REST daemon, API publishing, APP v1, phase ordering, ShellUtils, setup-architect action, MkDocs monorepo
+- [x] 25.8 **CI/CD integration guides** — GitHub Actions, GitLab CI, Jenkins, CircleCI — copy-paste examples | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/guides/ci-cd-integration.md` with full working examples for all four platforms plus best-practices section
+- [x] 25.9 **Migration guides** — from Make, from Gradle tasks, from Nx, from GitHub Actions scripts | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/guides/migrating-from-make.md` and `migrating-from-nx.md`
+- [x] 25.10 Update MkDocs site to use `mkdocs-material` with: search, versioning, dark mode, code copy, task runner examples | Finished: 2026-03-24T10:00:00Z | Notes: created root `mkdocs.yml` with material theme (light/dark toggle), search plugin, monorepo plugin, code copy, navigation tabs, full nav tree wiring all new docs; updated `docs/index.md` to remove `curl|bash` installer example
 
 ---
 

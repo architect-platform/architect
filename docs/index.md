@@ -35,59 +35,43 @@ The Architect Platform consists of several core components:
 
 ### Prerequisites
 
-- Java 17 or higher
-- Gradle 8.x (included via wrapper)
+- Java 17 or higher (for JVM-based plugins)
 - Git
 
 ### Installation
 
-\`\`\`bash
-curl -sSL https://raw.githubusercontent.com/architect-platform/architect/main/architect-cli/.installers/bash | bash
-\`\`\`
+```bash
+brew tap architect-platform/tap
+brew install architect    # macOS
 
-### Optional: Install & Run the Engine
+# Linux / macOS (binary)
+curl -sSfL https://github.com/architect-platform/architect/releases/latest/download/install.sh -o install.sh
+# Verify the checksum published on the Releases page before running
+bash install.sh
+```
 
-\`\`\`bash
-architect engine install
-architect engine start
-\`\`\`
-
-### Embedded Mode (No Engine Required)
-
-\`\`\`bash
-architect --embedded docs-build
-architect --no-daemon docs-build
-\`\`\`
+See the full [Installation guide](getting-started/installation.md) for Windows and CI/CD environments.
 
 ### Your First Project
 
-1. **Create a project configuration** (\`architect.yml\`):
+1. **Create `architect.yml`:**
 
-\`\`\`yaml
+```yaml
 project:
-  name: my-awesome-project
-  description: "My first Architect project"
+  name: my-project
 
-plugins:
-  - name: docs-architected
-    repo: architect-platform/architect
+tasks:
+  hello:
+    run: echo "Hello from Architect!"
+```
 
-docs:
-  build:
-    framework: "mkdocs"
-    siteName: "My Project Documentation"
-  publish:
-    enabled: true
-    githubPages: true
-\`\`\`
+2. **Run your first task:**
 
-2. **Initialize and build:**
+```bash
+architect hello
+```
 
-\`\`\`bash
-architect docs-init
-architect docs-build
-architect docs-publish
-\`\`\`
+→ **[Full Getting Started guide](getting-started/installation.md)**
 
 ## Key Features
 
