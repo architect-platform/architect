@@ -1,8 +1,8 @@
-val kotlinVersion = libs.versions.kotlin.get()
-
 version = libs.versions.architectCliArtifact.get()
 
 group = "io.github.architectplatform"
+
+apply(from = "../../gradle/architect-kotlin-alignment.gradle.kts")
 
 plugins {
   alias(libs.plugins.kotlin.jvm)
@@ -76,30 +76,6 @@ micronaut {
 java { sourceCompatibility = JavaVersion.toVersion("17") }
 
 kotlin { jvmToolchain { languageVersion.set(JavaLanguageVersion.of(17)) } }
-
-// Enforce Kotlin version coherence
-configurations
-    .matching { it.name != "detekt" }
-    .all {
-      resolutionStrategy.eachDependency {
-        if (requested.group == "org.jetbrains.kotlin" && requested.name.startsWith("kotlin")) {
-          useVersion(kotlinVersion)
-          because(
-              "All Kotlin modules should use the same version, and compiler uses $kotlinVersion")
-        }
-      }
-    }
-
-configurations.all {
-  resolutionStrategy.eachDependency {
-    if (requested.group == "org.jetbrains.kotlin") {
-      useVersion("1.9.25")
-    }
-    if (requested.group == "org.jetbrains.kotlinx") {
-      useVersion(libs.versions.coroutines.get()) // kotlinx.coroutines: last 1.x series compiled with Kotlin 1.9.x; 1.10.x requires Kotlin 2.x
-    }
-  }
-}
 
 jacoco { toolVersion = libs.versions.jacoco.get() }
 

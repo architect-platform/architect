@@ -14,6 +14,8 @@ version = libs.versions.architectEngineArtifact.get()
 
 group = "io.github.architectplatform"
 
+apply(from = "../../gradle/architect-kotlin-alignment.gradle.kts")
+
 repositories {
   mavenLocal()
   mavenCentral()
@@ -87,17 +89,6 @@ micronaut {
     optimizeClassLoading.set(true)
     deduceEnvironment.set(true)
     optimizeNetty.set(true)
-  }
-}
-
-configurations.all {
-  resolutionStrategy.eachDependency {
-    if (requested.group == "org.jetbrains.kotlin") {
-      useVersion(libs.versions.kotlin.get())
-    }
-    if (requested.group == "org.jetbrains.kotlinx") {
-      useVersion(libs.versions.coroutines.get()) // kotlinx.coroutines: last 1.x series compiled with Kotlin 1.9.x; 1.10.x requires Kotlin 2.x
-    }
   }
 }
 

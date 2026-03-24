@@ -12,6 +12,8 @@ version = "1.0.0"
 
 group = "io.github.architectplatform"
 
+apply(from = "../../gradle/architect-kotlin-alignment.gradle.kts")
+
 repositories {
   mavenLocal()
   mavenCentral()
@@ -86,17 +88,6 @@ micronaut {
     optimizeClassLoading.set(true)
     deduceEnvironment.set(true)
     optimizeNetty.set(true)
-  }
-}
-
-configurations.all {
-  resolutionStrategy.eachDependency {
-    if (requested.group == "org.jetbrains.kotlin") {
-      useVersion(libs.versions.kotlin.get())
-    }
-    if (requested.group == "org.jetbrains.kotlinx") {
-      useVersion(libs.versions.coroutines.get())
-    }
   }
 }
 

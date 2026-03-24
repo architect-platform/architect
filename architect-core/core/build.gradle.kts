@@ -8,6 +8,8 @@ plugins {
 group = "io.github.architectplatform"
 version = libs.versions.architectCoreArtifact.get()
 
+apply(from = "../../gradle/architect-kotlin-alignment.gradle.kts")
+
 repositories {
   mavenLocal()
   mavenCentral()
@@ -61,14 +63,6 @@ java {
 
 tasks.test {
   useJUnitPlatform()
-}
-
-configurations.all {
-  resolutionStrategy.eachDependency {
-    if (requested.group == "org.jetbrains.kotlin") {
-      useVersion(libs.versions.kotlin.get())
-    }
-  }
 }
 
 jacoco { toolVersion = libs.versions.jacoco.get() }
