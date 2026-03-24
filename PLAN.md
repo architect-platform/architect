@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 85/350 tasks completed (24.3%)
-Current Phase: Phase 7 — Raise product-surface quality outside the Kotlin core
-Last Updated: 2026-03-24T22:40:00Z
+Overall Progress: 86/350 tasks completed (24.6%)
+Current Phase: Phase 8 — Standardize testing, compatibility, and release confidence
+Last Updated: 2026-03-24T22:45:00Z
 
 ## Standards and Principles Gaps
 
@@ -325,7 +325,7 @@ Last Updated: 2026-03-24T22:40:00Z
 - [ ] Validation
   - [x] Run UI lint/build/test. | Finished: 2026-03-24T22:35:00Z | Notes: Re-ran the current `architect-cloud/ui` validation loop with `npm run lint && npm test && npm run build`. All checks passed. The run still emits non-blocking warnings from `baseline-browser-mapping` freshness and Vite's React/esbuild deprecation notices, but those do not fail the lint, test, or build steps.
   - [x] Run VS Code extension tests. | Finished: 2026-03-24T22:40:00Z | Notes: Re-ran `npm test` in `architect-vscode`. The command recompiles the extension TypeScript sources and executes the parser-model regression suite in `out/test/**/*.test.js`; all 3 tests passed.
-  - [ ] Run IntelliJ plugin verification/tests as supported by the build.
+  - [x] Run IntelliJ plugin verification/tests as supported by the build. | Finished: 2026-03-24T22:45:00Z | Notes: Re-ran `gradle test` in `architect-intellij`. The plugin test suite passed, and the build also completed the built-in `verifyPluginConfiguration` step. The run still emits the Gradle IntelliJ advisory about Kotlin stdlib alignment with the IDE platform, but it does not fail the verification/test flow.
 
 ## Phase 8 — Standardize testing, compatibility, and release confidence
 
