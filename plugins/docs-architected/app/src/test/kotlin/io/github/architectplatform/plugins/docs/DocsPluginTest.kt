@@ -9,7 +9,7 @@ import io.github.architectplatform.plugins.docs.builders.DocumentationBuilderFac
 import io.github.architectplatform.plugins.docs.dto.BuildContext
 import io.github.architectplatform.plugins.docs.DocsContext
 import io.github.architectplatform.plugins.docs.dto.PublishContext
-import io.github.architectplatform.plugins.docs.utils.SecurityUtils
+import io.github.architectplatform.plugins.docs.utils.InputSanitizer
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
@@ -46,54 +46,54 @@ class DocsPluginTest {
 
   @Test
   fun `sanitizePath blocks simple parent directory traversal`() {
-    val result = SecurityUtils.sanitizePath("../../etc/passwd")
+    val result = InputSanitizer.sanitizePath("../../etc/passwd")
     assertFalse(result.contains(".."))
     assertFalse(result.startsWith("/"))
   }
 
   @Test
   fun `sanitizePath blocks deep nested traversal`() {
-    val result = SecurityUtils.sanitizePath("docs/../../../etc/shadow")
+    val result = InputSanitizer.sanitizePath("docs/../../../etc/shadow")
     assertFalse(result.contains(".."))
   }
 
   @Test
   fun `sanitizePath removes absolute path prefix`() {
-    val result = SecurityUtils.sanitizePath("/etc/passwd")
+    val result = InputSanitizer.sanitizePath("/etc/passwd")
     assertFalse(result.startsWith("/"))
     assertEquals("etc/passwd", result)
   }
 
   @Test
   fun `sanitizePath strips semicolons preventing command injection`() {
-    val result = SecurityUtils.sanitizePath("docs;rm -rf /")
+    val result = InputSanitizer.sanitizePath("docs;rm -rf /")
     assertFalse(result.contains(";"))
     assertFalse(result.contains(" "))
   }
 
   @Test
   fun `sanitizePath strips pipe and ampersand preventing command chaining`() {
-    val result = SecurityUtils.sanitizePath("docs|cat /etc/passwd")
+    val result = InputSanitizer.sanitizePath("docs|cat /etc/passwd")
     assertFalse(result.contains("|"))
-    val result2 = SecurityUtils.sanitizePath("docs&&echo hacked")
+    val result2 = InputSanitizer.sanitizePath("docs&&echo hacked")
     assertFalse(result2.contains("&"))
   }
 
   @Test
   fun `sanitizePath normalizes duplicate slashes`() {
-    assertEquals("docs/build/output", SecurityUtils.sanitizePath("docs//build///output"))
+    assertEquals("docs/build/output", InputSanitizer.sanitizePath("docs//build///output"))
   }
 
   @Test
   fun `sanitizeBranch strips command injection from branch name`() {
-    val result = SecurityUtils.sanitizeBranch("gh-pages;rm -rf /")
+    val result = InputSanitizer.sanitizeBranch("gh-pages;rm -rf /")
     assertFalse(result.contains(";"))
     assertFalse(result.contains(" "))
   }
 
   @Test
   fun `sanitizeVersion strips command injection from version string`() {
-    val result = SecurityUtils.sanitizeVersion("1.0.0;whoami")
+    val result = InputSanitizer.sanitizeVersion("1.0.0;whoami")
     assertFalse(result.contains(";"))
     assertEquals("1.0.0whoami", result)
   }
@@ -149,7 +149,7 @@ class DocsPluginTest {
   @Test
   fun `MkDocs builder sanitizes version strings`() {
     val injectedVersion = "1.5.3;rm -rf /"
-    val sanitized = SecurityUtils.sanitizeVersion(injectedVersion)
+    val sanitized = InputSanitizer.sanitizeVersion(injectedVersion)
     assertFalse(sanitized.contains(";"))
     assertFalse(sanitized.contains(" "))
   }

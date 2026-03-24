@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 
 @Controller("/api/executions")
 @ExecuteOn(TaskExecutors.IO)
-class ExecutionApiController(private val taskService: TaskService) {
+class ExecutionController(private val taskService: TaskService) {
 
   private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 

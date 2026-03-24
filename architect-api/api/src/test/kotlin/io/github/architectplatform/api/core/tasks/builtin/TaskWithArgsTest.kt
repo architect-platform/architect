@@ -1,4 +1,4 @@
-package io.github.architectplatform.api.core.tasks.impl
+package io.github.architectplatform.api.core.tasks.builtin
 
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.project.ProjectContext

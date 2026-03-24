@@ -110,7 +110,7 @@ Adopt a fixed lifecycle of phases (`INIT → LINT → VERIFY → BUILD → RUN/T
 
 ---
 
-## ADR-006: Shell argument escaping via central ShellUtils
+## ADR-006: Shell argument escaping via central ShellArgumentSanitizer
 
 **Status**: Accepted  
 **Date**: 2025-03
@@ -121,14 +121,14 @@ Multiple plugins were constructing shell commands by string interpolation, creat
 
 ### Decision
 
-Introduce `io.github.architectplatform.api.core.utils.ShellUtils` in `architect-api` with `escapeShellArg()`, `escapeShellArgs()`, and `requireSafeIdentifier()`. All plugins must use these utilities when constructing commands. `requireSafeIdentifier()` validates identifiers (profiles, targets, etc.) against an allowlist pattern.
+Introduce `io.github.architectplatform.api.core.utils.ShellArgumentSanitizer` in `architect-api` with `escapeShellArg()`, `escapeShellArgs()`, and `requireSafeIdentifier()`. All plugins must use these utilities when constructing commands. `requireSafeIdentifier()` validates identifiers (profiles, targets, etc.) against an allowlist pattern.
 
 ### Consequences
 
 - **Pro**: Single, auditable escape implementation.
 - **Pro**: `architect-api` is the natural shared location — all JVM plugins already depend on it.
 - **Con**: Process plugins (TypeScript, Go, Python) must implement equivalent escaping in their respective SDKs.
-- Related: task 24.6; see `ShellUtils.kt` and `ShellUtilsTest.kt`.
+- Related: task 24.6; see `ShellArgumentSanitizer.kt` and `ShellArgumentSanitizerTest.kt`.
 
 ---
 

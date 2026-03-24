@@ -1,7 +1,7 @@
 package io.github.architectplatform.api.core.tasks
 
 import io.github.architectplatform.api.core.project.ProjectContext
-import io.github.architectplatform.api.core.tasks.impl.SimpleTask
+import io.github.architectplatform.api.core.tasks.builtin.SimpleTask
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull

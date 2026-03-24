@@ -336,7 +336,7 @@ The scripts-architected plugin implements multiple layers of security to prevent
 
 ### Security Implementation
 
-The plugin uses the `ScriptUtils` utility class that provides:
+The plugin uses the `ShellCommandSanitizer` utility class that provides:
 
 - `escapeShellArg()`: Wraps arguments in single quotes and escapes any single quotes within
 - `validateEnvKey()`: Ensures environment variable keys follow shell naming conventions

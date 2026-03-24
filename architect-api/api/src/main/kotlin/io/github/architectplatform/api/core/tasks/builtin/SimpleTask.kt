@@ -1,4 +1,4 @@
-package io.github.architectplatform.api.core.tasks.impl
+package io.github.architectplatform.api.core.tasks.builtin
 
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
@@ -9,40 +9,37 @@ import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
 
 /**
- * A task implementation that accepts and processes command-line arguments.
+ * A simple task implementation that executes a lambda function without arguments.
  *
- * TaskWithArgs provides a convenient way to create tasks that need to handle command-line
- * arguments. The task logic is provided as a lambda function that receives the environment,
- * project context, and the argument list.
+ * SimpleTask provides a convenient way to create tasks that don't require command-line
+ * arguments. The task logic is provided as a lambda function that receives the environment
+ * and project context.
  *
  * This task supports:
  * - Optional phase membership (can be standalone or belong to a phase)
  * - Custom dependencies beyond phase dependencies
- * - Flexible argument handling
  * - Convention over configuration with sensible defaults
  *
  * Example usage:
  * ```kotlin
  * // Task with phase
- * val task = TaskWithArgs(
- *   id = "greet",
- *   description = "Greets a person by name",
- *   phase = CoreWorkflow.RUN
- * ) { env, ctx, args ->
- *   val name = args.firstOrNull() ?: "World"
- *   println("Hello, $name!")
+ * val task = SimpleTask(
+ *   id = "hello",
+ *   description = "Prints hello",
+ *   phase = CoreWorkflow.INIT
+ * ) { env, ctx ->
+ *   println("Hello from ${ctx.dir}")
  *   TaskResult.success()
  * }
  *
- * // Standalone task with dependencies
- * val task = TaskWithArgs(
- *   id = "deploy",
- *   description = "Deploy to environment",
- *   customDependencies = listOf("build", "test")
- * ) { env, ctx, args ->
- *   val environment = args.firstOrNull() ?: "staging"
- *   // Deploy logic
- *   TaskResult.success("Deployed to $environment")
+ * // Standalone task with custom dependencies
+ * val task = SimpleTask(
+ *   id = "verify",
+ *   description = "Verify setup",
+ *   customDependencies = listOf("init", "configure")
+ * ) { env, ctx ->
+ *   // Verification logic
+ *   TaskResult.success()
  * }
  * ```
  *
@@ -52,16 +49,16 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
  * @param customDependencies Additional dependencies beyond phase dependencies (optional)
  * @param permissions Permissions required to execute the task (defaults to full access)
  * @param requirements Runtime preconditions checked before execution (optional)
- * @param task Lambda function containing the task logic, receives arguments as a list
+ * @param task Lambda function containing the task logic
  */
-class TaskWithArgs(
+class SimpleTask(
   override val id: String,
-  val description: String,
+  private val description: String,
   private val phase: Phase? = null,
   private val customDependencies: List<String> = emptyList(),
   private val permissions: Set<TaskPermission> = TaskPermission.all(),
   private val requirements: TaskRequirements? = null,
-  private val task: (Environment, ProjectContext, List<String>) -> TaskResult,
+  private val task: (Environment, ProjectContext) -> TaskResult,
 ) : Task {
   override fun phase(): Phase? = phase
 
@@ -82,6 +79,6 @@ class TaskWithArgs(
     projectContext: ProjectContext,
     args: List<String>,
   ): TaskResult {
-    return task(environment, projectContext, args)
+    return task(environment, projectContext)
   }
 }

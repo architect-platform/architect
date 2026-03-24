@@ -44,7 +44,7 @@ class GitTask(
     }
     
     // Validate command against whitelist
-    if (!GitUtils.isValidGitCommand(command)) {
+    if (!GitCommandValidator.isValidGitCommand(command)) {
       return TaskResult.failure("Git task: $id - Invalid or disallowed Git command: $command")
     }
 
@@ -56,7 +56,7 @@ class GitTask(
       // 1. Command whitelisting (isValidGitCommand)
       // 2. Proper shell argument escaping (escapeShellArg)
       // 3. Special handling for arguments starting with hyphens
-      val escapedArgs = args.map { GitUtils.escapeShellArg(it) }.joinToString(" ")
+      val escapedArgs = args.map { GitCommandValidator.escapeShellArg(it) }.joinToString(" ")
       val fullCommand = "git $command $escapedArgs"
       commandExecutor.execute(fullCommand, workingDir = projectContext.dir.toString())
       TaskResult.success("Git task: $id completed successfully")

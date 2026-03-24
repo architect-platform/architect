@@ -24,7 +24,7 @@ Open `build/dokka/html/index.html` in your browser to browse the full API.
 | `io.github.architectplatform.api.components.workflows.hooks` | `HooksWorkflow` phases (pre-commit, pre-push, commit-msg) |
 | `io.github.architectplatform.api.components.execution` | `CommandExecutor`, `ResourceExtractor` |
 | `io.github.architectplatform.api.core.project` | `ProjectContext`, path utilities |
-| `io.github.architectplatform.api.core.utils` | `ShellUtils` — shell escaping utilities |
+| `io.github.architectplatform.api.core.utils` | `ShellArgumentSanitizer` — shell escaping utilities |
 | `io.github.architectplatform.api.testing` | `ArchitectPluginTestKit` — in-memory test harness |
 
 ## Core interfaces
@@ -93,19 +93,19 @@ assertTrue(result.success)
 
 ## Shell escaping utilities
 
-All JVM plugins should use `ShellUtils` when building shell commands:
+All JVM plugins should use `ShellArgumentSanitizer` when building shell commands:
 
 ```kotlin
-import io.github.architectplatform.api.core.utils.ShellUtils
+import io.github.architectplatform.api.core.utils.ShellArgumentSanitizer
 
 // Escape a single argument
-val safe = ShellUtils.escapeShellArg(userInput)
+val safe = ShellArgumentSanitizer.escapeShellArg(userInput)
 
 // Escape a list of arguments and join with spaces
-val safeArgs = ShellUtils.escapeShellArgs(argList)
+val safeArgs = ShellArgumentSanitizer.escapeShellArgs(argList)
 
 // Validate an identifier (e.g. profile name, target triple)
-val identifier = ShellUtils.requireSafeIdentifier(ctx.profile, "profile")
+val identifier = ShellArgumentSanitizer.requireSafeIdentifier(ctx.profile, "profile")
 ```
 
 `requireSafeIdentifier` throws `IllegalArgumentException` for values containing characters outside `[a-zA-Z0-9._-]`.

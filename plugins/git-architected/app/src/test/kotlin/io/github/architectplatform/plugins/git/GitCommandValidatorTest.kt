@@ -4,9 +4,9 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 /**
- * Tests for GitUtils utility functions.
+ * Tests for GitCommandValidator utility functions.
  */
-class GitUtilsTest {
+class GitCommandValidatorTest {
 
   @Test
   fun `escapeShellArg should not escape safe arguments`() {
@@ -18,42 +18,42 @@ class GitUtilsTest {
     )
     
     for (arg in safeArgs) {
-      assertEquals(arg, GitUtils.escapeShellArg(arg), "Safe argument '$arg' should not be escaped")
+      assertEquals(arg, GitCommandValidator.escapeShellArg(arg), "Safe argument '$arg' should not be escaped")
     }
   }
 
   @Test
   fun `escapeShellArg should escape arguments with colons`() {
     // Colons should be escaped to prevent URL/network parsing issues
-    assertEquals("'192.168.1.1:8080'", GitUtils.escapeShellArg("192.168.1.1:8080"))
-    assertEquals("'https://github.com'", GitUtils.escapeShellArg("https://github.com"))
+    assertEquals("'192.168.1.1:8080'", GitCommandValidator.escapeShellArg("192.168.1.1:8080"))
+    assertEquals("'https://github.com'", GitCommandValidator.escapeShellArg("https://github.com"))
   }
 
   @Test
   fun `escapeShellArg should escape arguments with hyphens`() {
     // Arguments with hyphens should be escaped to prevent flag interpretation
-    assertEquals("'branch-name'", GitUtils.escapeShellArg("branch-name"))
-    assertEquals("'-m'", GitUtils.escapeShellArg("-m"))
-    assertEquals("'--force'", GitUtils.escapeShellArg("--force"))
+    assertEquals("'branch-name'", GitCommandValidator.escapeShellArg("branch-name"))
+    assertEquals("'-m'", GitCommandValidator.escapeShellArg("-m"))
+    assertEquals("'--force'", GitCommandValidator.escapeShellArg("--force"))
   }
 
   @Test
   fun `escapeShellArg should escape arguments with spaces`() {
-    assertEquals("'hello world'", GitUtils.escapeShellArg("hello world"))
-    assertEquals("'commit message'", GitUtils.escapeShellArg("commit message"))
+    assertEquals("'hello world'", GitCommandValidator.escapeShellArg("hello world"))
+    assertEquals("'commit message'", GitCommandValidator.escapeShellArg("commit message"))
   }
 
   @Test
   fun `escapeShellArg should escape arguments with single quotes`() {
-    assertEquals("'it'\\''s working'", GitUtils.escapeShellArg("it's working"))
-    assertEquals("'user'\\''s branch'", GitUtils.escapeShellArg("user's branch"))
+    assertEquals("'it'\\''s working'", GitCommandValidator.escapeShellArg("it's working"))
+    assertEquals("'user'\\''s branch'", GitCommandValidator.escapeShellArg("user's branch"))
   }
 
   @Test
   fun `escapeShellArg should escape arguments with special characters`() {
-    assertEquals("'test;rm -rf'", GitUtils.escapeShellArg("test;rm -rf"))
-    assertEquals("'test\$var'", GitUtils.escapeShellArg("test\$var"))
-    assertEquals("'test`cmd`'", GitUtils.escapeShellArg("test`cmd`"))
+    assertEquals("'test;rm -rf'", GitCommandValidator.escapeShellArg("test;rm -rf"))
+    assertEquals("'test\$var'", GitCommandValidator.escapeShellArg("test\$var"))
+    assertEquals("'test`cmd`'", GitCommandValidator.escapeShellArg("test`cmd`"))
   }
 
   @Test
@@ -71,7 +71,7 @@ class GitUtilsTest {
     )
     
     for (key in validKeys) {
-      assertTrue(GitUtils.isValidGitConfigKey(key), "Valid key '$key' should be accepted")
+      assertTrue(GitCommandValidator.isValidGitConfigKey(key), "Valid key '$key' should be accepted")
     }
   }
 
@@ -94,15 +94,15 @@ class GitUtilsTest {
     )
     
     for (key in invalidKeys) {
-      assertFalse(GitUtils.isValidGitConfigKey(key), "Invalid key '$key' should be rejected")
+      assertFalse(GitCommandValidator.isValidGitConfigKey(key), "Invalid key '$key' should be rejected")
     }
   }
 
   @Test
   fun `isValidGitConfigKey should handle multi-level keys`() {
-    assertTrue(GitUtils.isValidGitConfigKey("a.b"))
-    assertTrue(GitUtils.isValidGitConfigKey("a.b.c"))
-    assertTrue(GitUtils.isValidGitConfigKey("a.b.c.d"))
+    assertTrue(GitCommandValidator.isValidGitConfigKey("a.b"))
+    assertTrue(GitCommandValidator.isValidGitConfigKey("a.b.c"))
+    assertTrue(GitCommandValidator.isValidGitConfigKey("a.b.c.d"))
   }
 
   @Test
@@ -114,7 +114,7 @@ class GitUtilsTest {
     )
     
     for (cmd in allowedCommands) {
-      assertTrue(GitUtils.isValidGitCommand(cmd), "Command '$cmd' should be allowed")
+      assertTrue(GitCommandValidator.isValidGitCommand(cmd), "Command '$cmd' should be allowed")
     }
   }
 
@@ -135,7 +135,7 @@ class GitUtilsTest {
     )
     
     for (cmd in disallowedCommands) {
-      assertFalse(GitUtils.isValidGitCommand(cmd), "Command '$cmd' should be rejected")
+      assertFalse(GitCommandValidator.isValidGitCommand(cmd), "Command '$cmd' should be rejected")
     }
   }
 }

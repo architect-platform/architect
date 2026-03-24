@@ -113,7 +113,7 @@ class GitPlugin : ArchitectPlugin<GitContext> {
       for ((key, value) in context.config) {
         try {
           // Validate config key to prevent command injection
-          if (!GitUtils.isValidGitConfigKey(key)) {
+          if (!GitCommandValidator.isValidGitConfigKey(key)) {
             results.add(TaskResult.failure("Invalid Git config key: $key"))
             continue
           }
@@ -123,8 +123,8 @@ class GitPlugin : ArchitectPlugin<GitContext> {
           // 1. Strict config key validation (isValidGitConfigKey)
           // 2. Shell argument escaping for both key and value (defense-in-depth)
           // Even though key is validated, we escape it for additional safety
-          val escapedKey = GitUtils.escapeShellArg(key)
-          val escapedValue = GitUtils.escapeShellArg(value)
+          val escapedKey = GitCommandValidator.escapeShellArg(key)
+          val escapedValue = GitCommandValidator.escapeShellArg(value)
           
           commandExecutor.execute(
               "git config --local $escapedKey $escapedValue",

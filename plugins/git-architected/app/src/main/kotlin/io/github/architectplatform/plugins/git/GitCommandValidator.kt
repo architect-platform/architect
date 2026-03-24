@@ -3,7 +3,7 @@ package io.github.architectplatform.plugins.git
 /**
  * Utility object for Git-related helper functions.
  */
-object GitUtils {
+object GitCommandValidator {
   /**
    * Escapes a shell argument to prevent command injection.
    *

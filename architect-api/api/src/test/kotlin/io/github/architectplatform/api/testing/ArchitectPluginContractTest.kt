@@ -3,7 +3,7 @@ package io.github.architectplatform.api.testing
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
-import io.github.architectplatform.api.core.tasks.impl.SimpleTask
+import io.github.architectplatform.api.core.tasks.builtin.SimpleTask
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 

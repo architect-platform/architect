@@ -7,7 +7,7 @@ import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
-import io.github.architectplatform.api.core.utils.ShellUtils
+import io.github.architectplatform.api.core.utils.ShellArgumentSanitizer
 
 /**
  * Task implementation for executing Gradle commands.
@@ -94,7 +94,7 @@ class GradleTask(
 
     try {
       commandExecutor.execute(
-          "${gradleProjectContext.gradlePath} $command ${ShellUtils.escapeShellArgs(args)}",
+          "${gradleProjectContext.gradlePath} $command ${ShellArgumentSanitizer.escapeShellArgs(args)}",
           workingDir = gradleProjectDir.toString())
     } catch (e: Exception) {
       return TaskResult.failure(

@@ -6,7 +6,7 @@ import io.github.architectplatform.api.core.tasks.CompositeTask
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.TaskPermission
 import io.github.architectplatform.api.core.tasks.TaskResult
-import io.github.architectplatform.api.core.tasks.impl.SimpleTask
+import io.github.architectplatform.api.core.tasks.builtin.SimpleTask
 import io.github.architectplatform.core.execution.TaskPermissionScope
 import io.github.architectplatform.core.events.EmbeddedEventBus
 import io.github.architectplatform.core.project.app.ApplicationEnvironment

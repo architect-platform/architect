@@ -3,7 +3,7 @@ package io.github.architectplatform.plugins.rust
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.tasks.TaskRegistry
-import io.github.architectplatform.api.core.utils.ShellUtils
+import io.github.architectplatform.api.core.utils.ShellArgumentSanitizer
 
 class RustPlugin : ArchitectPlugin<RustContext> {
   override val id = "rust-plugin"
@@ -12,10 +12,10 @@ class RustPlugin : ArchitectPlugin<RustContext> {
   override var context: RustContext = RustContext()
 
   private fun featureFlags(ctx: RustContext): String =
-    if (ctx.features.isNotEmpty()) " --features ${ShellUtils.escapeShellArg(ctx.features.joinToString(","))}" else ""
+    if (ctx.features.isNotEmpty()) " --features ${ShellArgumentSanitizer.escapeShellArg(ctx.features.joinToString(","))}" else ""
 
   private fun targetFlag(ctx: RustContext): String =
-    if (ctx.target.isNotEmpty()) " --target ${ShellUtils.escapeShellArg(ctx.target)}" else ""
+    if (ctx.target.isNotEmpty()) " --target ${ShellArgumentSanitizer.escapeShellArg(ctx.target)}" else ""
 
   override fun register(registry: TaskRegistry) {
     registry.add(RustTask(
@@ -23,8 +23,8 @@ class RustPlugin : ArchitectPlugin<RustContext> {
       phase = CoreWorkflow.BUILD,
       ctx = context,
       buildCommand = { ctx, args ->
-        val safeProfile = ShellUtils.requireSafeIdentifier(ctx.profile, "Rust build profile")
-        "cargo build --$safeProfile${featureFlags(ctx)}${targetFlag(ctx)}${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
+        val safeProfile = ShellArgumentSanitizer.requireSafeIdentifier(ctx.profile, "Rust build profile")
+        "cargo build --$safeProfile${featureFlags(ctx)}${targetFlag(ctx)}${if (args.isNotEmpty()) " ${ShellArgumentSanitizer.escapeShellArgs(args)}" else ""}"
       },
     ))
 
@@ -33,7 +33,7 @@ class RustPlugin : ArchitectPlugin<RustContext> {
       phase = CoreWorkflow.TEST,
       ctx = context,
       buildCommand = { ctx, args ->
-        "cargo test${featureFlags(ctx)}${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
+        "cargo test${featureFlags(ctx)}${if (args.isNotEmpty()) " ${ShellArgumentSanitizer.escapeShellArgs(args)}" else ""}"
       },
     ))
 
@@ -42,7 +42,7 @@ class RustPlugin : ArchitectPlugin<RustContext> {
       phase = CoreWorkflow.LINT,
       ctx = context,
       buildCommand = { ctx, args ->
-        "cargo clippy${featureFlags(ctx)}${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else " -- -D warnings"}"
+        "cargo clippy${featureFlags(ctx)}${if (args.isNotEmpty()) " ${ShellArgumentSanitizer.escapeShellArgs(args)}" else " -- -D warnings"}"
       },
     ))
 
@@ -51,7 +51,7 @@ class RustPlugin : ArchitectPlugin<RustContext> {
       phase = CoreWorkflow.PUBLISH,
       ctx = context,
       buildCommand = { _, args ->
-        "cargo publish${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
+        "cargo publish${if (args.isNotEmpty()) " ${ShellArgumentSanitizer.escapeShellArgs(args)}" else ""}"
       },
     ))
   }

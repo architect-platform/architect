@@ -7,7 +7,7 @@ import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
-import io.github.architectplatform.api.core.utils.ShellUtils
+import io.github.architectplatform.api.core.utils.ShellArgumentSanitizer
 
 /**
  * Task implementation for executing JavaScript/Node.js commands via package managers.
@@ -69,7 +69,7 @@ class JavaScriptTask(
    */
   private fun buildCommand(command: String, args: List<String>): String {
     val packageManager = context.packageManager
-    val argsString = if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""
+    val argsString = if (args.isNotEmpty()) " ${ShellArgumentSanitizer.escapeShellArgs(args)}" else ""
 
     return when (command) {
       "install" -> "$packageManager install$argsString"

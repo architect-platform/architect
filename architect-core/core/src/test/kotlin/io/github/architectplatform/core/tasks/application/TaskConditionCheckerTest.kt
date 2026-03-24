@@ -2,7 +2,7 @@ package io.github.architectplatform.core.tasks.application
 
 import io.github.architectplatform.api.core.tasks.Platform
 import io.github.architectplatform.api.core.tasks.TaskRequirements
-import io.github.architectplatform.api.core.tasks.impl.SimpleTask
+import io.github.architectplatform.api.core.tasks.builtin.SimpleTask
 import io.github.architectplatform.api.core.tasks.TaskResult
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.DisabledOnOs

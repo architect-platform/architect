@@ -3,7 +3,7 @@ package io.github.architectplatform.plugins.docs.utils
 /**
  * Utility class for security-related operations like sanitization and validation.
  */
-object SecurityUtils {
+object InputSanitizer {
 
     // Domain validation regex (relaxed RFC 1035 style)
     // - Must have at least one dot (no single-label domains)

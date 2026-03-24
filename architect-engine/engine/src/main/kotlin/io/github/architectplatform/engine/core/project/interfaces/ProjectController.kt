@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 
 @Controller("/api/projects")
 @ExecuteOn(TaskExecutors.IO)
-class ProjectsApiController(
+class ProjectController(
     private val projectService: ProjectService,
 ) {
 

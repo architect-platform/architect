@@ -9,11 +9,11 @@ package io.github.architectplatform.api.core.utils
  *
  * Usage:
  * ```kotlin
- * val cmd = "my-tool ${ShellUtils.escapeShellArg(userInput)}"
- * val cmd = "my-tool ${ShellUtils.escapeShellArgs(userArgs)}"
+ * val cmd = "my-tool ${ShellArgumentSanitizer.escapeShellArg(userInput)}"
+ * val cmd = "my-tool ${ShellArgumentSanitizer.escapeShellArgs(userArgs)}"
  * ```
  */
-object ShellUtils {
+object ShellArgumentSanitizer {
 
   /**
    * Escapes a single shell argument by wrapping it in single quotes.

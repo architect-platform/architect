@@ -3,7 +3,7 @@ package io.github.architectplatform.plugins.scripts
 /**
  * Utility object for script-related helper functions, particularly security-related.
  */
-object ScriptUtils {
+object ShellCommandSanitizer {
     /**
      * Escapes a shell argument to prevent command injection.
      *

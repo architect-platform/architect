@@ -69,7 +69,7 @@ class ScriptTask(
         }
 
         // Escape all arguments to prevent command injection
-        val escapedArgs = args.map { ScriptUtils.escapeShellArg(it) }
+        val escapedArgs = args.map { ShellCommandSanitizer.escapeShellArg(it) }
         val argsString = if (escapedArgs.isNotEmpty()) " ${escapedArgs.joinToString(" ")}" else ""
         
         // Build environment variable prefix with proper escaping
@@ -77,9 +77,9 @@ class ScriptTask(
             try {
                 config.environment.entries.joinToString(" ") { (key, value) ->
                     // Validate key format
-                    val validatedKey = ScriptUtils.validateEnvKey(key)
+                    val validatedKey = ShellCommandSanitizer.validateEnvKey(key)
                     // Escape value
-                    val escapedValue = ScriptUtils.escapeEnvValue(value)
+                    val escapedValue = ShellCommandSanitizer.escapeEnvValue(value)
                     "$validatedKey=$escapedValue"
                 } + " "
             } catch (e: IllegalArgumentException) {

@@ -3,7 +3,7 @@ package io.github.architectplatform.cli.integration
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
-import io.github.architectplatform.api.core.tasks.impl.SimpleTask
+import io.github.architectplatform.api.core.tasks.builtin.SimpleTask
 import io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor
 import io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher
 import io.github.architectplatform.cli.history.LocalHistoryReader

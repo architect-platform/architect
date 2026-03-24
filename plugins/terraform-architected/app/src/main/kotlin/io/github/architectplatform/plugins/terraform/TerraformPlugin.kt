@@ -3,7 +3,7 @@ package io.github.architectplatform.plugins.terraform
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.tasks.TaskRegistry
-import io.github.architectplatform.api.core.utils.ShellUtils
+import io.github.architectplatform.api.core.utils.ShellArgumentSanitizer
 
 class TerraformPlugin : ArchitectPlugin<TerraformContext> {
   override val id = "terraform-plugin"
@@ -12,8 +12,8 @@ class TerraformPlugin : ArchitectPlugin<TerraformContext> {
   override var context: TerraformContext = TerraformContext()
 
   private fun varFlags(ctx: TerraformContext): String = buildString {
-    ctx.vars.forEach { (k, v) -> append(" -var ${ShellUtils.escapeShellArg("$k=$v")}") }
-    if (ctx.varFile.isNotEmpty()) append(" -var-file=${ShellUtils.escapeShellArg(ctx.varFile)}")  
+    ctx.vars.forEach { (k, v) -> append(" -var ${ShellArgumentSanitizer.escapeShellArg("$k=$v")}") }
+    if (ctx.varFile.isNotEmpty()) append(" -var-file=${ShellArgumentSanitizer.escapeShellArg(ctx.varFile)}")  
   }
 
   override fun register(registry: TaskRegistry) {
@@ -24,8 +24,8 @@ class TerraformPlugin : ArchitectPlugin<TerraformContext> {
       buildCommand = { ctx, args ->
         buildString {
           append("terraform init")
-          if (ctx.backend.isNotEmpty()) append(" -backend-config=${ShellUtils.escapeShellArg(ctx.backend)}")
-          if (args.isNotEmpty()) append(" ${ShellUtils.escapeShellArgs(args)}")
+          if (ctx.backend.isNotEmpty()) append(" -backend-config=${ShellArgumentSanitizer.escapeShellArg(ctx.backend)}")
+          if (args.isNotEmpty()) append(" ${ShellArgumentSanitizer.escapeShellArgs(args)}")
         }
       },
     ))
@@ -35,7 +35,7 @@ class TerraformPlugin : ArchitectPlugin<TerraformContext> {
       phase = CoreWorkflow.VERIFY,
       ctx = context,
       buildCommand = { ctx, args ->
-        "terraform plan${varFlags(ctx)}${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
+        "terraform plan${varFlags(ctx)}${if (args.isNotEmpty()) " ${ShellArgumentSanitizer.escapeShellArgs(args)}" else ""}"
       },
     ))
 
@@ -48,7 +48,7 @@ class TerraformPlugin : ArchitectPlugin<TerraformContext> {
           append("terraform apply")
           if (ctx.autoApprove) append(" -auto-approve")
           append(varFlags(ctx))
-          if (args.isNotEmpty()) append(" ${ShellUtils.escapeShellArgs(args)}")
+          if (args.isNotEmpty()) append(" ${ShellArgumentSanitizer.escapeShellArgs(args)}")
         }
       },
     ))
@@ -62,7 +62,7 @@ class TerraformPlugin : ArchitectPlugin<TerraformContext> {
           append("terraform destroy")
           if (ctx.autoApprove) append(" -auto-approve")
           append(varFlags(ctx))
-          if (args.isNotEmpty()) append(" ${ShellUtils.escapeShellArgs(args)}")
+          if (args.isNotEmpty()) append(" ${ShellArgumentSanitizer.escapeShellArgs(args)}")
         }
       },
     ))

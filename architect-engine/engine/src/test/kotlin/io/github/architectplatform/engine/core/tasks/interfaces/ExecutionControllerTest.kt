@@ -18,10 +18,10 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
-class ExecutionApiControllerTest {
+class ExecutionControllerTest {
 
   private val taskService = mock<TaskService>()
-  private val controller = ExecutionApiController(taskService)
+  private val controller = ExecutionController(taskService)
 
   @Test
   fun `should stream execution events to clients`() = runBlocking {

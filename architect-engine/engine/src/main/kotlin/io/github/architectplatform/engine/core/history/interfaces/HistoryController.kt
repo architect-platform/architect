@@ -11,7 +11,7 @@ import io.micronaut.scheduling.annotation.ExecuteOn
 
 @Controller("/api/history")
 @ExecuteOn(TaskExecutors.IO)
-class HistoryApiController(private val historyService: HistoryService) {
+class HistoryController(private val historyService: HistoryService) {
 
     @Get
     fun getAll(@QueryValue(defaultValue = "50") limit: Int): List<ExecutionRecord> =

@@ -47,31 +47,31 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
 
     /**
      * Sanitizes a path to prevent command injection and directory traversal.
-     * @deprecated Use SecurityUtils.sanitizePath() instead
+     * @deprecated Use InputSanitizer.sanitizePath() instead
      */
-    @Deprecated("Use SecurityUtils.sanitizePath() instead", ReplaceWith("SecurityUtils.sanitizePath(path)", "io.github.architectplatform.plugins.docs.utils.SecurityUtils"))
-    fun sanitizePath(path: String): String = io.github.architectplatform.plugins.docs.utils.SecurityUtils.sanitizePath(path)
+    @Deprecated("Use InputSanitizer.sanitizePath() instead", ReplaceWith("InputSanitizer.sanitizePath(path)", "io.github.architectplatform.plugins.docs.utils.InputSanitizer"))
+    fun sanitizePath(path: String): String = io.github.architectplatform.plugins.docs.utils.InputSanitizer.sanitizePath(path)
 
     /**
      * Sanitizes a Git branch name for safe shell execution.
-     * @deprecated Use SecurityUtils.sanitizeBranch() instead
+     * @deprecated Use InputSanitizer.sanitizeBranch() instead
      */
-    @Deprecated("Use SecurityUtils.sanitizeBranch() instead", ReplaceWith("SecurityUtils.sanitizeBranch(branch)", "io.github.architectplatform.plugins.docs.utils.SecurityUtils"))
-    fun sanitizeBranch(branch: String): String = io.github.architectplatform.plugins.docs.utils.SecurityUtils.sanitizeBranch(branch)
+    @Deprecated("Use InputSanitizer.sanitizeBranch() instead", ReplaceWith("InputSanitizer.sanitizeBranch(branch)", "io.github.architectplatform.plugins.docs.utils.InputSanitizer"))
+    fun sanitizeBranch(branch: String): String = io.github.architectplatform.plugins.docs.utils.InputSanitizer.sanitizeBranch(branch)
 
     /**
      * Sanitizes a version string for safe shell execution.
-     * @deprecated Use SecurityUtils.sanitizeVersion() instead
+     * @deprecated Use InputSanitizer.sanitizeVersion() instead
      */
-    @Deprecated("Use SecurityUtils.sanitizeVersion() instead", ReplaceWith("SecurityUtils.sanitizeVersion(version)", "io.github.architectplatform.plugins.docs.utils.SecurityUtils"))
-    fun sanitizeVersion(version: String): String = io.github.architectplatform.plugins.docs.utils.SecurityUtils.sanitizeVersion(version)
+    @Deprecated("Use InputSanitizer.sanitizeVersion() instead", ReplaceWith("InputSanitizer.sanitizeVersion(version)", "io.github.architectplatform.plugins.docs.utils.InputSanitizer"))
+    fun sanitizeVersion(version: String): String = io.github.architectplatform.plugins.docs.utils.InputSanitizer.sanitizeVersion(version)
 
     /**
      * Validates a domain name using RFC-compliant rules.
-     * @deprecated Use SecurityUtils.isValidDomain() instead
+     * @deprecated Use InputSanitizer.isValidDomain() instead
      */
-    @Deprecated("Use SecurityUtils.isValidDomain() instead", ReplaceWith("SecurityUtils.isValidDomain(domain)", "io.github.architectplatform.plugins.docs.utils.SecurityUtils"))
-    fun isValidDomain(domain: String): Boolean = io.github.architectplatform.plugins.docs.utils.SecurityUtils.isValidDomain(domain)
+    @Deprecated("Use InputSanitizer.isValidDomain() instead", ReplaceWith("InputSanitizer.isValidDomain(domain)", "io.github.architectplatform.plugins.docs.utils.InputSanitizer"))
+    fun isValidDomain(domain: String): Boolean = io.github.architectplatform.plugins.docs.utils.InputSanitizer.isValidDomain(domain)
   }
 
   /**

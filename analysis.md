@@ -59,7 +59,7 @@ Auto-discovery of subprojects (any directory with `architect.yml`) and concurren
 
 ### Security-Conscious Plugin Code
 
-The git plugin includes shell argument escaping and config key validation. The docs plugin has a `SecurityUtils` for path and domain sanitization. This discipline is rare and important given that plugins execute shell commands.
+The git plugin includes shell argument escaping and config key validation. The docs plugin has a `InputSanitizer` for path and domain sanitization. This discipline is rare and important given that plugins execute shell commands.
 
 ---
 

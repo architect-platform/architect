@@ -5,7 +5,7 @@ import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.plugins.docs.dto.BuildContext
 import io.github.architectplatform.plugins.docs.dto.ComponentDocs
 import io.github.architectplatform.api.core.project.resolvePathWithinRoot
-import io.github.architectplatform.plugins.docs.utils.SecurityUtils
+import io.github.architectplatform.plugins.docs.utils.InputSanitizer
 import java.io.File
 
 /**
@@ -62,8 +62,8 @@ class MkDocsBuilder(
      * Installs MkDocs and dependencies in the virtual environment.
      */
     override fun installDependencies(workingDir: File): TaskResult {
-        val mkdocsVer = SecurityUtils.sanitizeVersion(context.mkdocsVersion)
-        val materialVer = SecurityUtils.sanitizeVersion(context.mkdocsMaterialVersion)
+        val mkdocsVer = InputSanitizer.sanitizeVersion(context.mkdocsVersion)
+        val materialVer = InputSanitizer.sanitizeVersion(context.mkdocsMaterialVersion)
         
         val packages = listOf(
             "mkdocs==$mkdocsVer",
@@ -110,7 +110,7 @@ class MkDocsBuilder(
         val sanitizedOutputDir = if (context.outputDir.isNotEmpty()) {
             try {
                 resolvePathWithinRoot(workingDir.toPath(), context.outputDir, "Docs output directory")
-                SecurityUtils.sanitizePath(context.outputDir)
+                InputSanitizer.sanitizePath(context.outputDir)
             } catch (e: IllegalArgumentException) {
                 return TaskResult.failure("Invalid MkDocs output directory: ${e.message}")
             }
