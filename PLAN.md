@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 34/283 tasks completed (12.0%)
-Current Phase: Phase 2 — Unify build, dependency, and version governance
-Last Updated: 2026-03-24T10:07:17Z
+Overall Progress: 37/283 tasks completed (13.1%)
+Current Phase: Phase 3 — Re-establish architectural boundaries in the runtime stack
+Last Updated: 2026-03-24T10:11:09Z
 
 ## Executive Summary
 
@@ -411,10 +411,10 @@ The repository currently contains several categories of assets:
   - [x] Standardize plugin build scripts onto one template with deliberate deviations only. | Finished: 2026-03-24T10:05:56Z | Notes: Added `gradle/architect-plugin-conventions.gradle.kts` and refactored all first-party plugin builds to share one common template for group, repositories, Java compatibility, test/JaCoCo wiring, and coverage enforcement. The remaining deliberate deviations are now limited to plugin-specific dependencies, artifact version selection, and explicit `mavenLocal()` opt-in where local development needs it.
   - [x] Audit and modernize Shadow plugin usage consistently across all relevant modules. | Finished: 2026-03-24T10:07:17Z | Notes: Audited Shadow usage across the repo and confirmed only `architect-cli/cli` still used the legacy `com.github.johnrengelman.shadow` plugin line. Switched the CLI to the shared modern `com.gradleup.shadow` alias and removed the unused legacy alias from `gradle/libs.versions.toml`.
 
-- [ ] Validation
-  - [ ] Run module builds against the new shared conventions.
-  - [ ] Confirm dependency trees no longer show mixed API versions across plugins.
-  - [ ] Verify publishing metadata and artifact coordinates still resolve correctly.
+- [x] Validation
+  - [x] Run module builds against the new shared conventions. | Finished: 2026-03-24T10:11:09Z | Notes: Re-ran `./gradlew test` for `architect-api/api`, `architect-core/core`, and `architect-cloud/backend`; re-ran `./gradlew help` for `architect-engine/engine`; and re-ran representative plugin `help` checks after the shared catalog, versioning, alignment, and plugin convention changes.
+  - [x] Confirm dependency trees no longer show mixed API versions across plugins. | Finished: 2026-03-24T10:11:09Z | Notes: Re-checked plugin build scripts and confirmed the old `io.github.architectplatform:api:1.1.2` and `1.1.3` references are gone. All first-party plugin builds now consume the shared `architect-api` contract version from `gradle/libs.versions.toml`.
+  - [x] Verify publishing metadata and artifact coordinates still resolve correctly. | Finished: 2026-03-24T10:11:09Z | Notes: Ran `architect-api/api` with `./gradlew test generatePomFileForGprPublication` successfully, confirming the published API artifact metadata still resolves after the shared-version changes.
 
 ## Phase 3 — Re-establish architectural boundaries in the runtime stack
 
