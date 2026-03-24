@@ -46,10 +46,12 @@ class ArchitectRunConfiguration(
   }
 
   override fun getState(executor: Executor, environment: ExecutionEnvironment): RunProfileState {
-    return RunProfileState { _, _ ->
-      val cmd = GeneralCommandLine("architect", "--embedded", taskId)
-      cmd.withWorkDirectory(project.basePath)
-      ProcessHandlerFactory.getInstance().createProcessHandler(cmd)
+    return object : CommandLineState(environment) {
+      override fun startProcess(): ProcessHandler {
+        val cmd = GeneralCommandLine("architect", "--embedded", taskId)
+        cmd.withWorkDirectory(project.basePath)
+        return ProcessHandlerFactory.getInstance().createProcessHandler(cmd)
+      }
     }
   }
 }
