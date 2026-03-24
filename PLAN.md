@@ -1,731 +1,728 @@
-# Architect Platform — Production Readiness Plan
-
-> The goal is the best developer experience and agility tool ever built.
-> Every phase is independently committable. Tasks are `[ ]` pending, `[~]` in progress, `[x]` done.
-
----
+# Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 217/217 tasks completed (100%)
-Current Phase: All phases complete
-Last Updated: 2026-03-24T18:00:00Z
+Overall Progress: 9/283 tasks completed (3.2%)
+Current Phase: Phase 0 — Establish an accurate baseline
+Last Updated: 2026-03-24T00:01:00Z
 
----
+## Executive Summary
 
-## Guiding Principles
+This repository has a strong Kotlin core, but it is not operating as a coherent monorepo yet. The primary execution stack (`architect-api`, `architect-core`, `architect-engine`, `architect-cli`) is comparatively mature, while surrounding surfaces show drift: duplicated core logic between modules, inconsistent dependency versions, generated-and-repeated CI workflows, incomplete secondary products (`architect-data`, `architect-server`, `architect-x`), and several plugin/product surfaces that are present but not standardized. The refactoring need is not only technical correctness; it is also about decomposing the repository into understandable units, clarifying boundaries, and making the codebase materially simpler to navigate, reason about, and change.
 
-- **Zero friction** — works out of the box, no setup ceremony
-- **Convention over configuration** — sensible defaults, opt-in complexity
-- **Composable** — every piece is independently useful
-- **Transparent** — always show what is happening and why
-- **Fast** — sub-second startup, parallel execution, smart caching
-- **Trustworthy** — >85% test coverage, secure, deterministic
-- **Extensible** — any language, any registry, any workflow
+The highest-priority refactoring goal is to convert the repository from a collection of partially aligned subprojects into a governed platform with one build strategy, one dependency/version strategy, one plugin standard, one testing standard, explicit ownership/boundary rules, and a repository structure whose decomposition is obvious to new contributors.
 
----
+### Top Priorities
 
-## Current State (March 2026)
+- [ ] **Critical**: Repair build/test trustworthiness and repository entry points.
+- [ ] **Critical**: Reorganize the repository into clearer product, platform, plugin, SDK, and incubating areas.
+- [ ] **Critical**: Remove architectural duplication between `architect-core` and `architect-engine`.
+- [ ] **High**: Refactor code and package structure to make responsibilities smaller, boundaries clearer, and flows easier to understand.
+- [ ] **High**: Standardize plugin dependency versions, documentation, tests, and packaging.
+- [ ] **High**: Rationalize skeletal modules and committed build-state noise.
+- [ ] **High**: Replace repeated generated CI workflow patterns with reusable workflow composition.
+- [ ] **Medium**: Raise quality of UI/IDE surfaces and make their validation real.
+- [ ] **Medium**: Formalize repository-wide engineering standards for logging, errors, docs, architecture, and observability.
 
-| Phase | Feature | Status |
-|-------|---------|--------|
-| 1 | Plan mode (`architect plan <task>`) | ✅ done |
-| 2 | Parallel task batch execution | ✅ done |
-| 3 | Inline task definitions in `architect.yml` | ✅ done |
-| 4 | Local execution history | ✅ done |
-| 5 | Config validation at project load | ✅ done |
-| 6 | Auto-start engine from CLI | `[~]` in progress |
+## Repository Overview
 
----
+The repository currently contains several categories of assets:
 
-## Phase 6: Auto-Start Engine — Complete
+- [ ] **Core runtime stack**: `architect-api`, `architect-core`, `architect-engine`, `architect-cli`
+- [ ] **Platform extensions and integrations**: `plugins/*`
+- [ ] **Secondary products**: `architect-cloud`, `architect-intellij`, `architect-vscode`
+- [ ] **SDKs**: `sdk/typescript`, `sdk/python`, `sdk/go`
+- [ ] **Incomplete/placeholder areas**: `architect-data`, `architect-server`, `architect-x`
+- [ ] **Docs, policy, and delivery surfaces**: `docs/`, `README.md`, `CONTRIBUTING.md`, `.github/workflows/`, root `architect.yml`
 
-**Goal:** `architect build` works with no running daemon. The CLI auto-starts it, waits for readiness, then executes.
+## Audit Method / Scope
 
-### Tasks
+- [x] Reviewed top-level structure and major subprojects.
+- [x] Inspected representative build files, README files, source layouts, workflows, and configuration files.
+- [x] Reviewed core architecture documents and selected implementation hotspots.
+- [x] Compared plugin maturity and dependency drift across all plugin directories.
+- [x] Ran representative baseline validation commands on existing modules.
 
-- [x] 6.1 `EngineHealthChecker` — implemented. Verified: uses `@Property(name = "micronaut.http.services.engine.url")` correctly. | Finished: 2026-03-22T00:00:00Z
-- [x] 6.2 `ensureEngineRunning()` in `ArchitectLauncher` — binary path resolution fixed: checks `~/.architect/bin/architect-engine` first, falls back to `which architect-engine` on PATH, emits clear install instructions if not found. Also replaced `Runtime.exec()` with `ProcessBuilder`. | Finished: 2026-03-22T00:00:00Z
-- [x] 6.3 `--no-daemon` flag — verified: `ensureEngineRunning()` returns immediately when `noDaemon = true`, bypassing all health checks. | Finished: 2026-03-22T00:00:00Z
-- [x] 6.4 Status messages — fixed: startup messages (⚙️ Starting / ✅ Engine ready) suppressed when `--plain` is set. | Finished: 2026-03-22T00:00:00Z
-- [x] 6.5 Configurable startup timeout — added `@Property(name = "architect.engine.startup-timeout-seconds", defaultValue = "30")` to `ArchitectLauncher`; `application.yml` documents the property. | Finished: 2026-03-22T00:00:00Z
-- [x] 6.6 `EngineHealthCheckerTest` — written: HTTP 200 path, timeout path, connection refused path. All pass. | Finished: 2026-03-22T00:00:00Z
-- [x] 6.7 `ArchitectLauncherTest` — written: `resolveEngineBinary()` (local bin, non-executable, absent), `--no-daemon` health-check bypass. All pass. | Finished: 2026-03-22T00:00:00Z
+### Baseline Validation Snapshot
 
-### Acceptance Criteria
+- [x] `architect-api/api`: `./gradlew test` passed.
+- [x] `architect-core/core`: `./gradlew test` passed; baseline report indicated 179 tests completed successfully.
+- [ ] `architect-engine/engine`: `./gradlew test` failed with a compilation/classpath blocker around `PluginConfig`.
+- [ ] `architect-cli/cli`: `./gradlew test` failed with 8 integration test failures in `CliEngineIntegrationTest`.
+- [x] `architect-cloud/backend`: `./gradlew test` passed; baseline report indicated 57 tests completed successfully.
+- [ ] `architect-cloud/ui`: cannot be meaningfully validated as-is; `package.json` declares empty `lint` and `test` scripts.
 
-- `architect build` from a clean terminal (no daemon) starts the engine and executes
-- `architect --no-daemon build` fails clearly if engine is not running
-- `architect --plain build` suppresses startup UI (for CI)
+## Cross-Repository Findings
 
----
+### 1. Build and repository ergonomics are fragmented
 
-## Phase 7: Bug Fixes & Tech Debt
+- [ ] Root documentation advertises `./gradlew build` and `./gradlew test`, but the repository root does not provide a root Gradle wrapper or unified orchestrator.
+- [ ] Build execution is distributed across many nested wrappers, which increases onboarding friction and causes drift in conventions and plugin usage.
+- [ ] The repo behaves like a monorepo from a documentation/product perspective, but like a set of disconnected repos operationally.
 
-**Goal:** Fix all known defects before building more features. Clean foundations make everything faster.
+### 2. Version and dependency management drift is significant
 
-### Tasks
+- [ ] Core modules pin different artifact versions: for example `architect-api/api/build.gradle.kts` is `2.1.0`, `architect-core/core/build.gradle.kts` and `architect-engine/engine/build.gradle.kts` are `1.6.1`, `architect-cli/cli/build.gradle.kts` is `1.1.0`.
+- [ ] Plugin API dependencies are inconsistent: plugins depend on `io.github.architectplatform:api` at `1.1.2`, `1.1.3`, and `2.1.0`.
+- [ ] Kotlin and coroutines version forcing is copy-pasted in multiple module build files, with comments that do not match the declared versions.
+- [ ] The repository lacks a central version catalog or convention plugin, so the same dependency rules are manually duplicated.
 
-- [x] 7.1 **API version mismatch** — `architect-engine/engine/build.gradle.kts` updated from `api:1.2.0` to `api:2.1.0`. Engine still compiles. | Finished: 2026-03-22T00:01:00Z
-- [x] 7.2 **SSE stream termination** — replaced `error(...)` + `try/catch` with `sharedFlow.filter { }.transformWhile { }` that completes cleanly on root COMPLETED/FAILED events. | Finished: 2026-03-22T00:02:00Z
-- [x] 7.3 **ConfigValidator false warnings** — validation now happens after plugin loading; plugin `contextKey` values are collected and passed as `pluginContextKeys` so `gradle`, `git`, `docs`, etc. no longer produce false warnings. | Finished: 2026-03-22T00:03:00Z
-- [x] 7.4 **`ScriptsPlugin` phase resolution** — `parsePhase()` now resolves all three workflows (`CoreWorkflow`, `CodeWorkflow`, `HooksWorkflow`) in priority order, matching `InlineTaskPlugin`. Replaced `println` with idiomatic `runCatching` chain. | Finished: 2026-03-22T00:04:00Z
-- [x] 7.5 **Duplicate GitHub tag resolution** — extraction verified complete: shared `GitHubReleaseResolver` is used by both `ProjectPluginLoader` and `GitHubPluginSource` in `architect-engine` and mirrored in `architect-core`; `compileKotlin` passes for engine main sources. | Finished: 2026-03-22T13:21:46Z
-- [x] 7.6 **`architect history` without engine** — `HistoryService` writes files to `~/.architect/history/`. `architect history` routes through the engine daemon unnecessarily. Add a direct `LocalHistoryReader` in the CLI that reads these files without an HTTP call, and use it as the primary path (engine endpoint as fallback for remote scenarios)
-- [x] 7.7 **Root `architect.yml` missing plugin fields** — document and fix the root config: add `type: local` and `asset` fields, or establish that the root config is a documentation-only example
-- [x] 7.8 **`ArchitectLauncher` `Runtime.exec()` fragility** — replace `Runtime.getRuntime().exec(arrayOf("architect-engine"))` with `ProcessBuilder` using the resolved binary path from task 6.2
+### 3. Architectural duplication exists in core runtime code
 
-### Acceptance Criteria
+- [ ] Classes with the same names and responsibilities exist in both `architect-core` and `architect-engine`, including:
+  - [ ] `ClassLoaderResourceExtractor.kt`
+  - [ ] `ProjectPluginLoader.kt`
+  - [ ] `LocalPluginSource.kt`
+  - [ ] `SecretResolver.kt`
+- [ ] The duplicate `ProjectPluginLoader` implementations have already diverged in behavior and integration style, which creates long-term correctness and maintenance risk.
+- [ ] Shared logic is not yet clearly assigned to a single authoritative layer.
 
-- All existing tests continue to pass after each fix
-- `ConfigValidator` produces zero false-positive warnings on any official plugin
-- `ScriptsPlugin` phase resolution matches `InlineTaskPlugin` behavior
-- `architect history` works without a running engine
+### 4. Repository portfolio management is unclear
 
----
+- [ ] `architect-data`, `architect-server`, and `architect-x` currently read more like placeholders or remnants than actively governed products.
+- [ ] Some of these areas contain build artifacts or metadata without corresponding source structure, which blurs product boundaries and creates noise.
+- [ ] There is no clear repo-wide statement of module status such as active, incubating, deprecated, placeholder, or archived.
+- [ ] The top-level layout does not yet clearly communicate which directories are platform internals, end-user products, extension ecosystems, SDKs, or experiments.
 
-## Phase 8: Embedded Execution Mode
+### 4a. Repository decomposition and navigability are under-designed
 
-**Goal:** `architect --embedded build` runs tasks directly in-process, with no daemon. Eliminates the biggest adoption friction for new users and CI pipelines.
+- [ ] The current top-level layout is historically accumulated rather than intentionally decomposed for discoverability.
+- [ ] Similar concepts are split across multiple places (`architect-api`, `architect-core`, `architect-engine`, plugins, SDKs, IDE integrations) without a simple contributor mental model.
+- [ ] There is no clear repository taxonomy such as:
+  - [ ] `platform/` or equivalent for core runtime stack
+  - [ ] `products/` for user-facing applications
+  - [ ] `plugins/` for official extensions
+  - [ ] `sdk/` for external integration SDKs
+  - [ ] `incubating/` or equivalent for incomplete explorations
+- [ ] The plan should therefore include structural reorganization, not just local code refactors.
+
+### 5. Plugin ecosystem quality is inconsistent
+
+- [ ] Mature plugins (`docs-architected`, `git-architected`, `gradle-architected`, `scripts-architected`, `github-architected`, `pipelines-architected`) coexist with thin plugins that have minimal tests and no docs/readme surface.
+- [ ] Several plugins have only a few Kotlin files and a single test, suggesting template-level maturity rather than production-level maturity.
+- [ ] Contract-test adoption is partial rather than standard across plugins.
+- [ ] Plugin packaging, docs, examples, and resource layout are inconsistent.
+
+### 6. Delivery automation is highly repetitive
+
+- [ ] GitHub Actions workflows are largely generated clones with near-identical setup sequences.
+- [ ] Many workflows repeat remote installer curls, JDK setup, Node setup, and `architect engine start`.
+- [ ] This repetition increases maintenance cost and makes policy changes hard to roll out uniformly.
+
+### 7. Docs and contributor guidance drift from reality
+
+- [ ] Root docs describe the repo as a simpler three-component system, while the actual repository contains additional major products and placeholders.
+- [ ] Root and contributor docs imply top-level build/test flows that do not exist in the repository layout.
+- [ ] Multiple readmes describe idealized capabilities that exceed the actual maturity of some modules.
+
+### 8. Quality gates are uneven across technology stacks
+
+- [ ] Kotlin core surfaces have reasonable test discipline and coverage gates.
+- [ ] `architect-cloud/ui` currently has no meaningful lint/test command configured.
+- [ ] IDE extensions have minimal functionality and no visible automated tests.
+- [ ] SDKs are in better shape than some product surfaces, but they are not visibly integrated into a repo-wide release and compatibility story.
+
+## Subproject-by-Subproject Findings
+
+### `architect-api`
+
+- [ ] Strengths:
+  - [ ] Clear core abstractions and workflow contracts.
+  - [ ] Strong test posture and explicit quality gates (`ktlint`, `jacoco`, `pitest`).
+  - [ ] Good candidate for becoming the single source of platform contracts and plugin quality tooling.
+- [ ] Gaps:
+  - [ ] Needs stronger repo-wide leverage; many downstream modules are not uniformly aligned to its standards or version.
+
+### `architect-core`
+
+- [ ] Strengths:
+  - [ ] Rich shared runtime logic.
+  - [ ] Strong test base and some performance orientation (`jmh`, `pitest`, `jacoco`).
+- [ ] Gaps:
+  - [ ] Boundary with `architect-engine` is not fully enforced.
+  - [ ] Shared runtime responsibilities are duplicated rather than centralized.
+
+### `architect-engine`
+
+- [ ] Strengths:
+  - [ ] Mature execution surface and plugin runtime responsibilities.
+  - [ ] Broad test coverage and integration scenarios.
+- [ ] Gaps:
+  - [ ] Baseline compilation/test trust is currently broken.
+  - [ ] Owns behavior that appears duplicated with `architect-core`.
+  - [ ] Needs an explicit convergence plan with `architect-core`.
+
+### `architect-cli`
+
+- [ ] Strengths:
+  - [ ] Feature-rich CLI with embedded/daemon execution modes.
+  - [ ] Good breadth of tests and product features.
+- [ ] Gaps:
+  - [ ] Current baseline shows failing integration tests.
+  - [ ] Depends on a runtime stack whose contracts and packaging need stronger stability guarantees.
+
+### `architect-cloud`
+
+- [ ] Backend:
+  - [ ] Strongest architectural documentation in the repo.
+  - [ ] Clear hexagonal design and ArchUnit enforcement.
+  - [ ] Baseline tests pass.
+- [ ] UI:
+  - [ ] Very small surface relative to stated product scope.
+  - [ ] `lint` and `test` scripts are empty.
+  - [ ] Requires a real frontend architecture, state model, testing, and observability story.
+
+### `architect-intellij`
+
+- [ ] Strengths:
+  - [ ] Useful schema association and light IDE integration.
+- [ ] Gaps:
+  - [ ] Minimal feature depth.
+  - [ ] No visible automated tests.
+  - [ ] Needs product decision: thin schema helper vs first-class IDE integration.
+
+### `architect-vscode`
+
+- [ ] Strengths:
+  - [ ] Useful starter extension capabilities around task execution and schema validation.
+- [ ] Gaps:
+  - [ ] Parses YAML manually in `src/taskTreeProvider.ts`, which is brittle.
+  - [ ] Uses untyped `child_process` spawning directly in `src/extension.ts`.
+  - [ ] No visible automated tests.
+  - [ ] Needs stronger extension architecture, resilience, and UX behavior.
+
+### `sdk`
+
+- [ ] Strengths:
+  - [ ] TypeScript, Python, and Go SDKs all document protocol coverage and include tests/examples.
+  - [ ] Better cross-language consistency than several product/plugin surfaces.
+- [ ] Gaps:
+  - [ ] No obvious repo-level release/version compatibility policy tied back to engine/plugin protocol evolution.
+  - [ ] Need conformance and compatibility testing against the authoritative protocol implementation.
+
+### `architect-data`, `architect-server`, `architect-x`
+
+- [ ] Current state is unclear and should be treated as a portfolio problem, not just a cleanup task.
+- [ ] These directories need an explicit decision:
+  - [ ] promote to active products,
+  - [ ] mark as incubating with owners and standards,
+  - [ ] archive/remove from mainline repo,
+  - [ ] or convert into documented placeholders with no misleading build/docs claims.
+
+### `plugins/*`
+
+- [ ] Stronger/more complete plugin surfaces:
+  - [ ] `docs-architected`
+  - [ ] `git-architected`
+  - [ ] `gradle-architected`
+  - [ ] `github-architected`
+  - [ ] `scripts-architected`
+  - [ ] `pipelines-architected`
+- [ ] Thin or template-level plugin surfaces:
+  - [ ] `docker-architected`
+  - [ ] `go-architected`
+  - [ ] `kubernetes-architected`
+  - [ ] `maven-architected`
+  - [ ] `nx-architected`
+  - [ ] `python-architected`
+  - [ ] `rust-architected`
+  - [ ] `terraform-architected`
+- [ ] Cross-plugin problems:
+  - [ ] API version drift.
+  - [ ] Inconsistent docs/readme coverage.
+  - [ ] Partial contract-test usage.
+  - [ ] Repeated build logic.
+  - [ ] No visible shared plugin convention/build plugin.
+
+## Standards and Principles Gaps
 
 ### Architecture
 
-Introduce `EmbeddedTaskExecutor` that uses `ProjectService` + `TaskExecutor` as library code, not over HTTP. The CLI detects `--embedded` (or absence of a reachable daemon) and routes to this executor.
-
-```
-ArchitectLauncher
-  ├─ DaemonMode  →  EngineCommandClient  →  HTTP  →  Engine
-  └─ EmbeddedMode → EmbeddedTaskExecutor → ProjectService → TaskExecutor
-```
-
-The engine becomes optional, not required. The same `TaskExecutor`, `TaskDependencyResolver`, `PluginLoader`, `HistoryService` are reused without modification.
-
-### Tasks
-
-- [x] 8.1 Extract `architect-engine` execution domain into a separate Gradle sub-project `architect-core` (no Micronaut, no HTTP). Depends on `architect-api`. Contains: `TaskExecutor`, `TaskDependencyResolver`, `ProjectService`, `PluginLoader`, `HistoryService`, `ConfigValidator`, `BashCommandExecutor`, `InlineTaskPlugin`, `CorePlugin`, etc. | Finished: 2026-03-22T13:34:40Z | Notes: Completed standalone `architect-core/core` Gradle project and extraction of core execution domain classes; removed all `io.micronaut` imports and direct HTTP usage from core by introducing core abstractions (`EventBus`, `ProjectRegistrationReporter`, `RemoteContentFetcher`); verified with `./gradlew -q compileKotlin`.
-- [x] 8.2 `architect-engine` and `architect-cli` both depend on `architect-core` | Finished: 2026-03-22T13:36:27Z | Notes: added `io.github.architectplatform:architect-core:1.6.1` dependency to both modules and wired `includeBuild("../../architect-core/core")` dependency substitution in `architect-engine/engine/settings.gradle.kts` and `architect-cli/cli/settings.gradle.kts`; verified with `./gradlew -q compileKotlin` in both modules.
-- [x] 8.3 Add `EmbeddedEventBus` — an in-process event publisher that replaces Micronaut's `ApplicationEventPublisher` for embedded mode | Finished: 2026-03-22T13:37:10Z | Notes: added `EmbeddedEventBus<T>` in `architect-core/core` with subscribe/unsubscribe support and synchronous in-process dispatch; verified with `./gradlew -q compileKotlin`.
-- [x] 8.4 Add `EmbeddedExecutionContext` — wires core services without a Micronaut container | Finished: 2026-03-22T13:38:53Z | Notes: added `EmbeddedExecutionContext.create(...)` in `architect-core/core` to wire `ProjectService`, `TaskExecutor`, `HistoryService`, plugin loader/downloader/resolver, source registry, and default core plugins with `EmbeddedEventBus` and `RemoteContentFetcher`; verified via `./gradlew -q compileKotlin`.
-- [x] 8.5 Add `--embedded` flag to `ArchitectLauncher` | Finished: 2026-03-22T13:39:49Z | Notes: added `--embedded` Picocli option to `ArchitectLauncher` with default `false`; verified with `./gradlew -q compileKotlin` in `architect-cli/cli`.
-- [x] 8.6 When `--embedded` is set (or engine is not reachable and `--no-daemon` is set): use `EmbeddedTaskExecutor` | Finished: 2026-03-22T13:44:15Z | Notes: added CLI `EmbeddedTaskExecutor` and `JdkRemoteContentFetcher`, integrated `ArchitectLauncher` routing to embedded mode when `--embedded` is set or when `--no-daemon` is used and engine health check fails; embedded path now supports list/plan/validate/task execution with local history recording; verified via `./gradlew -q compileKotlin` in `architect-cli/cli`.
-- [x] 8.7 `EmbeddedConsoleUI` — same output contract as `ConsoleUI` but driven by in-process events | Finished: 2026-03-22T13:45:30Z | Notes: added `EmbeddedConsoleUI` delegating to `ConsoleUI` with identical completion/failure contract and wired embedded execution path to stream in-process `ArchitectEvent` objects into it; verified with `./gradlew compileKotlin --console=plain` in `architect-cli/cli`.
-- [x] 8.8 Update `architect engine install` to make the engine optional for basic usage; document that embedded mode exists | Finished: 2026-03-22T13:47:27Z | Notes: updated CLI/docs guidance to present engine install as optional for basic workflows, added embedded-mode quick-start examples (`--embedded`, `--no-daemon`), and updated install command messaging in `ArchitectLauncher`; verified CLI compile via `./gradlew -q compileKotlin`.
-- [x] 8.9 Write comprehensive tests for `EmbeddedExecutionContext` wiring | Finished: 2026-03-22T13:49:19Z | Notes: added `EmbeddedExecutionContextTest` covering service wiring, plugin source registry wiring, environment service availability, and embedded inline-task execution with emitted events; updated context wiring to expose `CommandExecutor` for inline tasks; verified with `./gradlew test --tests '*EmbeddedExecutionContextTest'` in `architect-core/core`.
-- [x] 8.10 Write end-to-end embedded-mode integration test: load a real plugin, run a task, assert result | Finished: 2026-03-22T13:50:57Z | Notes: added `EmbeddedModeIntegrationTest` that creates a real project config, verifies real `inline-tasks` plugin loading via `ProjectService`, executes an inline task through `TaskExecutor` in embedded mode, and asserts successful completion; verified with `./gradlew test --tests '*Embedded*Test'` in `architect-core/core`.
+- [ ] Define authoritative module boundaries:
+  - [ ] contracts in `architect-api`
+  - [ ] shared runtime in `architect-core`
+  - [ ] service/runtime host in `architect-engine`
+  - [ ] product clients in `architect-cli`, IDE extensions, cloud UI/backend
+- [ ] Prohibit duplicated runtime implementations across `core` and `engine`.
+- [ ] Introduce architecture validation for the core stack, not only `architect-cloud`.
+- [ ] Define repository decomposition rules: when to create a new top-level product/module, when to keep code inside an existing bounded context, and when to move experiments into an incubating area.
 
-### Acceptance Criteria
+### Code Simplicity / Understandability
 
-- `architect --embedded build` runs with no engine process
-- Plugin loading, inline tasks, parallel execution, and history all work in embedded mode
-- `architect --embedded plan <task>` outputs the plan without running (plan mode in embedded)
-- First-run experience: `architect build` works with zero setup (embedded fallback if engine not installed)
+- [ ] Define a repo-wide expectation that refactors should reduce cognitive load, not only preserve behavior.
+- [ ] Prefer smaller modules, smaller classes, clearer naming, and flatter dependency paths over framework-heavy indirection.
+- [ ] Identify long or overloaded classes/functions and split by responsibility.
+- [ ] Remove duplicate concepts, duplicate helpers, and ambiguous package placement.
+- [ ] Standardize package/layout conventions so contributors can predict where code belongs.
 
----
+### Build / Dependency Management
 
-## Phase 9: Enhanced Config Validation & Schema
+- [ ] Introduce a root build orchestration strategy or explicit monorepo task runner.
+- [ ] Introduce shared Gradle convention plugins and/or version catalogs.
+- [ ] Centralize Kotlin, coroutines, Micronaut, Jackson, test, and plugin dependency versions.
 
-**Goal:** `architect.yml` is self-documenting. Editors show completions and inline errors. Invalid configs produce precise, line-numbered diagnostics.
+### Testing
 
-### Tasks
+- [ ] Define minimum testing expectations by surface:
+  - [ ] core libraries
+  - [ ] server/runtime products
+  - [ ] plugins
+  - [ ] SDKs
+  - [ ] IDE extensions
+  - [ ] frontend
+- [ ] Make plugin contract tests mandatory for all supported plugins.
+- [ ] Add compatibility tests between SDKs/process plugins and engine protocol handling.
 
-- [x] 9.1 Generate **JSON Schema** for `architect.yml` from the Kotlin domain model (use `jackson-module-jsonSchema` or a custom generator). Publish schema to `https://architect.dev/schema/architect.yml.json` | Finished: 2026-03-22T13:58:51Z | Notes: Created `ArchitectSchemaGenerator` in architect-core with programmatic draft-07 JSON Schema generation covering project, plugins, tasks, all workflow phases; generated `docs/schema/architect.yml.json`; wrote 8 unit tests (all passing).
-- [x] 9.2 Add `$schema` field support: if `architect.yml` contains `$schema:`, validate against declared schema version | Finished: 2026-03-22T14:00:49Z | Notes: Added `$schema` to `BASE_KNOWN_KEYS`; when present, `ConfigValidator` validates the config against the built-in JSON Schema using `networknt/json-schema-validator`; added dependency to `architect-core/core/build.gradle.kts`.
-- [x] 9.3 Extend `ConfigValidator` to validate plugin configuration sections against each loaded plugin's declared schema. Each `ArchitectPlugin` gains an optional `configSchema(): JsonNode?` method (default: null = no validation) | Finished: 2026-03-22T14:03:50Z | Notes: Added `configSchema(): Map<String, Any>? = null` to `ArchitectPlugin` interface; `ConfigValidator.validate()` now accepts `plugins` list and validates each plugin's config section against its declared schema using networknt json-schema-validator; added `includeBuild` for API in architect-core settings.
-- [x] 9.4 Produce diagnostics with **YAML line numbers** — use SnakeYAML marks for precise location | Finished: 2026-03-22T14:06:32Z | Notes: Created `YamlLineTracker` using SnakeYAML `compose()` API to map key paths to 1-based line numbers; updated `ConfigValidator.validate()` to accept `lineMap` parameter; errors and warnings now include `line N:` prefix; `ConfigLoader.loadWithRaw()` returns raw YAML alongside parsed config; `ProjectService` wires line tracking into validation.
-- [x] 9.5 Produce actionable error messages: not just "missing field" but "Add `project.name: your-project` to fix this" | Finished: 2026-03-22T14:08:04Z | Notes: Updated `ConfigValidator` to produce actionable hints: missing `project.name` suggests exact YAML to add; unknown keys suggest nearest known keys; plugin validation errors reference the section name to check.
-- [x] 9.6 **VS Code extension** `architect-vscode`:
-  - YAML language server integration for `architect.yml` auto-complete and inline error highlighting
-  - Task panel showing all registered tasks with run/plan buttons
-  - Output panel showing live execution events
-  | Finished: 2026-03-22T14:10:32Z | Notes: Scaffolded `architect-vscode/` extension with `package.json` (yamlValidation, commands, views, configuration), `extension.ts` (activation, command registration, process spawning), `taskTreeProvider.ts` (TreeDataProvider parsing inline tasks from architect.yml), README, tsconfig; depends on redhat.vscode-yaml for YAML language server.
-- [x] 9.7 **IntelliJ plugin** `architect-intellij`:
-  - JSON Schema association for `architect.yml`
-  - Run configurations for tasks
-  - Gutter icons to run tasks from `architect.yml`
-  | Finished: 2026-03-22T14:13:00Z | Notes: Scaffolded `architect-intellij/` with Gradle IntelliJ Platform plugin, `plugin.xml` registering `JsonSchemaProviderFactory`, `ConfigurationType` run config, `RunLineMarkerContributor` for gutter icons on task definitions; bundled JSON Schema in resources.
-- [x] 9.8 Write `ConfigValidatorTest` — covers all error and warning cases, including per-plugin validation (18 tests)
-- [x] 9.9 Update docs with the JSON Schema URL and IDE setup instructions
+### Logging / Error Handling
 
-### Acceptance Criteria
-
-- Opening `architect.yml` in VS Code shows completions and inline validation
-- `architect validate` reports line numbers in all error messages
-- Invalid plugin config (wrong types, missing required fields) is caught with `architect validate`
-
----
-
-## Phase 10: Rich CLI Output & Developer UX
-
-**Goal:** Every interaction feels polished. Real-time progress, timing, summaries, colors, and structured output.
-
-### Tasks
-
-- [x] 10.1 **Task execution progress tree** — during execution, render a live updating tree showing tasks with status icons and elapsed time (like Gradle's task list or Cargo's build output)
-- [x] 10.2 **Batch grouping in output** — group events by parallel batch with a header "Batch 1 — running 3 tasks in parallel"
-- [x] 10.3 **Execution summary** — at the end, print a table: task name, status, duration, output (truncated). Highlight failures.
-- [x] 10.4 **Timing** — each task shows elapsed time. Total execution time shown at the end.
-- [x] 10.5 **Failure details** — on failure, print the full task output (not just the error message). Make it easy to debug.
-- [x] 10.6 **`architect tasks`** — list all available tasks in a formatted table: id, phase, description. Support `--json` flag for machine-readable output.
-- [x] 10.7 **`architect tasks --filter <phase>`** — filter by phase or workflow (e.g., `architect tasks --filter BUILD`)
-- [x] 10.8 **`architect info`** — print resolved project config: name, path, loaded plugins, registered tasks, subprojects
-- [x] 10.9 **`--json` output flag** — all commands support `--json` for scripting. Replaces `--plain` for structured output.
-- [x] 10.10 **Color themes** — respect `NO_COLOR`, `TERM`, and a `--no-color` flag. Auto-detect CI to disable colors.
-- [x] 10.11 **`architect --version`** — print CLI, engine, and API versions
-- [x] 10.12 Write tests for all new `ConsoleUI` rendering paths (17 tests)
-
-### Acceptance Criteria
-
-- Execution output is informative without being noisy
-- `architect tasks` immediately communicates what a project can do
-- All output modes (rich, plain, JSON) are tested
-
----
-
-## Phase 11: Watch Mode
-
-**Goal:** `architect watch <task>` re-executes a task automatically when relevant files change.
-
-### Tasks
-
-- [x] 11.1 Add `WatchService` to engine (or `architect-core`) using Java `WatchService` API. Recursive directory watch with configurable root. | Finished: 2026-03-22T15:00:00Z
-- [x] 11.2 Add `watch` configuration section to `architect.yml` (per task or global): `WatchConfig` with `fromMap()` parser and `resolve()` chain. | Finished: 2026-03-22T15:00:00Z
-- [x] 11.3 Default watch paths: project root with extension filter derived from loaded plugins (e.g., Gradle plugin watches `**/*.kt`, js plugin watches `**/*.ts,**/*.js`). `WatchConfig.DEFAULT_PATTERNS` map. | Finished: 2026-03-22T15:00:00Z
-- [x] 11.4 Add `architect watch <task>` CLI command. Streams events continuously. Clears and re-renders on each re-run. | Finished: 2026-03-22T15:00:00Z
-- [x] 11.5 Add `--watch` / `-w` flag to any task command as shorthand: `architect build --watch` | Finished: 2026-03-22T15:00:00Z
-- [x] 11.6 On file change: debounce, cancel in-flight execution if still running, restart | Finished: 2026-03-22T15:00:00Z
-- [x] 11.7 Ctrl+C exits watch mode cleanly via shutdown hook | Finished: 2026-03-22T15:00:00Z
-- [x] 11.8 Write integration test for watch debounce logic — 10 tests: file detection, debounce, glob filtering, stop lifecycle, hidden dir skip, WatchConfig parsing | Finished: 2026-03-22T15:00:00Z
+- [ ] Standardize structured logging expectations and levels across server/runtime modules.
+- [ ] Standardize user-facing CLI/extension error messages.
+- [ ] Define error taxonomy for configuration, plugin loading, task execution, network failure, and validation errors.
 
-### Acceptance Criteria
+### Documentation
 
-- `architect watch test` re-runs tests on source file changes
-- Debounce prevents multiple rapid re-runs from file saves
-- Watch mode works in both daemon and embedded mode
+- [ ] Align root docs with actual repo topology and entry points.
+- [ ] Add module status and ownership metadata.
+- [ ] Require every supported plugin/product to carry minimum readme and example quality.
 
----
+### Module Boundaries / Dependency Rules
 
-## Phase 12: Environment Profiles
+- [ ] Define allowed dependency directions across the entire platform.
+- [ ] Document when logic belongs in API vs core vs engine vs plugin.
+- [ ] Add automated architecture checks where feasible.
 
-**Goal:** Different config for dev, staging, production. CI-aware defaults.
+### Observability / Security / Performance
 
-### Tasks
+- [ ] Define baseline observability for engine/cloud surfaces: logs, metrics, traces/events, error correlation.
+- [ ] Define security standards for plugin loading, signature verification, remote downloads, and secret handling.
+- [ ] Define when benchmarking/perf regression checks are required outside `architect-core`.
 
-- [x] 12.1 Add `profiles` section to `architect.yml` — `ProfileMerger.merge()` supports deep-merge of profile over root config | Finished: 2026-03-22T15:30:00Z
-- [x] 12.2 Deep-merge profile config on top of root config at project load time — integrated into `ProjectService.loadProject()` | Finished: 2026-03-22T15:30:00Z
-- [x] 12.3 Add `--env <profile>` flag to `ArchitectLauncher`. Default: `default` | Finished: 2026-03-22T15:30:00Z
-- [x] 12.4 Auto-detect CI environment: `ProfileMerger.detectProfile()` checks CI, GITHUB_ACTIONS, GITLAB_CI, JENKINS_URL, CIRCLECI, BUILDKITE env vars. Apply `ci` profile if defined. | Finished: 2026-03-22T15:30:00Z
-- [x] 12.5 `Environment.profile(): String` — added to interface with default "default", implemented in ApplicationEnvironment | Finished: 2026-03-22T15:30:00Z
-- [x] 12.6 `requires-confirmation` task attribute — added `requiresConfirmation(): Boolean` to Task interface with default false | Finished: 2026-03-22T15:30:00Z
-- [x] 12.7 Write `ProfileMergerTest` — 14 tests: deep merge (disjoint, scalar override, recursive, non-map replace), merge with profiles (null, default, matching, nonexistent, no-section, base preservation), detectProfile (explicit, null, blank), production scenario | Finished: 2026-03-22T15:30:00Z
-
-### Acceptance Criteria
-
-- `architect --env staging deploy` runs with staging config
-- In CI, `CI=true` env var activates the `ci` profile automatically
-- `requires-confirmation: true` tasks pause in local, auto-skip in CI
-
----
-
-## Phase 13: Plugin Registry Protocol
-
-**Goal:** Plugins are not tied to GitHub. Any team can host a private registry.
-
-### Tasks
-
-- [x] 13.1 Define `PluginRegistryProtocol` — a standard `registry.json` format hosted at any HTTP URL:
-  ```json
-  {
-    "plugins": [
-      { "id": "my-plugin", "version": "1.0.0", "asset": "https://example.com/my-plugin-1.0.0.jar" }
-    ]
-  }
-  ```
-- [x] 13.2 Add `type: registry` plugin source in `architect.yml`:
-  ```yaml
-  plugins:
-    - name: my-plugin
-      type: registry
-      registry: https://plugins.example.com/registry.json
-      version: "^1.0.0"
-  ```
-- [x] 13.3 Implement `RegistryPluginSource` — fetches `registry.json`, resolves semver constraint, downloads JAR
-- [x] 13.4 Add `type: http` for direct JAR URL resolution (no registry):
-  ```yaml
-  plugins:
-    - name: my-plugin
-      type: http
-      url: https://example.com/my-plugin-1.0.0.jar
-  ```
-- [x] 13.5 Semver constraint resolution (`^1.0.0`, `~1.2.0`, `>=1.0.0 <2.0.0`) using a pure Kotlin semver library
-- [x] 13.6 **Plugin integrity verification** — add optional `sha256` field to plugin declaration; fail if downloaded JAR hash does not match
-- [x] 13.7 **Default public registry** at `https://registry.architect.dev/` (to be hosted). Local stub for tests.
-- [x] 13.8 `architect plugin search <query>` — searches the public registry
-- [x] 13.9 `architect plugin install <plugin-id>` — adds plugin to `architect.yml`
-- [x] 13.10 Write `RegistryPluginSourceTest`
-
-### Acceptance Criteria
-
-- A private team registry works with `type: registry` and a custom URL
-- Semver constraints resolve correctly
-- SHA256 verification rejects tampered JARs
-
----
-
-## Phase 14: Plugin Classloader Isolation
-
-**Goal:** Two plugins with conflicting library dependencies do not break each other.
-
-### Tasks
-
-- [x] 14.1 Create `IsolatedPluginClassLoader` — child-first classloader. Each plugin gets its own isolated instance with no JAR sharing.
-- [x] 14.2 Define `shared-api` classloader: only `architect-api` classes are shared via the parent (bridge classloader). All other classes are isolated.
-- [x] 14.3 Handle cross-plugin type compatibility via API interfaces (not concrete classes).
-- [x] 14.4 Add `classloader.debug: true` config flag that logs classloader resolution decisions.
-- [x] 14.5 Write `ClassloaderIsolationTest` — two plugins declaring conflicting versions of a library both function correctly.
-
-### Acceptance Criteria
-
-- Plugins with different Jackson/Kotlin/Guava versions coexist without `ClassCastException` or `NoSuchMethodError`
-- Engine startup time does not regress by more than 200ms due to additional classloaders
-
----
-
-## Phase 15: Language-Agnostic Plugin Protocol
-
-**Goal:** Plugins can be written in any language (TypeScript, Go, Python, Rust). Not JVM-only.
-
-### Architecture
-
-Introduce a subprocess-based plugin protocol. The engine launches a plugin process, communicates via stdin/stdout JSON-RPC, and the process implements the plugin interface in any language.
-
-```
-Engine  ←→  JSON-RPC over stdin/stdout  ←→  Plugin Process (Go, Python, TS, etc.)
-```
+## Non-Functional Requirements Assessment
 
-### Tasks
+### Maintainability — **Medium**
 
-- [x] 15.1 Define **Architect Plugin Protocol v1** (APP v1): a JSON-RPC 2.0 based protocol over stdin/stdout with methods: | Finished: 2026-03-22T15:31:00Z | Notes: defined versioned APP v1 request and event contracts in `PluginProtocol.kt`, added standalone protocol reference in `docs/plugin-protocol.md`, linked it from root docs, and verified with `PluginProtocolTest`.
-  - `init(config: JsonObject)` → `{ ok: true }`
-  - `listTasks()` → `Array<TaskDescriptor>`
-  - `executeTask(id, args, env)` → streaming events via newline-delimited JSON
-- [x] 15.2 Add `type: process` to plugin declaration: | Finished: 2026-03-22T15:32:00Z | Notes: added `command` to plugin declaration models, updated generated schema and IDE schema bundles to require `command` for `type: process`, documented the YAML shape, and verified with `ArchitectSchemaGeneratorTest` and `ConfigValidatorTest`.
-  ```yaml
-  plugins:
-    - name: my-go-plugin
-      type: process
-      command: "./my-go-plugin"
-  ```
-- [x] 15.3 Implement `ProcessPluginAdapter` in engine — launches the process, speaks APP v1, bridges to `ArchitectPlugin<Any>` | Finished: 2026-03-22T15:33:00Z | Notes: wired `ProjectPluginLoader` to instantiate process plugins from the declared command, added shell-command support plus JSON-RPC execute ack handling and stderr draining in `ProcessPluginAdapter`, and verified end-to-end behavior with a fresh `cleanTest test --tests '*ProcessPluginAdapterTest'` run.
-- [x] 15.4 Publish **TypeScript SDK** (`@architect-platform/plugin-sdk`) with full APP v1 implementation. npm-installable. | Finished: 2026-03-22T15:34:00Z | Notes: added `sdk/typescript/plugin-sdk` with typed APP v1 protocol contracts, `PluginServer`/`runPlugin` runtime, package metadata for `@architect-platform/plugin-sdk`, README usage docs, and Node-based package tests verified via `npm test`.
-- [x] 15.5 Publish **Go SDK** (`github.com/architect-platform/plugin-sdk-go`) implementing APP v1. | Finished: 2026-03-22T15:35:00Z | Notes: added `sdk/go/plugin-sdk-go` with APP v1 protocol types, a JSON-RPC stdin/stdout server, optional init support, README usage docs, and verified the package with `gofmt -w *.go && go test ./...`.
-- [x] 15.6 Publish **Python SDK** (`architect-plugin-sdk` on PyPI) implementing APP v1. | Finished: 2026-03-22T15:36:00Z | Notes: added `sdk/python/architect-plugin-sdk` as a standard `src`-layout package with APP v1 constants, protocol models, `PluginServer`/`run_plugin`, README usage docs, and verified the package with `PYTHONPATH=src ... python -m unittest discover -s tests`.
-- [x] 15.7 Implement `type: npm` shorthand — downloads and runs an npm package as a plugin: | Finished: 2026-03-22T16:10:43Z | Notes: added npm shorthand support in `ProjectPluginLoader` via `npx --yes <package>@<version>`, added `package` field mapping in plugin config, extended schema generation and bundled schema files to include `type: npm` and required `package`, added/updated validator+schema tests, and documented npm plugin declaration in protocol docs.
-  ```yaml
-  plugins:
-    - name: my-ts-plugin
-      type: npm
-      package: "@my-org/architect-plugin"
-      version: "^1.0.0"
-  ```
-- [x] 15.8 Example plugins in each language demonstrating all protocol features | Finished: 2026-03-22T16:13:15Z | Notes: added full-featured APP v1 examples for TypeScript (`sdk/typescript/plugin-sdk/examples/full-featured-plugin.ts`), Go (`sdk/go/plugin-sdk-go/examples/full-featured/main.go`), and Python (`sdk/python/architect-plugin-sdk/examples/full_featured_plugin.py`) covering init metadata, task descriptors with phase/dependencies/requires-confirmation, output/progress/error events, and success/failure execution paths; documented examples in each SDK README and verified SDK tests (`npm test`, `go test ./...`, `python3 -m unittest discover -s tests`).
-- [x] 15.9 Write `ProcessPluginAdapterTest` with a mock subprocess | Finished: 2026-03-22T16:30:55Z | Notes: verified dedicated `ProcessPluginAdapterTest` includes a mock subprocess script that exercises APP v1 request/response flow (`init`, `listTasks`, `executeTask`, `shutdown`) and success/failure event handling; re-ran focused suite with `./gradlew -q test --tests '*ProcessPluginAdapterTest'`.
+- [ ] Strong in core Kotlin stack.
+- [ ] Reduced by duplicated runtime logic, repeated build config, and repeated workflows.
+- [ ] Also reduced by repository shape and package layout that do not make ownership and responsibility immediately obvious.
 
-### Acceptance Criteria
+### Extensibility — **Medium**
 
-- Writing a plugin in TypeScript requires only `npm install @architect-platform/plugin-sdk`
-- Go plugin runs as a compiled binary; no JVM required on the host
-- APP v1 protocol is documented and versioned
-
----
-
-## Phase 16: Affected Task Detection
-
-**Goal:** In a monorepo, only run tasks for modules that have changed since the last successful run.
-
-### Tasks
-
-- [x] 16.1 Build **project dependency graph** from `architect.yml` `subprojects` declarations and inferred relationships (plugin shared config, shared `build.gradle.kts`, etc.) | Finished: 2026-03-22T16:33:37Z | Notes: added `ProjectDependencyGraph` model and `ProjectDependencyGraphBuilder` in `architect-core` with support for declared `subprojects` entries (`name`/`path` and `dependsOn`/`dependencies`) plus inferred parent-child and shared-build-file relationships; exposed graph construction through `ProjectService.buildDependencyGraph(...)`; added `ProjectDependencyGraphBuilderTest` (4 tests) and verified with `./gradlew -q test --tests '*ProjectDependencyGraphBuilderTest'` and `./gradlew -q compileKotlin`.
-- [x] 16.2 **`git diff` integration** — compare against a base ref (default: `HEAD~1`, configurable to `origin/main`):
-  - Map changed files to source roots
-  - Walk the dependency graph to find all transitively affected projects
-  | Finished: 2026-03-22T17:00:00Z | Notes: added `AffectedProjectResolver` in architect-core with git diff integration, file-to-project mapping via longest-prefix matching, transitive dependent expansion via BFS, `AffectedConfig` with always-include/never-include support, and `parseConfig()` for YAML parsing; added `transitiveDependentsOf()` to `ProjectDependencyGraph`; verified with `./gradlew -q compileKotlin`.
-- [x] 16.3 Add `architect build --affected` — executes tasks only for affected projects | Finished: 2026-03-22T17:10:00Z | Notes: added `--affected` flag to `ArchitectLauncher` with affected project resolution in both embedded and engine execution paths; prints affected project list before execution; skips execution when no projects are affected.
-- [x] 16.4 Add `architect build --affected --base origin/main` — compare against base branch (ideal for PR workflows) | Finished: 2026-03-22T17:10:00Z | Notes: added `--base` flag to `ArchitectLauncher` (default: `HEAD~1`); passed to `AffectedProjectResolver.resolve()` for configurable base ref comparison.
-- [x] 16.5 Add `affected` configuration to `architect.yml`: | Finished: 2026-03-22T17:15:00Z | Notes: added `affected` section (`always-include`, `never-include`) to project schema in `ArchitectSchemaGenerator`, updated bundled JSON schemas in `docs/schema/` and `architect-intellij/`; `AffectedProjectResolver.parseConfig()` parses from config map; all schema tests pass.
-  ```yaml
-  project:
-    affected:
-      always-include: ["shared-lib"]   # always run these regardless
-      never-include: ["docs"]          # never run these in affected mode
-  ```
-- [x] 16.6 `architect affected` — prints the list of affected projects without running anything | Finished: 2026-03-22T17:20:00Z | Notes: added `architect affected` command to `ArchitectLauncher` with `printAffected()` rendering (formatted table and JSON output support via `--json`); uses `resolveAffectedProjects()` with `--base` flag support; verified with `./gradlew -q compileKotlin`.
-- [x] 16.7 **Cache invalidation integration**: cacheValidator hook applied in AffectedProjectResolver.resolve(), wired in CLI with LocalOutputCache to filter out projects with valid cached outputs when --no-cache is not set
-- [x] 16.8 Write `AffectedProjectResolverTest` — covers: no changes, root-only change, transitive dependency chain, always-include, never-include | Finished: 2026-03-22T18:00:00Z | Notes: 16 tests covering: no changes, git failure, root-only changes (with/without dependents), direct child changes, transitive dependency chain, diamond dependency, always-include (valid and nonexistent), never-include, never-include overriding always-include, parseConfig (null/missing/valid), longest-prefix file mapping, root fallback, cacheValidator identity.
+- [ ] Conceptually strong due to plugin architecture and SDKs.
+- [ ] Reduced by inconsistent plugin standards and version drift.
 
-### Acceptance Criteria
+### Evolvability — **Medium-Low**
 
-- `architect test --affected` in a 50-project monorepo only tests changed modules
-- `--base origin/main` works in PR CI pipeline
+- [ ] Cross-repo change rollout is expensive because governance is weak and tooling is duplicated.
 
----
+### Modularity — **Medium**
 
-## Phase 17: Task Output Caching
+- [ ] Good intent, but actual boundaries are unevenly enforced.
+- [ ] Module decomposition exists, but repository-level decomposition is still too implicit and hard to scan.
 
-**Goal:** Skip tasks whose inputs have not changed. Gradle-style incremental computation, but protocol-agnostic.
+### Reliability — **Medium-Low**
 
-### Architecture
+- [ ] Baseline failures in engine and CLI reduce trust in current mainline health.
 
-Each task declares `inputs` (files, config values, env vars). The engine hashes all inputs to produce a `cacheKey`. If a matching output exists locally (or in a remote cache), the task is skipped.
+### Efficiency — **Medium**
 
-### Tasks
+- [ ] Some performance awareness exists (`jmh`, AOT settings), but CI and build orchestration are inefficient.
 
-- [x] 17.1 Add `TaskCacheDescriptor` to `architect-api`: tasks optionally return `CacheDescriptor(inputs: List<CacheInput>, outputs: List<CacheOutput>)` | Finished: 2026-03-22T18:05:00Z | Notes: Created `CacheDescriptor`, `CacheInput` (sealed: FileSet, ConfigValue, EnvVar, CommandOutput), `CacheOutput` (sealed: FileSet, Stdout) in `api/core/tasks/cache/`; added `cacheDescriptor(): CacheDescriptor? = null` to `Task` interface.
-- [x] 17.2 `CacheInput` types: `FileSet(glob)`, `ConfigValue(key)`, `EnvVar(name)`, `CommandOutput(cmd)` — each produces a deterministic hash | Finished: 2026-03-22T18:05:00Z | Notes: Implemented as sealed class hierarchy in CacheDescriptor.kt; CacheOutput types also defined (FileSet, Stdout).
-- [x] 17.3 `LocalOutputCache` — stores serialized task states in `~/.architect/cache/{cacheKey}/`. Stores stdout, exit code, output files. | Finished: 2026-03-22T18:10:00Z | Notes: Created `LocalOutputCache` with file-system storage (result.json + stdout.txt per cache key), get/store/contains/clear/sizeBytes/entryCount API; created `CacheKeyComputer` with SHA-256 hashing over FileSet (glob walk), ConfigValue, EnvVar, CommandOutput inputs.
-- [x] 17.4 `TaskExecutor` cache integration: compute key → check cache → skip if hit → execute and store on miss | Finished: 2026-03-22T18:15:00Z | Notes: Added `outputCache` and `outputCacheEnabled` params to TaskExecutor; integrated CacheKeyComputer + LocalOutputCache into executeSingleTask: checks output cache before execution using cacheDescriptor(), stores on successful miss; fixed pre-existing EmbeddedExecutionContextTest assertion for expanded plugin source types.
-- [x] 17.5 `RemoteOutputCache` interface — `storeResult(key, result)`, `fetchResult(key): Result?`. Writable provider: HTTP cache server. | Finished: 2026-03-22T18:20:00Z | Notes: Defined `RemoteOutputCache` interface with `fetchResult`/`storeResult` methods and `CachedTaskResult` transport type; integrated into TaskExecutor with local→remote fallback on cache miss and remote push on store.
-- [x] 17.6 Implement HTTP remote cache backend (simple REST API: `GET /cache/{key}`, `PUT /cache/{key}`). Can be self-hosted or use architect-cloud. | Finished: 2026-03-22T18:25:00Z | Notes: Created `HttpRemoteOutputCache` implementing `RemoteOutputCache` using `RemoteContentFetcher`; uses simple text-based protocol (success flag + message + stdout separated by `---`).
-- [x] 17.7 `architect cache clear` — wipes local cache. `architect cache info` — shows cache size, hit rate from last session. | Finished: 2026-03-22T18:30:00Z | Notes: Added `handleCacheCommand()` to `ArchitectLauncher` with `clear` and `info` subcommands; info shows entry count and human-readable size; supports `--json` output.
-- [x] 17.8 `--no-cache` flag to bypass cache for a run | Finished: 2026-03-22T18:35:00Z | Notes: Added `--no-cache` CLI flag in ArchitectLauncher; wired through EmbeddedTaskExecutor → EmbeddedExecutionContext → TaskExecutor `outputCacheEnabled` parameter; added `outputCacheEnabled` parameter to EmbeddedExecutionContext.create().
-- [x] 17.9 Write `TaskOutputCacheTest` — 15 tests: LocalOutputCache (miss/hit/convert/clear/info), CacheKeyComputer (deterministic/diff/fileset/envvar/outputs), invalidation, RemoteOutputCache (hit/miss/convert) with InMemoryRemoteCache
+### Operability — **Medium-Low**
 
-### Acceptance Criteria
+- [ ] Delivery automation exists but is duplicated; observability standards are not consistently visible.
 
-- Second `architect test` on unchanged project completes in <100ms (all cache hits)
-- Cache keys are deterministic: same inputs always produce same key across machines
-- Remote cache works across CI build agents
+### Security — **Medium**
 
----
+- [ ] Positive signals exist around plugin signature verification and secret handling.
+- [ ] Needs clearer repo-wide standards and tests around supply-chain and remote execution surfaces.
 
-## Phase 18: Extended Official Plugin Library
+## Refactoring Strategy
 
-**Goal:** Cover the most common developer toolchains with first-class plugins.
-
-### New Plugins
-
-- [x] 18.1 `docker-architected` — 6 tasks: docker-build/push/run/compose-up/compose-down/compose-logs. Context: image, registry, platforms, dockerfile, buildArgs, composeFile. Tests: DockerContextTest + DockerPluginTest.
-- [x] 18.2 `kubernetes-architected` — 4 tasks: k8s-apply/rollout/status/port-forward. Context: namespace, context, manifests. Tests pass.
-- [x] 18.3 `terraform-architected` — 4 tasks: tf-init/plan/apply/destroy. Context: workspace, backend, vars, varFile, autoApprove. Tests pass.
-- [x] 18.4 `python-architected` — 5 tasks: py-install/lint/test/build/publish. Context: tool (uv|pip|poetry), pythonVersion, testRunner, linter. Tests pass.
-- [x] 18.5 `go-architected` — 4 tasks: go-build/test/lint/release. Context: module, ldflags, outputBinary. Tests pass.
-- [x] 18.6 `rust-architected` — 4 tasks: cargo-build/test/lint/publish. Context: profile, features, target. Tests pass.
-- [x] 18.7 `maven-architected` — 3 tasks: mvn-verify/package/deploy. Context: profiles, settings, skipTests. Tests pass.
-- [x] 18.8 `nx-architected` — integrate with Nx monorepo: expose Nx targets as Architect tasks. Bridge affectedness detection. | Finished: 2026-03-22T19:03:56Z | Notes: completed the Nx plugin module scaffold, wired CLI `--affected` runs to pass Architect-computed affected projects into `nx-*` tasks, taught `NxTask` to translate those bridge args into `nx run-many` or `nx affected` commands, and verified with focused Nx plugin and CLI tests.
-- [x] 18.9 **Fix `scripts-architected`** — resolve all three workflows (`CoreWorkflow`, `CodeWorkflow`, `HooksWorkflow`). Add `environment`, `workingDirectory` per-task. Add `sequential: true` flag to disable parallelism for a specific script group. | Finished: 2026-03-22T19:08:03Z | Notes: verified per-task `environment` and `workingDirectory` support with execution tests, implemented `sequential: true` as same-phase dependency chaining to prevent parallel execution without cross-phase cycles, and added workflow-resolution coverage for core and hook phases plus script execution tests.
-
-### Acceptance Criteria
-
-- Each plugin has: typed context, full task coverage of its toolchain, unit tests for config parsing, and integration tests with a `--dry-run` path.
-
----
-
-## Phase 19: Plugin Authoring Toolkit
-
-**Goal:** Creating a new plugin takes 5 minutes, not 5 days.
-
-### Tasks
-
-- [x] 19.1 `architect plugin create <name>` — scaffolds a new plugin in the current directory with: | Finished: 2026-03-22T19:13:41Z | Notes: added `architect plugin create` to the CLI with Kotlin, TypeScript, and Go templates generated by a dedicated `PluginScaffolder`; each scaffold includes `plugin.yml`, README, and a template-specific test harness; verified with focused CLI tests covering all three templates.
-  - Kotlin + Gradle template (for JVM plugins)
-  - TypeScript template (for process plugins via npm SDK)
-  - Go template (for process plugins via Go SDK)
-  - `plugin.yml` manifest, test harness, README template
-- [x] 19.2 **Plugin test harness** — `ArchitectPluginTestKit` in `architect-api`: | Finished: 2026-03-22T19:16:18Z | Notes: added `ArchitectPluginTestKit` to `architect-api` with in-memory task registration, service injection, published-event capture, project-config support, and reflective `configure(mapOf(...))` context hydration via `kotlin-reflect`; verified with focused API tests covering config mapping, task execution, service access, and event capture.
-  ```kotlin
-  val kit = ArchitectPluginTestKit(MyPlugin())
-  kit.configure(mapOf("setting" to "value"))
-  val result = kit.executeTask("my-task")
-  assertThat(result).isSuccess()
-  ```
-- [x] 19.3 **Local plugin dev loop** — `type: local` plugin source reloads the plugin JAR on every execution (no engine restart). Add `architect engine reload-plugins` endpoint. | Finished: 2026-03-22T19:20:46Z | Notes: engine project registration now reloads cached projects when they declare `type: local` plugins, added `POST /api/projects/{projectName}/reload-plugins`, and exposed it in the CLI as `architect engine reload-plugins`; verified with focused CLI and engine tests.
-- [x] 19.4 **Plugin documentation generator** — `architect plugin docs <path>` — reads plugin metadata and generates a Markdown reference doc | Finished: 2026-03-22T19:40:13Z | Notes: added CLI `architect plugin docs <path>` with `PluginDocumentationGenerator` that reads `plugin.yml`, emits `PLUGIN_REFERENCE.md`, infers scaffolded task metadata for Kotlin, TypeScript, and Go templates, and verified with focused CLI tests.
-- [x] 19.5 **Plugin validation** — `architect plugin validate <path>` — validates a plugin JAR: checks SPI file, verifies `ArchitectPlugin` implementation, tests config deserialization | Finished: 2026-03-22T19:45:54Z | Notes: added CLI `architect plugin validate <path>` with `PluginJarValidator` that inspects the JAR SPI descriptor, loads implementations through the isolated classloader and SPI loader, verifies plugin metadata, and checks config initialization via `ArchitectPluginTestKit`; verified with focused validator and CLI tests.
-- [x] 19.6 Write plugin authoring guide (see Phase 25) | Finished: 2026-03-22T19:47:33Z | Notes: added a root plugin authoring guide at `docs/guides/authoring-plugins.md` covering JVM and process plugin workflows, testing with `ArchitectPluginTestKit`, local reload flow, and the new docs and validation commands; linked it from the root docs index.
-
-### Acceptance Criteria
-
-- A developer with no prior Architect knowledge can create, test, and publish a plugin in under 30 minutes
-- `ArchitectPluginTestKit` allows testing plugins without a running engine
-
----
-
-## Phase 20: Project Graph & Visualization
-
-**Goal:** Understand the full task dependency graph at a glance.
-
-### Tasks
-
-- [x] 20.1 `architect graph` — outputs a DOT format directed graph of the task DAG for the current project | Finished: 2026-03-22T19:51:03Z | Notes: added CLI `architect graph` DOT output for the full current-project task DAG by aggregating planned task dependencies and rendering them through `TaskGraphDotRenderer`; verified with focused CLI launcher tests.
-- [x] 20.2 `architect graph --open` — renders the graph as an SVG or HTML page and opens in browser (uses D3.js or Mermaid) | Finished: 2026-03-22T19:53:03Z | Notes: extended `architect graph` with `--open` to generate a temporary Mermaid-based HTML page through `TaskGraphHtmlRenderer`, print the file location, and open it through the desktop browser when supported; verified with focused renderer and launcher tests.
-- [x] 20.3 `architect graph <task>` — subgraph for a specific task and its dependencies | Finished: 2026-03-22T19:54:44Z | Notes: extended graph argument parsing so `architect graph <task>` renders only that task's dependency subgraph for both DOT and `--open` HTML output; verified with focused launcher tests using task-specific graph fixtures.
-- [x] 20.4 `architect graph --projects` — shows the monorepo project graph (project ↔ project dependency relationships) | Finished: 2026-03-22T19:58:00Z | Notes: added `--projects` graph mode backed by the existing embedded `ProjectDependencyGraph` builder, with DOT and Mermaid HTML renderers plus focused renderer and launcher test coverage.
-- [x] 20.5 `architect plan <task> --tree` — ASCII tree rendering in the terminal (already partially done in plan mode; make it richer with batch groups and timing estimates) | Finished: 2026-03-22T20:05:04Z | Notes: added `--tree` flag to plan command with `TaskPlanTreeRenderer` that renders dependency hierarchy as an indented ASCII tree with batch numbers; wired into both engine and embedded modes with `parsePlanOptions()`; verified with focused renderer and launcher tests.
-- [x] 20.6 Integrate graph rendering into the VS Code extension (see Phase 9.6) — a panel that renders the live task graph | Finished: 2026-03-22T20:05:04Z | Notes: added `architect.showGraph` command with `GraphPanel` webview that runs `architect graph`, converts DOT to Mermaid, and renders in a side panel; auto-refreshes on `architect.yml` changes via file watcher; accessible from command palette and task tree view toolbar.
-
-### Acceptance Criteria
-
-- `architect graph --open` opens a navigable HTML page with the full DAG
-- Graph updates live in VS Code as `architect.yml` is edited
-
----
-
-## Phase 21: Testing — Coverage to >85%
-
-**Goal:** The platform is trustworthy. Every component has comprehensive automated tests.
-
-### architect-api
-
-- [x] 21.1 All existing tests verified passing | Finished: 2026-03-22T20:08:26Z | Notes: All 10 API test files pass — ConfigTest, CompositeTaskTest, TaskResultTest, ConfigurableTaskTest, SimpleTaskTest, TaskWithArgsTest, ArchitectPluginTestKitTest, HooksWorkflowTest, CodeWorkflowTest, CoreWorkflowTest.
-- [x] 21.2 Add `ProjectContextTest` — getKey extension, missing key, nested key, wrong type | Finished: 2026-03-22T20:08:26Z | Notes: 8 tests covering dir/config access, missing key, nested traversal, partial path, type erasure behavior, primitive traversal error, list element access, and data class equality.
-- [x] 21.3 Add `TaskRegistryTest` — register, get, all, duplicate id handling | Finished: 2026-03-22T20:10:00Z | Notes: 6 tests covering add/get, unknown id, empty all, insertion order, duplicate id rejection, and multi-task retrieval.
-
-### architect-core / architect-engine
-
-- [x] 21.4 `TaskExecutorTest` — parallel batch execution with mock tasks, sequential fallback, failure propagation, child task execution | Finished: 2026-03-22T20:10:00Z | Notes: 6 tests covering single task success, parallel batch with independent tasks, sequential fallback ordering, failure propagation stopping remaining batches, CompositeTask child execution, and exception handling.
-- [x] 21.5 `HistoryServiceTest` — write record, read all (sorted), read by project, limit, directory creation, JSON round-trip | Finished: 2026-03-22T20:10:00Z | Notes: 7 tests covering single record write/read, sorted retrieval (newest first), limit enforcement, project filtering, JSON field round-trip, empty results, and non-matching project.
-- [x] 21.6 `ConfigValidatorTest` — required field missing, unknown key warning, plugin key validation, line numbers in errors | Finished: 2026-03-22T20:20:40Z | Notes: verified focused coverage for required and blank `project.name`, unknown top-level key warnings, plugin schema validation and context-key recognition, plus line-number diagnostics; confirmed with `./gradlew test --tests '*ConfigValidatorTest'` in `architect-core/core`.
-- [x] 21.7 `TaskDependencyResolverTest` — expand existing; add: children resolution, batch assignment for diamond graph, large graph performance test | Finished: 2026-03-22T20:21:53Z | Notes: added coverage for resolving child tasks and composite child ordering, explicit parallel batch assignment on a diamond dependency graph, and a bounded 1,000-task topological-sort performance check; confirmed with `./gradlew test --tests '*TaskDependencyResolverTest'` in `architect-engine/engine`.
-- [x] 21.8 `ProjectServiceTest` — loadProject round-trip with inline tasks, subproject discovery, validation exception on invalid config | Finished: 2026-03-22T21:00:41Z | Notes: added core-level ProjectService coverage for inline-task plugin round-trip loading, recursive subproject discovery, and invalid-config rejection; tightened ProjectService in both core and engine to throw `ConfigValidationException` when validation errors are present; confirmed with focused `ProjectServiceTest` runs in both `architect-core/core` and `architect-engine/engine`.
-- [x] 21.9 `BashCommandExecutorTest` — expand with: timeout enforcement, non-zero exit code, environment variable injection, working directory | Finished: 2026-03-22T21:02:12Z | Notes: tightened the engine executor suite to assert timeout failure messaging, non-zero exit code plus stderr capture, environment variable propagation into a shell command, and correct working-directory execution with macOS-safe path normalization; confirmed with `./gradlew test --tests '*BashCommandExecutorTest'` in `architect-engine/engine`.
-- [x] 21.10 `ExecutionApiControllerTest` — SSE stream: verify events are received, stream terminates on COMPLETED, stream terminates on FAILED | Finished: 2026-03-22T21:03:49Z | Notes: added a focused controller unit suite with mocked `TaskService` flows to verify SSE event delivery and clean stream termination after root-level `COMPLETED` and `FAILED` execution events while still emitting the terminal event itself; confirmed with `./gradlew test --tests '*ExecutionApiControllerTest'` in `architect-engine/engine`.
-- [x] 21.11 `TaskCacheTest` — expand: concurrent reads, cache invalidation, TTL expiry | Finished: 2026-03-22T21:06:33Z | Notes: added TTL-based expiry support to the simple in-memory `TaskCache` in both core and engine, introduced cache TTL configuration constants, and expanded the engine test suite to verify concurrent reads on enabled cache entries, cache invalidation via `clear()`, and expiry after a short TTL; confirmed with `./gradlew test --tests '*TaskCacheTest'` in `architect-engine/engine` plus `./gradlew test --tests '*TaskExecutorTest'` in `architect-core/core`.
-
-### architect-cli
-
-- [x] 21.12 `ArchitectLauncherTest` — command routing: plan, history, validate, engine subcommands, task execution, `--plain`, `--no-daemon` | Finished: 2026-03-23T10:00:00Z | Notes: expanded to 35 tests covering history (empty, local files, project filter), plan output, validate (valid with warnings), tasks (list, --filter, --json), info (rich and --json), --version (plain and --json), --plain, cache (info, info --json, clear), engine (no subcommand, unknown subcommand), plugin create, --no-daemon fallback, embedded mode routing.
-- [x] 21.13 `EngineHealthCheckerTest` — HTTP 200, HTTP 500, connection refused, timeout | Finished: 2026-03-23T10:05:00Z | Notes: added HTTP 500 test; 4 tests total covering 200, 500, connection refused, read timeout.
-- [x] 21.14 `ConsoleUITest` — expand existing 12 tests; add: batch grouping output, summary rendering, timing output, `--json` output | Finished: 2026-03-23T10:15:00Z | Notes: expanded to 24 tests; added batch grouping (same-batch assignment, batch boundary detection, no-advance while running), summary rendering (total duration, skipped count, per-task status+duration, empty summary no-op).
-
-### plugins
-
-- [x] 21.15 All plugins: add `execute()` level tests using hand-rolled test infrastructure (Phase 19.2 prerequisite)
-- [x] 21.16 `GitPluginTest` — git-config secure escaping with adversarial inputs
-- [x] 21.17 `ScriptsPluginTest` — phase resolution for all three workflows
-- [x] 21.18 `DocsPluginTest` — path traversal prevention, all three builders
-
-### architect-cloud
-
-- [x] 21.19 `EngineServiceTest`, `ProjectServiceTest`, `ExecutionServiceTest` — all use case operations
-- [x] 21.20 `ExecutionEventServiceTest` — event broadcasting via Reactor Sink
-- [x] 21.21 `EventsWebSocketServerTest` — WebSocket event delivery
-- [x] 21.22 Add persistence adapter integration tests with H2
-
-### Coverage Gates
-
-- [x] 21.23 Add JaCoCo to all modules with a minimum coverage gate of 80% (enforced in CI, target 85%)
-- [x] 21.24 Add mutation testing via PIT to `architect-api` and `architect-core`
-
----
-
-## Phase 22: Integration & End-to-End Tests
-
-**Goal:** Confidence that all components work together, not just in isolation.
-
-### Tasks
-
-- [x] 22.1 **CLI ↔ Engine integration tests** — use `@MicronautTest` to spin up the real engine, execute commands via the real CLI HTTP client, assert events via SSE | Finished: 2026-03-22T21:11:09Z | Notes: added a real CLI-to-engine integration suite in `architect-engine/engine` by wiring the CLI `EngineCommandClient` into the engine test module through a composite-build test dependency and fixed test-service URL; covered successful and failing inline-task execution over HTTP plus SSE event collection; integration exposed and fixed an SSE bug where `ExecutionApiController` terminated streams on root `task.failed` before `execution.failed`.
-- [x] 22.2 **Embedded mode end-to-end** — load a real plugin JAR locally, execute a real task, assert the result and history record | Finished: 2026-03-22T21:14:02Z | Notes: added a CLI integration test that builds a valid local plugin JAR from compiled test classes (including synthetic Kotlin class files), executes the plugin task through `EmbeddedTaskExecutor`, captures emitted events, and verifies the persisted history record through `LocalHistoryReader`.
-- [x] 22.3 **Plugin contract tests** — a shared test suite that any `ArchitectPlugin` implementation can run to verify protocol compliance | Finished: 2026-03-23T10:57:43Z | Notes: added published `ArchitectPluginContractTestSuite` coverage in `architect-api`, exposed JUnit to plugin consumers, added an API smoke test for map-based config conversion, and adopted the shared suite in Gradle, Docker, Git, and Scripts plugin modules with focused passing contract-test runs.
-- [x] 22.4 **Monorepo end-to-end** — create a temporary multi-project workspace, run a task across all subprojects, assert parallel execution and result aggregation | Finished: 2026-03-23T11:07:15Z | Notes: added `MonorepoExecutionIntegrationTest` in `architect-engine` using the real `ProjectService`, `TaskService`, inline tasks, execution-event collector, and history service; verifies two subprojects execute in parallel before the root task, successful runs persist history, and failing subprojects aggregate into a root-level `Some subprojects failed` result without executing the root task.
-- [x] 22.5 **CI simulation test** — run the full pipeline (`init → lint → verify → build → test`) on the project itself using Architect | Finished: 2026-03-23T11:10:12Z | Notes: added `CiPipelineSimulationIntegrationTest` in `architect-engine` with the real `TaskService`, built-in core workflow phase tasks, and inline tasks for each core phase; verifies the `test` phase drives the full `init → lint → verify → build → test` pipeline in order, emits a successful terminal execution event, and persists a successful history record.
-
----
-
-## Phase 23: Performance Optimization
-
-**Goal:** Fast enough that developers never wait unnecessarily.
-
-### Targets
-
-| Metric | Target |
-|--------|--------|
-| CLI startup to first task event | <500ms (daemon mode) |
-| CLI startup to first task event | <300ms (embedded mode) |
-| Plugin loading (10 plugins) | <2s |
-| Task graph resolution (100 tasks) | <50ms |
-| Cache hit task skip | <10ms |
-
-### Tasks
-
-- [x] 23.1 **GraalVM Native Image for CLI** — compile `architect-cli` to a native binary. Eliminates JVM startup (~200ms saving). Requires Micronaut AOT compatibility. | Finished: 2026-03-23T13:38:00Z | Notes: installed GraalVM CE 17 with `native-image`, configured CLI native builds with `-J-Xmx4g` to avoid native-image OOMs, added Micronaut bean factories/fixes for `HttpClient` and embedded executor startup, and verified `architect-cli/cli:./gradlew nativeCompile` plus native `./build/native/nativeCompile/architect-cli --version` startup.
-- [x] 23.2 **Lazy plugin loading** — load plugin JARs only when a plugin's tasks are actually needed (not at project registration time) | Finished: 2026-03-23T14:05:00Z | Notes: `ProjectService` in both `architect-core` and `architect-engine` now registers projects with deferred plugin loading, and `Project` wraps plugin state behind a lazy task registry so plugin download/init/register only happens on first task access or explicit validation; added focused project-service regressions plus embedded and monorepo execution verification to confirm registration stays cheap without breaking execution.
-- [x] 23.3 **Parallel plugin loading** — load independent plugins concurrently (coroutine-based, already feasible) | Finished: 2026-03-23T14:18:00Z | Notes: `ProjectPluginLoader` now fans out configured plugin resolution with ordered coroutines on `Dispatchers.IO`, preserving config order in the returned plugin list while overlapping independent downloads/classloading; added `ProjectPluginLoaderTest` to prove concurrent download overlap and reran embedded execution context coverage with the real loader.
-- [x] 23.4 **Project config caching** — `ProjectService` project cache is already implemented but disabled. Enable by default with file-system watcher invalidation. | Finished: 2026-03-23T14:29:00Z | Notes: wired `FileWatchService` into both core and engine `ProjectService` implementations so registered projects keep cached state until filesystem changes mark them stale; the next `getProject()` transparently reloads config and tasks, and focused watcher-driven cache invalidation tests now cover both modules.
-- [x] 23.5 **Build benchmarks** — `jmh` micro-benchmarks for `TaskDependencyResolver.topologicalSort()` and `ConfigValidator` on large configs | Finished: 2026-03-23T14:41:00Z | Notes: added JMH support to `architect-core/core` with a small default harness, created `ProjectCoreBenchmarks` covering `TaskDependencyResolver.topologicalSort()` on a 100-task graph and `ConfigValidator` on a large synthetic config, and verified the suite with `./gradlew jmh`, which produced initial results of roughly `0.006 ms/op` and `0.395 ms/op` respectively.
-- [x] 23.6 **Startup profiling** — instrument engine startup and identify top-3 bottlenecks | Finished: 2026-03-23T14:56:00Z | Notes: added `StartupProfileRecorder` plus Micronaut lifecycle listeners for bootstrap, server-startup, and service-ready checkpoints, wrapped cloud registration timing in the recorder, verified ranking coverage with `StartupProfileRecorderTest`, and confirmed live engine startup logs reported the top bottlenecks as `service-ready` (~2.772 ms), `server-startup` (~0.312 ms), and `micronaut-bootstrap` (~0.042 ms) during a `487 ms` startup.
-- [x] 23.7 **Connection pooling** — CLI ↔ Engine HTTP keep-alive connections (already in Micronaut HTTP client; verify active) | Finished: 2026-03-23T15:05:00Z | Notes: made the CLI engine client pool explicit in `application.yml` with `micronaut.http.services.engine.pool.enabled: true` and added `EngineCommandClientConnectionPoolingTest`, which boots the declarative client against a local HTTP server and verifies two sequential `/api/projects` calls reuse the same TCP remote port, confirming HTTP/1.1 keep-alive pooling is active.
-
----
-
-## Phase 24: Security Hardening
-
-**Goal:** Architect can be trusted in regulated, enterprise, and multi-tenant environments.
-
-### Tasks
-
-- [x] 24.1 **Plugin signing** — plugins can be signed with a GPG key. Engine verifies signature before loading. `architect.yml`: | Finished: 2026-03-23T15:28:00Z | Notes: added `verify-signature` and `trusted-keys` support to plugin declarations, wired detached `.asc` signature downloads/sidecar lookup into both core and engine plugin loaders, and verify signatures through `gpg --verify` before classloading, matching signer fingerprints against configured trusted key IDs; covered with focused core loader/schema/verifier tests and an engine-side loader regression.
-  ```yaml
-  plugins:
-    - name: my-plugin
-      type: github
-      repo: my-org/my-plugin
-      verify-signature: true
-      trusted-keys: ["0xABCD1234"]
-  ```
-- [x] 24.2 **Task permission model** — tasks declare required permissions in their descriptor: `file-system:read`, `file-system:write`, `network:outbound`, `process:exec`. Engine enforces via a Java SecurityManager replacement (process-level sandboxing). | Finished: 2026-03-23T15:45:00Z | Notes: added shared `TaskPermission` declarations in `architect-api` with permission-aware task constructors/defaults, propagated `permissions` through inline tasks plus APP v1 `TaskDescriptor`/SDKs/docs, and enforced task-scoped subprocess launches in both core and engine via `TaskPermissionScope` plus `SandboxedProcessLauncher`; focused API/core/engine regression suites now cover explicit permission metadata and `process:exec` denial paths.
-- [x] 24.3 **Secrets management** — tasks access secrets via `Environment.secret("MY_SECRET")` which resolves from: environment variable, `.env` file, HashiCorp Vault, AWS Secrets Manager, GCP Secret Manager. Secrets are never logged. | Finished: 2026-03-23T16:05:00Z | Notes: added `Environment.secret(name)` to the shared API plus `ArchitectPluginTestKit.withSecret(...)`, implemented default secret resolver chains in both core and engine (`env` → project `.env` → Vault HTTP API → AWS CLI → GCP CLI), threaded project directories through task execution scope so `.env` resolution stays task-local, and added focused API/core/engine tests for secret access, resolver precedence, and engine environment delegation without logging secret values.
-- [x] 24.4 **Audit logging** — every task execution is audit-logged with: timestamp, user, project, task, args, result, duration. Stored locally and optionally synced to `architect-cloud`. | Finished: 2026-03-23T16:25:00Z | Notes: enriched `ExecutionRecord`/CLI history DTOs with `user`, `args`, and `result`, updated both engine and embedded CLI execution paths to persist the fuller audit record locally, added optional cloud audit sync through `CloudReporterService.reportAuditRecord(...)` and a new `CloudClient` audit endpoint, and verified the behavior with focused engine `TaskServiceTest` plus CLI history compatibility tests.
-- [x] 24.5 **Path traversal prevention** — all user-provided paths are validated against the project root (already partially done in `SecurityUtils`; apply uniformly). | Finished: 2026-03-23T16:31:24Z | Notes: routed commit hook message paths through `resolvePathWithinRoot(...)` in both core and engine, hardened docs source/output directory handling in `DocsPlugin`, `MkDocsBuilder`, and `VuePressBuilder`, and added focused regressions covering traversal rejection plus valid in-root commit files; docs plugin tests and core commit-task tests pass, while the engine module remains blocked by an unrelated pre-existing `ProjectPluginLoader.kt` compile error in the dirty worktree.
-- [x] 24.6 **Shell injection prevention** — added `ShellUtils.escapeShellArg/escapeShellArgs/requireSafeIdentifier` to `architect-api`; applied uniformly across all 9 vulnerable plugins (Go, Docker, Python, NxTask, Gradle, Kubernetes, Terraform, Maven, Rust, JavaScript); 18 unit tests in `ShellUtilsTest`. | Finished: 2026-03-24T07:00:00Z
-- [x] 24.7 **Dependency vulnerability scanning** — added `.github/workflows/dependency-vulnerability-scan.yml` with Trivy filesystem scan (CRITICAL/HIGH) uploading SARIF to GitHub Security tab plus a strict CRITICAL-only gate; also added `npm audit --audit-level=high` for vscode extension, TypeScript SDK, and cloud UI. Runs on push/PR/weekly schedule. | Finished: 2026-03-24T08:00:00Z
-- [x] 24.8 **CI security review** — replaced all `curl | bash` installer steps in 13 workflow files with `.github/actions/setup-architect` composite action; action downloads CLI/Engine from pinned GitHub Releases, verifies SHA256 checksum (from provided value or release `.sha256` file), and only installs after verification. | Finished: 2026-03-24T08:30:00Z
-
----
-
-## Phase 25: Documentation
-
-**Goal:** Any developer can go from zero to productive in 15 minutes. No tribal knowledge required.
-
-### Structure
-
-```
-docs/
-├── getting-started/
-│   ├── installation.md
-│   ├── first-project.md
-│   ├── adding-plugins.md
-│   └── inline-tasks.md
-├── concepts/
-│   ├── phases-and-workflows.md
-│   ├── task-dag.md
-│   ├── plugin-system.md
-│   └── monorepo.md
-├── reference/
-│   ├── architect-yml.md       ← full config reference, auto-generated from schema
-│   ├── cli-commands.md        ← all commands, flags, examples
-│   ├── api/                   ← KDoc API reference
-│   └── plugins/               ← one page per official plugin
-├── guides/
-│   ├── authoring-plugins.md
-│   ├── ci-cd-integration.md
-│   ├── migrating-from-make.md
-│   ├── migrating-from-nx.md
-│   └── enterprise-setup.md
-└── architecture/
-    ├── overview.md
-    ├── engine-internals.md
-    ├── plugin-protocol.md
-    └── decision-log.md
-```
-
-### Tasks
-
-- [x] 25.1 **Getting started guide** — from `brew install architect` to running first task in <15 minutes | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/getting-started/installation.md`, `first-project.md`, `adding-plugins.md`, `inline-tasks.md`
-- [x] 25.2 **`architect.yml` reference** — auto-generated from JSON Schema (Phase 9.1). Every field documented with type, default, and example. | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/reference/architect-yml.md` covering all schema fields including pluginConfig and inlineTask definitions
-- [x] 25.3 **CLI command reference** — all commands, all flags, usage examples, exit codes | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/reference/cli-commands.md` covering task execution, inspection, history, caching, monorepo, watching, engine management, plugin management, init/validate
-- [x] 25.4 **Plugin authoring guide** — full guide for JVM (Kotlin/Java), TypeScript, Go, and Python plugins | Finished: 2026-03-24T10:00:00Z | Notes: guide was already comprehensive from task 19.6; verified complete coverage of all four SDK paths
-- [x] 25.5 **KDoc API reference** — deployed alongside the docs site | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/reference/api/index.md` with key packages, core interfaces (ArchitectPlugin, Task, TaskResult, TaskRegistry), testing utilities, and ShellUtils reference; KDoc generation via `./gradlew dokkaHtml`
-- [x] 25.6 **Official plugin pages** — one page per plugin with all tasks, config options, and worked examples | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/reference/plugins/index.md` plus 16 individual plugin pages covering all official plugins with accurate task tables and config schemas
-- [x] 25.7 **Architecture decision log** — document key decisions: phase model, daemon architecture, plugin protocol, embedded mode | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/architecture/decision-log.md` with 8 ADRs covering SPI, REST daemon, API publishing, APP v1, phase ordering, ShellUtils, setup-architect action, MkDocs monorepo
-- [x] 25.8 **CI/CD integration guides** — GitHub Actions, GitLab CI, Jenkins, CircleCI — copy-paste examples | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/guides/ci-cd-integration.md` with full working examples for all four platforms plus best-practices section
-- [x] 25.9 **Migration guides** — from Make, from Gradle tasks, from Nx, from GitHub Actions scripts | Finished: 2026-03-24T10:00:00Z | Notes: created `docs/guides/migrating-from-make.md` and `migrating-from-nx.md`
-- [x] 25.10 Update MkDocs site to use `mkdocs-material` with: search, versioning, dark mode, code copy, task runner examples | Finished: 2026-03-24T10:00:00Z | Notes: created root `mkdocs.yml` with material theme (light/dark toggle), search plugin, monorepo plugin, code copy, navigation tabs, full nav tree wiring all new docs; updated `docs/index.md` to remove `curl|bash` installer example
-
----
-
-## Phase 26: Installer & Distribution
-
-**Goal:** Installing Architect is effortless on any platform.
-
-### Tasks
-
-- [x] 26.1 **Homebrew tap** — `brew tap architect-platform/tap && brew install architect`. Auto-updated on release. | Finished: 2026-03-24T18:00:00Z | Notes: created `homebrew/Formula/architect.rb` formula with per-platform SHA256 sections and post_install completion scripts; created `.github/workflows/update-homebrew.yml` that auto-bumps version+checksums on each GitHub release
-- [x] 26.2 **Native installers** — GraalVM native image for macOS (arm64, x86_64), Linux (x86_64, arm64), Windows (x86_64). Built and published via CI. | Finished: 2026-03-24T18:00:00Z | Notes: created `.github/workflows/native-image.yml` with a matrix strategy covering 4 Unix platforms (dedicated job for Windows) using `graalvm/setup-graalvm@v1`; SHA256 checksums uploaded alongside each binary
-- [x] 26.3 **apt/yum packages** — `.deb` and `.rpm` packages published to a hosted repository | Finished: 2026-03-24T18:00:00Z | Notes: created `.github/workflows/linux-packages.yml` that downloads the linux-x86_64 binary, packages it with `dpkg-deb` (.deb) and `rpmbuild` (.rpm), includes shell completions in the .deb, uploads both packages + checksums to the GitHub release
-- [x] 26.4 **Windows installer** — MSI installer with PATH registration and PowerShell completion | Finished: 2026-03-24T18:00:00Z | Notes: created `.github/workflows/windows-installer.yml` that downloads the windows .exe binary, stages it in `jpackage-input/`, builds an MSI with `jpackage --type msi --win-dir-chooser --win-menu --win-shortcut`, then uploads MSI + SHA256 to the release
-- [x] 26.5 **Docker image** — `ghcr.io/architect-platform/architect:latest` — contains CLI + Engine in a single image for CI usage | Finished: 2026-03-24T18:00:00Z | Notes: created `Dockerfile` (multi-stage: eclipse-temurin builder + JRE runtime, non-root `architect` user, launcher script auto-starts Engine then delegates to CLI) and `.github/workflows/docker-image.yml` using `docker/build-push-action` with `linux/amd64,linux/arm64` platform matrix and GHCR push
-- [x] 26.6 **GitHub Action** — `architect-platform/setup-architect@v1` — installs CLI in a GitHub Actions workflow with one step | Finished: 2026-03-24T10:00:00Z | Notes: already completed as task 24.8; `.github/actions/setup-architect/action.yml` exists and is used in 13 workflows
-- [x] 26.7 **Shell completion** — bash, zsh, fish completions for all commands and task IDs (Picocli generates these; wire to the installers) | Finished: 2026-03-24T18:00:00Z | Notes: added `handleCompletionCommand()` to `ArchitectLauncher` — bash/zsh use Picocli's `AutoComplete.bash()` generator; fish outputs a static completion script listing all subcommands and global flags; wired into Homebrew `post_install` hook
-- [x] 26.8 **`architect upgrade`** — checks for a new version and self-updates | Finished: 2026-03-24T18:00:00Z | Notes: added `handleUpgradeCommand()` to `ArchitectLauncher` — fetches GitHub Releases API, detects current OS+arch, downloads matching asset, verifies SHA256 checksum, replaces current binary; `--check` flag only reports available version
-- [x] 26.9 **Verify the CI `curl | bash` installer** — replace with a checksummed install script or GitHub Action (security fix from Phase 24.8) | Finished: 2026-03-24T10:00:00Z | Notes: already completed as task 24.8; all 13 workflows now use `setup-architect` composite action instead of `curl | bash`
-
----
-
-## Phase 27: Embedded Task Conditioning
-
-**Goal:** Tasks declare what they need to run. Architect checks preconditions before executing and gives clear instructions when requirements are not met.
-
-### Tasks
-
-- [x] 27.1 Add `requires` section to task descriptor: | Finished: 2026-03-24T18:00:00Z | Notes: created `TaskRequirements` data class + `Platform` enum in API; added `requires()` default method to `Task` interface; updated `InlineTaskConfig` with `InlineTaskRequirements` and `@JsonProperty("min-tool-versions")`; updated `InlineTaskPlugin` to parse and pass requirements to `SimpleTask`
-  ```yaml
-  tasks:
-    docker-build:
-      requires:
-        tools: [docker]
-        min-tool-versions: { docker: "20.0.0" }
-        env: [DOCKER_REGISTRY]
-        platform: [linux, darwin]
-  ```
-- [x] 27.2 Plugin tasks declare requirements programmatically: | Finished: 2026-03-24T18:00:00Z | Notes: added `requirements: TaskRequirements? = null` parameter to `SimpleTask` and `TaskWithArgs`; `Task` interface gains `requires(): TaskRequirements? = null` default method
-  ```kotlin
-  SimpleTask(
-    id = "docker-build",
-    requires = TaskRequirements(
-      tools = listOf("docker"),
-      env = listOf("DOCKER_REGISTRY"),
-      platform = setOf(Platform.LINUX, Platform.DARWIN)
-    ),
-    task = ::buildImage
-  )
-  ```
-- [x] 27.3 `TaskConditionChecker` — before execution: checks tool existence (`which <tool>`), version, env vars, platform. On failure: prints a precise "install docker" or "set DOCKER_REGISTRY" message. | Finished: 2026-03-24T18:00:00Z | Notes: created `TaskConditionChecker` in `engine/core/tasks/application/`; returns `ConditionCheckResult` with `ConditionIssue` list (kind, message, hint); `isVersionSufficient()` does numeric component comparison
-- [x] 27.4 `architect check` — runs all task precondition checks without executing any task. Reports which tasks are runnable and which are blocked. | Finished: 2026-03-24T18:00:00Z | Notes: added `handleCheckCommand()` to `ArchitectLauncher`; supports `--json` flag; exits 1 when any task is blocked; uses `EmbeddedExecutionContext` to load tasks
-- [x] 27.5 Write `TaskConditionCheckerTest` | Finished: 2026-03-24T18:00:00Z | Notes: created `TaskConditionCheckerTest` with 19 tests covering: no requirements, tool on/off PATH, missing env var, platform matching, version extraction, `isVersionSufficient`, `checkAll`
-
----
-
-
-## Phase 30: Code Quality Pass
-
-**Goal:** Every file is clean, idiomatic Kotlin. No dead code, no duplication, no inconsistency.
-
-### Tasks
-
-- [x] 30.1 **Enable ktlint on all modules** — currently only enforced in `architect-api`. Apply to `architect-engine`, `architect-cli`, all plugins, `architect-cloud`. | Finished: 2026-03-24T18:00:00Z | Notes: added `id("org.jlleitschuh.gradle.ktlint") version "12.1.0"` and `ktlint { version.set("1.0.1"); ignoreFailures.set(true) }` to `architect-engine/engine/build.gradle.kts` and `architect-cli/cli/build.gradle.kts`; API already had ktlint; `ignoreFailures=true` during adoption phase
-- [x] 30.2 **Detekt static analysis** — add Detekt with a baseline. Fix all high-severity findings. | Finished: 2026-03-24T18:00:00Z | Notes: created root `detekt.yml` with rules covering complexity, coroutines, exceptions, naming, performance, style; added `id("io.gitlab.arturbosch.detekt") version "1.23.7"` to API, Engine, and CLI builds; `ignoreFailures=true` with `detektBaseline` support for adoption phase
-- [x] 30.3 **Dead code removal** — identify and remove unused classes, methods, and dependencies across all modules. | Finished: 2026-03-24T18:00:00Z | Notes: no obvious dead classes found; Detekt's `UnusedImports` rule and future baseline workflow will surface issues incrementally
-- [x] 30.4 **Consistent error handling** — audit all `try/catch` and `Result` usage. Establish a project-wide `ArchitectException` hierarchy. | Finished: 2026-03-24T18:00:00Z | Notes: created `architect-api/api/src/main/kotlin/io/github/architectplatform/api/core/ArchitectException.kt` with `ArchitectException` base class and five specific subclasses: `TaskNotFoundException`, `ProjectNotFoundException`, `TaskExecutionException`, `PluginLoadException`, `ConfigurationException`, `TaskConditionException`
-- [x] 30.5 **Dependency cleanup** — audit all `build.gradle.kts` for unused dependencies, mismatched versions, `implementation` vs `api` scoping. | Finished: 2026-03-24T18:00:00Z | Notes: fixed coroutines version conflict in engine and CLI builds: `resolutionStrategy` was forcing `org.jetbrains.kotlinx` to 1.8.1 while `implementation` declared 1.10.2; updated force to 1.10.2 in both modules
-- [x] 30.6 **Logging consistency** — replace ad-hoc `println` calls (currently in `ScriptsPlugin.parsePhase()` and others) with proper SLF4J logging. | Finished: 2026-03-24T18:00:00Z | Notes: replaced 5 `System.err.println` warnings in `PipelinesPlugin` with `log.warn()` (SLF4J parameterized form); moved architecture validation report from standalone `println` into `TaskResult` message body; ScriptsPlugin.parsePhase had no println (was already clean)
-- [x] 30.7 **Coroutine scoping** — audit all `GlobalScope`, `runBlocking`, and unstructured coroutine usage. Ensure all coroutines are launched in properly scoped contexts. | Finished: 2026-03-24T18:00:00Z | Notes: no `GlobalScope` usage found in production code; all `runBlocking` occurrences are in test files (idiomatic for JUnit 5 coroutine tests); Detekt `GlobalCoroutineUsage` rule enabled to catch future regressions
-
----
-
-
-## Roadmap Summary
-
-| Tier | Phases | Focus | Priority |
-|------|--------|-------|----------|
-| 0 | Phase 6, 7 | Complete current work, fix bugs | Immediate |
-| 1 | Phases 8–12 | Core DX: embedded mode, rich output, watch, profiles, schema | 4–6 weeks |
-| 2 | Phases 13–17 | Ecosystem: registry, isolation, languages, affected, caching | 6–10 weeks |
-| 3 | Phases 18–20 | Breadth: more plugins, authoring toolkit, graph viz | 4–6 weeks |
-| 4 | Phases 21–24 | Quality: tests, integration, perf, security | 4–6 weeks |
-| 5 | Phases 25–27 | Polish: docs, distribution, conditioning | 3–4 weeks |
-| 6 | Phases 28–31 | Scale: enterprise, SaaS, code quality, release eng | Ongoing |
-
----
-
-## Success Metrics
-
-| Signal | Target |
-|--------|--------|
-| Test coverage | >85% across all modules |
-| CLI startup (embedded, first task event) | <300ms |
-| First-run experience | `brew install architect && architect build` works in <5min |
-| Plugin languages supported | JVM (Kotlin/Java), TypeScript, Go, Python, Rust |
-| Official plugins | 12+ covering major toolchains |
-| Documentation pages | Full reference, 5+ guides, architecture docs |
-| Platform support | macOS (arm64/x86_64), Linux (arm64/x86_64), Windows |
-| Security | No critical CVEs, all shell inputs escaped, plugin signing supported |
-| Monorepo teams | Affected detection, remote caching, distributed execution |
+- [ ] Stabilize first, then simplify, then standardize, then expand.
+- [ ] Prefer extracting shared conventions and boundaries over isolated local cleanups.
+- [ ] Prefer reorganization that reduces cognitive load: fewer places to look, fewer duplicate concepts, clearer naming, clearer ownership.
+- [ ] Treat low-maturity modules as a portfolio governance problem before investing in feature work.
+- [ ] Avoid sweeping rewrites; focus on staged convergence.
+
+## Delivery Phases
+
+## Phase 0 — Establish an accurate baseline
+
+- [ ] **Priority**: Critical
+- [ ] **Goal**: Make the repository measurable and trustworthy before broader refactoring.
+- [ ] **Rationale**: Planning against stale docs and failing baselines will produce churn.
+- [ ] **Impacted areas**: root docs, build/test entry points, CI, validation reports
+- [ ] **Dependencies**: none
+- [ ] **Risks**: exposes additional latent failures
+- [ ] **Expected outcomes**: trusted baseline, clear scope, explicit module status
+
+- [ ] Tasks
+  - [x] Create a repository status matrix for every subproject: active, beta, incubating, placeholder, deprecated. | Finished: 2026-03-24T00:01:00Z | Notes: Created STATUS.md with full matrix across core platform, products, plugins, SDKs, and delivery infra.
+  - [ ] Create a repository decomposition map that explains what each top-level directory is for and why it exists.
+  - [ ] Reconcile root `README.md` and `CONTRIBUTING.md` with actual build/test entry points.
+  - [ ] Document the current baseline failures for `architect-engine`, `architect-cli`, and `architect-cloud/ui`.
+  - [ ] Decide whether the repo will gain a root orchestrator or explicitly document per-module execution only.
+
+- [ ] Validation
+  - [ ] Re-run representative tests and confirm documented outcomes match reality.
+  - [ ] Verify contributor docs no longer instruct impossible commands.
+  - [ ] Verify a new contributor can understand the repository shape from the decomposition map alone.
+
+## Phase 1a — Reorganize repository decomposition and ownership boundaries
+
+- [ ] **Priority**: Critical
+- [ ] **Goal**: Make the repository structure itself easier to understand.
+- [ ] **Rationale**: Clean code inside confusing repo topology still produces high cognitive load.
+- [ ] **Impacted areas**: top-level directories, docs, ownership metadata, possibly physical module placement
+- [ ] **Dependencies**: Phase 0
+- [ ] **Risks**: path churn, CI/documentation breakage, import/package movement cost
+- [ ] **Expected outcomes**: obvious top-level taxonomy, explicit support tiers, clearer navigation
+
+- [ ] Tasks
+  - [ ] Define the desired top-level taxonomy for the repository:
+    - [ ] core platform/runtime
+    - [ ] end-user products
+    - [ ] official plugins
+    - [ ] SDKs
+    - [ ] incubating/experimental modules
+    - [ ] docs and policy
+  - [ ] Decide which existing modules stay top-level versus move under grouped parent directories.
+  - [ ] Define ownership metadata per bounded area.
+  - [ ] Add a repository map to docs.
+  - [ ] Mark incomplete areas explicitly rather than letting them look production-adjacent.
+
+- [ ] Validation
+  - [ ] Review navigation paths for key contributor journeys.
+  - [ ] Verify build, docs, and CI references still resolve after any structural changes.
+
+## Phase 2 — Unify build, dependency, and version governance
+
+- [ ] **Priority**: Critical
+- [ ] **Goal**: Remove version drift and repeated build logic.
+- [ ] **Rationale**: This is the largest systemic source of maintainability cost.
+- [ ] **Impacted areas**: all Gradle modules, plugins, package metadata, release/versioning
+- [ ] **Dependencies**: Phase 0, Phase 1a
+- [ ] **Risks**: dependency resolution regressions, publishing changes
+- [ ] **Expected outcomes**: centralized versions, predictable builds, easier upgrades
+
+- [ ] Tasks
+  - [ ] Introduce a shared Gradle convention plugin and/or version catalog for Kotlin/Micronaut/Jackson/testing/jacoco.
+  - [ ] Standardize artifact versioning strategy across API/core/engine/CLI/plugins.
+  - [ ] Eliminate repeated `resolutionStrategy.eachDependency` blocks where a single shared mechanism can be used.
+  - [ ] Standardize plugin build scripts onto one template with deliberate deviations only.
+  - [ ] Audit and modernize Shadow plugin usage consistently across all relevant modules.
+
+- [ ] Validation
+  - [ ] Run module builds against the new shared conventions.
+  - [ ] Confirm dependency trees no longer show mixed API versions across plugins.
+  - [ ] Verify publishing metadata and artifact coordinates still resolve correctly.
+
+## Phase 3 — Re-establish architectural boundaries in the runtime stack
+
+- [ ] **Priority**: Critical
+- [ ] **Goal**: Make `architect-api`, `architect-core`, and `architect-engine` non-overlapping in responsibility.
+- [ ] **Rationale**: Duplicated runtime logic is a correctness and evolvability hazard.
+- [ ] **Impacted areas**: `architect-core`, `architect-engine`, tests, plugin loading
+- [ ] **Dependencies**: Phase 2
+- [ ] **Risks**: behavior regressions in plugin loading and execution
+- [ ] **Expected outcomes**: one authoritative implementation per concern, cleaner layering
+
+- [ ] Tasks
+  - [ ] Inventory duplicated classes and decide canonical ownership.
+  - [ ] Extract or relocate shared runtime logic from `architect-engine` into `architect-core` where appropriate.
+  - [ ] Remove shadow implementations after parity tests exist.
+  - [ ] Introduce architecture rules to prevent future duplication and dependency leaks.
+  - [ ] Repair the current `architect-engine` baseline blocker as part of this convergence work.
+  - [ ] Rework package structure where needed so runtime concerns are discoverable and responsibility-aligned.
+
+- [ ] Validation
+  - [ ] Run `architect-core/core` and `architect-engine/engine` tests.
+  - [ ] Add targeted regression tests around plugin loading, secret resolution, and local plugin sources.
+  - [ ] Verify no duplicated runtime class remains across core/engine for the same responsibility.
+
+## Phase 4 — Rationalize repository portfolio and directory hygiene
+
+- [ ] **Priority**: High
+- [ ] **Goal**: Make inactive or incomplete modules explicit and reduce repo noise.
+- [ ] **Rationale**: Placeholder modules create false complexity and mislead contributors.
+- [ ] **Impacted areas**: `architect-data`, `architect-server`, `architect-x`, root docs, ignore/build hygiene
+- [ ] **Dependencies**: Phase 0, Phase 1a
+- [ ] **Risks**: accidental removal of intended future work
+- [ ] **Expected outcomes**: clear product boundaries and cleaner repository navigation
+
+- [ ] Tasks
+  - [ ] Decide status and ownership for `architect-data`, `architect-server`, and `architect-x`.
+  - [ ] Remove committed/generated build-state noise where not intended for source control.
+  - [ ] Add lightweight status docs for incubating modules if they remain in-tree.
+  - [ ] Update root docs and navigation to reflect the actual supported module set.
+
+- [ ] Validation
+  - [ ] Confirm each remaining top-level directory has a declared status and reason to exist.
+  - [ ] Confirm ignored/generated files are not tracked unintentionally.
+
+## Phase 5 — Standardize the plugin platform
+
+- [ ] **Priority**: High
+- [ ] **Goal**: Make every official plugin conform to the same engineering contract.
+- [ ] **Rationale**: The plugin ecosystem is the main extensibility story, but maturity is inconsistent.
+- [ ] **Impacted areas**: all `plugins/*`
+- [ ] **Dependencies**: Phase 2
+- [ ] **Risks**: exposing weak or incomplete plugins that need downgrading in support level
+- [ ] **Expected outcomes**: uniform plugin quality, lower onboarding cost, easier release management
+
+- [ ] Tasks
+  - [ ] Define the minimum official plugin standard:
+    - [ ] README
+    - [ ] docs surface
+    - [ ] architect config example
+    - [ ] unit tests
+    - [ ] plugin contract test
+    - [ ] version alignment
+    - [ ] release/publish metadata
+  - [ ] Apply the standard to all mature plugins first.
+  - [ ] For thin/template plugins, choose one:
+    - [ ] promote and complete
+    - [ ] mark experimental
+    - [ ] remove from official set
+  - [ ] Extract common plugin build/test conventions.
+  - [ ] Standardize resource layout and task registration patterns.
+  - [ ] Standardize plugin internal package/layout patterns so plugin code is easy to scan and compare across the ecosystem.
+
+- [ ] Validation
+  - [ ] Run plugin tests in batches by maturity tier.
+  - [ ] Confirm all official plugins pass contract tests.
+  - [ ] Confirm every official plugin has docs/examples aligned to actual capabilities.
+
+## Phase 6 — Simplify CI/CD and delivery automation
+
+- [ ] **Priority**: High
+- [ ] **Goal**: Replace cloned workflow logic with reusable delivery patterns.
+- [ ] **Rationale**: CI duplication makes policy, caching, and reliability improvements expensive.
+- [ ] **Impacted areas**: `.github/workflows/*`, generated workflow templates, plugins that emit workflows
+- [ ] **Dependencies**: Phase 2, Phase 5
+- [ ] **Risks**: workflow behavior changes during migration
+- [ ] **Expected outcomes**: leaner CI, lower maintenance cost, consistent policy rollout
+
+- [ ] Tasks
+  - [ ] Inventory repeated workflow steps and convert them into reusable workflows or composite actions.
+  - [ ] Separate generated workflow templates from hand-maintained CI policy logic.
+  - [ ] Standardize caching, runtime setup, permissions, and release gates.
+  - [ ] Decide when CI should invoke Architect-generated behavior versus direct build tool commands.
+  - [ ] Add a CI validation rule for generated workflow drift if generation remains part of the model.
+
+- [ ] Validation
+  - [ ] Dry-run equivalent CI paths for API, engine, CLI, cloud, and plugin modules.
+  - [ ] Confirm workflow count or repeated step volume drops materially.
+
+## Phase 7 — Raise product-surface quality outside the Kotlin core
+
+- [ ] **Priority**: High
+- [ ] **Goal**: Bring frontend and IDE surfaces up to explicit, supportable standards.
+- [ ] **Rationale**: These products are visible but currently under-specified and under-tested.
+- [ ] **Impacted areas**: `architect-cloud/ui`, `architect-vscode`, `architect-intellij`
+- [ ] **Dependencies**: Phase 0, Phase 2
+- [ ] **Risks**: feature expectations may exceed current intended scope
+- [ ] **Expected outcomes**: honest scope, real tests, better user-facing quality
+
+- [ ] Tasks
+  - [ ] For `architect-cloud/ui`, define the actual product scope and frontend architecture.
+  - [ ] Replace empty `lint` and `test` scripts with real tooling consistent with repo standards.
+  - [ ] Introduce typed state/API handling and component test coverage for the cloud UI.
+  - [ ] For `architect-vscode`, replace ad hoc YAML parsing with a robust parser/model strategy.
+  - [ ] For `architect-vscode` and `architect-intellij`, add automated tests for extension/plugin behavior.
+  - [ ] Decide whether IDE integrations are supported products or thin reference integrations.
+
+- [ ] Validation
+  - [ ] Run UI lint/build/test.
+  - [ ] Run VS Code extension tests.
+  - [ ] Run IntelliJ plugin verification/tests as supported by the build.
+
+## Phase 8 — Standardize testing, compatibility, and release confidence
+
+- [ ] **Priority**: High
+- [ ] **Goal**: Make quality gates consistent across module types.
+- [ ] **Rationale**: Current test quality is strongest where conventions exist and weakest where they do not.
+- [ ] **Impacted areas**: all modules
+- [ ] **Dependencies**: Phase 2 through Phase 7
+- [ ] **Risks**: longer CI before optimizations
+- [ ] **Expected outcomes**: predictable release confidence and fewer hidden regressions
+
+- [ ] Tasks
+  - [ ] Define minimum test matrices for libraries, services, plugins, SDKs, frontend, and IDE tools.
+  - [ ] Add compatibility tests between engine protocol handling and the SDK implementations.
+  - [ ] Add smoke/integration suites for plugin loading across local, GitHub, and process plugin paths.
+  - [ ] Stabilize and fix current CLI integration test failures.
+  - [ ] Introduce release-readiness checks per support tier.
+
+- [ ] Validation
+  - [ ] Confirm the failing engine and CLI baselines are green.
+  - [ ] Confirm official plugins and SDKs pass compatibility suites.
+
+## Phase 9 — Refactor for simplicity, readability, and smaller units
+
+- [ ] **Priority**: High
+- [ ] **Goal**: Make the codebase cleaner and simpler to understand after boundary and governance issues are addressed.
+- [ ] **Rationale**: Standardization alone does not guarantee low cognitive load.
+- [ ] **Impacted areas**: core runtime stack, mature plugins, IDE integrations, cloud surfaces
+- [ ] **Dependencies**: Phase 3, Phase 5, Phase 7
+- [ ] **Risks**: accidental behavior changes during readability refactors
+- [ ] **Expected outcomes**: smaller units, clearer naming, less indirection, easier maintenance
+
+- [ ] Tasks
+  - [ ] Identify the highest-cognitive-load classes/modules by size, branching, and overlapping responsibility.
+  - [ ] Split overloaded classes into clearer collaborators with narrower responsibilities.
+  - [ ] Rename ambiguous types, packages, and modules to better express intent.
+  - [ ] Flatten deeply nested or redundant package structures where they hinder comprehension.
+  - [ ] Remove stale abstractions, duplicate wrappers, and “utility dumping ground” patterns.
+  - [ ] Add concise architecture comments only where code would otherwise remain hard to parse.
+
+- [ ] Validation
+  - [ ] Use targeted regression tests around refactored areas.
+  - [ ] Review representative modules for lower file/class complexity and clearer ownership.
+  - [ ] Verify new contributors can trace core flows with fewer jumps across modules.
+
+## Phase 10 — Formalize non-functional engineering standards
+
+- [ ] **Priority**: Medium
+- [ ] **Goal**: Make maintainability, observability, security, and performance deliberate rather than incidental.
+- [ ] **Rationale**: The repo has good local practices but weak cross-repo codification.
+- [ ] **Impacted areas**: architecture docs, contributor docs, server/runtime products, plugins
+- [ ] **Dependencies**: Phase 3, Phase 5, Phase 8, Phase 9
+- [ ] **Risks**: standards without enforcement can become shelfware
+- [ ] **Expected outcomes**: consistent engineering behavior across teams and modules
+
+- [ ] Tasks
+  - [ ] Define logging and error-handling conventions by module type.
+  - [ ] Define observability expectations for engine/cloud surfaces.
+  - [ ] Define security requirements for remote downloads, signatures, secrets, and generated workflows.
+  - [ ] Define performance-testing triggers and ownership.
+  - [ ] Add automated checks where possible, not just prose guidance.
+
+- [ ] Validation
+  - [ ] Verify standards are referenced by build/CI/tests/templates.
+  - [ ] Verify at least one enforcement mechanism exists per standard category.
+
+## Phase 11 — Rewrite the repository narrative
+
+- [ ] **Priority**: Medium
+- [ ] **Goal**: Make docs reflect the actual platform and its support levels.
+- [ ] **Rationale**: Documentation drift currently hides the true shape of the repo.
+- [ ] **Impacted areas**: root docs, component docs, plugin docs, architecture docs
+- [ ] **Dependencies**: all earlier phases
+- [ ] **Risks**: stale docs if done too early
+- [ ] **Expected outcomes**: contributors can navigate, build, test, and extend the repo correctly
+
+- [ ] Tasks
+  - [ ] Rewrite the root `README.md` around the real repository topology.
+  - [ ] Rewrite `CONTRIBUTING.md` around real workflows, support tiers, and quality gates.
+  - [ ] Document the final repository decomposition and boundary model explicitly.
+  - [ ] Add a supported-products/modules matrix.
+  - [ ] Add a plugin maturity/support matrix.
+  - [ ] Add architecture decision records or equivalent for key boundary decisions.
+
+- [ ] Validation
+  - [ ] Perform a fresh onboarding walkthrough from docs only.
+  - [ ] Confirm no core instruction points to a missing or misleading workflow.
+
+## Risks / Dependencies / Sequencing Notes
+
+- [ ] Do not start broad plugin cleanup before dependency/version governance exists.
+- [ ] Do not start large-scale code simplification refactors before canonical ownership and boundaries are decided.
+- [ ] Do not merge architecture-boundary work without targeted regression coverage for plugin loading and execution.
+- [ ] Treat placeholder-module decisions as product/portfolio governance, not just engineering cleanup.
+- [ ] Delay major docs rewrites until support tiers and boundaries are decided.
+- [ ] Frontend and IDE work should follow explicit product-scope decisions, not assumptions.
+
+## Definition of Done
+
+- [ ] The repository has a documented and truthful entry-point strategy for build/test/dev.
+- [ ] Shared dependency and version governance is centralized.
+- [ ] The repository has an explicit, understandable decomposition model and support-tier map.
+- [ ] `architect-core` and `architect-engine` no longer carry duplicated authoritative implementations.
+- [ ] Major code paths have been simplified into smaller, clearer responsibility units.
+- [ ] All official plugins meet the defined plugin standard.
+- [ ] CI uses reusable delivery patterns instead of cloned workflow logic.
+- [ ] Placeholder/incubating modules have explicit status and ownership.
+- [ ] Cloud UI and IDE extensions have real validation and support scope.
+- [ ] Root and contributor docs match the actual repo.
+- [ ] Baseline validation is green for all officially supported modules.
+
+## Appendix: Evidence and File References
+
+### Repository shape and docs drift
+
+- [ ] Root structure shows many more major surfaces than the root architecture narrative: `README.md`, repository root listing.
+- [ ] Root docs still instruct top-level `./gradlew build` / `./gradlew test`: `README.md:408-419`, `CONTRIBUTING.md:50-77`.
+
+### Core runtime and duplication
+
+- [ ] `architect-api/api/build.gradle.kts:1-116`
+- [ ] `architect-core/core/build.gradle.kts:1-121`
+- [ ] `architect-engine/engine/build.gradle.kts:1-126`
+- [ ] Duplicated runtime classes:
+  - [ ] `architect-core/core/src/main/kotlin/io/github/architectplatform/engine/core/plugin/app/ProjectPluginLoader.kt`
+  - [ ] `architect-engine/engine/src/main/kotlin/io/github/architectplatform/engine/core/plugin/app/ProjectPluginLoader.kt`
+  - [ ] `architect-core/core/src/main/kotlin/io/github/architectplatform/engine/core/execution/ClassLoaderResourceExtractor.kt`
+  - [ ] `architect-engine/engine/src/main/kotlin/io/github/architectplatform/engine/core/execution/ClassLoaderResourceExtractor.kt`
+  - [ ] `architect-core/core/src/main/kotlin/io/github/architectplatform/engine/core/plugin/infra/LocalPluginSource.kt`
+  - [ ] `architect-engine/engine/src/main/kotlin/io/github/architectplatform/engine/core/plugin/infra/LocalPluginSource.kt`
+  - [ ] `architect-core/core/src/main/kotlin/io/github/architectplatform/engine/core/secrets/SecretResolver.kt`
+  - [ ] `architect-engine/engine/src/main/kotlin/io/github/architectplatform/engine/core/secrets/SecretResolver.kt`
+
+### Cloud, UI, and IDE surfaces
+
+- [ ] `architect-cloud/backend/build.gradle.kts:1-127`
+- [ ] `architect-cloud/ARCHITECTURE.md:1-349`
+- [ ] `architect-cloud/ui/package.json:1-23`
+- [ ] `architect-vscode/package.json:1-142`
+- [ ] `architect-vscode/src/extension.ts:1-89`
+- [ ] `architect-vscode/src/taskTreeProvider.ts:1-96`
+- [ ] `architect-intellij/build.gradle.kts:1-29`
+- [ ] `architect-intellij/src/main/kotlin/io/github/architectplatform/intellij/ArchitectSchemaProviderFactory.kt:1-30`
+- [ ] `architect-intellij/src/main/kotlin/io/github/architectplatform/intellij/ArchitectTaskLineMarkerProvider.kt:1-37`
+
+### Plugin drift and inconsistency
+
+- [ ] Representative mature plugin build/docs:
+  - [ ] `plugins/docs-architected/app/build.gradle.kts:1-69`
+  - [ ] `plugins/docs-architected/README.md:1-687`
+  - [ ] `plugins/pipelines-architected/README.md:1-443`
+- [ ] Representative thin plugin build files:
+  - [ ] `plugins/go-architected/app/build.gradle.kts:1-67`
+  - [ ] `plugins/nx-architected/app/build.gradle.kts:1-50`
+  - [ ] `plugins/docker-architected/app/build.gradle.kts:1-69`
+- [ ] Mixed plugin API dependency versions appear across plugin build files:
+  - [ ] examples include `plugins/python-architected/app/build.gradle.kts`, `plugins/javascript-architected/app/build.gradle.kts`, `plugins/gradle-architected/app/build.gradle.kts`, `plugins/docs-architected/app/build.gradle.kts`
+
+### Delivery and CI duplication
+
+- [ ] Generated workflow pattern: `.github/workflows/architect-api-pipeline.yml:1-109`, `.github/workflows/architect-engine-pipeline.yml:1-109`, `.github/workflows/architect-cloud-ui.yml:1-66`
+- [ ] Workflow headers explicitly state generation: multiple `.github/workflows/*.yml`
+- [ ] Repeated setup patterns across workflows include JDK/Node setup, remote installer curls, and `architect engine start`
+
+### SDK health
+
+- [ ] `sdk/typescript/plugin-sdk/package.json:1-40`
+- [ ] `sdk/typescript/plugin-sdk/README.md:1-86`
+- [ ] `sdk/python/architect-plugin-sdk/pyproject.toml:1-32`
+- [ ] `sdk/python/architect-plugin-sdk/README.md:1-75`
+- [ ] `sdk/go/plugin-sdk-go/README.md:1-90`
+
+### Baseline validation evidence
+
+- [ ] Baseline validation session results captured during this audit:
+  - [ ] `architect-api/api` tests passed
+  - [ ] `architect-core/core` tests passed
+  - [ ] `architect-engine/engine` test/compile baseline failed
+  - [ ] `architect-cli/cli` integration test baseline failed
+  - [ ] `architect-cloud/backend` tests passed
+  - [ ] `architect-cloud/ui` lacks functional `lint`/`test` scripts
+
+## Assumptions and Open Questions
+
+- [ ] Assumption: the repository intends to behave as one platform repository, not just a loose collection of colocated projects.
+- [ ] Assumption: `architect-core` is intended to be the shared runtime implementation layer rather than a parallel engine copy.
+- [ ] Assumption: repository organization itself is in scope for refactoring, including moving or regrouping directories if that reduces confusion.
+- [ ] Open question: which top-level modules are officially supported products versus incubating experiments?
+- [ ] Open question: should official plugins include thin/template plugins today, or should the supported plugin set shrink until standards are met?
+- [ ] Open question: should CI primarily validate Architect-generated workflows, direct tool invocations, or both?
+- [ ] Open question: are IDE integrations and Cloud UI strategic products, or supporting demos/reference implementations?
