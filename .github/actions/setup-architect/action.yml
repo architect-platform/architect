@@ -1,0 +1,193 @@
+name: 'Setup Architect'
+description: |
+  Installs the Architect CLI (and optionally the Engine) from a pinned, checksummed GitHub Release asset.
+  Replaces the insecure `curl | bash` installer pattern used in CI workflows.
+
+inputs:
+  cli-version:
+    description: 'Architect CLI version to install (e.g. "1.0.0"). Default: "latest"'
+    required: false
+    default: 'latest'
+  install-engine:
+    description: 'Whether to also install and start the Architect Engine'
+    required: false
+    default: 'false'
+  engine-version:
+    description: 'Architect Engine version to install (e.g. "1.0.0"). Default: matches cli-version'
+    required: false
+    default: ''
+  cli-sha256:
+    description: |
+      Expected SHA256 checksum of the CLI binary (hex string).
+      When provided, the download is verified before installation.
+      Strongly recommended for pinned versions in production pipelines.
+    required: false
+    default: ''
+  engine-sha256:
+    description: |
+      Expected SHA256 checksum of the Engine binary (hex string).
+      When provided, the download is verified before installation.
+    required: false
+    default: ''
+
+outputs:
+  cli-path:
+    description: 'Absolute path to the installed architect-cli binary'
+    value: ${{ steps.install-cli.outputs.cli-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Detect OS and architecture
+      id: platform
+      shell: bash
+      run: |
+        OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+        ARCH=$(uname -m)
+        case "$ARCH" in
+          x86_64)  ARCH="amd64" ;;
+          aarch64|arm64) ARCH="arm64" ;;
+          *) echo "Unsupported architecture: $ARCH" && exit 1 ;;
+        esac
+        echo "os=$OS" >> "$GITHUB_OUTPUT"
+        echo "arch=$ARCH" >> "$GITHUB_OUTPUT"
+        echo "Detected platform: $OS/$ARCH"
+
+    - name: Resolve CLI version
+      id: resolve-version
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        CLI_VERSION: ${{ inputs.cli-version }}
+      run: |
+        if [ "$CLI_VERSION" = "latest" ]; then
+          VERSION=$(gh release view --repo architect-platform/architect --json tagName -q '.tagName' 2>/dev/null || echo "v1.0.0")
+        else
+          VERSION="v${CLI_VERSION#v}"
+        fi
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "Resolved CLI version: $VERSION"
+
+    - name: Download and verify Architect CLI
+      id: install-cli
+      shell: bash
+      env:
+        OS: ${{ steps.platform.outputs.os }}
+        ARCH: ${{ steps.platform.outputs.arch }}
+        VERSION: ${{ steps.resolve-version.outputs.version }}
+        EXPECTED_SHA256: ${{ inputs.cli-sha256 }}
+      run: |
+        INSTALL_DIR="$HOME/.architect/bin"
+        mkdir -p "$INSTALL_DIR"
+
+        ASSET_NAME="architect-cli-${OS}-${ARCH}"
+        DOWNLOAD_URL="https://github.com/architect-platform/architect/releases/download/${VERSION}/${ASSET_NAME}"
+        CHECKSUM_URL="${DOWNLOAD_URL}.sha256"
+        DEST="$INSTALL_DIR/architect"
+
+        echo "Downloading Architect CLI ${VERSION} from: $DOWNLOAD_URL"
+        curl -sSfL "$DOWNLOAD_URL" -o "$DEST"
+
+        # Verify checksum — either against a provided expected value or the release's .sha256 file
+        if [ -n "$EXPECTED_SHA256" ]; then
+          echo "Verifying SHA256 against provided checksum..."
+          ACTUAL=$(sha256sum "$DEST" | awk '{print $1}')
+          if [ "$ACTUAL" != "$EXPECTED_SHA256" ]; then
+            echo "ERROR: SHA256 mismatch!"
+            echo "  Expected: $EXPECTED_SHA256"
+            echo "  Actual:   $ACTUAL"
+            rm -f "$DEST"
+            exit 1
+          fi
+          echo "SHA256 checksum verified (provided)."
+        else
+          echo "Fetching release checksum from: $CHECKSUM_URL"
+          EXPECTED=$(curl -sSfL "$CHECKSUM_URL" 2>/dev/null | awk '{print $1}')
+          if [ -n "$EXPECTED" ]; then
+            ACTUAL=$(sha256sum "$DEST" | awk '{print $1}')
+            if [ "$ACTUAL" != "$EXPECTED" ]; then
+              echo "ERROR: SHA256 mismatch!"
+              echo "  Expected: $EXPECTED"
+              echo "  Actual:   $ACTUAL"
+              rm -f "$DEST"
+              exit 1
+            fi
+            echo "SHA256 checksum verified (from release)."
+          else
+            echo "WARNING: No checksum available for verification. Proceeding without verification."
+            echo "It is strongly recommended to pin the version and provide cli-sha256 in production."
+          fi
+        fi
+
+        chmod +x "$DEST"
+        echo "$INSTALL_DIR" >> "$GITHUB_PATH"
+        echo "cli-path=$DEST" >> "$GITHUB_OUTPUT"
+        echo "Architect CLI installed at: $DEST"
+        "$DEST" --version || true
+
+    - name: Download and verify Architect Engine
+      if: inputs.install-engine == 'true'
+      shell: bash
+      env:
+        OS: ${{ steps.platform.outputs.os }}
+        ARCH: ${{ steps.platform.outputs.arch }}
+        VERSION: ${{ steps.resolve-version.outputs.version }}
+        ENGINE_VERSION: ${{ inputs.engine-version }}
+        EXPECTED_SHA256: ${{ inputs.engine-sha256 }}
+      run: |
+        INSTALL_DIR="$HOME/.architect/bin"
+        mkdir -p "$INSTALL_DIR"
+
+        EFFECTIVE_VERSION="${ENGINE_VERSION:-$VERSION}"
+        ASSET_NAME="architect-engine-${OS}-${ARCH}"
+        DOWNLOAD_URL="https://github.com/architect-platform/architect/releases/download/${EFFECTIVE_VERSION}/${ASSET_NAME}"
+        CHECKSUM_URL="${DOWNLOAD_URL}.sha256"
+        DEST="$INSTALL_DIR/architect-engine"
+
+        echo "Downloading Architect Engine ${EFFECTIVE_VERSION} from: $DOWNLOAD_URL"
+        curl -sSfL "$DOWNLOAD_URL" -o "$DEST"
+
+        if [ -n "$EXPECTED_SHA256" ]; then
+          echo "Verifying Engine SHA256 against provided checksum..."
+          ACTUAL=$(sha256sum "$DEST" | awk '{print $1}')
+          if [ "$ACTUAL" != "$EXPECTED_SHA256" ]; then
+            echo "ERROR: SHA256 mismatch for Engine binary!"
+            echo "  Expected: $EXPECTED_SHA256"
+            echo "  Actual:   $ACTUAL"
+            rm -f "$DEST"
+            exit 1
+          fi
+          echo "Engine SHA256 checksum verified (provided)."
+        else
+          EXPECTED=$(curl -sSfL "$CHECKSUM_URL" 2>/dev/null | awk '{print $1}')
+          if [ -n "$EXPECTED" ]; then
+            ACTUAL=$(sha256sum "$DEST" | awk '{print $1}')
+            if [ "$ACTUAL" != "$EXPECTED" ]; then
+              echo "ERROR: SHA256 mismatch for Engine binary!"
+              echo "  Expected: $EXPECTED"
+              echo "  Actual:   $ACTUAL"
+              rm -f "$DEST"
+              exit 1
+            fi
+            echo "Engine SHA256 checksum verified (from release)."
+          else
+            echo "WARNING: No checksum available for Engine binary verification."
+          fi
+        fi
+
+        chmod +x "$DEST"
+        echo "Architect Engine installed at: $DEST"
+
+    - name: Start Architect Engine
+      if: inputs.install-engine == 'true'
+      shell: bash
+      run: |
+        architect-engine &
+        # Wait up to 30 seconds for the engine to become healthy
+        for i in $(seq 1 30); do
+          if curl -sf http://localhost:8080/health >/dev/null 2>&1; then
+            echo "Architect Engine is ready."
+            break
+          fi
+          sleep 1
+        done

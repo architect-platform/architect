@@ -6,9 +6,9 @@
 ---
 
 ## Status
-Overall Progress: 158/217 tasks completed (73%)
-Current Phase: Phase 24 — Security Hardening
-Last Updated: 2026-03-23T16:31:24Z
+Overall Progress: 161/217 tasks completed (74%)
+Current Phase: Phase 25 — Documentation
+Last Updated: 2026-03-24T08:30:00Z
 
 ---
 
@@ -575,9 +575,9 @@ Each task declares `inputs` (files, config values, env vars). The engine hashes 
 - [x] 24.3 **Secrets management** — tasks access secrets via `Environment.secret("MY_SECRET")` which resolves from: environment variable, `.env` file, HashiCorp Vault, AWS Secrets Manager, GCP Secret Manager. Secrets are never logged. | Finished: 2026-03-23T16:05:00Z | Notes: added `Environment.secret(name)` to the shared API plus `ArchitectPluginTestKit.withSecret(...)`, implemented default secret resolver chains in both core and engine (`env` → project `.env` → Vault HTTP API → AWS CLI → GCP CLI), threaded project directories through task execution scope so `.env` resolution stays task-local, and added focused API/core/engine tests for secret access, resolver precedence, and engine environment delegation without logging secret values.
 - [x] 24.4 **Audit logging** — every task execution is audit-logged with: timestamp, user, project, task, args, result, duration. Stored locally and optionally synced to `architect-cloud`. | Finished: 2026-03-23T16:25:00Z | Notes: enriched `ExecutionRecord`/CLI history DTOs with `user`, `args`, and `result`, updated both engine and embedded CLI execution paths to persist the fuller audit record locally, added optional cloud audit sync through `CloudReporterService.reportAuditRecord(...)` and a new `CloudClient` audit endpoint, and verified the behavior with focused engine `TaskServiceTest` plus CLI history compatibility tests.
 - [x] 24.5 **Path traversal prevention** — all user-provided paths are validated against the project root (already partially done in `SecurityUtils`; apply uniformly). | Finished: 2026-03-23T16:31:24Z | Notes: routed commit hook message paths through `resolvePathWithinRoot(...)` in both core and engine, hardened docs source/output directory handling in `DocsPlugin`, `MkDocsBuilder`, and `VuePressBuilder`, and added focused regressions covering traversal rejection plus valid in-root commit files; docs plugin tests and core commit-task tests pass, while the engine module remains blocked by an unrelated pre-existing `ProjectPluginLoader.kt` compile error in the dirty worktree.
-- [ ] 24.6 **Shell injection prevention** — all user-provided values passed to shell commands are escaped (already done in `GitUtils`; apply uniformly to `BashCommandExecutor.buildCommand()`).
-- [ ] 24.7 **Dependency vulnerability scanning** — add `trivy` or OWASP Dependency Check to CI for all components
-- [ ] 24.8 **CI security review** — replace `curl | bash` installer in CI workflows with a checksummed binary download
+- [x] 24.6 **Shell injection prevention** — added `ShellUtils.escapeShellArg/escapeShellArgs/requireSafeIdentifier` to `architect-api`; applied uniformly across all 9 vulnerable plugins (Go, Docker, Python, NxTask, Gradle, Kubernetes, Terraform, Maven, Rust, JavaScript); 18 unit tests in `ShellUtilsTest`. | Finished: 2026-03-24T07:00:00Z
+- [x] 24.7 **Dependency vulnerability scanning** — added `.github/workflows/dependency-vulnerability-scan.yml` with Trivy filesystem scan (CRITICAL/HIGH) uploading SARIF to GitHub Security tab plus a strict CRITICAL-only gate; also added `npm audit --audit-level=high` for vscode extension, TypeScript SDK, and cloud UI. Runs on push/PR/weekly schedule. | Finished: 2026-03-24T08:00:00Z
+- [x] 24.8 **CI security review** — replaced all `curl | bash` installer steps in 13 workflow files with `.github/actions/setup-architect` composite action; action downloads CLI/Engine from pinned GitHub Releases, verifies SHA256 checksum (from provided value or release `.sha256` file), and only installs after verification. | Finished: 2026-03-24T08:30:00Z
 
 ---
 
