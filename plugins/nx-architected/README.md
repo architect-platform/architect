@@ -39,8 +39,8 @@ nx:
 
 ```bash
 cd plugins/nx-architected/app
-./gradlew build
-./gradlew test
+gradle build
+gradle test
 ```
 
 ## Limitations

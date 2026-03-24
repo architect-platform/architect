@@ -12,6 +12,8 @@ Docker build, push, and compose workflow automation for Architect projects.
 | `docker-push` | Push the built image to the configured registry |
 | `docker-run` | Run the Docker image locally |
 | `docker-compose-up` | Start services defined in the compose file |
+| `docker-compose-down` | Stop and remove compose services |
+| `docker-compose-logs` | Stream logs from compose services |
 
 ## Configuration
 
@@ -34,8 +36,8 @@ docker:
 
 ```bash
 cd plugins/docker-architected/app
-./gradlew build
-./gradlew test
+gradle build
+gradle test
 ```
 
 ## Limitations

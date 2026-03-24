@@ -12,6 +12,7 @@ Python workflow automation for Architect projects (supports uv, pip, pytest, ruf
 | `py-lint` | Run linter (default: ruff) |
 | `py-test` | Run test suite (default: pytest) |
 | `py-build` | Build distribution artifacts |
+| `py-publish` | Publish the package to PyPI |
 
 ## Configuration
 
@@ -33,8 +34,8 @@ python:
 
 ```bash
 cd plugins/python-architected/app
-./gradlew build
-./gradlew test
+gradle build
+gradle test
 ```
 
 ## Limitations

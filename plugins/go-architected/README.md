@@ -32,8 +32,8 @@ go:
 
 ```bash
 cd plugins/go-architected/app
-./gradlew build
-./gradlew test
+gradle build
+gradle test
 ```
 
 ## Limitations

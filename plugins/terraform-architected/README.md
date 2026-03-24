@@ -37,8 +37,8 @@ terraform:
 
 ```bash
 cd plugins/terraform-architected/app
-./gradlew build
-./gradlew test
+gradle build
+gradle test
 ```
 
 ## Limitations

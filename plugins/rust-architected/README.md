@@ -34,8 +34,8 @@ rust:
 
 ```bash
 cd plugins/rust-architected/app
-./gradlew build
-./gradlew test
+gradle build
+gradle test
 ```
 
 ## Limitations

@@ -32,8 +32,8 @@ maven:
 
 ```bash
 cd plugins/maven-architected/app
-./gradlew build
-./gradlew test
+gradle build
+gradle test
 ```
 
 ## Limitations
