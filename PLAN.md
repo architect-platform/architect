@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 41/287 tasks completed (14.3%)
+Overall Progress: 42/288 tasks completed (14.6%)
 Current Phase: Phase 3 — Re-establish architectural boundaries in the runtime stack
-Last Updated: 2026-03-24T10:26:43Z
+Last Updated: 2026-03-24T10:28:54Z
 
 ## Executive Summary
 
@@ -431,7 +431,8 @@ The repository currently contains several categories of assets:
   - [x] Converge identical plugin-loading support types into `architect-core`. | Finished: 2026-03-24T10:21:10Z | Notes: Removed six byte-identical plugin-loading support classes from `architect-engine/engine` (`CommonPlugin`, `PluginDownloader`, `PluginLoader`, `PluginSourceRegistry`, `GitHubPluginSource`, `LocalPluginSource`) so the engine now resolves the canonical implementations from `architect-core` instead of shadowing them locally.
   - [x] Split drifted plugin-loading runtime classes into `architect-core` logic plus `architect-engine` host adapters. | Finished: 2026-03-24T10:24:32Z | Notes: Replaced engine-local plugin-loading runtime classes with two thin Micronaut host adapters (`MicronautArchitectEventBus`, `MicronautRemoteContentFetcher`) and removed the engine shadow copies of `ProjectPluginLoader`, `CachedPluginDownloader`, `GitHubReleaseResolver`, `SpiPluginLoader`, `IsolatedPluginClassLoader`, `PluginConfig`, and `PluginSource`. The engine now uses `architect-core` for plugin loader/downloader/config/source behavior while keeping engine-only event-publication and HTTP transport wiring local.
   - [x] Converge secret resolution into `architect-core`. | Finished: 2026-03-24T10:26:43Z | Notes: Removed the engine-local `SecretResolver` implementation set and replaced it with a Micronaut factory that exposes `architect-core`'s `CompositeSecretResolver.default()` as the engine bean. Secret resolution logic now lives in `architect-core`, while `architect-engine` keeps only the host bean registration needed by `ApplicationEnvironment`.
-  - [ ] Converge project loading and validation services into `architect-core`.
+  - [x] Converge config loading and validation into `architect-core`. | Finished: 2026-03-24T10:28:54Z | Notes: Removed the engine-local `ConfigLoader` and `ConfigValidator` copies so `architect-engine` now consumes the richer `architect-core` implementations, including raw-YAML loading, profile-aware validation inputs, schema/plugin-section validation, and line-aware diagnostics.
+  - [ ] Converge project lifecycle service into `architect-core`.
   - [ ] Converge task execution, cache, and runtime event services into `architect-core`.
   - [ ] Remove shadow implementations after parity tests exist.
   - [ ] Introduce architecture rules to prevent future duplication and dependency leaks.
@@ -444,6 +445,7 @@ The repository currently contains several categories of assets:
 - 2026-03-24: decomposed the broad extraction task into smaller convergence workstreams because the inventory exposed 78 duplicate runtime files across multiple concern clusters. Completed the first low-risk extraction by deleting six byte-identical plugin-loading support classes from `architect-engine` so the server now consumes the canonical `architect-core` implementations for those types.
 - 2026-03-24: completed the plugin-loading adapter split by removing the remaining engine-local plugin loader/downloader/config/source shadow classes and replacing them with two engine-only Micronaut adapters for event publication and remote HTTP fetching. Plugin-loading runtime behavior now resolves from `architect-core`, while `architect-engine` retains only host wiring for that concern.
 - 2026-03-24: further decomposed the remaining shared-runtime convergence work into secret-resolution, project-service, and task-service slices. Completed the secret-resolution slice by deleting the engine-local resolver implementation set and registering the core `CompositeSecretResolver` through a Micronaut factory bean.
+- 2026-03-24: decomposed the project-service slice into configuration and lifecycle work. Completed the configuration half by removing the engine-local `ConfigLoader` and `ConfigValidator` copies so the engine now uses core's richer config loading and validation behavior.
 
 - [ ] Validation
   - [ ] Run `architect-core/core` and `architect-engine/engine` tests.
