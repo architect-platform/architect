@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 49/288 tasks completed (17.0%)
+Overall Progress: 50/288 tasks completed (17.4%)
 Current Phase: Phase 3 — Re-establish architectural boundaries in the runtime stack
-Last Updated: 2026-03-24T15:36:14Z
+Last Updated: 2026-03-24T15:38:13Z
 
 ## Executive Summary
 
@@ -450,10 +450,11 @@ The repository currently contains several categories of assets:
 - 2026-03-24: completed the task execution/cache/events convergence. Deleted 41 identical files and 13 drifted engine shadow classes across multiple concern areas: task execution (TaskExecutor, TaskCache, BashCommandExecutor), inline plugins (InlineTaskPlugin, InlineTaskConfig), domain events and DTOs (8 Serdeable-annotated types). Merged InlineTaskRequirements feature into core, created RuntimeServiceFactory for Micronaut property-driven construction, and introduced centralized SerdeImports for core types needing Micronaut serialization. Made TaskPermissionScope/TaskPermissionContext public to support ApplicationEnvironment cross-module access.
 - 2026-03-24: repaired the remaining engine baseline regressions exposed by the convergence. Rebuilt the engine's Micronaut host wiring around the core-owned project/plugin/task/history services, resolved function-type event bus injection through `MicronautArchitectEventBus`, and restored the built-in internal plugin providers so inline `tasks:` blocks register again. Fresh validation now shows `architect-core/core` and `architect-engine/engine` `./gradlew test` both passing.
 - 2026-03-24: completed the runtime package-structure rework for discoverability. The move set now stages as renames from legacy `io.github.architectplatform.engine.*` paths to responsibility-aligned `io.github.architectplatform.core.*` paths, and targeted core/engine architecture and runtime regression tests passed after the reorganization.
+- 2026-03-24: completed targeted regression validation for plugin loading, local plugin sources, and secret resolution by running `ProjectPluginLoaderTest`, `LocalPluginSourceTest`, and `SecretResolverTest` in `architect-core/core` after the package rework.
 
 - [ ] Validation
   - [x] Run `architect-core/core` and `architect-engine/engine` tests. | Finished: 2026-03-24T13:42:48Z | Notes: Re-ran both module test suites after restoring host wiring; `architect-core/core` and `architect-engine/engine` now both pass, including the previously failing `ProjectsApiIntegrationTest` and `CliEngineHttpIntegrationTest` coverage inside the engine suite.
-  - [ ] Add targeted regression tests around plugin loading, secret resolution, and local plugin sources.
+  - [x] Add targeted regression tests around plugin loading, secret resolution, and local plugin sources. | Finished: 2026-03-24T15:38:13Z | Notes: Verified and executed the focused regression suite in `architect-core/core` (`ProjectPluginLoaderTest`, `LocalPluginSourceTest`, `SecretResolverTest`) to ensure plugin loading, local plugin path hardening, and secret-resolution flows remain stable after runtime package movement.
   - [ ] Verify no duplicated runtime class remains across core/engine for the same responsibility.
 
 ## Phase 4 — Rationalize repository portfolio and directory hygiene
