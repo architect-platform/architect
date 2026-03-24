@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 86/350 tasks completed (24.6%)
+Overall Progress: 87/350 tasks completed (24.9%)
 Current Phase: Phase 8 — Standardize testing, compatibility, and release confidence
-Last Updated: 2026-03-24T22:45:00Z
+Last Updated: 2026-03-24T22:55:00Z
 
 ## Standards and Principles Gaps
 
@@ -338,7 +338,7 @@ Last Updated: 2026-03-24T22:45:00Z
 - [ ] **Expected outcomes**: predictable release confidence and fewer hidden regressions
 
 - [ ] Tasks
-  - [ ] Define minimum test matrices for libraries, services, plugins, SDKs, frontend, and IDE tools.
+  - [x] Define minimum test matrices for libraries, services, plugins, SDKs, frontend, and IDE tools. | Finished: 2026-03-24T22:55:00Z | Notes: Added `docs/guides/testing-standard.md` as the new repository-wide minimum test matrix, covering libraries, services, plugins, SDKs, frontend products, and IDE/editor integrations with support-tier expectations and suggested local validation commands. Linked the guide from `mkdocs.yml` and updated `CONTRIBUTING.md` so contributors now have one authoritative cross-module testing baseline.
   - [ ] Add compatibility tests between engine protocol handling and the SDK implementations.
   - [ ] Add smoke/integration suites for plugin loading across local, GitHub, and process plugin paths.
   - [ ] Stabilize and fix current CLI integration test failures.

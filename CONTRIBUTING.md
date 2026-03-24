@@ -113,10 +113,12 @@ mkdocs serve
 
 ### Testing
 
-- Write unit tests for all new functionality
-- Aim for >80% code coverage
+- Follow the module-type minimum matrix in
+  [`docs/guides/testing-standard.md`](docs/guides/testing-standard.md)
+- Write tests for all new functionality and bug fixes in the affected module
 - Use descriptive test names
 - Follow Arrange-Act-Assert pattern
+- Run the module-local validation command(s) before opening a PR
 
 ```kotlin
 @Test
