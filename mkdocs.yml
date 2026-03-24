@@ -90,6 +90,7 @@ nav:
     - Plugin Authoring: guides/authoring-plugins.md
     - Official Plugin Standard: guides/plugin-standard.md
     - Repository Testing Standard: guides/testing-standard.md
+    - Release Readiness Checks: guides/release-readiness.md
     - CI/CD Integration: guides/ci-cd-integration.md
     - Migrating from Make: guides/migrating-from-make.md
     - Migrating from Nx: guides/migrating-from-nx.md

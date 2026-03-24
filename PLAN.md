@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 90/350 tasks completed (25.7%)
+Overall Progress: 91/350 tasks completed (26.0%)
 Current Phase: Phase 8 — Standardize testing, compatibility, and release confidence
-Last Updated: 2026-03-25T01:45:00Z
+Last Updated: 2026-03-25T03:00:00Z
 
 ## Standards and Principles Gaps
 
@@ -342,7 +342,7 @@ Last Updated: 2026-03-25T01:45:00Z
   - [x] Add compatibility tests between engine protocol handling and the SDK implementations. | Finished: 2026-03-25T01:00:00Z | Notes: Created shared protocol fixtures (docs/protocol-fixtures.json) and fixture-backed compatibility tests in all 4 implementations: Kotlin engine (9 tests), TypeScript SDK (4 tests), Python SDK (4 tests), Go SDK (3 tests). All pass green.
   - [x] Add smoke/integration suites for plugin loading across local, GitHub, and process plugin paths. | Finished: 2026-03-25T01:30:00Z | Notes: Added ProcessPluginAdapterSmokeTest (3 tests, real subprocess with shell script APP v1 plugin), IsolatedPluginClassLoaderTest (4 tests, child-first behavior + shared API delegation), PluginSourceRegistryTest (4 tests, delegation/unsupported/listing). Existing coverage for local, registry, HTTP, and GitHub paths was already solid.
   - [x] Stabilize and fix current CLI integration test failures. | Finished: 2026-03-25T01:45:00Z | Notes: Fixed 8 failing CliEngineIntegrationTest assertions — tests had wrong emoji/icon expectations (▶️→▶, ✅→✓, ❌→✗, 📝→│) and wrong header text (ERROR DETAILS→FAILURE DETAILS). All 15 tests now pass green.
-  - [ ] Introduce release-readiness checks per support tier.
+  - [x] Introduce release-readiness checks per support tier. | Finished: 2026-03-25T03:00:00Z | Notes: Created scripts/release-readiness-check.sh with tier-aware checks (README, STATUS.md, version, tests, build config, SPI, graduation, blocking TODOs). Added docs/guides/release-readiness.md. Tested on active, beta, incubating modules.
 
 - [ ] Validation
   - [ ] Confirm the failing engine and CLI baselines are green.
