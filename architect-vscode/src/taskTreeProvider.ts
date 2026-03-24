@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
+import { parseArchitectConfig } from "./architectConfigModel";
 
 export class TaskItem extends vscode.TreeItem {
   constructor(
@@ -46,51 +47,31 @@ export class TaskTreeProvider implements vscode.TreeDataProvider<TaskItem> {
       return;
     }
 
-    const configPath = path.join(workspaceFolder, "architect.yml");
-    if (!fs.existsSync(configPath)) {
+    const configPath = resolveArchitectConfigPath(workspaceFolder);
+    if (!configPath) {
       this.tasks = [];
       return;
     }
 
-    // Parse inline tasks from architect.yml
     try {
       const content = fs.readFileSync(configPath, "utf-8");
-      this.tasks = this.parseInlineTasks(content);
+      const model = parseArchitectConfig(content);
+      this.tasks = model.tasks.map(
+        (task) => new TaskItem(task.id, task.phase, task.description),
+      );
     } catch {
       this.tasks = [];
     }
   }
+}
 
-  private parseInlineTasks(yamlContent: string): TaskItem[] {
-    // Simple YAML parsing for the tasks section
-    const items: TaskItem[] = [];
-    const lines = yamlContent.split("\n");
-    let inTasks = false;
-    let currentIndent = 0;
-
-    for (const line of lines) {
-      const trimmed = line.trimStart();
-      const indent = line.length - trimmed.length;
-
-      if (trimmed === "tasks:") {
-        inTasks = true;
-        currentIndent = indent;
-        continue;
-      }
-
-      if (inTasks) {
-        // Detect top-level key under tasks (2 spaces deeper)
-        if (indent === currentIndent + 2 && trimmed.endsWith(":")) {
-          const taskId = trimmed.slice(0, -1).trim();
-          items.push(new TaskItem(taskId, undefined, ""));
-        }
-        // Back to same or less indent means we left the tasks section
-        if (indent <= currentIndent && trimmed.length > 0 && !trimmed.startsWith("#")) {
-          inTasks = false;
-        }
-      }
+function resolveArchitectConfigPath(workspaceFolder: string): string | undefined {
+  for (const candidate of ["architect.yml", "architect.yaml"]) {
+    const candidatePath = path.join(workspaceFolder, candidate);
+    if (fs.existsSync(candidatePath)) {
+      return candidatePath;
     }
-
-    return items;
   }
+
+  return undefined;
 }

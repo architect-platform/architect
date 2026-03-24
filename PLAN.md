@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 80/350 tasks completed (22.9%)
+Overall Progress: 81/350 tasks completed (23.1%)
 Current Phase: Phase 7 — Raise product-surface quality outside the Kotlin core
-Last Updated: 2026-03-24T21:50:00Z
+Last Updated: 2026-03-24T21:58:00Z
 
 ## Standards and Principles Gaps
 
@@ -318,7 +318,7 @@ Last Updated: 2026-03-24T21:50:00Z
   - [x] For `architect-cloud/ui`, define the actual product scope and frontend architecture. | Finished: 2026-03-24T21:00:00Z | Notes: Added `architect-cloud/ui/README.md` and `architect-cloud/ui/ARCHITECTURE.md` to define the UI truthfully as an incubating React + Vite monitoring stub built around one polling `App.jsx` component. Expanded `architect-cloud/ui/STATUS.md` with the concrete current scope, limitations, and graduation criteria, and corrected `architect-cloud/README.md` so the parent cloud docs no longer claim a complete real-time dashboard or stale `npm run serve` workflow.
   - [x] Replace empty `lint` and `test` scripts with real tooling consistent with repo standards. | Finished: 2026-03-24T21:15:00Z | Notes: Added a real frontend toolchain to `architect-cloud/ui`: ESLint flat config (`eslint.config.js`), Vitest + jsdom wiring in `vite.config.js`, Testing Library setup in `src/test/setup.js`, and `src/App.test.jsx` coverage for the current fetch/error behavior. Replaced the empty `lint` and `test` scripts with `eslint .` and `vitest run`, updated the UI stub to render lightweight summary cards so the tests assert visible behavior, and validated the full loop with `npm run lint && npm test && npm run build`.
   - [x] Introduce typed state/API handling and component test coverage for the cloud UI. | Finished: 2026-03-24T21:50:00Z | Notes: Converted `architect-cloud/ui` from ad hoc JSX state to a small typed TypeScript structure: `src/types/cloud.ts` defines backend response/state contracts, `src/api/cloudApi.ts` centralizes typed REST fetches, `src/hooks/useCloudDashboard.ts` owns typed polling state, and `src/components/` contains focused `ErrorBanner` and `SummaryStats` components. Migrated entrypoints/tests to TS/TSX, added `tsconfig.json`, extended linting to run `tsc --noEmit`, and added component coverage for `App`, `ErrorBanner`, and `SummaryStats`. Verified with `npm run lint && npm test && npm run build` in `architect-cloud/ui`.
-  - [ ] For `architect-vscode`, replace ad hoc YAML parsing with a robust parser/model strategy.
+  - [x] For `architect-vscode`, replace ad hoc YAML parsing with a robust parser/model strategy. | Finished: 2026-03-24T21:58:00Z | Notes: Replaced the line-by-line indentation parser in `architect-vscode/src/taskTreeProvider.ts` with a shared YAML-backed config model in `src/architectConfigModel.ts` using the `yaml` package. The new model parses both top-level `tasks:` and `scripts.scripts:` task definitions, preserves description/phase metadata, and supports both `architect.yml` and `architect.yaml`. Added parser regression tests in `src/test/architectConfigModel.test.ts` and validated with `npm test` in `architect-vscode`.
   - [ ] For `architect-vscode` and `architect-intellij`, add automated tests for extension/plugin behavior.
   - [ ] Decide whether IDE integrations are supported products or thin reference integrations.
 
