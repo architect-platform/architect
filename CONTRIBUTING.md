@@ -49,7 +49,7 @@ Enhancement suggestions are welcome! Please provide:
 
 ### Clone and Build
 
-> There is no root Gradle wrapper. Each module must be built from its own directory.
+> There is no root Gradle wrapper or supported root build/test task. Each module must be built from its own directory.
 
 ```bash
 # Clone the repository
@@ -77,6 +77,9 @@ cd architect-engine/engine && ./gradlew test --tests TaskServiceTest
 # Run with coverage (architect-api supports jacocoTestReport)
 cd architect-api/api && ./gradlew test jacocoTestReport
 ```
+
+The root `architect.yml` is repository metadata for docs/git/GitHub automation,
+not a monorepo build orchestrator.
 
 ### Building Documentation
 

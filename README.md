@@ -407,7 +407,7 @@ architect/
 
 ### Building Components
 
-> There is no root Gradle wrapper. Each module is independently built from its own directory.
+> There is no root Gradle wrapper or supported root build/test orchestrator. Each module is independently built from its own directory.
 
 ```bash
 # Build the API library
@@ -428,6 +428,9 @@ cd architect-engine/engine && ./gradlew test
 # Run tests with coverage
 cd architect-api/api && ./gradlew test jacocoTestReport
 ```
+
+The root `architect.yml` configures documentation and automation metadata; it is
+not a repository-wide build runner.
 
 ### Creating a Custom Plugin
 

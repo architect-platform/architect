@@ -192,7 +192,7 @@ languages other than Kotlin/JVM. All are **incubating**.
 | `CONTRIBUTING.md` | Contributor guide; build/test entry points per module |
 | `PLAN.md` | Active refactor plan tracking all outstanding work |
 | `STATUS.md` | Repository status matrix (module health at a glance) |
-| `architect.yml` | Root project config; uses docs, git, github plugins |
+| `architect.yml` | Root project config for docs, git, and GitHub automation; not a repository-wide build/test orchestrator |
 | `mkdocs.yml` | Root MkDocs config for unified docs site |
 | `detekt.yml` | Detekt static analysis config |
 | `Dockerfile` | Container image for the engine |
@@ -239,7 +239,8 @@ cd <module-dir>
 ./gradlew test
 ```
 
-There is no root Gradle wrapper. Each module is independently built.
+There is no root Gradle wrapper or supported root build/test orchestrator. Each
+module is independently built.
 See CONTRIBUTING.md for per-module entry points.
 
 ---

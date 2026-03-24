@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 12/283 tasks completed (4.2%)
+Overall Progress: 13/283 tasks completed (4.6%)
 Current Phase: Phase 0 — Establish an accurate baseline
-Last Updated: 2026-03-24T09:18:02Z
+Last Updated: 2026-03-24T09:19:50Z
 
 ## Executive Summary
 
@@ -360,7 +360,7 @@ The repository currently contains several categories of assets:
   - [x] Create a repository decomposition map that explains what each top-level directory is for and why it exists. | Finished: 2026-03-24T00:02:00Z | Notes: Created docs/architecture/repository-map.md with full taxonomy, per-directory tables, contributor journeys, and root file inventory.
   - [x] Reconcile root `README.md` and `CONTRIBUTING.md` with actual build/test entry points. | Finished: 2026-03-24T00:03:00Z | Notes: Removed root-level ./gradlew build/test instructions (no root wrapper exists); replaced with per-module commands. Fixed wrong path (architect-cli → architect-cli/cli). Fixed Apache 2.0 vs MIT license error in CONTRIBUTING.md.
   - [x] Document the current baseline failures for `architect-engine`, `architect-cli`, and `architect-cloud/ui`. | Finished: 2026-03-24T09:18:02Z | Notes: Added docs/architecture/baseline-failures.md with exact current failure modes and validation commands. Updated STATUS.md and the PLAN baseline snapshot to replace stale `PluginConfig` and `CliEngineIntegrationTest` references with the current CLI compilation blocker and empty cloud UI validation scripts.
-  - [ ] Decide whether the repo will gain a root orchestrator or explicitly document per-module execution only.
+  - [x] Decide whether the repo will gain a root orchestrator or explicitly document per-module execution only. | Finished: 2026-03-24T09:19:50Z | Notes: Accepted ADR-009 to keep root execution explicitly per-module until a real orchestrator exists. Updated README.md, CONTRIBUTING.md, and docs/architecture/repository-map.md to clarify that the root `architect.yml` is metadata/configuration, not a supported monorepo build runner.
 
 - [ ] Validation
   - [ ] Re-run representative tests and confirm documented outcomes match reality.

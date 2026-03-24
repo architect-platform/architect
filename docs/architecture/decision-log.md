@@ -172,3 +172,38 @@ Use MkDocs with `mkdocs-monorepo-plugin`. Each component has an `mkdocs.yml` wit
 - **Pro**: Each component team owns its documentation independently.
 - **Pro**: Single consistent rendered site with shared themes/search.
 - **Con**: MkDocs monorepo plugin must be pinned to a compatible version; breaking updates must be coordinated.
+
+---
+
+## ADR-009: Root execution stays per-module until a real orchestrator exists
+
+**Status**: Accepted  
+**Date**: 2026-03
+
+### Context
+
+The repository presents itself as a platform monorepo, but the root does not
+ship a Gradle wrapper, a multi-project settings file, or a root Architect task
+definition that can reliably build and test all modules. The root
+`architect.yml` currently configures documentation, git, and GitHub automation,
+not repository-wide build/test orchestration. Leaving this ambiguous causes
+contributors to infer a top-level build entry point that does not exist.
+
+### Decision
+
+For the current repository state, the supported execution model is explicit
+per-module commands only. Contributors must build and test from each module's
+own directory. The root `architect.yml` is not a general-purpose monorepo build
+runner.
+
+If the repository later gains a real root orchestrator, that change must be an
+intentional Phase 2+ investment with dedicated implementation and documentation,
+not an implied convention.
+
+### Consequences
+
+- **Pro**: Matches the repository's actual capabilities today.
+- **Pro**: Removes ambiguity between root metadata/configuration and real build
+	entry points.
+- **Con**: Cross-repository validation remains fragmented until a future
+	orchestrator or monorepo task runner is deliberately introduced.
