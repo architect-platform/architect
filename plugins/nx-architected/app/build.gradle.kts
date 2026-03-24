@@ -3,7 +3,7 @@ plugins {
   jacoco
 }
 group = "io.github.architectplatform.plugins"
-version = "1.0.0"
+version = libs.versions.pluginDefaultArtifact.get()
 java { sourceCompatibility = JavaVersion.toVersion("17") }
 kotlin { jvmToolchain { languageVersion.set(JavaLanguageVersion.of(17)) } }
 repositories {
@@ -18,13 +18,13 @@ repositories {
   }
 }
 dependencies {
-  implementation("io.github.architectplatform:api:1.1.2")
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+  implementation(libs.architect.api.contract)
+  testImplementation(libs.junit.jupiter.api)
+  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 tasks.test { useJUnitPlatform() }
 
-jacoco { toolVersion = "0.8.12" }
+jacoco { toolVersion = libs.versions.jacoco.get() }
 
 tasks.jacocoTestReport {
   dependsOn(tasks.test)

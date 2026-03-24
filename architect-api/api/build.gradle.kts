@@ -9,7 +9,7 @@ plugins {
 
 group = "io.github.architectplatform"
 
-version = "2.1.0"
+version = libs.versions.architectApiArtifact.get()
 
 java {
   withSourcesJar()

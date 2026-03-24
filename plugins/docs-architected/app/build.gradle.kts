@@ -5,7 +5,7 @@ plugins {
 
 group = "io.github.architectplatform.plugins"
 
-version = "2.1.0"
+version = libs.versions.pluginDocsArtifact.get()
 
 java { sourceCompatibility = JavaVersion.toVersion("17") }
 
@@ -30,12 +30,12 @@ repositories {
 }
 
 dependencies {
-  implementation("io.github.architectplatform:api:1.1.2")
-  implementation("com.fasterxml.jackson.core:jackson-databind:2.20.0") // core Jackson
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.0") // Kotlin support
+  implementation(libs.architect.api.contract)
+  implementation(libs.jackson.databind) // core Jackson
+  implementation(libs.jackson.module.kotlin) // Kotlin support
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+  testImplementation(libs.junit.jupiter.api)
+  testRuntimeOnly(libs.junit.jupiter.engine)
   testImplementation("org.mockito:mockito-core:5.8.0")
   testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
 }
@@ -44,7 +44,7 @@ tasks.test {
   useJUnitPlatform()
 }
 
-jacoco { toolVersion = "0.8.12" }
+jacoco { toolVersion = libs.versions.jacoco.get() }
 
 tasks.jacocoTestReport {
   dependsOn(tasks.test)

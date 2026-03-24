@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "io.github.architectplatform"
-version = "1.6.1"
+version = libs.versions.architectCoreArtifact.get()
 
 repositories {
   mavenLocal()
@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-  implementation("io.github.architectplatform:api:2.1.0")
+  implementation(libs.architect.api.contract)
   implementation(libs.kotlin.stdlib.jdk8)
   implementation(libs.kotlin.reflect)
   implementation(libs.kotlinx.coroutines.core)

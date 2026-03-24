@@ -1,6 +1,6 @@
 val kotlinVersion = libs.versions.kotlin.get()
 
-version = "1.1.0"
+version = libs.versions.architectCliArtifact.get()
 
 group = "io.github.architectplatform"
 
@@ -19,8 +19,8 @@ plugins {
 repositories { mavenCentral() }
 
 dependencies {
-  implementation("io.github.architectplatform:api:2.1.0")
-  implementation("io.github.architectplatform:architect-core:1.6.1")
+  implementation(libs.architect.api.contract)
+  implementation(libs.architect.core.module)
   kapt("info.picocli:picocli-codegen")
   kapt(libs.micronaut.serde.processor)
   implementation("info.picocli:picocli")

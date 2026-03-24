@@ -10,7 +10,7 @@ plugins {
   jacoco
 }
 
-version = "1.6.1"
+version = libs.versions.architectEngineArtifact.get()
 
 group = "io.github.architectplatform"
 
@@ -34,8 +34,8 @@ repositories {
 }
 
 dependencies {
-  implementation("io.github.architectplatform:architect-core:1.6.1")
-  implementation("io.github.architectplatform:api:2.1.0")
+  implementation(libs.architect.core.module)
+  implementation(libs.architect.api.contract)
   ksp(libs.micronaut.http.validation)
   ksp(libs.micronaut.serde.processor)
   implementation(libs.micronaut.kotlin.runtime)
@@ -54,7 +54,7 @@ dependencies {
   runtimeOnly(libs.jackson.module.kotlin)
   runtimeOnly("org.yaml:snakeyaml")
   testImplementation(libs.micronaut.http.client)
-  testImplementation("io.github.architectplatform:architect-cli:1.1.0")
+  testImplementation(libs.architect.cli.module)
   testImplementation(libs.mockito.kotlin)
   testImplementation(libs.mockito.core)
 }

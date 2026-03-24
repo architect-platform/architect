@@ -5,7 +5,7 @@ plugins {
 
 group = "io.github.architectplatform.plugins"
 
-version = "1.1.0"
+version = libs.versions.pluginGradleArtifact.get()
 
 java { sourceCompatibility = JavaVersion.toVersion("17") }
 
@@ -31,17 +31,17 @@ repositories {
 }
 
 dependencies {
-  implementation("io.github.architectplatform:api:2.1.0")
+  implementation(libs.architect.api.contract)
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+  testImplementation(libs.junit.jupiter.api)
+  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 tasks.test {
   useJUnitPlatform()
 }
 
-jacoco { toolVersion = "0.8.12" }
+jacoco { toolVersion = libs.versions.jacoco.get() }
 
 tasks.jacocoTestReport {
   dependsOn(tasks.test)
