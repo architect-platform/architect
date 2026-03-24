@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 64/350 tasks completed (18.3%)
+Overall Progress: 65/350 tasks completed (18.6%)
 Current Phase: Phase 5 — Standardize the plugin platform
-Last Updated: 2026-03-24T16:31:01Z
+Last Updated: 2026-03-24T17:42:44Z
 
 ## Standards and Principles Gaps
 
@@ -274,7 +274,7 @@ Last Updated: 2026-03-24T16:31:01Z
     - [ ] promote and complete
     - [x] mark experimental
     - [ ] remove from official set
-  - [ ] Extract common plugin build/test conventions.
+  - [x] Extract common plugin build/test conventions. | Finished: 2026-03-24T17:42:44Z | Notes: Extended `gradle/architect-plugin-conventions.gradle.kts` to own the shared Java 17 toolchain plus common plugin API/JUnit dependencies, then removed those duplicate lines from every `plugins/*/app/build.gradle.kts` file while preserving plugin-specific repositories and extra dependencies. Validation passed for `docs-architected` and `pipelines-architected`; `go-architected` still fails to compile because of unresolved `ShellUtils`, and `gradle-architected` still has a failing functional test (`GradlePluginTest` path-traversal case), both appearing unrelated to the convention extraction itself.
   - [ ] Standardize resource layout and task registration patterns.
   - [ ] Standardize plugin internal package/layout patterns so plugin code is easy to scan and compare across the ecosystem.
 

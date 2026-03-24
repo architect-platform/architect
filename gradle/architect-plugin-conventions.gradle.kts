@@ -2,6 +2,7 @@ import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.withType
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
@@ -14,6 +15,14 @@ group = "io.github.architectplatform.plugins"
 
 extensions.configure<JavaPluginExtension> {
   sourceCompatibility = JavaVersion.toVersion("17")
+  targetCompatibility = JavaVersion.toVersion("17")
+  toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+
+dependencies {
+  add("implementation", versionCatalog.findLibrary("architect-api-contract").get())
+  add("testImplementation", versionCatalog.findLibrary("junit-jupiter-api").get())
+  add("testRuntimeOnly", versionCatalog.findLibrary("junit-jupiter-engine").get())
 }
 
 repositories {
