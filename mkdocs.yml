@@ -96,6 +96,7 @@ nav:
     - Decision Log: architecture/decision-log.md
     - Repository Map: architecture/repository-map.md
     - Ownership Map: architecture/ownership-map.md
+    - Runtime Boundaries: architecture/runtime-boundaries.md
     - Baseline Failures: architecture/baseline-failures.md
 
   - Components:

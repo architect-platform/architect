@@ -110,6 +110,11 @@ Version: **2.1.0** (active).
 **Role**: Shared runtime — plugin loading, execution utilities, secret
 resolution, file watching, project caching.
 
+Canonical ownership note: when a runtime concern is needed by both embedded and
+server execution paths, `architect-core` is the authoritative implementation.
+`architect-engine` should depend on these implementations rather than carrying a
+parallel copy.
+
 | Sub-path | Purpose |
 |---|---|
 | `core/` | Kotlin library: `ProjectService`, `ProjectPluginLoader`, `TaskDependencyResolver`, `SecretResolver`, `ClassLoaderResourceExtractor`, `LocalPluginSource`, JMH benchmarks |
@@ -125,6 +130,10 @@ Primary downstream consumers: `architect-engine/engine` and
 ### `architect-engine/`
 
 **Role**: REST API server — the process that orchestrates task execution.
+
+Canonical ownership note: `architect-engine` owns host concerns only
+(Micronaut bootstrapping, HTTP/SSE transport, long-lived orchestration, cloud
+reporting). Shared runtime behavior belongs in `architect-core`.
 
 | Sub-path | Purpose |
 |---|---|

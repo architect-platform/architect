@@ -327,3 +327,61 @@ often requires cross-group review.
 	paths.
 - **Con**: Still requires a later decision if the project wants enforceable
 	CODEOWNERS rules or named team assignments.
+
+---
+
+## ADR-013: Architect-core is the canonical home for shared runtime behavior
+
+**Status**: Accepted  
+**Date**: 2026-03
+
+### Context
+
+`architect-core` and `architect-engine` currently contain a large same-path
+duplication surface across runtime packages such as plugin loading, project
+loading, task execution, secret resolution, workflow plugins, and event DTOs.
+An inventory run in Phase 3 found 78 duplicated Kotlin source files under
+`src/main/kotlin`, with 25 of them already drifted instead of remaining exact
+copies.
+
+This duplication is especially risky because the same responsibilities are split
+between the embedded runtime path and the Micronaut engine host. Bug fixes can
+land in one module without landing in the other, and contributors cannot tell
+which implementation is authoritative.
+
+### Decision
+
+`architect-core` is the canonical home for shared runtime behavior.
+
+That includes:
+
+- plugin loading and plugin source resolution
+- secret resolution and environment/config expansion helpers
+- project loading, validation, and repository abstractions
+- task execution internals, dependency resolution, caches, and domain events
+- built-in workflow/installers/inline plugin implementations used by both
+	engine-hosted and embedded execution paths
+- shared runtime configuration constants and execution utilities
+
+`architect-engine` remains the canonical home for engine-host concerns only:
+
+- Micronaut application bootstrapping and bean wiring
+- HTTP controllers, transport DTOs, SSE/event streaming adapters, and request
+	validation at the transport boundary
+- orchestration services that are meaningful only in the long-lived server host
+- startup profiling, cloud reporting, and other engine-only operational code
+
+When a runtime concern needs Micronaut integration, the underlying logic should
+live in `architect-core` and the engine should provide only the thinnest host
+adapter required for dependency injection, configuration binding, or HTTP
+exposure.
+
+### Consequences
+
+- **Pro**: Gives every duplicated runtime concern a single target owner.
+- **Pro**: Keeps embedded CLI execution and server execution on the same core
+	implementation path.
+- **Pro**: Makes future architecture rules straightforward: engine depends on
+	core, but core must not depend on engine-host transport code.
+- **Con**: Some engine classes will need to be split into core logic plus
+	Micronaut adapters before duplicate files can be removed safely.

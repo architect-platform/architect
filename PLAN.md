@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 37/283 tasks completed (13.1%)
+Overall Progress: 38/283 tasks completed (13.4%)
 Current Phase: Phase 3 — Re-establish architectural boundaries in the runtime stack
-Last Updated: 2026-03-24T10:11:09Z
+Last Updated: 2026-03-24T10:16:17Z
 
 ## Executive Summary
 
@@ -427,12 +427,16 @@ The repository currently contains several categories of assets:
 - [ ] **Expected outcomes**: one authoritative implementation per concern, cleaner layering
 
 - [ ] Tasks
-  - [ ] Inventory duplicated classes and decide canonical ownership.
+  - [x] Inventory duplicated classes and decide canonical ownership.
   - [ ] Extract or relocate shared runtime logic from `architect-engine` into `architect-core` where appropriate.
   - [ ] Remove shadow implementations after parity tests exist.
   - [ ] Introduce architecture rules to prevent future duplication and dependency leaks.
   - [ ] Repair the current `architect-engine` baseline blocker as part of this convergence work.
   - [ ] Rework package structure where needed so runtime concerns are discoverable and responsibility-aligned.
+
+### Phase 3 Notes
+
+- 2026-03-24: inventoried `architect-core` and `architect-engine` duplicate runtime sources and recorded canonical ownership in `docs/architecture/runtime-boundaries.md` plus ADR-013. The inventory found 78 same-path Kotlin files duplicated across the two modules, with 25 already drifted. Canonical rule: shared runtime behavior lives in `architect-core`; `architect-engine` keeps Micronaut host/transport adapters only.
 
 - [ ] Validation
   - [ ] Run `architect-core/core` and `architect-engine/engine` tests.
