@@ -105,7 +105,7 @@ A Micronaut-based REST API service that:
 A React + Vite monitoring stub that currently:
 - polls backend REST APIs for engines, projects, and executions
 - keeps fetched data in local component state inside one top-level component
-- exposes a minimal shell plus retryable error banner
+- exposes lightweight summary cards plus a retryable error banner
 
 It does **not** yet provide a complete dashboard, routing model, WebSocket event subscription, or a tested supportable UI architecture.
 
@@ -135,9 +135,9 @@ It does **not** yet provide a complete dashboard, routing model, WebSocket event
 ### Dashboard UI Status
 - ⚠️ React + Vite scaffold exists
 - ⚠️ REST polling exists in `ui/src/App.jsx`
-- ⚠️ Dashboard rendering is still incomplete
+- ⚠️ Dashboard rendering is still incomplete beyond summary cards
 - ❌ WebSocket event streaming is not consumed by the UI
-- ❌ Lint and test tooling are not configured yet
+- ⚠️ Lint and unit-test tooling now exist, but coverage is still minimal
 
 ## Data Model
 

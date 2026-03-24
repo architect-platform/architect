@@ -7,12 +7,12 @@
 Current scope:
 - React + Vite proof of concept for Architect Cloud monitoring.
 - Polls the cloud backend REST API from a single `App.jsx` component.
-- Provides only a minimal shell and error/retry experience today.
+- Provides a small summary-card view and error/retry experience today.
 
 Current limitations:
 - No complete dashboard views for engines, projects, or executions.
 - No routing, shared state layer, or WebSocket event subscription.
-- Test and lint surface is incomplete.
+- Lint and test tooling now exist, but coverage remains minimal.
 - Product behavior and support expectations are still being defined.
 
 Graduation criteria:

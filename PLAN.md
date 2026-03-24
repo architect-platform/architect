@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 78/350 tasks completed (22.3%)
+Overall Progress: 79/350 tasks completed (22.6%)
 Current Phase: Phase 7 — Raise product-surface quality outside the Kotlin core
-Last Updated: 2026-03-24T21:00:00Z
+Last Updated: 2026-03-24T21:15:00Z
 
 ## Standards and Principles Gaps
 
@@ -316,7 +316,7 @@ Last Updated: 2026-03-24T21:00:00Z
 
 - [ ] Tasks
   - [x] For `architect-cloud/ui`, define the actual product scope and frontend architecture. | Finished: 2026-03-24T21:00:00Z | Notes: Added `architect-cloud/ui/README.md` and `architect-cloud/ui/ARCHITECTURE.md` to define the UI truthfully as an incubating React + Vite monitoring stub built around one polling `App.jsx` component. Expanded `architect-cloud/ui/STATUS.md` with the concrete current scope, limitations, and graduation criteria, and corrected `architect-cloud/README.md` so the parent cloud docs no longer claim a complete real-time dashboard or stale `npm run serve` workflow.
-  - [ ] Replace empty `lint` and `test` scripts with real tooling consistent with repo standards.
+  - [x] Replace empty `lint` and `test` scripts with real tooling consistent with repo standards. | Finished: 2026-03-24T21:15:00Z | Notes: Added a real frontend toolchain to `architect-cloud/ui`: ESLint flat config (`eslint.config.js`), Vitest + jsdom wiring in `vite.config.js`, Testing Library setup in `src/test/setup.js`, and `src/App.test.jsx` coverage for the current fetch/error behavior. Replaced the empty `lint` and `test` scripts with `eslint .` and `vitest run`, updated the UI stub to render lightweight summary cards so the tests assert visible behavior, and validated the full loop with `npm run lint && npm test && npm run build`.
   - [ ] Introduce typed state/API handling and component test coverage for the cloud UI.
   - [ ] For `architect-vscode`, replace ad hoc YAML parsing with a robust parser/model strategy.
   - [ ] For `architect-vscode` and `architect-intellij`, add automated tests for extension/plugin behavior.

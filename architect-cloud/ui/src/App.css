@@ -8,6 +8,35 @@
   padding: 2rem;
 }
 
+.page-header {
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #596780;
+  margin-bottom: 0.5rem;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.description {
+  max-width: 52rem;
+  color: #596780;
+  line-height: 1.5;
+}
+
+.status-message {
+  color: #596780;
+  font-weight: 600;
+}
+
 .error-banner {
   background: #fee;
   border: 1px solid #fcc;
@@ -32,4 +61,31 @@
 
 .error-banner button:hover {
   background: #a22;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid #dde4ee;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+}
+
+.stat-label {
+  color: #596780;
+  font-size: 0.9rem;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  color: #0f172a;
 }

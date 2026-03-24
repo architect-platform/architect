@@ -63,14 +63,14 @@ architect-cloud/ui/
 - **No routing**: the UI is one screen with no navigation model
 - **No shared state layer**: there is no query/cache abstraction, store, or typed API client
 - **Polling instead of streaming**: the backend exposes WebSocket-based event streaming, but the UI currently refreshes with periodic REST polling only
-- **Minimal rendering**: the current view shell renders an error banner and container structure, but not a full dashboard layout
+- **Minimal rendering**: the current view renders a small summary-card view and an error banner, but not a full dashboard layout
 
 ## Known limitations
 
 - no dedicated components for engines, projects, or executions
 - no request cancellation, retry policy, or normalized cache
 - no environment-based API configuration beyond in-file constants
-- no linting or test harness
+- linting and unit-test harnesses exist, but coverage is still minimal
 - no support statement beyond incubating proof-of-concept status
 
 ## Near-term architecture follow-ups
