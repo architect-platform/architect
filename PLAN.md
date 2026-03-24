@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 44/288 tasks completed (15.3%)
+Overall Progress: 45/288 tasks completed (15.6%)
 Current Phase: Phase 3 — Re-establish architectural boundaries in the runtime stack
-Last Updated: 2026-03-24T12:00:00Z
+Last Updated: 2026-03-24T12:15:00Z
 
 ## Executive Summary
 
@@ -434,7 +434,7 @@ The repository currently contains several categories of assets:
   - [x] Converge config loading and validation into `architect-core`. | Finished: 2026-03-24T10:28:54Z | Notes: Removed the engine-local `ConfigLoader` and `ConfigValidator` copies so `architect-engine` now consumes the richer `architect-core` implementations, including raw-YAML loading, profile-aware validation inputs, schema/plugin-section validation, and line-aware diagnostics.
   - [x] Converge project lifecycle service into `architect-core`. | Finished: 2026-03-24T11:05:00Z | Notes: Deleted the engine-local ProjectService and 6 identical project domain types (Project, ProjectRepository, LazyProjectLoadState, ConfigParser, InMemoryProjectRepository, YamlConfigParser). Added reloadProject() and hasLocalPlugins() to core's ProjectService. Created ProjectServiceFactory in engine to construct ProjectService with Micronaut property-driven config and to adapt CloudReporterService to the core ProjectRegistrationReporter interface.
   - [x] Converge task execution, cache, and runtime event services into `architect-core`. | Finished: 2026-03-24T12:00:00Z | Notes: Deleted 41 byte-identical files and 13 engine-local shadow classes (including TaskExecutor, TaskCache, BashCommandExecutor, InlineTaskPlugin, InlineTaskConfig, and 8 Serdeable-only drifted DTOs/events). Merged InlineTaskRequirements feature from engine into core's InlineTaskConfig/InlineTaskPlugin. Removed @Singleton from core's TaskExecutor, TaskCache, and BashCommandExecutor. Created RuntimeServiceFactory in engine for Micronaut property-driven construction of these services. Created SerdeImports.kt for centralized @SerdeImport declarations. Made TaskPermissionScope/TaskPermissionContext public for cross-module access.
-  - [ ] Remove shadow implementations after parity tests exist.
+  - [x] Remove shadow implementations after parity tests exist. | Finished: 2026-03-24T12:15:00Z | Notes: Deleted 8 remaining Serdeable-only main source shadows from engine (ExecutionRecord, PluginEvents, ArchitectEventDTO, TaskDTO, TaskPlanDTO, TaskResultDTO, ExecutionEvents, TaskEvents) and 1 trivially-different test shadow (VerifyCommitMessageTaskTest). Core's SerdeImports.kt covers all serialization needs. ApplicationEnvironment legitimately differs between core (standalone/test) and engine (Micronaut production). 3 engine @MicronautTest test shadows retained as integration tests. Core tests pass (179 tests).
   - [ ] Introduce architecture rules to prevent future duplication and dependency leaks.
   - [ ] Repair the current `architect-engine` baseline blocker as part of this convergence work.
   - [ ] Rework package structure where needed so runtime concerns are discoverable and responsibility-aligned.
