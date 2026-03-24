@@ -283,3 +283,37 @@ The tool should own this identity explicitly. The README should open with the ph
 | Schema-first config | Missing |
 | Language-agnostic plugins | Missing |
 | `architect-x/data/server` scaffolding | Promising direction, undefined |
+
+---
+
+## Cognitive Complexity Analysis
+
+### Module Statistics
+
+| Module | Files | Est. Lines | Risk |
+|---|---|---|---|
+| architect-api/api | 27 | ~2,013 | ✅ Healthy |
+| architect-core/core | 102 | ~6,110 | ⚠️ High |
+| architect-engine/engine | 25 | ~1,425 | ✅ Healthy |
+| architect-cli/cli | 26 | ~3,877 | 🔴 Critical |
+| plugins/git-architected | 4 | ~288 | ✅ Healthy |
+| plugins/github-architected | 7 | ~362 | ✅ Healthy |
+
+### Highest Cognitive Load Classes
+
+| Rank | File | Lines | Branches | Domains | Risk |
+|---|---|---|---|---|---|
+| 1 | ArchitectLauncher.kt (CLI) | 1609 | 157 | 8 | 🔴 Critical |
+| 2 | PluginScaffolder.kt (core) | 410 | 7 | 3+ | 🟠 High |
+| 3 | ProjectService.kt (engine) | 312 | 25 | 6 | 🟠 High |
+| 4 | ConsoleUI.kt (CLI) | 300 | 24 | 4 | 🟠 High |
+| 5 | ProcessPluginAdapter.kt (core) | 266 | 19 | 5 | 🟠 High |
+| 6 | TaskExecutor.kt (core) | 220 | 19 | 6 | 🟠 High |
+
+### Recommended Refactoring Priority
+
+1. **ArchitectLauncher** → Extract 8 command handlers (Strategy pattern)
+2. **ProjectService** → Split into ProjectLoaderService, PluginDiscoveryService, ProjectWatchingService
+3. **ProcessPluginAdapter** → Separate ProcessLauncher, JsonRpcClient, PluginProcessAdapter
+4. **TaskExecutor** → Extract TaskCacheLayer, TaskEventPublisher
+5. **ConsoleUI** → Extract formatters per output concern
