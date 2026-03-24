@@ -14,7 +14,6 @@ import io.github.architectplatform.engine.core.project.domain.Project
 import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTaskRegistry
 import io.github.architectplatform.engine.core.project.infra.YamlLineTracker
 import io.github.architectplatform.engine.core.watch.FileWatchService
-import jakarta.inject.Singleton
 import java.io.File
 import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
@@ -36,7 +35,6 @@ import org.slf4j.LoggerFactory
  * @property pluginLoader Loader for discovering and instantiating plugins
  * @property cloudReporter Optional cloud reporter for tracking projects in the cloud
  */
-@Singleton
 class ProjectService(
     private val projectRepository: ProjectRepository,
     private val configLoader: ConfigLoader,
@@ -190,12 +188,12 @@ class ProjectService(
     registeredProjectPaths[name] = path
     val project = projectRepository.get(name)
     if (project != null) {
-      if (cacheEnabled && invalidatedProjects.remove(name)) {
+      if (hasLocalPlugins(project.context.config)) {
+        logger.debug("Project $name uses local plugins, reloading project state")
+        reloadProject(name)
+      } else if (cacheEnabled && invalidatedProjects.remove(name)) {
         logger.debug("Project $name cache invalidated, reloading project state")
-        val reloadedProject =
-          loadProject(name, path)
-            ?: throw IllegalArgumentException("Failed to load project $name from path $path")
-        projectRepository.save(name, reloadedProject)
+        reloadProject(name)
       }
       logger.debug("Project $name already registered at path ${project.path}")
       return
@@ -211,6 +209,23 @@ class ProjectService(
       val description = newProject.context.config.getKey<String>("project.description")
       reporter.reportProject(name, path, description)
     }
+  }
+
+  /**
+   * Reloads a previously registered project from disk.
+   *
+   * @param name The unique name identifier of the project
+   * @return The reloaded project
+   * @throws IllegalArgumentException if the project is not registered or cannot be reloaded
+   */
+  fun reloadProject(name: String): Project {
+    val existingProject = projectRepository.get(name)
+      ?: throw IllegalArgumentException("Project $name is not registered")
+    val reloadedProject = loadProject(name, existingProject.path)
+      ?: throw IllegalArgumentException("Failed to reload project $name from path ${existingProject.path}")
+    projectRepository.save(name, reloadedProject)
+    invalidatedProjects.remove(name)
+    return reloadedProject
   }
 
   /**
@@ -286,5 +301,12 @@ class ProjectService(
     val project = getProject(name)
       ?: throw IllegalArgumentException("Project $name is not registered")
     return dependencyGraphBuilder.build(project)
+  }
+
+  private fun hasLocalPlugins(config: Map<String, Any>): Boolean {
+    val plugins = config["plugins"] as? List<*> ?: return false
+    return plugins.filterIsInstance<Map<*, *>>().any { plugin ->
+      plugin["type"] == "local"
+    }
   }
 }
