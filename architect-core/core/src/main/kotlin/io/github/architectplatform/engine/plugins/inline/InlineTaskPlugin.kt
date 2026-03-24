@@ -10,9 +10,11 @@ import io.github.architectplatform.api.components.workflows.hooks.HooksWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.tasks.TaskPermission
 import io.github.architectplatform.api.core.tasks.TaskRegistry
+import io.github.architectplatform.api.core.tasks.TaskRequirements
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.impl.SimpleTask
 import io.github.architectplatform.api.core.tasks.phase.Phase
+import io.github.architectplatform.api.core.tasks.Platform
 import io.github.architectplatform.engine.plugins.inline.context.InlineTaskConfig
 
 /**
@@ -72,6 +74,17 @@ class InlineTaskPlugin : ArchitectPlugin<HashMap<String, Any>> {
                 continue
             }
 
+            val requirements = config.requires?.let { req ->
+                TaskRequirements(
+                    tools = req.tools,
+                    minToolVersions = req.minToolVersions,
+                    env = req.env,
+                    platform = req.platform.mapNotNull { p ->
+                        runCatching { Platform.valueOf(p.uppercase()) }.getOrNull()
+                    }.toSet(),
+                )
+            }
+
             registry.add(
                 SimpleTask(
                     id = taskId,
@@ -79,6 +92,7 @@ class InlineTaskPlugin : ArchitectPlugin<HashMap<String, Any>> {
                     phase = phase,
                     customDependencies = config.depends,
                     permissions = permissions,
+                    requirements = requirements,
                     task = { environment, projectContext ->
                         try {
                             val executor = environment.service(CommandExecutor::class.java)

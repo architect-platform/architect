@@ -1,0 +1,80 @@
+package io.github.architectplatform.engine.core.tasks
+
+import io.github.architectplatform.api.core.tasks.Environment
+import io.github.architectplatform.engine.core.config.EngineConfiguration
+import io.github.architectplatform.engine.core.events.EventBus
+import io.github.architectplatform.engine.core.execution.BashCommandExecutor
+import io.github.architectplatform.engine.core.tasks.application.LocalOutputCache
+import io.github.architectplatform.engine.core.tasks.application.RemoteOutputCache
+import io.github.architectplatform.engine.core.tasks.application.TaskCache
+import io.github.architectplatform.engine.core.tasks.application.TaskExecutor
+import io.github.architectplatform.engine.core.tasks.domain.TaskDependencyResolver
+import io.github.architectplatform.engine.domain.events.ArchitectEvent
+import io.micronaut.context.annotation.Factory
+import io.micronaut.context.annotation.Property
+import jakarta.inject.Singleton
+import java.util.Optional
+
+@Factory
+class RuntimeServiceFactory {
+
+  @Singleton
+  fun bashCommandExecutor(
+    @Property(
+      name = EngineConfiguration.CommandExecutor.TIMEOUT_SECONDS,
+      defaultValue = "${EngineConfiguration.CommandExecutor.DEFAULT_TIMEOUT_SECONDS}",
+    )
+    timeoutSeconds: Long,
+    @Property(
+      name = EngineConfiguration.CommandExecutor.REDIRECT_ERROR_STREAM,
+      defaultValue = "${EngineConfiguration.CommandExecutor.DEFAULT_REDIRECT_ERROR_STREAM}",
+    )
+    redirectErrorStream: Boolean,
+  ): BashCommandExecutor =
+    BashCommandExecutor(
+      timeoutSeconds = timeoutSeconds,
+      redirectErrorStream = redirectErrorStream,
+    )
+
+  @Singleton
+  fun taskCache(
+    @Property(
+      name = EngineConfiguration.Cache.ENABLED,
+      defaultValue = "${EngineConfiguration.Cache.DEFAULT_ENABLED}",
+    )
+    cacheEnabled: Boolean,
+    @Property(
+      name = EngineConfiguration.Cache.TTL_SECONDS,
+      defaultValue = "${EngineConfiguration.Cache.DEFAULT_TTL_SECONDS}",
+    )
+    ttlSeconds: Long,
+  ): TaskCache =
+    TaskCache(
+      cacheEnabled = cacheEnabled,
+      ttlSeconds = ttlSeconds,
+    )
+
+  @Singleton
+  fun taskExecutor(
+    environment: Environment,
+    taskCache: TaskCache,
+    eventBus: EventBus<ArchitectEvent<*>>,
+    @Property(
+      name = EngineConfiguration.TaskExecution.PARALLEL_ENABLED,
+      defaultValue = "${EngineConfiguration.TaskExecution.DEFAULT_PARALLEL_ENABLED}",
+    )
+    parallelExecutionEnabled: Boolean,
+    localOutputCache: Optional<LocalOutputCache>,
+    remoteOutputCache: Optional<RemoteOutputCache>,
+  ): TaskExecutor =
+    TaskExecutor(
+      environment = environment,
+      taskCache = taskCache,
+      eventBus = eventBus,
+      dependencyResolver = TaskDependencyResolver(),
+      parallelExecutionEnabled = parallelExecutionEnabled,
+      outputCache = localOutputCache.orElse(null),
+      outputCacheEnabled = localOutputCache.isPresent,
+      remoteOutputCache = remoteOutputCache.orElse(null),
+    )
+}

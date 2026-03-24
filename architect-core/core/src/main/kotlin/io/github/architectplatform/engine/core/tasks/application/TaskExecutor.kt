@@ -18,7 +18,6 @@ import io.github.architectplatform.engine.core.tasks.domain.events.TaskEvents.ta
 import io.github.architectplatform.engine.domain.events.ArchitectEvent
 import io.github.architectplatform.engine.domain.events.ExecutionId
 import io.github.architectplatform.engine.domain.events.generateExecutionId
-import jakarta.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +33,6 @@ import org.slf4j.LoggerFactory
  * the same batch have no ordering dependency on each other and run concurrently when
  * [parallelExecutionEnabled] is true. Batches themselves execute sequentially.
  */
-@Singleton
 class TaskExecutor(
     private val environment: Environment,
     private val taskCache: TaskCache,

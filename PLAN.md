@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 43/288 tasks completed (14.9%)
+Overall Progress: 44/288 tasks completed (15.3%)
 Current Phase: Phase 3 — Re-establish architectural boundaries in the runtime stack
-Last Updated: 2026-03-24T11:05:00Z
+Last Updated: 2026-03-24T12:00:00Z
 
 ## Executive Summary
 
@@ -433,7 +433,7 @@ The repository currently contains several categories of assets:
   - [x] Converge secret resolution into `architect-core`. | Finished: 2026-03-24T10:26:43Z | Notes: Removed the engine-local `SecretResolver` implementation set and replaced it with a Micronaut factory that exposes `architect-core`'s `CompositeSecretResolver.default()` as the engine bean. Secret resolution logic now lives in `architect-core`, while `architect-engine` keeps only the host bean registration needed by `ApplicationEnvironment`.
   - [x] Converge config loading and validation into `architect-core`. | Finished: 2026-03-24T10:28:54Z | Notes: Removed the engine-local `ConfigLoader` and `ConfigValidator` copies so `architect-engine` now consumes the richer `architect-core` implementations, including raw-YAML loading, profile-aware validation inputs, schema/plugin-section validation, and line-aware diagnostics.
   - [x] Converge project lifecycle service into `architect-core`. | Finished: 2026-03-24T11:05:00Z | Notes: Deleted the engine-local ProjectService and 6 identical project domain types (Project, ProjectRepository, LazyProjectLoadState, ConfigParser, InMemoryProjectRepository, YamlConfigParser). Added reloadProject() and hasLocalPlugins() to core's ProjectService. Created ProjectServiceFactory in engine to construct ProjectService with Micronaut property-driven config and to adapt CloudReporterService to the core ProjectRegistrationReporter interface.
-  - [ ] Converge task execution, cache, and runtime event services into `architect-core`.
+  - [x] Converge task execution, cache, and runtime event services into `architect-core`. | Finished: 2026-03-24T12:00:00Z | Notes: Deleted 41 byte-identical files and 13 engine-local shadow classes (including TaskExecutor, TaskCache, BashCommandExecutor, InlineTaskPlugin, InlineTaskConfig, and 8 Serdeable-only drifted DTOs/events). Merged InlineTaskRequirements feature from engine into core's InlineTaskConfig/InlineTaskPlugin. Removed @Singleton from core's TaskExecutor, TaskCache, and BashCommandExecutor. Created RuntimeServiceFactory in engine for Micronaut property-driven construction of these services. Created SerdeImports.kt for centralized @SerdeImport declarations. Made TaskPermissionScope/TaskPermissionContext public for cross-module access.
   - [ ] Remove shadow implementations after parity tests exist.
   - [ ] Introduce architecture rules to prevent future duplication and dependency leaks.
   - [ ] Repair the current `architect-engine` baseline blocker as part of this convergence work.
@@ -447,6 +447,7 @@ The repository currently contains several categories of assets:
 - 2026-03-24: further decomposed the remaining shared-runtime convergence work into secret-resolution, project-service, and task-service slices. Completed the secret-resolution slice by deleting the engine-local resolver implementation set and registering the core `CompositeSecretResolver` through a Micronaut factory bean.
 - 2026-03-24: decomposed the project-service slice into configuration and lifecycle work. Completed the configuration half by removing the engine-local `ConfigLoader` and `ConfigValidator` copies so the engine now uses core's richer config loading and validation behavior.
 - 2026-03-24: completed the project lifecycle convergence by deleting the engine-local ProjectService and 6 identical project domain types, adding engine-only methods (reloadProject, hasLocalPlugins) to core's richer ProjectService, and creating a Micronaut factory bean to wire configuration and adapt CloudReporterService to the core ProjectRegistrationReporter interface.
+- 2026-03-24: completed the task execution/cache/events convergence. Deleted 41 identical files and 13 drifted engine shadow classes across multiple concern areas: task execution (TaskExecutor, TaskCache, BashCommandExecutor), inline plugins (InlineTaskPlugin, InlineTaskConfig), domain events and DTOs (8 Serdeable-annotated types). Merged InlineTaskRequirements feature into core, created RuntimeServiceFactory for Micronaut property-driven construction, and introduced centralized SerdeImports for core types needing Micronaut serialization. Made TaskPermissionScope/TaskPermissionContext public to support ApplicationEnvironment cross-module access.
 
 - [ ] Validation
   - [ ] Run `architect-core/core` and `architect-engine/engine` tests.

@@ -2,7 +2,6 @@ package io.github.architectplatform.engine.core.execution
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.engine.core.config.EngineConfiguration
-import jakarta.inject.Singleton
 import java.io.File
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
@@ -16,7 +15,6 @@ import org.slf4j.LoggerFactory
  * - Detailed logging of command execution
  * - Thread-safe command execution
  */
-@Singleton
 open class BashCommandExecutor(
     private val timeoutSeconds: Long = EngineConfiguration.CommandExecutor.DEFAULT_TIMEOUT_SECONDS,
     private val redirectErrorStream: Boolean = EngineConfiguration.CommandExecutor.DEFAULT_REDIRECT_ERROR_STREAM

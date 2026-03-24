@@ -4,13 +4,13 @@ import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskPermission
 import java.nio.file.Path
 
-internal data class TaskPermissionContext(
+data class TaskPermissionContext(
   val taskId: String,
   val permissions: Set<TaskPermission>,
   val projectDir: Path? = null,
 )
 
-internal object TaskPermissionScope {
+object TaskPermissionScope {
   private val current = ThreadLocal<TaskPermissionContext?>()
 
   fun current(): TaskPermissionContext? = current.get()

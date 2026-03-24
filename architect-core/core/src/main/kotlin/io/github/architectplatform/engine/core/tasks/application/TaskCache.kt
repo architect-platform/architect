@@ -1,10 +1,8 @@
 package io.github.architectplatform.engine.core.tasks.application
 
 import io.github.architectplatform.api.core.tasks.TaskResult
-import jakarta.inject.Singleton
 import java.util.concurrent.ConcurrentHashMap
 
-@Singleton
 class TaskCache(
   private val cacheEnabled: Boolean = false,
   private val ttlSeconds: Long = 0,
