@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 88/350 tasks completed (25.1%)
+Overall Progress: 89/350 tasks completed (25.4%)
 Current Phase: Phase 8 — Standardize testing, compatibility, and release confidence
-Last Updated: 2026-03-25T01:00:00Z
+Last Updated: 2026-03-25T01:30:00Z
 
 ## Standards and Principles Gaps
 
@@ -340,7 +340,7 @@ Last Updated: 2026-03-25T01:00:00Z
 - [ ] Tasks
   - [x] Define minimum test matrices for libraries, services, plugins, SDKs, frontend, and IDE tools. | Finished: 2026-03-24T22:55:00Z | Notes: Added `docs/guides/testing-standard.md` as the new repository-wide minimum test matrix, covering libraries, services, plugins, SDKs, frontend products, and IDE/editor integrations with support-tier expectations and suggested local validation commands. Linked the guide from `mkdocs.yml` and updated `CONTRIBUTING.md` so contributors now have one authoritative cross-module testing baseline.
   - [x] Add compatibility tests between engine protocol handling and the SDK implementations. | Finished: 2026-03-25T01:00:00Z | Notes: Created shared protocol fixtures (docs/protocol-fixtures.json) and fixture-backed compatibility tests in all 4 implementations: Kotlin engine (9 tests), TypeScript SDK (4 tests), Python SDK (4 tests), Go SDK (3 tests). All pass green.
-  - [ ] Add smoke/integration suites for plugin loading across local, GitHub, and process plugin paths.
+  - [x] Add smoke/integration suites for plugin loading across local, GitHub, and process plugin paths. | Finished: 2026-03-25T01:30:00Z | Notes: Added ProcessPluginAdapterSmokeTest (3 tests, real subprocess with shell script APP v1 plugin), IsolatedPluginClassLoaderTest (4 tests, child-first behavior + shared API delegation), PluginSourceRegistryTest (4 tests, delegation/unsupported/listing). Existing coverage for local, registry, HTTP, and GitHub paths was already solid.
   - [ ] Stabilize and fix current CLI integration test failures.
   - [ ] Introduce release-readiness checks per support tier.
 
