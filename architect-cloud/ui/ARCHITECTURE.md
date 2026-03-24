@@ -18,8 +18,8 @@ That scope is deliberately smaller than a full dashboard product. The UI current
 
 - **Framework**: React 18
 - **Build tool**: Vite 5
-- **Language**: JavaScript (no TypeScript)
-- **State model**: local `useState` and `useEffect`
+- **Language**: TypeScript
+- **State model**: typed polling hook built on `useState`, `useEffect`, `useMemo`, and `useCallback`
 - **Styling**: global CSS files (`App.css`, `index.css`)
 - **Transport**: browser `fetch()` calls to the cloud backend REST API
 
@@ -31,8 +31,12 @@ architect-cloud/ui/
 ├── package.json
 ├── vite.config.js
 └── src/
-    ├── main.jsx
-    ├── App.jsx
+    ├── api/
+    ├── components/
+    ├── hooks/
+    ├── types/
+    ├── main.tsx
+    ├── App.tsx
     ├── App.css
     └── index.css
 ```
@@ -42,26 +46,29 @@ architect-cloud/ui/
 ### Entry points
 
 - `index.html` hosts the root DOM node
-- `src/main.jsx` mounts the React tree
-- `src/App.jsx` owns the entire application behavior
+- `src/main.tsx` mounts the React tree
+- `src/App.tsx` coordinates the typed dashboard hook and presentational components
+- `src/api/cloudApi.ts` contains typed fetch helpers for backend responses
+- `src/hooks/useCloudDashboard.ts` owns the polling lifecycle and typed state
+- `src/types/cloud.ts` defines the shared response/state contracts used by the UI
 
 ### Data flow
 
-`App.jsx` currently performs all frontend orchestration:
+The typed dashboard flow currently works like this:
 
-1. define `API_BASE_URL` and a fixed `REFRESH_INTERVAL`
-2. fetch `/api/engines`
-3. fetch `/api/projects`
-4. fetch `/api/executions/engine/{engineId}` for each engine
-5. sort executions client-side by `startedAt`
-6. store everything in local component state
-7. re-run the fetch cycle on a polling interval
+1. `useCloudDashboard()` triggers a refresh on mount and on the polling interval
+2. `cloudApi.ts` fetches `/api/engines`
+3. `cloudApi.ts` fetches `/api/projects`
+4. `cloudApi.ts` fetches `/api/executions/engine/{engineId}` for each engine
+5. executions are sorted client-side by `startedAt`
+6. the hook stores typed state plus `lastUpdated`
+7. `App.tsx` renders typed summary components from the hook state
 
 ## Current architectural characteristics
 
-- **Single-component application**: the top-level `App` component owns fetch logic, derived stats, loading state, error state, and rendering
+- **Small typed module split**: the UI is now divided into typed API, hook, component, and type modules
 - **No routing**: the UI is one screen with no navigation model
-- **No shared state layer**: there is no query/cache abstraction, store, or typed API client
+- **Hook-based state layer**: there is a typed dashboard hook, but no broader query/cache/store abstraction yet
 - **Polling instead of streaming**: the backend exposes WebSocket-based event streaming, but the UI currently refreshes with periodic REST polling only
 - **Minimal rendering**: the current view renders a small summary-card view and an error banner, but not a full dashboard layout
 
@@ -70,7 +77,7 @@ architect-cloud/ui/
 - no dedicated components for engines, projects, or executions
 - no request cancellation, retry policy, or normalized cache
 - no environment-based API configuration beyond in-file constants
-- linting and unit-test harnesses exist, but coverage is still minimal
+- linting, type-checking, and unit-test harnesses exist, but coverage is still minimal
 - no support statement beyond incubating proof-of-concept status
 
 ## Near-term architecture follow-ups

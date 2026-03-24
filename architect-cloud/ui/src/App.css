@@ -37,6 +37,12 @@
   font-weight: 600;
 }
 
+.last-updated {
+  margin-top: 1rem;
+  color: #596780;
+  font-size: 0.95rem;
+}
+
 .error-banner {
   background: #fee;
   border: 1px solid #fcc;

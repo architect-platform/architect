@@ -9,11 +9,11 @@
 The current UI scope is intentionally narrow:
 
 - boot a React application with Vite
-- poll the cloud backend REST API for engines, projects, and executions
-- keep the fetched data in local component state
+- poll the cloud backend REST API for engines, projects, and executions through a typed API layer
+- keep the fetched data in typed hook state
 - render a lightweight summary-card view plus an error banner with a retry action
 
-It is **not** yet a supported product dashboard. There is no routing, no dedicated view structure, no real-time WebSocket subscription, and the current lint/test coverage is still minimal.
+It is **not** yet a supported product dashboard. There is no routing, no dedicated view structure, no real-time WebSocket subscription, and the current test coverage remains intentionally small.
 
 ## Current architecture
 
@@ -22,10 +22,13 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for the concrete frontend architecture 
 ## What exists today
 
 - `src/main.jsx` mounts a single React application into `index.html`
-- `src/App.jsx` owns all UI state and backend polling logic
+- `src/App.tsx` composes typed hook and presentational components
+- `src/api/cloudApi.ts` defines the typed backend fetch layer
+- `src/hooks/useCloudDashboard.ts` owns typed polling/state logic
+- `src/components/` contains focused UI components
 - `src/App.css` and `src/index.css` provide a minimal global style layer
 - `vite.config.js` configures the Vite dev/build entrypoint
-- `src/App.test.jsx` covers the current fetch/error behavior with Vitest + Testing Library
+- `src/App.test.tsx` plus component tests cover the current fetch/error and rendering behavior
 - `eslint.config.js` provides repo-local frontend linting for the UI surface
 
 ## Local development
@@ -49,7 +52,7 @@ npm run preview
 ## Known gaps
 
 - dashboard rendering is still minimal and limited to summary cards
-- data fetching is implemented with ad hoc polling in one component
+- the typed polling model still lives in a single dashboard hook
 - the backend's WebSocket event stream is not consumed by the UI
-- test coverage is currently limited to the main `App` component behavior
+- test coverage is still limited to the current hook-backed summary flow and small presentational components
 - there are still no integration or end-to-end tests
