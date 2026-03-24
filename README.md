@@ -405,17 +405,28 @@ architect/
 └── README.md              # This file
 ```
 
-### Building All Components
+### Building Components
+
+> There is no root Gradle wrapper. Each module is independently built from its own directory.
 
 ```bash
-# Build everything
-./gradlew build
+# Build the API library
+cd architect-api/api && ./gradlew build
 
-# Build specific component
-cd architect-cli && ./gradlew build
+# Build the core runtime
+cd architect-core/core && ./gradlew build
 
-# Run tests
-./gradlew test
+# Build the engine
+cd architect-engine/engine && ./gradlew build
+
+# Build the CLI
+cd architect-cli/cli && ./gradlew build
+
+# Run tests for a specific module
+cd architect-engine/engine && ./gradlew test
+
+# Run tests with coverage
+cd architect-api/api && ./gradlew test jacocoTestReport
 ```
 
 ### Creating a Custom Plugin

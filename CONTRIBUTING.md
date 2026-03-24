@@ -49,31 +49,33 @@ Enhancement suggestions are welcome! Please provide:
 
 ### Clone and Build
 
+> There is no root Gradle wrapper. Each module must be built from its own directory.
+
 ```bash
 # Clone the repository
 git clone https://github.com/architect-platform/architect.git
 cd architect
 
-# Build all components
-./gradlew build
-
-# Or build specific components
+# Build specific components
 cd architect-cli/cli && ./gradlew build
 cd architect-engine/engine && ./gradlew build
 cd architect-api/api && ./gradlew build
+cd architect-core/core && ./gradlew build
 ```
 
 ### Running Tests
 
-```bash
-# Run all tests
-./gradlew test
+> Run tests per module — there is no root-level test task.
 
-# Run tests for specific component
+```bash
+# Run tests for a specific module
 cd architect-engine/engine && ./gradlew test
 
-# Run with coverage
-./gradlew test jacocoTestReport
+# Run tests for a specific test class
+cd architect-engine/engine && ./gradlew test --tests TaskServiceTest
+
+# Run with coverage (architect-api supports jacocoTestReport)
+cd architect-api/api && ./gradlew test jacocoTestReport
 ```
 
 ### Building Documentation
@@ -255,7 +257,7 @@ Releases follow semantic versioning:
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the project's MIT License.
+By contributing, you agree that your contributions will be licensed under the project's **Apache 2.0 License**.
 
 ---
 

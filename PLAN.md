@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 10/283 tasks completed (3.5%)
+Overall Progress: 11/283 tasks completed (3.9%)
 Current Phase: Phase 0 — Establish an accurate baseline
-Last Updated: 2026-03-24T00:02:00Z
+Last Updated: 2026-03-24T00:03:00Z
 
 ## Executive Summary
 
@@ -358,7 +358,7 @@ The repository currently contains several categories of assets:
 - [ ] Tasks
   - [x] Create a repository status matrix for every subproject: active, beta, incubating, placeholder, deprecated. | Finished: 2026-03-24T00:01:00Z | Notes: Created STATUS.md with full matrix across core platform, products, plugins, SDKs, and delivery infra.
   - [x] Create a repository decomposition map that explains what each top-level directory is for and why it exists. | Finished: 2026-03-24T00:02:00Z | Notes: Created docs/architecture/repository-map.md with full taxonomy, per-directory tables, contributor journeys, and root file inventory.
-  - [ ] Reconcile root `README.md` and `CONTRIBUTING.md` with actual build/test entry points.
+  - [x] Reconcile root `README.md` and `CONTRIBUTING.md` with actual build/test entry points. | Finished: 2026-03-24T00:03:00Z | Notes: Removed root-level ./gradlew build/test instructions (no root wrapper exists); replaced with per-module commands. Fixed wrong path (architect-cli → architect-cli/cli). Fixed Apache 2.0 vs MIT license error in CONTRIBUTING.md.
   - [ ] Document the current baseline failures for `architect-engine`, `architect-cli`, and `architect-cloud/ui`.
   - [ ] Decide whether the repo will gain a root orchestrator or explicitly document per-module execution only.
 
