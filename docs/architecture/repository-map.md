@@ -52,6 +52,26 @@ The taxonomy decision does **not** require immediate directory moves. It first
 establishes a stable classification model so later path changes can be
 intentional instead of ad hoc.
 
+## Current-to-Target Placement Decisions
+
+| Current top-level area | Decision | Target grouping |
+|---|---|---|
+| `architect-api/` | move under grouped parent | `platform/api/` |
+| `architect-core/` | move under grouped parent | `platform/core/` |
+| `architect-engine/` | move under grouped parent | `platform/engine/` |
+| `architect-cli/` | move under grouped parent | `platform/cli/` |
+| `architect-cloud/` | move under grouped parent | `products/cloud/` |
+| `architect-vscode/` | move under grouped parent | `products/vscode/` |
+| `architect-intellij/` | move under grouped parent | `products/intellij/` |
+| `plugins/` | stay top-level | category root |
+| `sdk/` | stay top-level | category root |
+| `docs/` | stay top-level | category root |
+| `.github/` | stay top-level | repository governance/delivery root |
+| `homebrew/` | stay top-level | repository delivery root |
+
+Root files remain at the repository root unless there is a separate governance
+decision to group policy/configuration files more aggressively.
+
 ---
 
 ## Core Platform

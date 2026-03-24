@@ -245,3 +245,48 @@ taxonomy visible in the tree instead of leaving it implicit.
 - **Pro**: Separates maturity/status concerns from functional ownership.
 - **Con**: Later physical path moves will need careful coordination across CI,
 	docs, and build tooling.
+
+---
+
+## ADR-011: Existing top-level modules will converge under grouped parents rather than remain flat
+
+**Status**: Accepted  
+**Date**: 2026-03
+
+### Context
+
+Now that the target taxonomy is defined, the repository still needs an explicit
+placement decision for today's top-level directories. Without that, future path
+moves remain subjective and contributors cannot tell whether the current flat
+layout is intentional or transitional.
+
+### Decision
+
+The following top-level areas should eventually move under grouped parents:
+
+- `architect-api`, `architect-core`, `architect-engine`, `architect-cli` ->
+	`platform/`
+- `architect-cloud`, `architect-vscode`, `architect-intellij` -> `products/`
+
+The following top-level areas should remain top-level category roots:
+
+- `plugins/`
+- `sdk/`
+- `docs/`
+- `.github/`
+- `homebrew/`
+
+Root governance files such as `README.md`, `CONTRIBUTING.md`, `SECURITY.md`,
+`CODE_OF_CONDUCT.md`, `LICENSE`, `PLAN.md`, `STATUS.md`, `mkdocs.yml`, and
+`architect.yml` remain at the repository root.
+
+No physical path moves are implied by this decision alone; it defines the
+intended destination layout for later phases.
+
+### Consequences
+
+- **Pro**: Makes future reorganization work incremental instead of ad hoc.
+- **Pro**: Preserves existing category roots that are already clear (`plugins`,
+	`sdk`, `docs`).
+- **Con**: Documentation and tooling will temporarily describe both current and
+	target layouts until migration actually happens.

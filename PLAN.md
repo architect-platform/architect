@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 23/283 tasks completed (8.1%)
+Overall Progress: 24/283 tasks completed (8.5%)
 Current Phase: Phase 1a — Reorganize repository decomposition and ownership boundaries
-Last Updated: 2026-03-24T09:25:56Z
+Last Updated: 2026-03-24T09:27:14Z
 
 ## Executive Summary
 
@@ -385,7 +385,7 @@ The repository currently contains several categories of assets:
     - [x] SDKs
     - [x] incubating/experimental modules
     - [x] docs and policy
-  - [ ] Decide which existing modules stay top-level versus move under grouped parent directories.
+  - [x] Decide which existing modules stay top-level versus move under grouped parent directories. | Finished: 2026-03-24T09:27:14Z | Notes: Accepted ADR-011 and added a current-to-target placement table in docs/architecture/repository-map.md. Decided that the current `architect-*` platform and product directories are transitional and should eventually group under `platform/` and `products/`, while `plugins/`, `sdk/`, `docs/`, `.github/`, and `homebrew/` remain top-level category roots.
   - [ ] Define ownership metadata per bounded area.
   - [ ] Add a repository map to docs.
   - [ ] Mark incomplete areas explicitly rather than letting them look production-adjacent.
