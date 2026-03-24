@@ -15,6 +15,7 @@ import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
 import java.io.File
 import java.nio.file.Path
+import org.slf4j.LoggerFactory
 
 /**
  * Architect plugin for managing and executing pipelines of Architect tasks.
@@ -28,6 +29,10 @@ import java.nio.file.Path
  * The plugin integrates with GitHub Actions for CI/CD automation.
  */
 class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
+
+    companion object {
+        private val log = LoggerFactory.getLogger(PipelinesPlugin::class.java)
+    }
     override val id = "pipelines-plugin"
     override val contextKey: String = "pipelines"
     override val ctxClass: Class<PipelinesContext> = PipelinesContext::class.java
@@ -257,7 +262,7 @@ class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
         // Validate template name — only simple names allowed, no path traversal
         val safeTemplateName = extendsTemplate.replace(Regex("[^a-zA-Z0-9._-]"), "")
         if (safeTemplateName != extendsTemplate || safeTemplateName.contains("..")) {
-            System.err.println("Warning: Unsafe pipeline template name '$extendsTemplate', skipping.")
+            log.warn("Unsafe pipeline template name '{}', skipping.", extendsTemplate)
             return workflow
         }
 
@@ -269,7 +274,7 @@ class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
                 "Pipeline template path"
             ).toFile()
         } catch (e: IllegalArgumentException) {
-            System.err.println("Warning: Template path traversal detected for '$extendsTemplate', skipping.")
+            log.warn("Template path traversal detected for '{}', skipping.", extendsTemplate)
             return workflow
         }
         if (templateFile.exists()) {
@@ -277,7 +282,7 @@ class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
                 val template = yamlMapper.readValue(templateFile, WorkflowDefinition::class.java)
                 return mergeWorkflows(template, workflow)
             } catch (e: Exception) {
-                System.err.println("Warning: Failed to parse template file '$extendsTemplate.yml': ${e.message}")
+                log.warn("Failed to parse template file '{}.yml': {}", extendsTemplate, e.message)
                 return workflow
             }
         }
@@ -289,14 +294,14 @@ class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
             )?.bufferedReader()?.use { it.readText() }
 
             if (content == null) {
-                System.err.println("Warning: Template '$extendsTemplate' not found in .architect/pipelines/ or embedded resources")
+                log.warn("Template '{}' not found in .architect/pipelines/ or embedded resources", extendsTemplate)
                 return workflow
             }
 
             val template = yamlMapper.readValue(content, WorkflowDefinition::class.java)
             return mergeWorkflows(template, workflow)
         } catch (e: Exception) {
-            System.err.println("Warning: Failed to load template '$extendsTemplate': ${e.message}")
+            log.warn("Failed to load template '{}': {}", extendsTemplate, e.message)
             return workflow
         }
     }

@@ -126,15 +126,12 @@ class ArchitecturePlugin : ArchitectPlugin<ArchitectureContext> {
                     else -> rules.formatTextReport(result)
                 }
                 
-                // Print report
-                println(report)
-                
                 // Determine if we should fail the build
                 val shouldFail = result.shouldFail(context.strict, context.onViolation)
                 
                 return if (shouldFail) {
                     TaskResult.failure(
-                        "Architecture validation failed with ${result.violations.size} violation(s)",
+                        "Architecture validation failed with ${result.violations.size} violation(s)\n$report",
                         listOf(
                             TaskResult.failure("${result.violations.count { it.rule.severity == "error" }} error(s)"),
                             TaskResult.failure("${result.violations.count { it.rule.severity == "warning" }} warning(s)")

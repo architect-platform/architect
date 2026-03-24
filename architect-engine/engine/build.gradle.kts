@@ -5,6 +5,8 @@ plugins {
   id("com.gradleup.shadow") version "8.3.5"
   id("io.micronaut.application") version "4.6.1"
   id("io.micronaut.aot") version "4.6.1"
+  id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
+  id("io.gitlab.arturbosch.detekt") version "1.23.7"
   jacoco
 }
 
@@ -96,12 +98,27 @@ configurations.all {
       useVersion("1.9.25")
     }
     if (requested.group == "org.jetbrains.kotlinx") {
-      useVersion("1.8.1") // coroutines version compatible with Kotlin 1.9.x
+      useVersion("1.10.2") // coroutines version declared in dependencies; compatible with Kotlin 1.9.x
     }
   }
 }
 
 jacoco { toolVersion = "0.8.12" }
+
+ktlint {
+  version.set("1.0.1")
+  verbose.set(true)
+  android.set(false)
+  ignoreFailures.set(true) // Report but do not break the build during adoption phase
+}
+
+detekt {
+  config.setFrom(rootProject.file("../../detekt.yml"))
+  buildUponDefaultConfig = true
+  ignoreFailures = true // Report but do not block the build during adoption phase
+  // Detect baseline file next to build.gradle.kts, created with `./gradlew detektBaseline`
+  baseline = file("detekt-baseline.xml")
+}
 
 tasks.jacocoTestReport {
   dependsOn(tasks.test)

@@ -2,6 +2,7 @@ plugins {
   kotlin("jvm") version "1.9.25"
   `maven-publish`
   id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
+  id("io.gitlab.arturbosch.detekt") version "1.23.7"
   jacoco
   id("info.solidsoft.pitest") version "1.15.0"
 }
@@ -39,6 +40,13 @@ ktlint {
   version.set("1.0.1")
   verbose.set(true)
   android.set(false)
+}
+
+detekt {
+  config.setFrom(rootProject.file("../../detekt.yml"))
+  buildUponDefaultConfig = true
+  ignoreFailures = true
+  baseline = file("detekt-baseline.xml")
 }
 
 publishing {
