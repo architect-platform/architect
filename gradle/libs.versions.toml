@@ -3,7 +3,6 @@ kotlin = "1.9.25"
 ksp = "1.9.25-1.0.20"
 micronaut = "4.6.1"
 shadow = "8.3.5"
-shadow-legacy = "8.1.1"
 ktlint-plugin = "12.1.0"
 detekt-plugin = "1.23.7"
 pitest-plugin = "1.15.0"
@@ -36,7 +35,6 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 micronaut-application = { id = "io.micronaut.application", version.ref = "micronaut" }
 micronaut-aot = { id = "io.micronaut.aot", version.ref = "micronaut" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
-shadow-legacy = { id = "com.github.johnrengelman.shadow", version.ref = "shadow-legacy" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-plugin" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt-plugin" }
 pitest = { id = "info.solidsoft.pitest", version.ref = "pitest-plugin" }

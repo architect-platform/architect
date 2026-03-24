@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 32/283 tasks completed (11.3%)
+Overall Progress: 34/283 tasks completed (12.0%)
 Current Phase: Phase 2 — Unify build, dependency, and version governance
-Last Updated: 2026-03-24T09:58:21Z
+Last Updated: 2026-03-24T10:07:17Z
 
 ## Executive Summary
 
@@ -408,8 +408,8 @@ The repository currently contains several categories of assets:
   - [x] Introduce a shared Gradle convention plugin and/or version catalog for Kotlin/Micronaut/Jackson/testing/jacoco. | Finished: 2026-03-24T09:47:38Z | Notes: Added a repository-level `gradle/libs.versions.toml` and wired `architect-api/api`, `architect-core/core`, `architect-cli/cli`, `architect-engine/engine`, and `architect-cloud/backend` settings to it. Updated those build scripts to consume shared plugin, dependency, coroutines, Kotlin, Jackson, testing, and JaCoCo versions from the catalog while keeping existing source-level failures isolated from build-configuration validation.
   - [x] Standardize artifact versioning strategy across API/core/engine/CLI/plugins. | Finished: 2026-03-24T09:53:45Z | Notes: Extended `gradle/libs.versions.toml` to become the shared source of truth for platform and plugin artifact versions, updated API/core/engine/CLI build scripts to read artifact versions and intra-platform dependency versions from the catalog, and wired all first-party plugin builds to use the shared API contract version. This removed mixed plugin API dependency versions (`1.1.2`, `1.1.3`, `2.1.0`) in favor of the current shared `2.1.0` contract.
   - [x] Eliminate repeated `resolutionStrategy.eachDependency` blocks where a single shared mechanism can be used. | Finished: 2026-03-24T09:58:21Z | Notes: Added `gradle/architect-kotlin-alignment.gradle.kts` and replaced the repeated Kotlin/coroutines alignment blocks in `architect-core/core`, `architect-engine/engine`, `architect-cli/cli`, and `architect-cloud/backend` with one shared applied script. Re-validated core and cloud backend test runs plus engine/CLI configuration resolution after the deduplication.
-  - [ ] Standardize plugin build scripts onto one template with deliberate deviations only.
-  - [ ] Audit and modernize Shadow plugin usage consistently across all relevant modules.
+  - [x] Standardize plugin build scripts onto one template with deliberate deviations only. | Finished: 2026-03-24T10:05:56Z | Notes: Added `gradle/architect-plugin-conventions.gradle.kts` and refactored all first-party plugin builds to share one common template for group, repositories, Java compatibility, test/JaCoCo wiring, and coverage enforcement. The remaining deliberate deviations are now limited to plugin-specific dependencies, artifact version selection, and explicit `mavenLocal()` opt-in where local development needs it.
+  - [x] Audit and modernize Shadow plugin usage consistently across all relevant modules. | Finished: 2026-03-24T10:07:17Z | Notes: Audited Shadow usage across the repo and confirmed only `architect-cli/cli` still used the legacy `com.github.johnrengelman.shadow` plugin line. Switched the CLI to the shared modern `com.gradleup.shadow` alias and removed the unused legacy alias from `gradle/libs.versions.toml`.
 
 - [ ] Validation
   - [ ] Run module builds against the new shared conventions.
