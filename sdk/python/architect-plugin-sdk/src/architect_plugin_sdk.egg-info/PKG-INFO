@@ -1,0 +1,92 @@
+Metadata-Version: 2.4
+Name: architect-plugin-sdk
+Version: 0.1.0
+Summary: Python SDK for Architect Plugin Protocol v1 process plugins
+Author: Architect Platform
+License: MIT
+Project-URL: Homepage, https://github.com/architect-platform/architect/tree/main/sdk/python/architect-plugin-sdk
+Project-URL: Repository, https://github.com/architect-platform/architect.git
+Project-URL: Issues, https://github.com/architect-platform/architect/issues
+Keywords: architect,plugin,json-rpc,python,sdk
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Typing :: Typed
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+
+# architect-plugin-sdk
+
+Python SDK for Architect Plugin Protocol v1 (APP v1). It lets you build Architect process plugins that communicate with the engine over JSON-RPC 2.0 on stdin/stdout.
+
+## Install
+
+```bash
+pip install architect-plugin-sdk
+```
+
+## Usage
+
+```python
+from architect_plugin_sdk import PluginServer, TaskDescriptor
+
+
+class ExamplePlugin:
+    def list_tasks(self):
+        return [TaskDescriptor(id="hello", description="Print a greeting")]
+
+    def execute_task(self, request, writer):
+        writer.output(f"running {request.id}")
+        writer.progress(1.0)
+        return 0
+
+
+if __name__ == "__main__":
+    PluginServer(ExamplePlugin()).serve()
+```
+
+## Full Example Plugin
+
+A full-featured APP v1 example is available at `examples/full_featured_plugin.py`.
+
+It demonstrates:
+
+- `init(config)` returning plugin metadata
+- `list_tasks()` with `phase`, `dependencies`, and `requires_confirmation`
+- `execute_task(id, args, env)` using `output`, `progress`, and `error` events
+- Success (`exitCode: 0`) and failure (`exitCode: 1`) task paths
+
+Run it locally:
+
+```bash
+PYTHONPATH=src python examples/full_featured_plugin.py
+```
+
+## API
+
+- `PluginServer`: APP v1 JSON-RPC server for stdin/stdout plugins
+- `PluginEventWriter`: helper for `output`, `error`, and `progress` events
+- `TaskDescriptor`, `ExecuteTaskParams`, `TaskEvent`, `InitResult`: typed protocol models
+- `run_plugin(plugin)`: convenience helper that starts the server immediately
+
+## Protocol Coverage
+
+This SDK implements the full APP v1 lifecycle:
+
+- `init`
+- `listTasks`
+- `executeTask`
+- `shutdown`
+
+It emits newline-delimited JSON task events for:
+
+- `output`
+- `progress`
+- `error`
+- `completed`
+
+## Development
+
+```bash
+PYTHONPATH=src python -m unittest discover -s tests
+```

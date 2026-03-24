@@ -1,0 +1,106 @@
+{
+  "description": "Shared protocol fixtures for Architect Plugin Protocol v1 (APP v1) compatibility testing. All engine and SDK implementations must be able to serialize/deserialize these messages identically.",
+  "protocol_version": "1.0.0",
+  "json_rpc_version": "2.0",
+
+  "requests": {
+    "init": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "init",
+      "params": {
+        "config": { "enabled": true, "name": "test-plugin" },
+        "protocol_version": "1.0.0"
+      }
+    },
+    "listTasks": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "listTasks"
+    },
+    "executeTask": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "method": "executeTask",
+      "params": {
+        "id": "build",
+        "args": ["--scan", "--verbose"],
+        "env": {
+          "ARCHITECT_PROJECT_DIR": "/workspace/project",
+          "ARCHITECT_PROFILE": "default"
+        }
+      }
+    },
+    "shutdown": {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "method": "shutdown"
+    }
+  },
+
+  "responses": {
+    "init_success": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": { "ok": true, "name": "test-plugin", "version": "1.0.0" }
+    },
+    "listTasks_success": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": [
+        {
+          "id": "build",
+          "description": "Build the project",
+          "phase": "build",
+          "dependencies": ["init"],
+          "permissions": ["process:exec"],
+          "requires_confirmation": false
+        },
+        {
+          "id": "deploy",
+          "description": "Deploy to production",
+          "phase": "release",
+          "dependencies": ["build"],
+          "permissions": ["process:exec", "network:outbound"],
+          "requires_confirmation": true
+        }
+      ]
+    },
+    "executeTask_ack": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": null
+    },
+    "protocol_version_error": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "error": {
+        "code": -32600,
+        "message": "Unsupported protocol version: 2.0.0"
+      }
+    }
+  },
+
+  "events": {
+    "output": { "type": "output", "data": "Compiling sources..." },
+    "progress": { "type": "progress", "progress": 0.5 },
+    "error": { "type": "error", "data": "Compilation failed: syntax error at line 42" },
+    "completed_success": { "type": "completed", "exitCode": 0 },
+    "completed_failure": { "type": "completed", "exitCode": 1 }
+  },
+
+  "task_descriptors": {
+    "minimal": {
+      "id": "hello",
+      "description": "A minimal task"
+    },
+    "full": {
+      "id": "deploy",
+      "description": "Deploy to production",
+      "phase": "release",
+      "dependencies": ["build", "test"],
+      "permissions": ["process:exec", "network:outbound"],
+      "requires_confirmation": true
+    }
+  }
+}

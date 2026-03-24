@@ -1,0 +1,13 @@
+README.md
+pyproject.toml
+src/architect_plugin_sdk/__init__.py
+src/architect_plugin_sdk/models.py
+src/architect_plugin_sdk/plugin.py
+src/architect_plugin_sdk/protocol.py
+src/architect_plugin_sdk/server.py
+src/architect_plugin_sdk.egg-info/PKG-INFO
+src/architect_plugin_sdk.egg-info/SOURCES.txt
+src/architect_plugin_sdk.egg-info/dependency_links.txt
+src/architect_plugin_sdk.egg-info/top_level.txt
+tests/test_protocol_compat.py
+tests/test_server.py
