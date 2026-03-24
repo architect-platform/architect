@@ -3,6 +3,7 @@ package io.github.architectplatform.plugins.maven
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.tasks.TaskRegistry
+import io.github.architectplatform.api.core.utils.ShellUtils
 
 class MavenPlugin : ArchitectPlugin<MavenContext> {
   override val id = "maven-plugin"
@@ -11,8 +12,8 @@ class MavenPlugin : ArchitectPlugin<MavenContext> {
   override var context: MavenContext = MavenContext()
 
   private fun commonFlags(ctx: MavenContext): String = buildString {
-    if (ctx.profiles.isNotEmpty()) append(" -P ${ctx.profiles.joinToString(",")}")
-    if (ctx.settings.isNotEmpty()) append(" -s ${ctx.settings}")
+    if (ctx.profiles.isNotEmpty()) append(" -P ${ShellUtils.escapeShellArg(ctx.profiles.joinToString(","))}")
+    if (ctx.settings.isNotEmpty()) append(" -s ${ShellUtils.escapeShellArg(ctx.settings)}")
   }
 
   override fun register(registry: TaskRegistry) {
@@ -21,7 +22,7 @@ class MavenPlugin : ArchitectPlugin<MavenContext> {
       phase = CoreWorkflow.TEST,
       ctx = context,
       buildCommand = { ctx, args ->
-        "mvn verify${commonFlags(ctx)}${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
+        "mvn verify${commonFlags(ctx)}${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
       },
     ))
 
@@ -34,7 +35,7 @@ class MavenPlugin : ArchitectPlugin<MavenContext> {
           append("mvn package")
           if (ctx.skipTests) append(" -DskipTests")
           append(commonFlags(ctx))
-          if (args.isNotEmpty()) append(" ${args.joinToString(" ")}")
+          if (args.isNotEmpty()) append(" ${ShellUtils.escapeShellArgs(args)}")
         }
       },
     ))
@@ -48,7 +49,7 @@ class MavenPlugin : ArchitectPlugin<MavenContext> {
           append("mvn deploy")
           if (ctx.skipTests) append(" -DskipTests")
           append(commonFlags(ctx))
-          if (args.isNotEmpty()) append(" ${args.joinToString(" ")}")
+          if (args.isNotEmpty()) append(" ${ShellUtils.escapeShellArgs(args)}")
         }
       },
     ))

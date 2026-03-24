@@ -3,6 +3,7 @@ package io.github.architectplatform.plugins.python
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.tasks.TaskRegistry
+import io.github.architectplatform.api.core.utils.ShellUtils
 
 class PythonPlugin : ArchitectPlugin<PythonContext> {
   override val id = "python-plugin"
@@ -17,9 +18,9 @@ class PythonPlugin : ArchitectPlugin<PythonContext> {
       ctx = context,
       buildCommand = { ctx, args ->
         when (ctx.tool) {
-          "uv" -> "uv sync${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
-          "poetry" -> "poetry install${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
-          else -> "pip install -r requirements.txt${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
+          "uv" -> "uv sync${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
+          "poetry" -> "poetry install${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
+          else -> "pip install -r requirements.txt${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
         }
       },
     ))
@@ -29,7 +30,7 @@ class PythonPlugin : ArchitectPlugin<PythonContext> {
       phase = CoreWorkflow.LINT,
       ctx = context,
       buildCommand = { ctx, args ->
-        val target = if (args.isNotEmpty()) args.joinToString(" ") else "."
+        val target = if (args.isNotEmpty()) ShellUtils.escapeShellArgs(args) else ShellUtils.escapeShellArg(".")
         when (ctx.linter) {
           "ruff" -> "ruff check $target"
           "flake8" -> "flake8 $target"
@@ -44,9 +45,9 @@ class PythonPlugin : ArchitectPlugin<PythonContext> {
       ctx = context,
       buildCommand = { ctx, args ->
         when (ctx.testRunner) {
-          "pytest" -> "pytest${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
-          "unittest" -> "python -m unittest${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
-          else -> "pytest${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
+          "pytest" -> "pytest${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
+          "unittest" -> "python -m unittest${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
+          else -> "pytest${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
         }
       },
     ))
@@ -57,9 +58,9 @@ class PythonPlugin : ArchitectPlugin<PythonContext> {
       ctx = context,
       buildCommand = { ctx, args ->
         when (ctx.tool) {
-          "uv" -> "uv build${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
-          "poetry" -> "poetry build${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
-          else -> "python -m build${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
+          "uv" -> "uv build${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
+          "poetry" -> "poetry build${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
+          else -> "python -m build${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
         }
       },
     ))
@@ -70,9 +71,9 @@ class PythonPlugin : ArchitectPlugin<PythonContext> {
       ctx = context,
       buildCommand = { ctx, args ->
         when (ctx.tool) {
-          "uv" -> "uv publish${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
-          "poetry" -> "poetry publish${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
-          else -> "twine upload dist/*${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
+          "uv" -> "uv publish${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
+          "poetry" -> "poetry publish${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
+          else -> "twine upload dist/*${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
         }
       },
     ))

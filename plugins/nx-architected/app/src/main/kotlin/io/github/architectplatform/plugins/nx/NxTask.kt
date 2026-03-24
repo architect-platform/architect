@@ -6,6 +6,7 @@ import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
+import io.github.architectplatform.api.core.utils.ShellUtils
 
 /**
  * Bridges an Nx target to an Architect task.
@@ -63,18 +64,19 @@ class NxTask(
   }
 
   private fun buildCommand(options: ExecutionOptions): String = buildString {
+    val safeTarget = ShellUtils.requireSafeIdentifier(nxTarget, "Nx target")
     append("npx nx")
     if (options.affected && options.projects.isNotEmpty()) {
-      append(" run-many --target=$nxTarget")
-      append(" --projects=${options.projects.joinToString(",")}")
+      append(" run-many --target=$safeTarget")
+      append(" --projects=${ShellUtils.escapeShellArg(options.projects.joinToString(","))}")
     } else if (options.affected) {
-      append(" affected --target=$nxTarget")
+      append(" affected --target=$safeTarget")
     } else {
-      append(" run-many --target=$nxTarget")
+      append(" run-many --target=$safeTarget")
     }
     append(" --parallel=${ctx.parallel}")
     if (options.forwardedArgs.isNotEmpty()) {
-      append(" ${options.forwardedArgs.joinToString(" ")}")
+      append(" ${ShellUtils.escapeShellArgs(options.forwardedArgs)}")
     }
   }
 }

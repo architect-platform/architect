@@ -3,6 +3,7 @@ package io.github.architectplatform.plugins.go
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.tasks.TaskRegistry
+import io.github.architectplatform.api.core.utils.ShellUtils
 
 class GoPlugin : ArchitectPlugin<GoContext> {
   override val id = "go-plugin"
@@ -18,9 +19,9 @@ class GoPlugin : ArchitectPlugin<GoContext> {
       buildCommand = { ctx, args ->
         buildString {
           append("go build")
-          if (ctx.ldflags.isNotEmpty()) append(" -ldflags '${ctx.ldflags}'")
-          if (ctx.outputBinary.isNotEmpty()) append(" -o ${ctx.outputBinary}")
-          if (args.isNotEmpty()) append(" ${args.joinToString(" ")}")
+          if (ctx.ldflags.isNotEmpty()) append(" -ldflags ${ShellUtils.escapeShellArg(ctx.ldflags)}")
+          if (ctx.outputBinary.isNotEmpty()) append(" -o ${ShellUtils.escapeShellArg(ctx.outputBinary)}")
+          if (args.isNotEmpty()) append(" ${ShellUtils.escapeShellArgs(args)}")
           else append(" ./...")
         }
       },
@@ -31,7 +32,7 @@ class GoPlugin : ArchitectPlugin<GoContext> {
       phase = CoreWorkflow.TEST,
       ctx = context,
       buildCommand = { _, args ->
-        "go test${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else " ./..."}"
+        "go test${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else " ./..."}"
       },
     ))
 
@@ -40,7 +41,7 @@ class GoPlugin : ArchitectPlugin<GoContext> {
       phase = CoreWorkflow.LINT,
       ctx = context,
       buildCommand = { _, args ->
-        "golangci-lint run${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else ""}"
+        "golangci-lint run${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else ""}"
       },
     ))
 
@@ -49,7 +50,7 @@ class GoPlugin : ArchitectPlugin<GoContext> {
       phase = CoreWorkflow.RELEASE,
       ctx = context,
       buildCommand = { _, args ->
-        "goreleaser release${if (args.isNotEmpty()) " ${args.joinToString(" ")}" else " --clean"}"
+        "goreleaser release${if (args.isNotEmpty()) " ${ShellUtils.escapeShellArgs(args)}" else " --clean"}"
       },
     ))
   }

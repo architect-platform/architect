@@ -3,6 +3,7 @@ package io.github.architectplatform.plugins.kubernetes
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.tasks.TaskRegistry
+import io.github.architectplatform.api.core.utils.ShellUtils
 
 class KubernetesPlugin : ArchitectPlugin<KubernetesContext> {
   override val id = "kubernetes-plugin"
@@ -11,10 +12,10 @@ class KubernetesPlugin : ArchitectPlugin<KubernetesContext> {
   override var context: KubernetesContext = KubernetesContext()
 
   private fun nsFlag(ctx: KubernetesContext): String =
-    if (ctx.namespace.isNotEmpty()) " -n ${ctx.namespace}" else ""
+    if (ctx.namespace.isNotEmpty()) " -n ${ShellUtils.escapeShellArg(ctx.namespace)}" else ""
 
   private fun ctxFlag(ctx: KubernetesContext): String =
-    if (ctx.context.isNotEmpty()) " --context ${ctx.context}" else ""
+    if (ctx.context.isNotEmpty()) " --context ${ShellUtils.escapeShellArg(ctx.context)}" else ""
 
   override fun register(registry: TaskRegistry) {
     registry.add(KubernetesTask(
@@ -22,7 +23,8 @@ class KubernetesPlugin : ArchitectPlugin<KubernetesContext> {
       phase = CoreWorkflow.PUBLISH,
       ctx = context,
       buildCommand = { c, args ->
-        "kubectl apply${nsFlag(c)}${ctxFlag(c)} -f ${if (args.isNotEmpty()) args.joinToString(" -f ") else c.manifests}"
+        val files = if (args.isNotEmpty()) args.joinToString(" -f ") { ShellUtils.escapeShellArg(it) } else ShellUtils.escapeShellArg(c.manifests)
+        "kubectl apply${nsFlag(c)}${ctxFlag(c)} -f $files"
       },
     ))
 
@@ -31,7 +33,7 @@ class KubernetesPlugin : ArchitectPlugin<KubernetesContext> {
       phase = CoreWorkflow.RUN,
       ctx = context,
       buildCommand = { c, args ->
-        val resource = if (args.isNotEmpty()) args[0] else "deployment"
+        val resource = ShellUtils.escapeShellArg(if (args.isNotEmpty()) args[0] else "deployment")
         "kubectl rollout status${nsFlag(c)}${ctxFlag(c)} $resource"
       },
     ))
@@ -41,7 +43,8 @@ class KubernetesPlugin : ArchitectPlugin<KubernetesContext> {
       phase = CoreWorkflow.VERIFY,
       ctx = context,
       buildCommand = { c, args ->
-        "kubectl get${nsFlag(c)}${ctxFlag(c)} ${if (args.isNotEmpty()) args.joinToString(" ") else "pods"}"
+        val resources = if (args.isNotEmpty()) ShellUtils.escapeShellArgs(args) else ShellUtils.escapeShellArg("pods")
+        "kubectl get${nsFlag(c)}${ctxFlag(c)} $resources"
       },
     ))
 
@@ -50,7 +53,7 @@ class KubernetesPlugin : ArchitectPlugin<KubernetesContext> {
       phase = CoreWorkflow.RUN,
       ctx = context,
       buildCommand = { c, args ->
-        "kubectl port-forward${nsFlag(c)}${ctxFlag(c)} ${args.joinToString(" ")}"
+        "kubectl port-forward${nsFlag(c)}${ctxFlag(c)} ${ShellUtils.escapeShellArgs(args)}"
       },
     ))
   }
