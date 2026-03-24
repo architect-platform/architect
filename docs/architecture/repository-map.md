@@ -297,6 +297,10 @@ languages other than Kotlin/JVM. All are **incubating**.
 
 ## Key Contributor Journeys
 
+These journeys use the **current repository paths**. The target taxonomy defined
+earlier in this document is the future destination, not the current on-disk
+layout.
+
 ### "I want to add a new task to an existing plugin"
 
 1. Open the plugin's `app/src/main/kotlin/.../` source
@@ -306,12 +310,19 @@ languages other than Kotlin/JVM. All are **incubating**.
 
 ### "I want to create a new plugin"
 
-1. Run `architect plugin create` or copy an active plugin as a template
+1. Run `architect plugin create <name> [template]` from the CLI, or copy an
+	active plugin as a fallback/manual template
 2. Implement `ArchitectPlugin<YourContext>`
 3. Register via `META-INF/services/io.github.architectplatform.api.core.plugins.ArchitectPlugin`
 4. Depend on `architect-api:2.1.0`
+5. Treat the generated/copied plugin as a standalone module under
+	`plugins/<name>/app/`
 
 ### "I want to run the engine locally"
+
+Current status warning: `architect-engine/engine` is still **incubating** and
+its baseline test path is currently blocked by CLI compilation issues. Use this
+path for exploration/development, not as proof of a stable green baseline.
 
 ```bash
 cd architect-engine/engine
@@ -319,6 +330,9 @@ cd architect-engine/engine
 ```
 
 ### "I want to build the CLI"
+
+Current status warning: `architect-cli/cli` is still **incubating** and its
+baseline test/build health is not yet fully restored.
 
 ```bash
 cd architect-cli/cli

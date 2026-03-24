@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 27/283 tasks completed (9.5%)
-Current Phase: Phase 1a — Reorganize repository decomposition and ownership boundaries
-Last Updated: 2026-03-24T09:31:08Z
+Overall Progress: 29/283 tasks completed (10.2%)
+Current Phase: Phase 2 — Unify build, dependency, and version governance
+Last Updated: 2026-03-24T09:34:39Z
 
 ## Executive Summary
 
@@ -390,9 +390,9 @@ The repository currently contains several categories of assets:
   - [x] Add a repository map to docs. | Finished: 2026-03-24T09:29:57Z | Notes: The repository map is now published under the MkDocs Architecture nav alongside the decision log, ownership map, and baseline failures documentation.
   - [x] Mark incomplete areas explicitly rather than letting them look production-adjacent. | Finished: 2026-03-24T09:31:08Z | Notes: Updated README.md and docs/architecture/repository-map.md to explicitly call out incubating areas such as `architect-cloud/ui`, `architect-vscode`, `architect-intellij`, and the thin plugin tier so they are not presented as production-stable surfaces.
 
-- [ ] Validation
-  - [ ] Review navigation paths for key contributor journeys.
-  - [ ] Verify build, docs, and CI references still resolve after any structural changes.
+- [x] Validation
+  - [x] Review navigation paths for key contributor journeys. | Finished: 2026-03-24T09:34:39Z | Notes: Reviewed docs/architecture/repository-map.md, fixed journey guidance for current-vs-target paths, verified `architect plugin create` exists in the CLI scaffolder path, and added explicit incubating-status warnings for engine and CLI workflows.
+  - [x] Verify build, docs, and CI references still resolve after any structural changes. | Finished: 2026-03-24T09:34:39Z | Notes: Confirmed MkDocs nav still resolves repository-map, ownership-map, and baseline-failures pages. Verified current build/docs paths in README.md, CONTRIBUTING.md, and docs/architecture/repository-map.md still match the on-disk module layout. Re-checked workflow references under `.github/workflows/` and confirmed they still point to existing module paths because no physical directory moves have been applied yet.
 
 ## Phase 2 — Unify build, dependency, and version governance
 
