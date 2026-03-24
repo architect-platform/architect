@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 83/350 tasks completed (23.7%)
+Overall Progress: 84/350 tasks completed (24.0%)
 Current Phase: Phase 7 — Raise product-surface quality outside the Kotlin core
-Last Updated: 2026-03-24T22:25:00Z
+Last Updated: 2026-03-24T22:35:00Z
 
 ## Standards and Principles Gaps
 
@@ -323,7 +323,7 @@ Last Updated: 2026-03-24T22:25:00Z
   - [x] Decide whether IDE integrations are supported products or thin reference integrations. | Finished: 2026-03-24T22:25:00Z | Notes: Classified `architect-vscode` and `architect-intellij` as thin reference integrations rather than supported products. The current code supports useful schema/task helpers and now has a basic automated test baseline, but both modules remain version `0.1.0`, depend on the external CLI, and lack marketplace distribution, release automation, and the broader UX/error-handling depth expected from supported IDE products. Updated the root status/docs plus each module's README/STATUS to make that support tier explicit.
 
 - [ ] Validation
-  - [ ] Run UI lint/build/test.
+  - [x] Run UI lint/build/test. | Finished: 2026-03-24T22:35:00Z | Notes: Re-ran the current `architect-cloud/ui` validation loop with `npm run lint && npm test && npm run build`. All checks passed. The run still emits non-blocking warnings from `baseline-browser-mapping` freshness and Vite's React/esbuild deprecation notices, but those do not fail the lint, test, or build steps.
   - [ ] Run VS Code extension tests.
   - [ ] Run IntelliJ plugin verification/tests as supported by the build.
 
