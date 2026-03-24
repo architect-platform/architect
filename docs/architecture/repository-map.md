@@ -161,6 +161,15 @@ engine over HTTP even though some commands can execute in embedded mode.
 These are user-facing products built on top of the core platform. They are in
 various states of maturity.
 
+Areas that should **not** be treated as production-adjacent today:
+
+- `architect-cloud/ui` — minimal frontend surface with no meaningful lint/test
+	entry points
+- `architect-vscode` — useful starter extension, but still incubating and
+	missing automated tests
+- `architect-intellij` — schema/helper plugin with minimal feature depth and no
+	visible automated tests
+
 ### `architect-cloud/`
 
 **Role**: Multi-tenant cloud service for running Architect remotely.
@@ -235,6 +244,9 @@ Local plugin development path:
 | `python-architected/` | Python build and test |
 | `rust-architected/` | Rust build and test |
 | `terraform-architected/` | Terraform apply/plan |
+
+These plugins are intentionally listed as incubating so contributors do not
+assume they meet the same support and testing bar as the mature plugin set.
 
 The `plugins/architect.yml` at the root of the plugins directory configures
 the plugins area for local development.

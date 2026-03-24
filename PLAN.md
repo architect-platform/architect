@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 26/283 tasks completed (9.2%)
+Overall Progress: 27/283 tasks completed (9.5%)
 Current Phase: Phase 1a — Reorganize repository decomposition and ownership boundaries
-Last Updated: 2026-03-24T09:29:57Z
+Last Updated: 2026-03-24T09:31:08Z
 
 ## Executive Summary
 
@@ -388,7 +388,7 @@ The repository currently contains several categories of assets:
   - [x] Decide which existing modules stay top-level versus move under grouped parent directories. | Finished: 2026-03-24T09:27:14Z | Notes: Accepted ADR-011 and added a current-to-target placement table in docs/architecture/repository-map.md. Decided that the current `architect-*` platform and product directories are transitional and should eventually group under `platform/` and `products/`, while `plugins/`, `sdk/`, `docs/`, `.github/`, and `homebrew/` remain top-level category roots.
   - [x] Define ownership metadata per bounded area. | Finished: 2026-03-24T09:28:39Z | Notes: Added docs/architecture/ownership-map.md and accepted ADR-012. Defined bounded-area stewardship groups for platform runtime, product surfaces, plugin ecosystem, SDK ecosystem, and docs/governance so the repo now has explicit ownership metadata even before CODEOWNERS or named team mappings exist.
   - [x] Add a repository map to docs. | Finished: 2026-03-24T09:29:57Z | Notes: The repository map is now published under the MkDocs Architecture nav alongside the decision log, ownership map, and baseline failures documentation.
-  - [ ] Mark incomplete areas explicitly rather than letting them look production-adjacent.
+  - [x] Mark incomplete areas explicitly rather than letting them look production-adjacent. | Finished: 2026-03-24T09:31:08Z | Notes: Updated README.md and docs/architecture/repository-map.md to explicitly call out incubating areas such as `architect-cloud/ui`, `architect-vscode`, `architect-intellij`, and the thin plugin tier so they are not presented as production-stable surfaces.
 
 - [ ] Validation
   - [ ] Review navigation paths for key contributor journeys.

@@ -396,6 +396,9 @@ architect/
 ├── architect-api/          # Core API and interfaces
 ├── architect-cli/          # Command-line interface
 ├── architect-engine/       # Execution engine (REST API)
+├── architect-cloud/        # Secondary product (backend beta, UI incubating)
+├── architect-vscode/       # Incubating VS Code extension
+├── architect-intellij/     # Incubating IntelliJ plugin
 ├── plugins/                # Official plugins
 │   ├── git-architected/
 │   ├── github-architected/
@@ -404,6 +407,9 @@ architect/
 ├── architect.yml           # Root project configuration
 └── README.md              # This file
 ```
+
+Incubating areas are intentionally called out above so they are not mistaken
+for production-stable surfaces.
 
 ### Building Components
 
