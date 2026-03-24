@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 53/288 tasks completed (18.4%)
+Overall Progress: 54/288 tasks completed (18.8%)
 Current Phase: Phase 4 — Rationalize repository portfolio and directory hygiene
-Last Updated: 2026-03-24T15:51:42Z
+Last Updated: 2026-03-24T16:04:32Z
 
 ## Executive Summary
 
@@ -471,7 +471,7 @@ The repository currently contains several categories of assets:
 - [ ] Tasks
   - [x] Decide status and ownership for `architect-data`, `architect-server`, and `architect-x`. | Finished: 2026-03-24T15:49:34Z | Notes: Confirmed all three paths are not present in-tree, formalized their governance ownership under the Docs and Governance stewardship group, and documented that any reintroduction requires explicit portfolio/status/ownership approval before code is added.
   - [x] Remove committed/generated build-state noise where not intended for source control. | Finished: 2026-03-24T15:51:42Z | Notes: Audited tracked files for generated/build-state patterns (`build/`, `dist/`, `target/`, `out/`, IDE/OS noise) and confirmed no such artifacts are currently tracked. Verified on-disk generated directories resolve to zero tracked entries and `.gitignore` already enforces the relevant exclusions.
-  - [ ] Add lightweight status docs for incubating modules if they remain in-tree.
+  - [x] Add lightweight status docs for incubating modules if they remain in-tree. | Finished: 2026-03-24T16:04:32Z | Notes: Added lightweight `STATUS.md` docs for all currently incubating modules that remain in-tree across platform (`architect-engine`, `architect-cli`), product surfaces (`architect-cloud/ui`, `architect-vscode`, `architect-intellij`), thin official plugins (`plugins/*-architected` incubating set), and SDKs (`sdk/typescript`, `sdk/python`, `sdk/go`).
   - [ ] Update root docs and navigation to reflect the actual supported module set.
 
 - [ ] Validation
