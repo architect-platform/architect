@@ -94,6 +94,7 @@ nav:
 
   - Architecture:
     - Decision Log: architecture/decision-log.md
+    - Repository Status Matrix: architecture/status-matrix.md
     - Repository Map: architecture/repository-map.md
     - Ownership Map: architecture/ownership-map.md
     - Runtime Boundaries: architecture/runtime-boundaries.md

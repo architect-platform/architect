@@ -8,14 +8,22 @@ Architect is a powerful, plugin-based task execution framework for automating pr
 
 ## Components
 
-The Architect Platform consists of several core components:
+The Architect Platform includes active, beta, and incubating modules.
+For the authoritative module support set, see the
+**[Repository Status Matrix](architecture/status-matrix.md)**.
 
-### Core Components
+### Core Platform
 
-- **[Architect API](architect-api/index.md)** - Core abstractions and interfaces for plugin development
-- **[Architect CLI](architect-cli/index.md)** - Interactive command-line tool for developers
-- **[Architect Engine](architect-engine/index.md)** - RESTful API server managing task execution
-- **[Architect Cloud](architect-cloud/index.md)** - Cloud platform for Architect (UI + Backend)
+- **[Architect API](architect-api/index.md)** - Active contracts and plugin interfaces
+- **Architect Core** (`architect-core/core`) - Active shared runtime library
+- **[Architect Engine](architect-engine/index.md)** - Incubating execution host and REST API server
+- **[Architect CLI](architect-cli/index.md)** - Incubating command-line interface
+
+### Secondary Products
+
+- **[Architect Cloud](architect-cloud/index.md)** - Backend is beta; UI is incubating
+- **Architect VS Code** (`architect-vscode/`) - Incubating editor extension
+- **Architect IntelliJ** (`architect-intellij/`) - Incubating IDE integration
 
 ### Official Plugins
 

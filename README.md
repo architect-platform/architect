@@ -22,7 +22,7 @@ Architect is a comprehensive automation platform that brings **convention over c
 
 ## Architecture
 
-Architect consists of three main components:
+Architect consists of four core platform components, plus product surfaces, plugins, and SDKs:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -38,25 +38,37 @@ Architect consists of three main components:
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                     Architect API                            │
-│  Core abstractions and interfaces for plugin development     │
+│                    Architect Core                            │
+│  Shared runtime: plugin loading, execution, config, secrets  │
 └─────────────────────────────────────────────────────────────┘
                          │
                          ▼
-            ┌────────────┴────────────┐
-            ▼                          ▼
-    ┌──────────────┐          ┌──────────────┐
-    │   Built-in   │          │    Custom    │
-    │   Plugins    │          │   Plugins    │
-    └──────────────┘          └──────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                     Architect API                            │
+│  Core abstractions and interfaces for plugin development     │
+└─────────────────────────────────────────────────────────────┘
+             │
+             ▼
+      ┌────────────┴────────────┐
+      ▼                          ▼
+  ┌──────────────┐          ┌──────────────┐
+  │ Official     │          │ Third-party  │
+  │ Plugins      │          │ Plugins      │
+  └──────────────┘          └──────────────┘
 ```
 
 ### Components
 
-- **[Architect CLI](architect-cli/)**: Interactive command-line tool for developers
-- **[Architect Engine](architect-engine/)**: RESTful API server managing task execution
-- **[Architect API](architect-api/)**: Core library for building plugins
-- **[Plugins](plugins/)**: Extensible plugins for various technologies and platforms
+- **[Architect API](architect-api/)**: Active contracts library for task/plugin interfaces
+- **[Architect Core](architect-core/)**: Active shared runtime used by CLI and Engine
+- **[Architect Engine](architect-engine/)**: Incubating execution host and REST API server
+- **[Architect CLI](architect-cli/)**: Incubating end-user command-line interface
+- **[Architect Cloud](architect-cloud/)**: Product surface (backend beta, UI incubating)
+- **[Architect VS Code](architect-vscode/)** and **[Architect IntelliJ](architect-intellij/)**: Incubating IDE/editor integrations
+- **[Plugins](plugins/)**: Official plugin ecosystem (mixed active and incubating maturity)
+- **[SDKs](sdk/)**: Language SDKs (currently incubating)
+
+Support status for all modules is tracked in [STATUS.md](STATUS.md).
 
 ## Quick Start
 
@@ -134,7 +146,8 @@ architect docs-publish
 
 ## Available Plugins
 
-Architect comes with several official plugins ready to use:
+Architect includes a mature official plugin set and an incubating set.
+See [STATUS.md](STATUS.md) for the current support tier of each plugin.
 
 ### Core Plugins
 

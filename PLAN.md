@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 54/288 tasks completed (18.8%)
-Current Phase: Phase 4 — Rationalize repository portfolio and directory hygiene
-Last Updated: 2026-03-24T16:04:32Z
+Overall Progress: 55/288 tasks completed (19.1%)
+Current Phase: Phase 5 — Standardize the plugin platform
+Last Updated: 2026-03-24T16:07:22Z
 
 ## Executive Summary
 
@@ -472,11 +472,11 @@ The repository currently contains several categories of assets:
   - [x] Decide status and ownership for `architect-data`, `architect-server`, and `architect-x`. | Finished: 2026-03-24T15:49:34Z | Notes: Confirmed all three paths are not present in-tree, formalized their governance ownership under the Docs and Governance stewardship group, and documented that any reintroduction requires explicit portfolio/status/ownership approval before code is added.
   - [x] Remove committed/generated build-state noise where not intended for source control. | Finished: 2026-03-24T15:51:42Z | Notes: Audited tracked files for generated/build-state patterns (`build/`, `dist/`, `target/`, `out/`, IDE/OS noise) and confirmed no such artifacts are currently tracked. Verified on-disk generated directories resolve to zero tracked entries and `.gitignore` already enforces the relevant exclusions.
   - [x] Add lightweight status docs for incubating modules if they remain in-tree. | Finished: 2026-03-24T16:04:32Z | Notes: Added lightweight `STATUS.md` docs for all currently incubating modules that remain in-tree across platform (`architect-engine`, `architect-cli`), product surfaces (`architect-cloud/ui`, `architect-vscode`, `architect-intellij`), thin official plugins (`plugins/*-architected` incubating set), and SDKs (`sdk/typescript`, `sdk/python`, `sdk/go`).
-  - [ ] Update root docs and navigation to reflect the actual supported module set.
+  - [x] Update root docs and navigation to reflect the actual supported module set. | Finished: 2026-03-24T16:07:22Z | Notes: Updated root README component descriptions to match the real platform/product/plugin/SDK support tiers, added `docs/architecture/status-matrix.md`, updated docs landing page component/status framing, and exposed the status matrix in MkDocs architecture navigation.
 
-- [ ] Validation
-  - [ ] Confirm each remaining top-level directory has a declared status and reason to exist.
-  - [ ] Confirm ignored/generated files are not tracked unintentionally.
+- [x] Validation
+  - [x] Confirm each remaining top-level directory has a declared status and reason to exist. | Finished: 2026-03-24T16:07:22Z | Notes: Repository-level and module-level status documentation now covers platform, products, plugin tiers, SDKs, and historical not-present paths (`architect-data`, `architect-server`, `architect-x`) with explicit ownership and support intent.
+  - [x] Confirm ignored/generated files are not tracked unintentionally. | Finished: 2026-03-24T15:51:42Z | Notes: Audit confirmed generated/build-state patterns are ignored and not tracked.
 
 ## Phase 5 — Standardize the plugin platform
 
