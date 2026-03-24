@@ -1,0 +1,46 @@
+# Hand-maintained. Detects when generated workflow caller files diverge from what
+# the template + generator script would produce on the current commit.
+name: Workflow Drift Check
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/reusable-kotlin-pipeline.yml'
+      - '.github/workflows/reusable-kotlin-no-release-pipeline.yml'
+      - 'plugins/github-architected/app/src/main/resources/workflows/github/**'
+      - '.github/scripts/gen_workflows.py'
+
+jobs:
+  drift-check:
+    name: Detect generated workflow drift
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Regenerate thin caller workflows
+        run: python3 .github/scripts/gen_workflows.py
+
+      - name: Fail if generated files differ from committed versions
+        run: |
+          if ! git diff --exit-code -- .github/workflows/architect-api-pipeline.yml \
+                                       .github/workflows/architect-cli-pipeline.yml \
+                                       .github/workflows/architect-engine-pipeline.yml \
+                                       .github/workflows/architecture-architected.yml \
+                                       .github/workflows/docs-architected-pipeline.yml \
+                                       .github/workflows/git-architected-pipeline.yml \
+                                       .github/workflows/github-architected-pipeline.yml \
+                                       .github/workflows/gradle-architected-pipeline.yml \
+                                       .github/workflows/javascript-architected.yml \
+                                       .github/workflows/pipelines-architected.yml \
+                                       .github/workflows/scripts-architected.yml \
+                                       .github/workflows/architect-cloud-backend.yml \
+                                       .github/workflows/architect-cloud-ui.yml; then
+            echo "::error::Generated workflow files are out of sync. Re-run .github/scripts/gen_workflows.py and commit the result."
+            exit 1
+          fi
+          echo "All generated workflow files are up to date."

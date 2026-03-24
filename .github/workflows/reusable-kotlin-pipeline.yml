@@ -1,0 +1,121 @@
+# Hand-maintained CI policy: update this file to change build/release behavior
+# for all Kotlin modules that use the classic-java-17 pipeline template.
+# Generated caller workflows (architect-*-pipeline.yml, *-architected.yml) are
+# thin wrappers that delegate here — never edit the generated files directly.
+name: Reusable Kotlin Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      module-name:
+        description: 'Human-readable pipeline name used in job display names and concurrency keys'
+        required: true
+        type: string
+      working-directory:
+        description: 'Path to the module root (relative to repo root) where architect commands run'
+        required: true
+        type: string
+    secrets:
+      REGISTRY_TOKEN:
+        required: false
+
+jobs:
+  build:
+    name: ${{ inputs.module-name }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Setup Architect CLI and Engine
+        uses: ./.github/actions/setup-architect
+        with:
+          install-engine: 'true'
+
+      - name: Init
+        run: architect init --plain
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: Verify
+        run: architect verify --plain
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: Build
+        run: architect build --plain
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: Test
+        run: architect test --plain
+        working-directory: ${{ inputs.working-directory }}
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: build
+    concurrency:
+      group: release-${{ inputs.module-name }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Setup Architect CLI and Engine
+        uses: ./.github/actions/setup-architect
+        with:
+          install-engine: 'true'
+
+      - name: Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: architect release --plain
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+
+      - name: Publish
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: architect publish --plain
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}

@@ -1,7 +1,7 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 70/350 tasks completed (20.0%)
+Overall Progress: 75/350 tasks completed (21.4%)
 Current Phase: Phase 5 — Standardize the plugin platform
 Last Updated: 2026-03-24T20:00:00Z
 
@@ -294,11 +294,11 @@ Last Updated: 2026-03-24T20:00:00Z
 - [ ] **Expected outcomes**: leaner CI, lower maintenance cost, consistent policy rollout
 
 - [ ] Tasks
-  - [ ] Inventory repeated workflow steps and convert them into reusable workflows or composite actions.
-  - [ ] Separate generated workflow templates from hand-maintained CI policy logic.
-  - [ ] Standardize caching, runtime setup, permissions, and release gates.
-  - [ ] Decide when CI should invoke Architect-generated behavior versus direct build tool commands.
-  - [ ] Add a CI validation rule for generated workflow drift if generation remains part of the model.
+  - [x] Inventory repeated workflow steps and convert them into reusable workflows or composite actions. | Finished: 2026-03-24T20:05:00Z | Notes: Replaced repeated module pipeline logic with two reusable workflow entry points (`reusable-kotlin-pipeline.yml` and `reusable-kotlin-no-release-pipeline.yml`) and regenerated the thin caller workflows so per-module YAML now delegates instead of cloning full job definitions.
+  - [x] Separate generated workflow templates from hand-maintained CI policy logic. | Finished: 2026-03-24T20:05:00Z | Notes: Moved the hand-maintained CI policy into reusable workflow files and slash-delimited workflow templates under `plugins/github-architected/.../workflows/github/`, while keeping generated caller workflows as thin wrappers produced by `.github/scripts/gen_workflows.py`.
+  - [x] Standardize caching, runtime setup, permissions, and release gates. | Finished: 2026-03-24T20:05:00Z | Notes: Centralized JDK/Node setup, Gradle cache keys, Architect CLI/Engine bootstrap, permissions, concurrency, and main-branch release/publish gating inside the reusable workflow definitions so all generated Kotlin pipelines share one policy surface.
+  - [x] Decide when CI should invoke Architect-generated behavior versus direct build tool commands. | Finished: 2026-03-24T20:05:00Z | Notes: Accepted `.github/decisions/01-ci-vs-architect-commands.md`, which makes generated project pipelines delegate to Architect phases while keeping hand-maintained governance/security workflows on direct tool commands.
+  - [x] Add a CI validation rule for generated workflow drift if generation remains part of the model. | Finished: 2026-03-24T20:05:00Z | Notes: Added `.github/workflows/workflow-drift-check.yml` to regenerate caller workflows on PRs and fail when committed generated workflow files diverge from the current template and generator script output.
 
 - [ ] Validation
   - [ ] Dry-run equivalent CI paths for API, engine, CLI, cloud, and plugin modules.
