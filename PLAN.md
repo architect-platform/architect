@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 11/283 tasks completed (3.9%)
+Overall Progress: 12/283 tasks completed (4.2%)
 Current Phase: Phase 0 — Establish an accurate baseline
-Last Updated: 2026-03-24T00:03:00Z
+Last Updated: 2026-03-24T09:18:02Z
 
 ## Executive Summary
 
@@ -46,8 +46,8 @@ The repository currently contains several categories of assets:
 
 - [x] `architect-api/api`: `./gradlew test` passed.
 - [x] `architect-core/core`: `./gradlew test` passed; baseline report indicated 179 tests completed successfully.
-- [ ] `architect-engine/engine`: `./gradlew test` failed with a compilation/classpath blocker around `PluginConfig`.
-- [ ] `architect-cli/cli`: `./gradlew test` failed with 8 integration test failures in `CliEngineIntegrationTest`.
+- [ ] `architect-engine/engine`: `./gradlew test` currently fails during composite-built CLI compilation in `ArchitectLauncher.kt` (`taskService`, `TaskConditionChecker`, ambiguous `forEach`), so engine tests do not run.
+- [ ] `architect-cli/cli`: `./gradlew test` currently fails at Kotlin compilation in `ArchitectLauncher.kt` before test execution.
 - [x] `architect-cloud/backend`: `./gradlew test` passed; baseline report indicated 57 tests completed successfully.
 - [ ] `architect-cloud/ui`: cannot be meaningfully validated as-is; `package.json` declares empty `lint` and `test` scripts.
 
@@ -359,7 +359,7 @@ The repository currently contains several categories of assets:
   - [x] Create a repository status matrix for every subproject: active, beta, incubating, placeholder, deprecated. | Finished: 2026-03-24T00:01:00Z | Notes: Created STATUS.md with full matrix across core platform, products, plugins, SDKs, and delivery infra.
   - [x] Create a repository decomposition map that explains what each top-level directory is for and why it exists. | Finished: 2026-03-24T00:02:00Z | Notes: Created docs/architecture/repository-map.md with full taxonomy, per-directory tables, contributor journeys, and root file inventory.
   - [x] Reconcile root `README.md` and `CONTRIBUTING.md` with actual build/test entry points. | Finished: 2026-03-24T00:03:00Z | Notes: Removed root-level ./gradlew build/test instructions (no root wrapper exists); replaced with per-module commands. Fixed wrong path (architect-cli → architect-cli/cli). Fixed Apache 2.0 vs MIT license error in CONTRIBUTING.md.
-  - [ ] Document the current baseline failures for `architect-engine`, `architect-cli`, and `architect-cloud/ui`.
+  - [x] Document the current baseline failures for `architect-engine`, `architect-cli`, and `architect-cloud/ui`. | Finished: 2026-03-24T09:18:02Z | Notes: Added docs/architecture/baseline-failures.md with exact current failure modes and validation commands. Updated STATUS.md and the PLAN baseline snapshot to replace stale `PluginConfig` and `CliEngineIntegrationTest` references with the current CLI compilation blocker and empty cloud UI validation scripts.
   - [ ] Decide whether the repo will gain a root orchestrator or explicitly document per-module execution only.
 
 - [ ] Validation

@@ -94,6 +94,8 @@ nav:
 
   - Architecture:
     - Decision Log: architecture/decision-log.md
+    - Repository Map: architecture/repository-map.md
+    - Baseline Failures: architecture/baseline-failures.md
 
   - Components:
     - Architect API: "!include ./architect-api/docs/mkdocs.yml"
