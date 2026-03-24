@@ -95,3 +95,5 @@ The following directories were referenced in historical docs but **do not exist*
 - `architect-data` — not present
 - `architect-server` — not present
 - `architect-x` — not present
+
+Ownership decision: these not-present paths are governed by the **Docs and Governance** stewardship group via `docs/architecture/ownership-map.md`. Any future reintroduction must be treated as a portfolio decision first, with an explicit status, ownership assignment, and support-tier declaration before code is added.

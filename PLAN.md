@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 51/288 tasks completed (17.7%)
-Current Phase: Phase 3 — Re-establish architectural boundaries in the runtime stack
-Last Updated: 2026-03-24T15:39:12Z
+Overall Progress: 52/288 tasks completed (18.1%)
+Current Phase: Phase 4 — Rationalize repository portfolio and directory hygiene
+Last Updated: 2026-03-24T15:49:34Z
 
 ## Executive Summary
 
@@ -469,7 +469,7 @@ The repository currently contains several categories of assets:
 - [ ] **Expected outcomes**: clear product boundaries and cleaner repository navigation
 
 - [ ] Tasks
-  - [ ] Decide status and ownership for `architect-data`, `architect-server`, and `architect-x`.
+  - [x] Decide status and ownership for `architect-data`, `architect-server`, and `architect-x`. | Finished: 2026-03-24T15:49:34Z | Notes: Confirmed all three paths are not present in-tree, formalized their governance ownership under the Docs and Governance stewardship group, and documented that any reintroduction requires explicit portfolio/status/ownership approval before code is added.
   - [ ] Remove committed/generated build-state noise where not intended for source control.
   - [ ] Add lightweight status docs for incubating modules if they remain in-tree.
   - [ ] Update root docs and navigation to reflect the actual supported module set.

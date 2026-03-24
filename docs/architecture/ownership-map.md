@@ -33,6 +33,7 @@ conceptual ownership units, not GitHub permission objects.
 | Official plugins | `plugins/` | Plugin Ecosystem | Plugin standards, contract tests, docs/examples, packaging consistency |
 | SDKs | `sdk/` | SDK Ecosystem | Protocol compatibility, SDK ergonomics, cross-language examples, conformance testing |
 | Documentation and governance | `docs/`, `README.md`, `CONTRIBUTING.md`, `PLAN.md`, `STATUS.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `LICENSE`, `mkdocs.yml`, `architect.yml`, `.github/`, `homebrew/` | Docs and Governance | Contributor guidance, repo narrative, policy maintenance, documentation publishing, delivery metadata |
+| Historical modules not present in-tree | `architect-data/`, `architect-server/`, `architect-x/` (not present) | Docs and Governance | Owns out-of-scope status, prevents accidental reintroduction into active scope, and approves any future reintroduction proposal before paths are added back to the repository |
 
 ---
 
