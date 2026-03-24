@@ -28,6 +28,17 @@ architect/
 These four modules form the primary execution stack. Every other module either
 depends on them, integrates with them, or extends them.
 
+Execution flow for most user-facing operations is:
+
+```text
+CLI -> Engine -> Core runtime -> API contracts -> Plugins
+```
+
+There is also an embedded path for selected CLI operations, where the CLI uses
+core runtime components in-process instead of calling a long-lived engine.
+Contributors debugging task execution should therefore expect both remote and
+embedded execution paths to exist in the codebase.
+
 ### `architect-api/`
 
 **Role**: Contracts library — the only module that all plugins and the engine
@@ -55,6 +66,9 @@ resolution, file watching, project caching.
 Does **not** publish to GitHub Packages; consumed internally.
 Version: **1.6.1** (active).
 
+Primary downstream consumers: `architect-engine/engine` and
+`architect-cli/cli`.
+
 ---
 
 ### `architect-engine/`
@@ -68,6 +82,9 @@ Version: **1.6.1** (active).
 
 End-users run `architect engine start` to launch this.
 Version: **1.6.1** (incubating — baseline tests currently broken).
+
+Depends on `architect-core` for shared runtime behavior and on `architect-api`
+for task/plugin contracts.
 
 ---
 
@@ -83,6 +100,9 @@ Version: **1.6.1** (incubating — baseline tests currently broken).
 Delivered via Homebrew and as a native binary.
 Version: **1.1.0** (incubating — integration tests currently failing).
 
+Depends on `architect-core` and `architect-api`, and usually talks to the
+engine over HTTP even though some commands can execute in embedded mode.
+
 ---
 
 ## Secondary Products
@@ -97,7 +117,7 @@ various states of maturity.
 | Sub-path | Purpose |
 |---|---|
 | `backend/` | Kotlin Micronaut server with hexagonal architecture; handles project registration, remote execution, audit |
-| `ui/` | Vite + Vue 3 frontend; currently minimal |
+| `ui/` | Vite + React frontend; currently minimal |
 | `agents/` | Docker Compose and Kubernetes agent definitions |
 | `api/` | Shared API types between backend and agents |
 | `docs/` | Component docs |
@@ -128,6 +148,16 @@ Status: **incubating** (no automated tests; minimal feature depth).
 
 `plugins/` contains all first-party plugins. Each plugin is an independent
 Gradle project that implements `ArchitectPlugin` and is discovered via Java SPI.
+
+Local plugin development path:
+
+1. Create or modify a plugin under `plugins/<plugin-name>/app/`
+2. Implement `ArchitectPlugin<Context>` and register tasks in `register()`
+3. Add the SPI entry under
+	`app/src/main/resources/META-INF/services/io.github.architectplatform.api.core.plugins.ArchitectPlugin`
+4. Run `./gradlew test` from the plugin's `app/` directory
+5. Treat the plugin as a standalone Gradle module during development; the root
+	repository does not provide a global plugin build runner
 
 ### Active (mature, tested, documented)
 
@@ -192,7 +222,7 @@ languages other than Kotlin/JVM. All are **incubating**.
 | `CONTRIBUTING.md` | Contributor guide; build/test entry points per module |
 | `PLAN.md` | Active refactor plan tracking all outstanding work |
 | `STATUS.md` | Repository status matrix (module health at a glance) |
-| `architect.yml` | Root project config for docs, git, and GitHub automation; not a repository-wide build/test orchestrator |
+| `architect.yml` | Root project config for documentation publishing plus git/GitHub automation metadata; not a repository-wide build/test orchestrator |
 | `mkdocs.yml` | Root MkDocs config for unified docs site |
 | `detekt.yml` | Detekt static analysis config |
 | `Dockerfile` | Container image for the engine |

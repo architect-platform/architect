@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 13/283 tasks completed (4.6%)
-Current Phase: Phase 0 — Establish an accurate baseline
-Last Updated: 2026-03-24T09:19:50Z
+Overall Progress: 16/283 tasks completed (5.7%)
+Current Phase: Phase 1a — Reorganize repository decomposition and ownership boundaries
+Last Updated: 2026-03-24T09:24:17Z
 
 ## Executive Summary
 
@@ -362,10 +362,10 @@ The repository currently contains several categories of assets:
   - [x] Document the current baseline failures for `architect-engine`, `architect-cli`, and `architect-cloud/ui`. | Finished: 2026-03-24T09:18:02Z | Notes: Added docs/architecture/baseline-failures.md with exact current failure modes and validation commands. Updated STATUS.md and the PLAN baseline snapshot to replace stale `PluginConfig` and `CliEngineIntegrationTest` references with the current CLI compilation blocker and empty cloud UI validation scripts.
   - [x] Decide whether the repo will gain a root orchestrator or explicitly document per-module execution only. | Finished: 2026-03-24T09:19:50Z | Notes: Accepted ADR-009 to keep root execution explicitly per-module until a real orchestrator exists. Updated README.md, CONTRIBUTING.md, and docs/architecture/repository-map.md to clarify that the root `architect.yml` is metadata/configuration, not a supported monorepo build runner.
 
-- [ ] Validation
-  - [ ] Re-run representative tests and confirm documented outcomes match reality.
-  - [ ] Verify contributor docs no longer instruct impossible commands.
-  - [ ] Verify a new contributor can understand the repository shape from the decomposition map alone.
+- [x] Validation
+  - [x] Re-run representative tests and confirm documented outcomes match reality. | Finished: 2026-03-24T09:24:17Z | Notes: Re-ran `./gradlew test` for `architect-api/api`, `architect-core/core`, and `architect-cloud/backend` and confirmed all three still pass. Confirmed fresh failing evidence from this Phase 0 cycle for `architect-engine/engine`, `architect-cli/cli`, and `architect-cloud/ui` still matches STATUS.md and docs/architecture/baseline-failures.md.
+  - [x] Verify contributor docs no longer instruct impossible commands. | Finished: 2026-03-24T09:24:17Z | Notes: Re-checked README.md, CONTRIBUTING.md, and docs/architecture/repository-map.md. All now state per-module execution and no longer imply a supported root Gradle build/test entry point.
+  - [x] Verify a new contributor can understand the repository shape from the decomposition map alone. | Finished: 2026-03-24T09:24:17Z | Notes: Reviewed docs/architecture/repository-map.md and strengthened it with execution flow, dependency relationships, local plugin development steps, and a clearer description of the root `architect.yml`. Also corrected the cloud UI technology description from Vue to React.
 
 ## Phase 1a — Reorganize repository decomposition and ownership boundaries
 
