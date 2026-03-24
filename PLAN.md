@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 84/350 tasks completed (24.0%)
+Overall Progress: 85/350 tasks completed (24.3%)
 Current Phase: Phase 7 — Raise product-surface quality outside the Kotlin core
-Last Updated: 2026-03-24T22:35:00Z
+Last Updated: 2026-03-24T22:40:00Z
 
 ## Standards and Principles Gaps
 
@@ -324,7 +324,7 @@ Last Updated: 2026-03-24T22:35:00Z
 
 - [ ] Validation
   - [x] Run UI lint/build/test. | Finished: 2026-03-24T22:35:00Z | Notes: Re-ran the current `architect-cloud/ui` validation loop with `npm run lint && npm test && npm run build`. All checks passed. The run still emits non-blocking warnings from `baseline-browser-mapping` freshness and Vite's React/esbuild deprecation notices, but those do not fail the lint, test, or build steps.
-  - [ ] Run VS Code extension tests.
+  - [x] Run VS Code extension tests. | Finished: 2026-03-24T22:40:00Z | Notes: Re-ran `npm test` in `architect-vscode`. The command recompiles the extension TypeScript sources and executes the parser-model regression suite in `out/test/**/*.test.js`; all 3 tests passed.
   - [ ] Run IntelliJ plugin verification/tests as supported by the build.
 
 ## Phase 8 — Standardize testing, compatibility, and release confidence
