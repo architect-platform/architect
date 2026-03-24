@@ -1,17 +1,12 @@
 plugins {
-  kotlin("jvm") version "1.9.25"
+  alias(libs.plugins.kotlin.jvm)
   jacoco
-  id("info.solidsoft.pitest") version "1.15.0"
-  id("me.champeau.jmh") version "0.7.2"
+  alias(libs.plugins.pitest)
+  alias(libs.plugins.jmh)
 }
 
 group = "io.github.architectplatform"
 version = "1.6.1"
-
-val kotlinVersion = project.properties.get("kotlinVersion") as String
-val jacksonVersion = project.properties.get("jacksonVersion") as String
-val snakeyamlVersion = project.properties.get("snakeyamlVersion") as String
-val coroutinesVersion = project.properties.get("coroutinesVersion") as String
 
 repositories {
   mavenLocal()
@@ -34,25 +29,25 @@ repositories {
 
 dependencies {
   implementation("io.github.architectplatform:api:2.1.0")
-  implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
-  implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${coroutinesVersion}")
+  implementation(libs.kotlin.stdlib.jdk8)
+  implementation(libs.kotlin.reflect)
+  implementation(libs.kotlinx.coroutines.core)
 
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
-  implementation("org.yaml:snakeyaml:${snakeyamlVersion}")
-  implementation("org.slf4j:slf4j-api:2.0.13")
-  implementation("com.networknt:json-schema-validator:1.5.6")
+  implementation(libs.jackson.module.kotlin)
+  implementation(libs.jackson.dataformat.yaml)
+  implementation("org.yaml:snakeyaml")
+  implementation(libs.slf4j.api)
+  implementation(libs.json.schema.validator)
 
-  compileOnly("jakarta.inject:jakarta.inject-api:2.0.1")
+  compileOnly(libs.jakarta.inject.api)
 
-  testImplementation("org.jetbrains.kotlin:kotlin-test")
-  testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+  testImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlin.test.junit5)
+  testImplementation(libs.junit.jupiter.api)
+  testRuntimeOnly(libs.junit.jupiter.engine)
 
-  jmhImplementation("org.openjdk.jmh:jmh-core:1.37")
-  jmhAnnotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.37")
+  jmhImplementation(libs.jmh.core)
+  jmhAnnotationProcessor(libs.jmh.generator.annprocess)
 }
 
 kotlin {
@@ -71,12 +66,12 @@ tasks.test {
 configurations.all {
   resolutionStrategy.eachDependency {
     if (requested.group == "org.jetbrains.kotlin") {
-      useVersion("1.9.25")
+      useVersion(libs.versions.kotlin.get())
     }
   }
 }
 
-jacoco { toolVersion = "0.8.12" }
+jacoco { toolVersion = libs.versions.jacoco.get() }
 
 tasks.jacocoTestReport {
   dependsOn(tasks.test)

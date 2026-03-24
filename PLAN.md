@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 29/283 tasks completed (10.2%)
+Overall Progress: 30/283 tasks completed (10.6%)
 Current Phase: Phase 2 — Unify build, dependency, and version governance
-Last Updated: 2026-03-24T09:34:39Z
+Last Updated: 2026-03-24T09:47:38Z
 
 ## Executive Summary
 
@@ -405,7 +405,7 @@ The repository currently contains several categories of assets:
 - [ ] **Expected outcomes**: centralized versions, predictable builds, easier upgrades
 
 - [ ] Tasks
-  - [ ] Introduce a shared Gradle convention plugin and/or version catalog for Kotlin/Micronaut/Jackson/testing/jacoco.
+  - [x] Introduce a shared Gradle convention plugin and/or version catalog for Kotlin/Micronaut/Jackson/testing/jacoco. | Finished: 2026-03-24T09:47:38Z | Notes: Added a repository-level `gradle/libs.versions.toml` and wired `architect-api/api`, `architect-core/core`, `architect-cli/cli`, `architect-engine/engine`, and `architect-cloud/backend` settings to it. Updated those build scripts to consume shared plugin, dependency, coroutines, Kotlin, Jackson, testing, and JaCoCo versions from the catalog while keeping existing source-level failures isolated from build-configuration validation.
   - [ ] Standardize artifact versioning strategy across API/core/engine/CLI/plugins.
   - [ ] Eliminate repeated `resolutionStrategy.eachDependency` blocks where a single shared mechanism can be used.
   - [ ] Standardize plugin build scripts onto one template with deliberate deviations only.

@@ -1,18 +1,16 @@
 plugins {
-  id("org.jetbrains.kotlin.jvm") version "1.9.25"
-  id("org.jetbrains.kotlin.plugin.allopen") version "1.9.25"
-  id("com.google.devtools.ksp") version "1.9.25-1.0.20"
-  id("com.gradleup.shadow") version "8.3.5"
-  id("io.micronaut.application") version "4.6.1"
-  id("io.micronaut.aot") version "4.6.1"
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.kotlin.allopen)
+  alias(libs.plugins.ksp)
+  alias(libs.plugins.shadow)
+  alias(libs.plugins.micronaut.application)
+  alias(libs.plugins.micronaut.aot)
   jacoco
 }
 
 version = "1.0.0"
 
 group = "io.github.architectplatform"
-
-val kotlinVersion = project.properties.get("kotlinVersion")
 
 repositories {
   mavenLocal()
@@ -34,32 +32,32 @@ repositories {
 }
 
 dependencies {
-  ksp("io.micronaut:micronaut-http-validation")
-  ksp("io.micronaut.serde:micronaut-serde-processor")
-  ksp("io.micronaut.data:micronaut-data-processor")
-  implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
-  implementation("io.micronaut.serde:micronaut-serde-jackson")
-  implementation("io.micronaut.data:micronaut-data-jdbc")
-  implementation("io.micronaut.sql:micronaut-jdbc-hikari")
-  implementation("io.micronaut.reactor:micronaut-reactor")
-  implementation("io.micronaut:micronaut-websocket")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.10.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.10.2")
-  implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
-  implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-  implementation("io.micronaut:micronaut-http-client")
-  implementation("io.micronaut:micronaut-runtime")
+  ksp(libs.micronaut.http.validation)
+  ksp(libs.micronaut.serde.processor)
+  ksp(libs.micronaut.data.processor)
+  implementation(libs.micronaut.kotlin.runtime)
+  implementation(libs.micronaut.serde.jackson)
+  implementation(libs.micronaut.data.jdbc)
+  implementation(libs.micronaut.jdbc.hikari)
+  implementation(libs.micronaut.reactor)
+  implementation(libs.micronaut.websocket)
+  implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.kotlinx.coroutines.reactive)
+  implementation(libs.kotlinx.coroutines.jdk8)
+  implementation(libs.kotlinx.coroutines.reactor)
+  implementation(libs.kotlin.reflect)
+  implementation(libs.kotlin.stdlib.jdk8)
+  implementation(libs.jackson.dataformat.yaml)
+  implementation(libs.jackson.module.kotlin)
+  implementation(libs.micronaut.http.client)
+  implementation(libs.micronaut.runtime)
   runtimeOnly("ch.qos.logback:logback-classic")
   runtimeOnly("com.h2database:h2")
-  runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
-  testImplementation("io.micronaut:micronaut-http-client")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
-  testImplementation("org.mockito:mockito-core:5.7.0")
-  testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
+  runtimeOnly(libs.jackson.module.kotlin)
+  testImplementation(libs.micronaut.http.client)
+  testImplementation(libs.mockito.kotlin)
+  testImplementation(libs.mockito.core)
+  testImplementation(libs.archunit.junit5)
 }
 
 application { mainClass.set("io.github.architectplatform.cloud.ApplicationKt") }
@@ -94,15 +92,15 @@ micronaut {
 configurations.all {
   resolutionStrategy.eachDependency {
     if (requested.group == "org.jetbrains.kotlin") {
-      useVersion("1.9.25")
+      useVersion(libs.versions.kotlin.get())
     }
     if (requested.group == "org.jetbrains.kotlinx") {
-      useVersion("1.8.1")
+      useVersion(libs.versions.coroutines.get())
     }
   }
 }
 
-jacoco { toolVersion = "0.8.12" }
+jacoco { toolVersion = libs.versions.jacoco.get() }
 
 tasks.jacocoTestReport {
   dependsOn(tasks.test)

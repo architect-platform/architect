@@ -1,10 +1,10 @@
 plugins {
-  kotlin("jvm") version "1.9.25"
+  alias(libs.plugins.kotlin.jvm)
   `maven-publish`
-  id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
-  id("io.gitlab.arturbosch.detekt") version "1.23.7"
+  alias(libs.plugins.ktlint)
+  alias(libs.plugins.detekt)
   jacoco
-  id("info.solidsoft.pitest") version "1.15.0"
+  alias(libs.plugins.pitest)
 }
 
 group = "io.github.architectplatform"
@@ -22,14 +22,14 @@ kotlin { jvmToolchain { languageVersion.set(JavaLanguageVersion.of(17)) } }
 repositories { mavenCentral() }
 
 dependencies {
-  implementation("org.jetbrains.kotlin:kotlin-reflect")
+  implementation(libs.kotlin.reflect)
   // Exposed for ArchitectPluginContractTestSuite (consumed by plugin tests)
-  api("org.junit.jupiter:junit-jupiter-api:5.10.0")
+  api(libs.junit.jupiter.api)
 
   // Test dependencies
-  testImplementation("org.jetbrains.kotlin:kotlin-test")
-  testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+  testImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlin.test.junit5)
+  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 tasks.test {
@@ -88,7 +88,7 @@ publishing {
   }
 }
 
-jacoco { toolVersion = "0.8.12" }
+jacoco { toolVersion = libs.versions.jacoco.get() }
 
 tasks.jacocoTestReport {
   dependsOn(tasks.test)

@@ -1,18 +1,18 @@
-val kotlinVersion = project.properties["kotlinVersion"] as String? ?: "1.9.24"
+val kotlinVersion = libs.versions.kotlin.get()
 
 version = "1.1.0"
 
 group = "io.github.architectplatform"
 
 plugins {
-  id("org.jetbrains.kotlin.jvm") version "1.9.25"
-  id("org.jetbrains.kotlin.kapt") version "1.9.25"
-  id("org.jetbrains.kotlin.plugin.allopen") version "1.9.25"
-  id("com.github.johnrengelman.shadow") version "8.1.1"
-  id("io.micronaut.application") version "4.6.1"
-  id("io.micronaut.aot") version "4.6.1"
-  id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
-  id("io.gitlab.arturbosch.detekt") version "1.23.7"
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.kotlin.kapt)
+  alias(libs.plugins.kotlin.allopen)
+  alias(libs.plugins.shadow.legacy)
+  alias(libs.plugins.micronaut.application)
+  alias(libs.plugins.micronaut.aot)
+  alias(libs.plugins.ktlint)
+  alias(libs.plugins.detekt)
   jacoco
 }
 
@@ -22,20 +22,20 @@ dependencies {
   implementation("io.github.architectplatform:api:2.1.0")
   implementation("io.github.architectplatform:architect-core:1.6.1")
   kapt("info.picocli:picocli-codegen")
-  kapt("io.micronaut.serde:micronaut-serde-processor")
+  kapt(libs.micronaut.serde.processor)
   implementation("info.picocli:picocli")
-  implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
+  implementation(libs.micronaut.kotlin.runtime)
   implementation("io.micronaut.picocli:micronaut-picocli")
-  implementation("io.micronaut.serde:micronaut-serde-jackson")
-  implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
-  implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.10.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.2")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-  implementation("io.micronaut.reactor:micronaut-reactor")
-  implementation("io.micronaut:micronaut-http-client")
+  implementation(libs.micronaut.serde.jackson)
+  implementation(libs.kotlin.reflect)
+  implementation(libs.kotlin.stdlib.jdk8)
+  implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.kotlinx.coroutines.reactive)
+  implementation(libs.kotlinx.coroutines.jdk8)
+  implementation(libs.jackson.dataformat.yaml)
+  implementation(libs.jackson.module.kotlin)
+  implementation(libs.micronaut.reactor)
+  implementation(libs.micronaut.http.client)
   runtimeOnly("ch.qos.logback:logback-classic")
   runtimeOnly("org.yaml:snakeyaml")
 }
@@ -96,12 +96,12 @@ configurations.all {
       useVersion("1.9.25")
     }
     if (requested.group == "org.jetbrains.kotlinx") {
-      useVersion("1.10.2") // coroutines version declared in dependencies; compatible with Kotlin 1.9.x
+      useVersion(libs.versions.coroutines.get()) // kotlinx.coroutines: last 1.x series compiled with Kotlin 1.9.x; 1.10.x requires Kotlin 2.x
     }
   }
 }
 
-jacoco { toolVersion = "0.8.12" }
+jacoco { toolVersion = libs.versions.jacoco.get() }
 
 ktlint {
   version.set("1.0.1")
