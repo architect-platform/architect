@@ -2,6 +2,8 @@
 
 IntelliJ IDEA plugin for the [Architect Platform](https://github.com/architect-platform/architect).
 
+> Status: incubating thin reference integration. This plugin currently serves as an in-repo reference/editor aid rather than a fully supported JetBrains product or Marketplace offering.
+
 ## Features
 
 - **JSON Schema Association** — `architect.yml` and `architect.yaml` files get auto-complete and inline validation using the Architect JSON Schema.

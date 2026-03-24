@@ -174,10 +174,10 @@ Areas that should **not** be treated as production-adjacent today:
 
 - `architect-cloud/ui` — minimal frontend surface with no meaningful lint/test
 	entry points
-- `architect-vscode` — useful starter extension, but still incubating and
-	missing automated tests
-- `architect-intellij` — schema/helper plugin with minimal feature depth and no
-	visible automated tests
+- `architect-vscode` — useful starter extension, but still incubating and only
+	supported as a thin reference integration rather than a product-grade editor offering
+- `architect-intellij` — schema/helper plugin with minimal feature depth, also
+	classified as a thin reference integration rather than a supported IDE product
 
 ### `architect-cloud/`
 
@@ -200,7 +200,8 @@ Backend status: **beta** (tests passing). UI status: **incubating** (no real tes
 **Role**: VS Code extension for Architect.
 
 Provides YAML schema validation, task tree view, and task execution from the
-editor. Status: **incubating** (no automated tests; brittle YAML implementation).
+editor. Status: **incubating** thin reference integration (basic parser-model tests
+exist, but the extension is still CLI-dependent and has no marketplace/release pipeline).
 
 ---
 
@@ -209,7 +210,8 @@ editor. Status: **incubating** (no automated tests; brittle YAML implementation)
 **Role**: IntelliJ IDEA plugin for Architect.
 
 Provides schema association for `architect.yml` and a task line marker.
-Status: **incubating** (no automated tests; minimal feature depth).
+Status: **incubating** thin reference integration (basic plugin tests exist, but the
+plugin remains minimal, CLI-dependent, and unpublished).
 
 ---
 

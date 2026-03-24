@@ -18,8 +18,8 @@ The authoritative source remains the root `STATUS.md`.
 |---|---|---|
 | Architect Cloud Backend | `architect-cloud/backend` | beta |
 | Architect Cloud UI | `architect-cloud/ui` | incubating |
-| Architect VS Code | `architect-vscode` | incubating |
-| Architect IntelliJ | `architect-intellij` | incubating |
+| Architect VS Code | `architect-vscode` | incubating (thin reference integration) |
+| Architect IntelliJ | `architect-intellij` | incubating (thin reference integration) |
 
 ## Official Plugins
 

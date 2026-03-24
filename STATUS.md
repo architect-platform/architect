@@ -34,8 +34,8 @@ It is the authoritative reference for Phase 0 of the refactor plan (PLAN.md).
 |---|---|---|---|---|---|
 | architect-cloud/backend | `architect-cloud/backend` | **beta** | 1.0.0 | ✅ pass (57) | Hexagonal architecture with ArchUnit enforcement |
 | architect-cloud/ui | `architect-cloud/ui` | **incubating** | — | ❌ none | `package.json` still defines empty `lint` and `test` scripts; see `docs/architecture/baseline-failures.md` |
-| architect-vscode | `architect-vscode` | **incubating** | — | ❌ none | No automated tests; brittle YAML parsing |
-| architect-intellij | `architect-intellij` | **incubating** | — | ❌ none | Schema association only; minimal feature depth |
+| architect-vscode | `architect-vscode` | **incubating** | 0.1.0 | ✅ pass (3) | Thin reference integration, not a supported product; parser-model tests now cover shared YAML task extraction, but the extension still depends on the external CLI and has no marketplace/release pipeline |
+| architect-intellij | `architect-intellij` | **incubating** | 0.1.0 | ✅ pass (4) | Thin reference integration, not a supported product; schema/run-helper behavior now has plugin tests, but the plugin remains minimal and unpublished |
 
 ---
 

@@ -64,7 +64,7 @@ Architect consists of four core platform components, plus product surfaces, plug
 - **[Architect Engine](architect-engine/)**: Incubating execution host and REST API server
 - **[Architect CLI](architect-cli/)**: Incubating end-user command-line interface
 - **[Architect Cloud](architect-cloud/)**: Product surface (backend beta, UI incubating)
-- **[Architect VS Code](architect-vscode/)** and **[Architect IntelliJ](architect-intellij/)**: Incubating IDE/editor integrations
+- **[Architect VS Code](architect-vscode/)** and **[Architect IntelliJ](architect-intellij/)**: Incubating IDE/editor reference integrations, not yet supported products
 - **[Plugins](plugins/)**: Official plugin ecosystem (mixed active and incubating maturity)
 - **[SDKs](sdk/)**: Language SDKs (currently incubating)
 

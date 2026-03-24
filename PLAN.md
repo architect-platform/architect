@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 82/350 tasks completed (23.4%)
+Overall Progress: 83/350 tasks completed (23.7%)
 Current Phase: Phase 7 — Raise product-surface quality outside the Kotlin core
-Last Updated: 2026-03-24T22:10:00Z
+Last Updated: 2026-03-24T22:25:00Z
 
 ## Standards and Principles Gaps
 
@@ -320,7 +320,7 @@ Last Updated: 2026-03-24T22:10:00Z
   - [x] Introduce typed state/API handling and component test coverage for the cloud UI. | Finished: 2026-03-24T21:50:00Z | Notes: Converted `architect-cloud/ui` from ad hoc JSX state to a small typed TypeScript structure: `src/types/cloud.ts` defines backend response/state contracts, `src/api/cloudApi.ts` centralizes typed REST fetches, `src/hooks/useCloudDashboard.ts` owns typed polling state, and `src/components/` contains focused `ErrorBanner` and `SummaryStats` components. Migrated entrypoints/tests to TS/TSX, added `tsconfig.json`, extended linting to run `tsc --noEmit`, and added component coverage for `App`, `ErrorBanner`, and `SummaryStats`. Verified with `npm run lint && npm test && npm run build` in `architect-cloud/ui`.
   - [x] For `architect-vscode`, replace ad hoc YAML parsing with a robust parser/model strategy. | Finished: 2026-03-24T21:58:00Z | Notes: Replaced the line-by-line indentation parser in `architect-vscode/src/taskTreeProvider.ts` with a shared YAML-backed config model in `src/architectConfigModel.ts` using the `yaml` package. The new model parses both top-level `tasks:` and `scripts.scripts:` task definitions, preserves description/phase metadata, and supports both `architect.yml` and `architect.yaml`. Added parser regression tests in `src/test/architectConfigModel.test.ts` and validated with `npm test` in `architect-vscode`.
   - [x] For `architect-vscode` and `architect-intellij`, add automated tests for extension/plugin behavior. | Finished: 2026-03-24T22:10:00Z | Notes: Added automated coverage for both IDE integrations. `architect-vscode` now validates its YAML-backed config model with parser regression tests executed by `npm test`. `architect-intellij` now includes plugin tests for schema-provider availability and task line-marker behavior, and the task also fixed two host-side issues uncovered while enabling that coverage: `ArchitectRunConfigurationType` now returns a proper `CommandLineState`, and `ArchitectTaskLineMarkerProvider` resolves YAML task keys by enclosing `YAMLKeyValue` position rather than relying on a brittle leaf-node shape. Verified with `cd architect-vscode && npm test` and `cd architect-intellij && gradle test`.
-  - [ ] Decide whether IDE integrations are supported products or thin reference integrations.
+  - [x] Decide whether IDE integrations are supported products or thin reference integrations. | Finished: 2026-03-24T22:25:00Z | Notes: Classified `architect-vscode` and `architect-intellij` as thin reference integrations rather than supported products. The current code supports useful schema/task helpers and now has a basic automated test baseline, but both modules remain version `0.1.0`, depend on the external CLI, and lack marketplace distribution, release automation, and the broader UX/error-handling depth expected from supported IDE products. Updated the root status/docs plus each module's README/STATUS to make that support tier explicit.
 
 - [ ] Validation
   - [ ] Run UI lint/build/test.

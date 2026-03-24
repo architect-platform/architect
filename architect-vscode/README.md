@@ -2,6 +2,8 @@
 
 VS Code extension for the [Architect Platform](https://github.com/architect-platform/architect).
 
+> Status: incubating thin reference integration. This module is kept in-tree as a starter/editor integration example and development aid; it is not yet treated as a fully supported product or Marketplace-delivered offering.
+
 ## Features
 
 - **YAML Auto-complete & Validation** — `architect.yml` files get schema-driven completion and inline error highlighting via the JSON Schema published by Architect.
