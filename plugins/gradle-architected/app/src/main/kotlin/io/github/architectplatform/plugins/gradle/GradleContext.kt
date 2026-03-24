@@ -1,4 +1,4 @@
-package io.github.architectplatform.plugins.gradlearchitected
+package io.github.architectplatform.plugins.gradle
 
 /**
  * Context containing all Gradle project configurations.

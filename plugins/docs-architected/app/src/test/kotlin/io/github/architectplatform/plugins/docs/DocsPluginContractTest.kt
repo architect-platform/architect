@@ -1,7 +1,7 @@
 package io.github.architectplatform.plugins.docs
 
 import io.github.architectplatform.api.testing.ArchitectPluginContractTestSuite
-import io.github.architectplatform.plugins.docs.dto.DocsContext
+import io.github.architectplatform.plugins.docs.DocsContext
 
 class DocsPluginContractTest : ArchitectPluginContractTestSuite<DocsContext>() {
 

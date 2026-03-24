@@ -1,4 +1,4 @@
-package io.github.architectplatform.plugins.gradlearchitected
+package io.github.architectplatform.plugins.gradle
 
 import io.github.architectplatform.api.components.workflows.code.CodeWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin

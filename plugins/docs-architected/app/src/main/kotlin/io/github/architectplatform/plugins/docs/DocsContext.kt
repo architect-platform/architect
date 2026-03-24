@@ -1,4 +1,7 @@
-package io.github.architectplatform.plugins.docs.dto
+package io.github.architectplatform.plugins.docs
+
+import io.github.architectplatform.plugins.docs.dto.BuildContext
+import io.github.architectplatform.plugins.docs.dto.PublishContext
 
 /**
  * Configuration context for the Docs plugin.

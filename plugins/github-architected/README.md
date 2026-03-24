@@ -49,7 +49,7 @@ Creates and configures GitHub Actions workflows:
 github:
   pipelines:
     - name: "ci"
-      type: "standard"
+      type: "github/classic-java-17"
       path: "**"
       branch: "main"
 ```
@@ -114,7 +114,7 @@ The plugin includes embedded resources:
 - `releases/run.sh`: Script to execute semantic-release
 - `releases/update-version.sh`: Script to update version in files
 - `releases/.releaserc.json`: semantic-release configuration template
-- `pipelines/*.yml`: GitHub Actions workflow templates
+- `workflows/github/*.yml`: GitHub Actions workflow templates
 - `dependencies/renovate/renovate.json`: Renovate configuration
 
 ## Building
@@ -162,7 +162,7 @@ github:
 
 ### Adding New Pipeline Types
 
-1. Create a new template in `resources/pipelines/`
+1. Create a new template in `resources/workflows/github/`
 2. Reference it in your `architect.yml` configuration
 3. Use `{{name}}`, `{{path}}`, and `{{branch}}` placeholders
 

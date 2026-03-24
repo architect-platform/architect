@@ -1,4 +1,4 @@
-package io.github.architectplatform.plugins.javascriptarchitected
+package io.github.architectplatform.plugins.javascript
 
 /**
  * Context configuration for JavaScript/Node.js projects.

@@ -7,7 +7,7 @@ import io.github.architectplatform.plugins.docs.builders.MkDocsBuilder
 import io.github.architectplatform.plugins.docs.builders.VuePressBuilder
 import io.github.architectplatform.plugins.docs.builders.DocumentationBuilderFactory
 import io.github.architectplatform.plugins.docs.dto.BuildContext
-import io.github.architectplatform.plugins.docs.dto.DocsContext
+import io.github.architectplatform.plugins.docs.DocsContext
 import io.github.architectplatform.plugins.docs.dto.PublishContext
 import io.github.architectplatform.plugins.docs.utils.SecurityUtils
 import org.junit.jupiter.api.Assertions.*

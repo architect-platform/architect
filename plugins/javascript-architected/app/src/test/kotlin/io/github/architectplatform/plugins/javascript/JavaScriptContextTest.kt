@@ -1,4 +1,4 @@
-package io.github.architectplatform.plugins.javascriptarchitected
+package io.github.architectplatform.plugins.javascript
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test

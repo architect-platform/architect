@@ -1,4 +1,4 @@
-package io.github.architectplatform.plugins.gradlearchitected
+package io.github.architectplatform.plugins.gradle
 
 /**
  * Configuration for a single Gradle project.

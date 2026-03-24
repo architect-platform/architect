@@ -1,4 +1,4 @@
-package io.github.architectplatform.plugins.javascriptarchitected
+package io.github.architectplatform.plugins.javascript
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.api.core.project.ProjectContext

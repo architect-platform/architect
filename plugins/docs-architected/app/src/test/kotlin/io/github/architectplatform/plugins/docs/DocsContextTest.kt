@@ -1,5 +1,7 @@
-package io.github.architectplatform.plugins.docs.dto
+package io.github.architectplatform.plugins.docs
 
+import io.github.architectplatform.plugins.docs.dto.BuildContext
+import io.github.architectplatform.plugins.docs.dto.PublishContext
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

@@ -1,4 +1,4 @@
-package io.github.architectplatform.plugins.gradlearchitected
+package io.github.architectplatform.plugins.gradle
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.api.testing.ArchitectPluginContractTestSuite

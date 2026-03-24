@@ -4,7 +4,7 @@ import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.api.components.execution.ResourceExtractor
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
-import io.github.architectplatform.plugins.github.dto.GithubContext
+import io.github.architectplatform.plugins.github.GithubContext
 import io.github.architectplatform.plugins.github.dto.PipelineContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse

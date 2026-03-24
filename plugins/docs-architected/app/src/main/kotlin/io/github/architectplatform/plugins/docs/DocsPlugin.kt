@@ -6,13 +6,10 @@ import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
-import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
-import io.github.architectplatform.api.core.tasks.phase.Phase
 import io.github.architectplatform.plugins.docs.builders.DocumentationBuilderFactory
 import io.github.architectplatform.plugins.docs.dto.ComponentDocs
-import io.github.architectplatform.plugins.docs.dto.DocsContext
 import io.github.architectplatform.api.core.project.resolvePathWithinRoot
 import io.github.architectplatform.plugins.docs.publishers.GitHubPagesPublisher
 import java.io.File
@@ -175,46 +172,6 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
             phase = CoreWorkflow.PUBLISH,
             task = ::publishDocs,
         ))
-  }
-
-  /**
-   * Task wrapper for documentation-specific operations.
-   *
-   * Executes a documentation task function and handles exceptions, converting them
-   * to appropriate TaskResult objects.
-   *
-   * @property id Unique identifier for the task
-   * @property phase The workflow phase this task belongs to
-   * @property task The actual task implementation function
-   */
-  class DocsTask(
-      override val id: String,
-      private val phase: Phase,
-      private val task: (Environment, ProjectContext) -> TaskResult
-  ) : Task {
-
-    override fun phase(): Phase = phase
-
-    /**
-     * Executes the documentation task with error handling.
-     *
-     * @param environment Execution environment providing services
-     * @param projectContext The project context
-     * @param args Additional arguments for the task
-     * @return TaskResult indicating success or failure
-     */
-    override fun execute(
-        environment: Environment,
-        projectContext: ProjectContext,
-        args: List<String>
-    ): TaskResult {
-      return try {
-        task(environment, projectContext)
-      } catch (e: Exception) {
-        TaskResult.failure(
-            "Docs task: $id failed with exception: ${e.message ?: "Unknown error"}")
-      }
-    }
   }
 
   /**

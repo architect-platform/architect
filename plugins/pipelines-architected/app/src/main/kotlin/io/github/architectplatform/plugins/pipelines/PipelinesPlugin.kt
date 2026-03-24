@@ -9,10 +9,8 @@ import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.project.resolvePathWithinRoot
 import io.github.architectplatform.api.core.tasks.Environment
-import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
-import io.github.architectplatform.api.core.tasks.phase.Phase
 import java.io.File
 import java.nio.file.Path
 import org.slf4j.LoggerFactory
@@ -69,29 +67,6 @@ class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
             phase = CoreWorkflow.BUILD,
             task = ::listWorkflows
         ))
-    }
-
-    /**
-     * Task wrapper for pipeline operations.
-     */
-    class PipelinesTask(
-        override val id: String,
-        private val phase: Phase,
-        private val task: (Environment, ProjectContext, List<String>) -> TaskResult
-    ) : Task {
-        override fun phase(): Phase = phase
-
-        override fun execute(
-            environment: Environment,
-            projectContext: ProjectContext,
-            args: List<String>
-        ): TaskResult {
-            return try {
-                task(environment, projectContext, args)
-            } catch (e: Exception) {
-                TaskResult.failure("Pipelines task: $id failed with exception: ${e.message ?: "Unknown error"}")
-            }
-        }
     }
 
     /**

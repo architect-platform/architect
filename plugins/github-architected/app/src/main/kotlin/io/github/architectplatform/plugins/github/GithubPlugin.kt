@@ -9,11 +9,8 @@ import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.project.getKey
 import io.github.architectplatform.api.core.project.resolvePathWithinRoot
 import io.github.architectplatform.api.core.tasks.Environment
-import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
-import io.github.architectplatform.api.core.tasks.phase.Phase
-import io.github.architectplatform.plugins.github.dto.GithubContext
 import io.github.architectplatform.plugins.github.dto.PipelineContext
 import java.io.File
 import java.nio.file.Files
@@ -69,46 +66,6 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
             phase = CoreWorkflow.INIT,
             task = ::initDependencies,
         ))
-  }
-
-  /**
-   * Task wrapper for GitHub-specific operations.
-   *
-   * Executes a GitHub task function and handles exceptions, converting them
-   * to appropriate TaskResult objects.
-   *
-   * @property id Unique identifier for the task
-   * @property phase The workflow phase this task belongs to
-   * @property task The actual task implementation function
-   */
-  class GithubTask(
-      override val id: String,
-      private val phase: Phase,
-      private val task: (Environment, ProjectContext) -> TaskResult
-  ) : Task {
-
-    override fun phase(): Phase = phase
-
-    /**
-     * Executes the GitHub task with error handling.
-     *
-     * @param environment Execution environment providing services
-     * @param projectContext The project context
-     * @param args Additional arguments for the task
-     * @return TaskResult indicating success or failure
-     */
-    override fun execute(
-        environment: Environment,
-        projectContext: ProjectContext,
-        args: List<String>
-    ): TaskResult {
-      return try {
-        task(environment, projectContext)
-      } catch (e: Exception) {
-        TaskResult.failure(
-            "Github task: $id failed with exception: ${e.message ?: "Unknown error"}")
-      }
-    }
   }
 
   /**
@@ -250,12 +207,20 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
     val gitDir =
         findRepoRoot(projectContext.dir.toFile())
             ?: return TaskResult.failure("Git directory not found in project hierarchy.")
-    val safeType = pipeline.type.replace(Regex("[^a-zA-Z0-9._-]"), "")
+    val safeTypeSegments =
+        pipeline.type.split("/").map { segment ->
+          val safeSegment = segment.replace(Regex("[^a-zA-Z0-9._-]"), "")
+          if (safeSegment.isBlank() || safeSegment != segment || safeSegment.contains("..")) {
+            return TaskResult.failure("Invalid pipeline type: '${pipeline.type}'")
+          }
+          safeSegment
+        }
+    val safeType = safeTypeSegments.joinToString("/")
     val safeName = pipeline.name.replace(Regex("[^a-zA-Z0-9._-]"), "")
     if (safeName.isBlank() || safeName.contains("..")) {
       return TaskResult.failure("Invalid pipeline name: '${pipeline.name}'")
     }
-    val resourceRoot = "pipelines/"
+    val resourceRoot = "workflows/"
     val resourceFile = resourceRoot + safeType + ".yml"
     val pipelinesDir = File(gitDir, ".github/workflows")
 
