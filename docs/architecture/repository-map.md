@@ -21,6 +21,37 @@ architect/
 └── Delivery / Docs      docs/, homebrew/, .github/
 ```
 
+This reflects the current repository shape. The desired target taxonomy for the
+repository is slightly more explicit and is the model future restructuring work
+should converge toward.
+
+## Target Taxonomy
+
+```text
+architect/
+├── platform/            api, core, engine, cli
+├── products/            cloud, vscode, intellij
+├── plugins/             first-party plugins
+├── sdk/                 language SDKs
+├── incubating/          incomplete or experimental modules
+└── docs-policy/         documentation, governance, delivery metadata
+```
+
+Target category rules:
+
+| Category | What belongs there | Current repository examples |
+|---|---|---|
+| `platform/` | Runtime stack, shared contracts, execution host/client | `architect-api`, `architect-core`, `architect-engine`, `architect-cli` |
+| `products/` | End-user applications and editor/IDE integrations | `architect-cloud`, `architect-vscode`, `architect-intellij` |
+| `plugins/` | Official first-party plugins | `plugins/*` |
+| `sdk/` | Language SDKs for third-party/plugin authors | `sdk/typescript`, `sdk/python`, `sdk/go` |
+| `incubating/` | Exploratory or incomplete modules that should not look production-grade | future home for low-maturity modules that should move out of the main product/platform paths |
+| `docs-policy/` | Repository-wide docs, contribution policy, release/delivery metadata | `docs/`, `.github/`, `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `LICENSE`, `mkdocs.yml`, `homebrew/` |
+
+The taxonomy decision does **not** require immediate directory moves. It first
+establishes a stable classification model so later path changes can be
+intentional instead of ad hoc.
+
 ---
 
 ## Core Platform

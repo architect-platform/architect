@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 16/283 tasks completed (5.7%)
+Overall Progress: 23/283 tasks completed (8.1%)
 Current Phase: Phase 1a — Reorganize repository decomposition and ownership boundaries
-Last Updated: 2026-03-24T09:24:17Z
+Last Updated: 2026-03-24T09:25:56Z
 
 ## Executive Summary
 
@@ -378,13 +378,13 @@ The repository currently contains several categories of assets:
 - [ ] **Expected outcomes**: obvious top-level taxonomy, explicit support tiers, clearer navigation
 
 - [ ] Tasks
-  - [ ] Define the desired top-level taxonomy for the repository:
-    - [ ] core platform/runtime
-    - [ ] end-user products
-    - [ ] official plugins
-    - [ ] SDKs
-    - [ ] incubating/experimental modules
-    - [ ] docs and policy
+  - [x] Define the desired top-level taxonomy for the repository: | Finished: 2026-03-24T09:25:56Z | Notes: Accepted ADR-010 and documented the target grouping model in docs/architecture/repository-map.md so later restructuring work has an explicit destination taxonomy rather than an implied one.
+    - [x] core platform/runtime
+    - [x] end-user products
+    - [x] official plugins
+    - [x] SDKs
+    - [x] incubating/experimental modules
+    - [x] docs and policy
   - [ ] Decide which existing modules stay top-level versus move under grouped parent directories.
   - [ ] Define ownership metadata per bounded area.
   - [ ] Add a repository map to docs.

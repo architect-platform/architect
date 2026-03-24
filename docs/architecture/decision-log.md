@@ -207,3 +207,41 @@ not an implied convention.
 	entry points.
 - **Con**: Cross-repository validation remains fragmented until a future
 	orchestrator or monorepo task runner is deliberately introduced.
+
+---
+
+## ADR-010: Repository taxonomy centers on platform, products, plugins, SDKs, incubating work, and docs/policy
+
+**Status**: Accepted  
+**Date**: 2026-03
+
+### Context
+
+The repository currently mixes mature runtime modules, user-facing products,
+official plugins, SDKs, and lower-maturity surfaces at the same visual level.
+That makes the top-level layout harder to scan and leaves contributors without
+a stable rule for where new code should live.
+
+### Decision
+
+The target repository taxonomy is:
+
+- **Platform/runtime**: core platform modules and execution stack
+- **Products**: end-user applications and IDE/editor integrations
+- **Official plugins**: first-party extensibility surfaces
+- **SDKs**: language SDKs for third-party plugin development
+- **Incubating/experimental**: incomplete or exploratory modules that should not
+	appear production-adjacent
+- **Docs and policy**: repository-wide documentation, governance, and delivery
+	metadata
+
+This taxonomy is authoritative even before all physical directory moves happen.
+When future restructuring occurs, directories should be grouped to make this
+taxonomy visible in the tree instead of leaving it implicit.
+
+### Consequences
+
+- **Pro**: Gives contributors a predictable placement rule for new modules.
+- **Pro**: Separates maturity/status concerns from functional ownership.
+- **Con**: Later physical path moves will need careful coordination across CI,
+	docs, and build tooling.
