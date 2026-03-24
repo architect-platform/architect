@@ -45,33 +45,7 @@ class DocsPlugin : ArchitectPlugin<DocsContext> {
     // Template pattern for repository URL
     private val REPO_URL_PATTERN = Regex("""(?s)\{\{#repoUrl}}(.*?)\{\{/repoUrl}}""")
 
-    /**
-     * Sanitizes a path to prevent command injection and directory traversal.
-     * @deprecated Use InputSanitizer.sanitizePath() instead
-     */
-    @Deprecated("Use InputSanitizer.sanitizePath() instead", ReplaceWith("InputSanitizer.sanitizePath(path)", "io.github.architectplatform.plugins.docs.utils.InputSanitizer"))
-    fun sanitizePath(path: String): String = io.github.architectplatform.plugins.docs.utils.InputSanitizer.sanitizePath(path)
 
-    /**
-     * Sanitizes a Git branch name for safe shell execution.
-     * @deprecated Use InputSanitizer.sanitizeBranch() instead
-     */
-    @Deprecated("Use InputSanitizer.sanitizeBranch() instead", ReplaceWith("InputSanitizer.sanitizeBranch(branch)", "io.github.architectplatform.plugins.docs.utils.InputSanitizer"))
-    fun sanitizeBranch(branch: String): String = io.github.architectplatform.plugins.docs.utils.InputSanitizer.sanitizeBranch(branch)
-
-    /**
-     * Sanitizes a version string for safe shell execution.
-     * @deprecated Use InputSanitizer.sanitizeVersion() instead
-     */
-    @Deprecated("Use InputSanitizer.sanitizeVersion() instead", ReplaceWith("InputSanitizer.sanitizeVersion(version)", "io.github.architectplatform.plugins.docs.utils.InputSanitizer"))
-    fun sanitizeVersion(version: String): String = io.github.architectplatform.plugins.docs.utils.InputSanitizer.sanitizeVersion(version)
-
-    /**
-     * Validates a domain name using RFC-compliant rules.
-     * @deprecated Use InputSanitizer.isValidDomain() instead
-     */
-    @Deprecated("Use InputSanitizer.isValidDomain() instead", ReplaceWith("InputSanitizer.isValidDomain(domain)", "io.github.architectplatform.plugins.docs.utils.InputSanitizer"))
-    fun isValidDomain(domain: String): Boolean = io.github.architectplatform.plugins.docs.utils.InputSanitizer.isValidDomain(domain)
   }
 
   /**

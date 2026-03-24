@@ -4,10 +4,6 @@ import jakarta.inject.Singleton
 import java.io.File
 import java.io.IOException
 
-interface PluginSignatureVerifier {
-  fun verify(plugin: PluginConfig, pluginFile: File, signatureFile: File)
-}
-
 data class CommandResult(
   val exitCode: Int,
   val output: String,
@@ -31,9 +27,9 @@ open class GpgCommandRunner {
 open class GpgPluginSignatureVerifier(
   private val commandRunner: GpgCommandRunner,
   private val gpgCommand: String = System.getProperty("architect.plugins.signature.gpg-command", "gpg"),
-) : PluginSignatureVerifier {
+) {
 
-  override fun verify(plugin: PluginConfig, pluginFile: File, signatureFile: File) {
+  open fun verify(plugin: PluginConfig, pluginFile: File, signatureFile: File) {
     if (plugin.trustedKeys.isEmpty()) {
       throw IllegalArgumentException(
         "Plugin '${plugin.name}' must declare at least one trusted key when verify-signature is true",

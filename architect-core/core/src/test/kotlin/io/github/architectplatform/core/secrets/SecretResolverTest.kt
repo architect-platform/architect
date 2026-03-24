@@ -31,7 +31,7 @@ class SecretResolverTest {
         "VAULT_ADDR" to "https://vault.example.com",
         "VAULT_TOKEN" to "token",
       ),
-      client = object : VaultSecretClient {
+      client = object : HttpVaultSecretClient() {
         override fun read(address: String, token: String, path: String): String? {
           assertEquals("https://vault.example.com", address)
           assertEquals("token", token)

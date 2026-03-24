@@ -26,7 +26,7 @@ class CompositeSecretResolver(
     fun default(
       env: Map<String, String> = System.getenv(),
       commandRunner: SecretCommandRunner = ProcessSecretCommandRunner(),
-      vaultClient: VaultSecretClient = HttpVaultSecretClient(),
+      vaultClient: HttpVaultSecretClient = HttpVaultSecretClient(),
       dotEnvLoader: DotEnvLoader = DotEnvLoader(),
     ): CompositeSecretResolver =
       CompositeSecretResolver(
@@ -89,7 +89,7 @@ class DotEnvLoader {
 
 class VaultSecretResolver(
   private val env: Map<String, String> = System.getenv(),
-  private val client: VaultSecretClient = HttpVaultSecretClient(),
+  private val client: HttpVaultSecretClient = HttpVaultSecretClient(),
 ) : SecretResolver {
   override fun resolve(name: String, projectDir: Path?): String? {
     val address = env["VAULT_ADDR"] ?: return null
@@ -99,15 +99,11 @@ class VaultSecretResolver(
   }
 }
 
-interface VaultSecretClient {
-  fun read(address: String, token: String, path: String): String?
-}
-
-class HttpVaultSecretClient(
+open class HttpVaultSecretClient(
   private val httpClient: HttpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build(),
   private val objectMapper: ObjectMapper = jacksonObjectMapper(),
-) : VaultSecretClient {
-  override fun read(address: String, token: String, path: String): String? {
+) {
+  open fun read(address: String, token: String, path: String): String? {
     val request = HttpRequest.newBuilder()
       .uri(URI.create(address.trimEnd('/') + "/v1/" + path.trimStart('/')))
       .timeout(Duration.ofSeconds(10))

@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory
 class ProjectPluginLoader(
     private val spiLoader: SpiPluginLoader,
     private val downloader: PluginDownloader,
-    private val signatureVerifier: PluginSignatureVerifier,
+    private val signatureVerifier: GpgPluginSignatureVerifier,
     private val internalPlugins: List<CommonPlugin>,
     private val releaseResolver: GitHubReleaseResolver,
     private val eventBus: EventBus<ArchitectEvent<*>>,

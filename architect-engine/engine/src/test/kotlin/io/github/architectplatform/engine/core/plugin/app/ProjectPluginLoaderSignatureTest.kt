@@ -3,9 +3,10 @@ package io.github.architectplatform.engine.core.plugin.app
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.TaskRegistry
+import io.github.architectplatform.core.plugin.app.GpgCommandRunner
+import io.github.architectplatform.core.plugin.app.GpgPluginSignatureVerifier
 import io.github.architectplatform.core.plugin.app.PluginConfig
 import io.github.architectplatform.core.plugin.app.PluginDownloader
-import io.github.architectplatform.core.plugin.app.PluginSignatureVerifier
 import io.github.architectplatform.core.plugin.app.ProjectPluginLoader
 import io.github.architectplatform.core.plugin.app.RemoteContentFetcher
 import io.github.architectplatform.core.plugin.app.SpiPluginLoader
@@ -121,7 +122,7 @@ class ProjectPluginLoaderSignatureTest {
     }
   }
 
-  private class RecordingSignatureVerifier : PluginSignatureVerifier {
+  private class RecordingSignatureVerifier : GpgPluginSignatureVerifier(GpgCommandRunner()) {
     val verifiedPluginNames = mutableListOf<String>()
 
     override fun verify(plugin: PluginConfig, pluginFile: File, signatureFile: File) {

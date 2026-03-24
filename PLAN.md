@@ -1,7 +1,7 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 97/350 tasks completed (27.7%)
+Overall Progress: 98/350 tasks completed (28.0%)
 Current Phase: Phase 9 — Refactor for simplicity, readability, and smaller units
 Last Updated: 2026-03-25T03:15:00Z
 
@@ -363,7 +363,7 @@ Last Updated: 2026-03-25T03:15:00Z
   - [x] Split overloaded classes into clearer collaborators with narrower responsibilities. | Finished: 2026-03-25T04:15:00Z | Notes: Extracted 6 handler classes from ArchitectLauncher (1609→570 lines, 65% reduction): EngineCommandHandler (138), PluginCommandHandler (228), CacheCommandHandler (50), CheckCommandHandler (85), OutputFormatter (264), CliInfrastructureHandler (195). All 15 CLI tests pass green.
   - [x] Rename ambiguous types, packages, and modules to better express intent. | Finished: 2026-03-25T04:45:00Z | Notes: Renamed 4 Utils objects (ShellUtils→ShellArgumentSanitizer, SecurityUtils→InputSanitizer, GitUtils→GitCommandValidator, ScriptUtils→ShellCommandSanitizer), 4 ApiControllers (removed redundant "Api" prefix), moved impl→builtin package (SimpleTask, TaskWithArgs). 47 files changed across all modules. API 160 tests, engine 116 tests pass.
   - [x] Flatten deeply nested or redundant package structures where they hinder comprehension. | Finished: 2026-03-25T05:10:00Z | Notes: Flattened interfaces.dto→dto in core (4 files) and engine (4 files), consolidated 3 single-file context packages into parent packages. 11 files moved, 13 import sites updated. Core 224 tests, engine 115 tests pass.
-  - [ ] Remove stale abstractions, duplicate wrappers, and “utility dumping ground” patterns.
+  - [x] Remove stale abstractions, duplicate wrappers, and "utility dumping ground" patterns. | Finished: 2026-03-25T05:45:00Z | Notes: Removed 4 deprecated DocsPlugin wrapper methods, inlined VaultSecretClient interface (single impl HttpVaultSecretClient), inlined PluginSignatureVerifier interface (single impl GpgPluginSignatureVerifier). 10 files changed, 34 lines removed. Core 224 tests, docs 58 tests pass.
   - [ ] Add concise architecture comments only where code would otherwise remain hard to parse.
 
 - [ ] Validation

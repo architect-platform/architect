@@ -156,7 +156,7 @@ class ProjectPluginLoaderTest {
     }
   }
 
-  private class RecordingSignatureVerifier : PluginSignatureVerifier {
+  private class RecordingSignatureVerifier : GpgPluginSignatureVerifier(GpgCommandRunner()) {
     val verifiedPluginNames = mutableListOf<String>()
 
     override fun verify(plugin: PluginConfig, pluginFile: File, signatureFile: File) {

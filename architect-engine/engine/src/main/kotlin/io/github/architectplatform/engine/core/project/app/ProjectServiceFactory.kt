@@ -8,7 +8,6 @@ import io.github.architectplatform.core.plugin.app.GpgCommandRunner
 import io.github.architectplatform.core.plugin.app.GpgPluginSignatureVerifier
 import io.github.architectplatform.core.plugin.app.PluginDownloader
 import io.github.architectplatform.core.plugin.app.PluginLoader
-import io.github.architectplatform.core.plugin.app.PluginSignatureVerifier
 import io.github.architectplatform.core.plugin.app.ProjectPluginLoader
 import io.github.architectplatform.core.plugin.app.SpiPluginLoader
 import io.github.architectplatform.core.plugin.infra.CachedPluginDownloader
@@ -73,7 +72,7 @@ class ProjectServiceFactory {
   fun gpgCommandRunner(): GpgCommandRunner = GpgCommandRunner()
 
   @Singleton
-  fun pluginSignatureVerifier(commandRunner: GpgCommandRunner): PluginSignatureVerifier =
+  fun pluginSignatureVerifier(commandRunner: GpgCommandRunner): GpgPluginSignatureVerifier =
     GpgPluginSignatureVerifier(commandRunner)
 
   @Singleton
@@ -104,7 +103,7 @@ class ProjectServiceFactory {
   fun pluginLoader(
     spiLoader: SpiPluginLoader,
     downloader: PluginDownloader,
-    signatureVerifier: PluginSignatureVerifier,
+    signatureVerifier: GpgPluginSignatureVerifier,
     internalPlugins: List<CommonPlugin>,
     releaseResolver: GitHubReleaseResolver,
     eventBus: MicronautArchitectEventBus,

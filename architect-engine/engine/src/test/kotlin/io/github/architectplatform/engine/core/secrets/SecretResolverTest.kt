@@ -7,7 +7,7 @@ import io.github.architectplatform.core.secrets.DotEnvSecretResolver
 import io.github.architectplatform.core.secrets.GcpSecretManagerSecretResolver
 import io.github.architectplatform.core.secrets.SecretCommandResult
 import io.github.architectplatform.core.secrets.SecretCommandRunner
-import io.github.architectplatform.core.secrets.VaultSecretClient
+import io.github.architectplatform.core.secrets.HttpVaultSecretClient
 import io.github.architectplatform.core.secrets.VaultSecretResolver
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -40,7 +40,7 @@ class SecretResolverTest {
         "VAULT_ADDR" to "https://vault.example.com",
         "VAULT_TOKEN" to "token",
       ),
-      client = object : VaultSecretClient {
+      client = object : HttpVaultSecretClient() {
         override fun read(address: String, token: String, path: String): String? {
           assertEquals("https://vault.example.com", address)
           assertEquals("token", token)
