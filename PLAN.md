@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 75/350 tasks completed (21.4%)
-Current Phase: Phase 5 — Standardize the plugin platform
-Last Updated: 2026-03-24T20:00:00Z
+Overall Progress: 76/350 tasks completed (21.7%)
+Current Phase: Phase 6 — Simplify CI/CD and delivery automation
+Last Updated: 2026-03-24T20:40:00Z
 
 ## Standards and Principles Gaps
 
@@ -301,7 +301,7 @@ Last Updated: 2026-03-24T20:00:00Z
   - [x] Add a CI validation rule for generated workflow drift if generation remains part of the model. | Finished: 2026-03-24T20:05:00Z | Notes: Added `.github/workflows/workflow-drift-check.yml` to regenerate caller workflows on PRs and fail when committed generated workflow files diverge from the current template and generator script output.
 
 - [ ] Validation
-  - [ ] Dry-run equivalent CI paths for API, engine, CLI, cloud, and plugin modules.
+  - [x] Dry-run equivalent CI paths for API, engine, CLI, cloud, and plugin modules. | Finished: 2026-03-24T20:40:00Z | Notes: Replayed the reusable workflow build/test paths locally across representative surfaces. `architect-api/api`, `architect-engine/engine`, `architect-cloud/backend`, `plugins/docs-architected/app`, and `plugins/javascript-architected/app` all pass when run in isolation. `architect-cli/cli` still fails reproducibly with 8 `CliEngineIntegrationTest` assertion failures, confirming the CLI baseline remains red. `architect-cloud/ui` still is not a trustworthy CI surface in this environment: `npm run build` fails with `vite: command not found`, and its `lint`/`test` scripts remain empty. An initial parallel false negative on `docs-architected` was eliminated by rerunning serially because these Gradle builds share included projects.
   - [ ] Confirm workflow count or repeated step volume drops materially.
 
 ## Phase 7 — Raise product-surface quality outside the Kotlin core
