@@ -1,0 +1,17 @@
+project:
+  name: my-terraform-project
+  description: "Example project using terraform-architected plugin"
+
+plugins:
+  - name: terraform-architected
+    repo: architect-platform/terraform-architected
+
+terraform:
+  workspace: production
+  backend: infra/backend.hcl
+  vars:
+    environment: production
+    region: eu-west-1
+  varFile: infra/production.tfvars
+  autoApprove: false
+  enabled: true

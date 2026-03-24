@@ -1,23 +1,25 @@
 project:
-  name: architecture-architected
-  description: "The Architect plugin for architectural rule management and validation"
+  name: my-architecture-validated-project
+  description: "Example project using architecture-architected plugin"
 
 plugins:
-  - name: gradle-architected
-    repo: architect-platform/architect
-  - name: github-architected
-    repo: architect-platform/architect
+  - name: architecture-architected
+    repo: architect-platform/architecture-architected
 
-# Documentation configuration
-docs:
-  build:
-    enabled: true
-    framework: "mkdocs"
-    siteName: "Architecture Architected Plugin"
-    siteDescription: "Architectural rule management and validation"
-    siteAuthor: "Architect Platform Team"
-    repoUrl: "https://github.com/architect-platform/architect"
-    repoName: "architect-platform/architect"
-  publish:
-    enabled: true
-    githubPages: true
+architecture:
+  enabled: true
+  onViolation: warn
+  reportFormat: text
+  strict: false
+  rulesets:
+    layered:
+      enabled: true
+      description: "Example layered architecture rules"
+      rules:
+        - id: no-direct-repository-access
+          description: "Controllers should not depend directly on repositories"
+          type: dependency
+          pattern: ".*Controller.*"
+          forbidden:
+            - ".*Repository.*"
+          severity: error

@@ -1,0 +1,14 @@
+project:
+  name: my-rust-project
+  description: "Example project using rust-architected plugin"
+
+plugins:
+  - name: rust-architected
+    repo: architect-platform/rust-architected
+
+rust:
+  profile: release
+  features:
+    - serde
+  target: x86_64-unknown-linux-gnu
+  enabled: true
