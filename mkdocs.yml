@@ -88,6 +88,7 @@ nav:
 
   - Guides:
     - Plugin Authoring: guides/authoring-plugins.md
+    - Official Plugin Standard: guides/plugin-standard.md
     - CI/CD Integration: guides/ci-cd-integration.md
     - Migrating from Make: guides/migrating-from-make.md
     - Migrating from Nx: guides/migrating-from-nx.md

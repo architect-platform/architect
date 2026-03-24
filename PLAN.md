@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 55/288 tasks completed (19.1%)
+Overall Progress: 56/288 tasks completed (19.4%)
 Current Phase: Phase 5 — Standardize the plugin platform
-Last Updated: 2026-03-24T16:07:22Z
+Last Updated: 2026-03-24T16:08:55Z
 
 ## Executive Summary
 
@@ -489,14 +489,14 @@ The repository currently contains several categories of assets:
 - [ ] **Expected outcomes**: uniform plugin quality, lower onboarding cost, easier release management
 
 - [ ] Tasks
-  - [ ] Define the minimum official plugin standard:
-    - [ ] README
-    - [ ] docs surface
-    - [ ] architect config example
-    - [ ] unit tests
-    - [ ] plugin contract test
-    - [ ] version alignment
-    - [ ] release/publish metadata
+  - [x] Define the minimum official plugin standard: | Finished: 2026-03-24T16:08:55Z | Notes: Added `docs/guides/plugin-standard.md` defining official plugin support tiers, minimum quality checklist, required layout, maturity rules, and validation commands; surfaced the guide in MkDocs navigation.
+    - [x] README
+    - [x] docs surface
+    - [x] architect config example
+    - [x] unit tests
+    - [x] plugin contract test
+    - [x] version alignment
+    - [x] release/publish metadata
   - [ ] Apply the standard to all mature plugins first.
   - [ ] For thin/template plugins, choose one:
     - [ ] promote and complete
