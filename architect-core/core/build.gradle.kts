@@ -46,6 +46,7 @@ dependencies {
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit5)
   testImplementation(libs.junit.jupiter.api)
+  testImplementation(libs.archunit.junit5)
   testRuntimeOnly(libs.junit.jupiter.engine)
 
   jmhImplementation(libs.jmh.core)

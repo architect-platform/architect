@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 45/288 tasks completed (15.6%)
+Overall Progress: 46/288 tasks completed (16.0%)
 Current Phase: Phase 3 — Re-establish architectural boundaries in the runtime stack
-Last Updated: 2026-03-24T12:15:00Z
+Last Updated: 2026-03-24T12:30:00Z
 
 ## Executive Summary
 
@@ -435,7 +435,7 @@ The repository currently contains several categories of assets:
   - [x] Converge project lifecycle service into `architect-core`. | Finished: 2026-03-24T11:05:00Z | Notes: Deleted the engine-local ProjectService and 6 identical project domain types (Project, ProjectRepository, LazyProjectLoadState, ConfigParser, InMemoryProjectRepository, YamlConfigParser). Added reloadProject() and hasLocalPlugins() to core's ProjectService. Created ProjectServiceFactory in engine to construct ProjectService with Micronaut property-driven config and to adapt CloudReporterService to the core ProjectRegistrationReporter interface.
   - [x] Converge task execution, cache, and runtime event services into `architect-core`. | Finished: 2026-03-24T12:00:00Z | Notes: Deleted 41 byte-identical files and 13 engine-local shadow classes (including TaskExecutor, TaskCache, BashCommandExecutor, InlineTaskPlugin, InlineTaskConfig, and 8 Serdeable-only drifted DTOs/events). Merged InlineTaskRequirements feature from engine into core's InlineTaskConfig/InlineTaskPlugin. Removed @Singleton from core's TaskExecutor, TaskCache, and BashCommandExecutor. Created RuntimeServiceFactory in engine for Micronaut property-driven construction of these services. Created SerdeImports.kt for centralized @SerdeImport declarations. Made TaskPermissionScope/TaskPermissionContext public for cross-module access.
   - [x] Remove shadow implementations after parity tests exist. | Finished: 2026-03-24T12:15:00Z | Notes: Deleted 8 remaining Serdeable-only main source shadows from engine (ExecutionRecord, PluginEvents, ArchitectEventDTO, TaskDTO, TaskPlanDTO, TaskResultDTO, ExecutionEvents, TaskEvents) and 1 trivially-different test shadow (VerifyCommitMessageTaskTest). Core's SerdeImports.kt covers all serialization needs. ApplicationEnvironment legitimately differs between core (standalone/test) and engine (Micronaut production). 3 engine @MicronautTest test shadows retained as integration tests. Core tests pass (179 tests).
-  - [ ] Introduce architecture rules to prevent future duplication and dependency leaks.
+  - [x] Introduce architecture rules to prevent future duplication and dependency leaks. | Finished: 2026-03-24T12:30:00Z | Notes: Added ArchUnit to both core and engine build files. Created CoreArchitectureTest (enforces no Micronaut imports in core) and EngineArchitectureTest (enforces no shadow implementations of TaskExecutor, TaskCache, BashCommandExecutor, ProjectService, ConfigLoader, SecretResolver). Core architecture tests pass. Engine architecture tests will be validated after the CLI baseline blocker is fixed (task 47).
   - [ ] Repair the current `architect-engine` baseline blocker as part of this convergence work.
   - [ ] Rework package structure where needed so runtime concerns are discoverable and responsibility-aligned.
 

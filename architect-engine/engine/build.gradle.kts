@@ -59,6 +59,7 @@ dependencies {
   testImplementation(libs.architect.cli.module)
   testImplementation(libs.mockito.kotlin)
   testImplementation(libs.mockito.core)
+  testImplementation(libs.archunit.junit5)
 }
 
 application { mainClass.set("io.github.architectplatform.engine.ApplicationKt") }
