@@ -1,9 +1,9 @@
 package io.github.architectplatform.engine.core.tasks.application
 
-import io.github.architectplatform.engine.core.config.EngineConfiguration
-import io.github.architectplatform.engine.domain.events.ArchitectEvent
-import io.github.architectplatform.engine.domain.events.ExecutionEvent
-import io.github.architectplatform.engine.domain.events.ExecutionId
+import io.github.architectplatform.core.config.EngineConfiguration
+import io.github.architectplatform.core.domain.events.ArchitectEvent
+import io.github.architectplatform.core.domain.events.ExecutionEvent
+import io.github.architectplatform.core.domain.events.ExecutionId
 import io.micronaut.context.annotation.Property
 import io.micronaut.runtime.event.annotation.EventListener
 import jakarta.inject.Singleton

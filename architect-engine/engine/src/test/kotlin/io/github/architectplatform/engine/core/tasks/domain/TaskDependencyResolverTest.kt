@@ -4,7 +4,8 @@ import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
-import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTaskRegistry
+import io.github.architectplatform.core.tasks.domain.TaskDependencyResolver
+import io.github.architectplatform.core.tasks.infrastructure.InMemoryTaskRegistry
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

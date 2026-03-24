@@ -1,13 +1,14 @@
 package io.github.architectplatform.engine.core.tasks.interfaces
 
 import io.github.architectplatform.engine.core.tasks.application.TaskService
-import io.github.architectplatform.engine.core.tasks.domain.events.ExecutionEvents.executionCompletedEvent
-import io.github.architectplatform.engine.core.tasks.domain.events.ExecutionEvents.executionFailedEvent
-import io.github.architectplatform.engine.core.tasks.domain.events.ExecutionEvents.executionStartedEvent
-import io.github.architectplatform.engine.core.tasks.domain.events.TaskEvents.taskCompletedEvent
-import io.github.architectplatform.engine.domain.events.ArchitectEvent
-import io.github.architectplatform.engine.domain.events.ExecutionEvent
-import io.github.architectplatform.engine.domain.events.ExecutionEventType
+import io.github.architectplatform.core.tasks.domain.events.ExecutionEvents.executionCompletedEvent
+import io.github.architectplatform.core.tasks.domain.events.ExecutionEvents.executionFailedEvent
+import io.github.architectplatform.core.tasks.domain.events.ExecutionEvents.executionStartedEvent
+import io.github.architectplatform.core.tasks.domain.events.TaskEvents.taskCompletedEvent
+import io.github.architectplatform.core.tasks.domain.events.TaskEvents.taskFailedEvent
+import io.github.architectplatform.core.domain.events.ArchitectEvent
+import io.github.architectplatform.core.domain.events.ExecutionEvent
+import io.github.architectplatform.core.domain.events.ExecutionEventType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
@@ -83,7 +84,7 @@ class ExecutionApiControllerTest {
       eventFlow(
         executionStartedEvent("demo", executionId, message = "started"),
         taskCompletedEvent("demo", executionId, "prepare", message = "prepare done"),
-        io.github.architectplatform.engine.core.tasks.domain.events.TaskEvents.taskFailedEvent(
+        taskFailedEvent(
           "demo",
           executionId,
           "build",

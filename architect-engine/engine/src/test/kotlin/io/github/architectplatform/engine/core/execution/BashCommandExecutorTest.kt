@@ -1,6 +1,8 @@
 package io.github.architectplatform.engine.core.execution
 
 import io.github.architectplatform.api.core.tasks.TaskPermission
+import io.github.architectplatform.core.execution.BashCommandExecutor
+import io.github.architectplatform.core.execution.TaskPermissionScope
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

@@ -1,7 +1,7 @@
 package io.github.architectplatform.engine.core.project.app
 
-import io.github.architectplatform.engine.core.execution.TaskPermissionScope
-import io.github.architectplatform.engine.core.secrets.SecretResolver
+import io.github.architectplatform.core.execution.TaskPermissionScope
+import io.github.architectplatform.core.secrets.SecretResolver
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock

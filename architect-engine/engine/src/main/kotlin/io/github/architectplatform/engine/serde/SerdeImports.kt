@@ -1,15 +1,15 @@
 package io.github.architectplatform.engine.serde
 
 import io.github.architectplatform.api.core.tasks.TaskResult
-import io.github.architectplatform.engine.core.history.domain.ExecutionRecord
-import io.github.architectplatform.engine.core.plugin.domain.events.ArchitectEventDTO
-import io.github.architectplatform.engine.core.plugin.domain.events.PluginEvents
-import io.github.architectplatform.engine.core.tasks.domain.events.ExecutionEvents
-import io.github.architectplatform.engine.core.tasks.domain.events.TaskEvents
-import io.github.architectplatform.engine.core.tasks.interfaces.dto.TaskDTO
-import io.github.architectplatform.engine.core.tasks.interfaces.dto.TaskPlanDTO
-import io.github.architectplatform.engine.core.tasks.interfaces.dto.TaskPlanStepDTO
-import io.github.architectplatform.engine.core.tasks.interfaces.dto.TaskResultDTO
+import io.github.architectplatform.core.history.domain.ExecutionRecord
+import io.github.architectplatform.core.plugin.domain.events.ArchitectEventDTO
+import io.github.architectplatform.core.plugin.domain.events.PluginEvents
+import io.github.architectplatform.core.tasks.domain.events.ExecutionEvents
+import io.github.architectplatform.core.tasks.domain.events.TaskEvents
+import io.github.architectplatform.core.tasks.interfaces.dto.TaskDTO
+import io.github.architectplatform.core.tasks.interfaces.dto.TaskPlanDTO
+import io.github.architectplatform.core.tasks.interfaces.dto.TaskPlanStepDTO
+import io.github.architectplatform.core.tasks.interfaces.dto.TaskResultDTO
 import io.micronaut.serde.annotation.SerdeImport
 
 /**

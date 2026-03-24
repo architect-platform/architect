@@ -1,10 +1,10 @@
 package io.github.architectplatform.engine.core.tasks.interfaces
 
 import io.github.architectplatform.engine.core.tasks.application.TaskService
-import io.github.architectplatform.engine.domain.events.ArchitectEvent
-import io.github.architectplatform.engine.domain.events.ExecutionEvent
-import io.github.architectplatform.engine.domain.events.ExecutionEventType
-import io.github.architectplatform.engine.domain.events.ExecutionId
+import io.github.architectplatform.core.domain.events.ArchitectEvent
+import io.github.architectplatform.core.domain.events.ExecutionEvent
+import io.github.architectplatform.core.domain.events.ExecutionEventType
+import io.github.architectplatform.core.domain.events.ExecutionId
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable

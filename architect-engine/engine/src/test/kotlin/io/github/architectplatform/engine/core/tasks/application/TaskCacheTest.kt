@@ -1,6 +1,7 @@
 package io.github.architectplatform.engine.core.tasks.application
 
 import io.github.architectplatform.api.core.tasks.TaskResult
+import io.github.architectplatform.core.tasks.application.TaskCache
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

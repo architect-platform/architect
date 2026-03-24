@@ -3,10 +3,13 @@ package io.github.architectplatform.engine.core.plugin.app
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.TaskRegistry
-import io.github.architectplatform.engine.core.plugin.infra.GitHubReleaseResolver
-import io.github.architectplatform.engine.domain.events.ArchitectEvent
-import io.micronaut.http.client.HttpClient
-import io.micronaut.context.event.ApplicationEventPublisher
+import io.github.architectplatform.core.plugin.app.PluginConfig
+import io.github.architectplatform.core.plugin.app.PluginDownloader
+import io.github.architectplatform.core.plugin.app.PluginSignatureVerifier
+import io.github.architectplatform.core.plugin.app.ProjectPluginLoader
+import io.github.architectplatform.core.plugin.app.RemoteContentFetcher
+import io.github.architectplatform.core.plugin.app.SpiPluginLoader
+import io.github.architectplatform.core.plugin.infra.GitHubReleaseResolver
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -37,8 +40,8 @@ class ProjectPluginLoaderSignatureTest {
         downloader = downloader,
         signatureVerifier = verifier,
         internalPlugins = emptyList(),
-        releaseResolver = GitHubReleaseResolver(mock<HttpClient>()),
-        eventPublisher = ApplicationEventPublisher<ArchitectEvent<*>> { },
+        releaseResolver = GitHubReleaseResolver(mock<RemoteContentFetcher>()),
+        eventBus = {},
         classloaderDebug = false,
       )
     val context =
@@ -77,8 +80,8 @@ class ProjectPluginLoaderSignatureTest {
         downloader = TrackingDownloader(tempDir),
         signatureVerifier = RecordingSignatureVerifier(),
         internalPlugins = emptyList(),
-        releaseResolver = GitHubReleaseResolver(mock<HttpClient>()),
-        eventPublisher = ApplicationEventPublisher<ArchitectEvent<*>> { },
+        releaseResolver = GitHubReleaseResolver(mock<RemoteContentFetcher>()),
+        eventBus = {},
         classloaderDebug = false,
       )
     val context =

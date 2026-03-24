@@ -2,10 +2,14 @@ package io.github.architectplatform.engine.core.project.app
 
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
-import io.github.architectplatform.engine.core.plugin.app.PluginLoader
-import io.github.architectplatform.engine.core.project.infra.InMemoryProjectRepository
-import io.github.architectplatform.engine.core.project.infra.YamlConfigParser
-import io.github.architectplatform.engine.plugins.inline.InlineTaskPlugin
+import io.github.architectplatform.core.plugin.app.PluginLoader
+import io.github.architectplatform.core.project.app.ConfigLoader
+import io.github.architectplatform.core.project.app.ConfigValidator
+import io.github.architectplatform.core.project.app.ProjectService
+import io.github.architectplatform.core.project.domain.Project
+import io.github.architectplatform.core.project.infra.InMemoryProjectRepository
+import io.github.architectplatform.core.project.infra.YamlConfigParser
+import io.github.architectplatform.core.plugins.inline.InlineTaskPlugin
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -169,8 +173,7 @@ class ProjectServiceTest {
 
         val configLoader = ConfigLoader(YamlConfigParser())
         val pluginLoader = CountingInlineTaskPluginLoader()
-        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty(), ConfigValidator())
-        projectService.projectWatchDebounceMs = 50
+        val projectService = ProjectService(InMemoryProjectRepository(), configLoader, pluginLoader, Optional.empty(), ConfigValidator(), projectWatchDebounceMs = 50)
 
         projectService.registerProject(projectName, projectPath)
         assertNotNull(projectService.getProject(projectName)!!.taskRegistry.get("build"))
@@ -265,7 +268,7 @@ class ProjectServiceTest {
         projectService: ProjectService,
         projectName: String,
         expectedTaskId: String,
-    ): io.github.architectplatform.engine.core.project.domain.Project {
+        ): Project {
         val deadline = System.currentTimeMillis() + 3.seconds.inWholeMilliseconds
         while (System.currentTimeMillis() < deadline) {
             val project = projectService.getProject(projectName)

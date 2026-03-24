@@ -1,15 +1,15 @@
 package io.github.architectplatform.engine.core.tasks
 
 import io.github.architectplatform.api.core.tasks.Environment
-import io.github.architectplatform.engine.core.config.EngineConfiguration
-import io.github.architectplatform.engine.core.events.EventBus
-import io.github.architectplatform.engine.core.execution.BashCommandExecutor
-import io.github.architectplatform.engine.core.tasks.application.LocalOutputCache
-import io.github.architectplatform.engine.core.tasks.application.RemoteOutputCache
-import io.github.architectplatform.engine.core.tasks.application.TaskCache
-import io.github.architectplatform.engine.core.tasks.application.TaskExecutor
-import io.github.architectplatform.engine.core.tasks.domain.TaskDependencyResolver
-import io.github.architectplatform.engine.domain.events.ArchitectEvent
+import io.github.architectplatform.core.config.EngineConfiguration
+import io.github.architectplatform.engine.core.events.MicronautArchitectEventBus
+import io.github.architectplatform.core.execution.BashCommandExecutor
+import io.github.architectplatform.core.history.app.HistoryService
+import io.github.architectplatform.core.tasks.application.LocalOutputCache
+import io.github.architectplatform.core.tasks.application.RemoteOutputCache
+import io.github.architectplatform.core.tasks.application.TaskCache
+import io.github.architectplatform.core.tasks.application.TaskExecutor
+import io.github.architectplatform.core.tasks.domain.TaskDependencyResolver
 import io.micronaut.context.annotation.Factory
 import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
@@ -17,6 +17,9 @@ import java.util.Optional
 
 @Factory
 class RuntimeServiceFactory {
+
+  @Singleton
+  fun historyService(): HistoryService = HistoryService()
 
   @Singleton
   fun bashCommandExecutor(
@@ -58,7 +61,7 @@ class RuntimeServiceFactory {
   fun taskExecutor(
     environment: Environment,
     taskCache: TaskCache,
-    eventBus: EventBus<ArchitectEvent<*>>,
+    eventBus: MicronautArchitectEventBus,
     @Property(
       name = EngineConfiguration.TaskExecution.PARALLEL_ENABLED,
       defaultValue = "${EngineConfiguration.TaskExecution.DEFAULT_PARALLEL_ENABLED}",
@@ -70,7 +73,7 @@ class RuntimeServiceFactory {
     TaskExecutor(
       environment = environment,
       taskCache = taskCache,
-      eventBus = eventBus,
+      eventBus = eventBus::invoke,
       dependencyResolver = TaskDependencyResolver(),
       parallelExecutionEnabled = parallelExecutionEnabled,
       outputCache = localOutputCache.orElse(null),

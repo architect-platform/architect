@@ -1,6 +1,6 @@
 package io.github.architectplatform.engine.cloud
 
-import io.github.architectplatform.engine.domain.events.*
+import io.github.architectplatform.core.domain.events.*
 import io.micronaut.context.annotation.Requires
 import io.micronaut.context.event.ApplicationEventListener
 import jakarta.inject.Singleton

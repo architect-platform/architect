@@ -1,6 +1,6 @@
 package io.github.architectplatform.cli.graph
 
-import io.github.architectplatform.engine.core.project.domain.ProjectDependencyGraph
+import io.github.architectplatform.core.project.domain.ProjectDependencyGraph
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 

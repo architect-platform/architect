@@ -1,0 +1,220 @@
+package io.github.architectplatform.core.project.app
+
+import io.github.architectplatform.api.core.plugins.ArchitectPlugin
+import io.github.architectplatform.api.core.project.ProjectContext
+import io.github.architectplatform.core.plugin.app.PluginLoader
+import io.github.architectplatform.core.project.infra.InMemoryProjectRepository
+import io.github.architectplatform.core.project.infra.YamlConfigParser
+import io.github.architectplatform.core.plugins.inline.InlineTaskPlugin
+import java.nio.file.Path
+import java.util.Optional
+import kotlin.io.path.createDirectories
+import kotlin.io.path.writeText
+import kotlin.time.Duration.Companion.seconds
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import org.junit.jupiter.api.io.TempDir
+
+class ProjectServiceTest {
+
+  @TempDir
+  lateinit var tempDir: Path
+
+  @Test
+  fun `should load project round-trip with inline tasks`() {
+    val projectDir = tempDir.resolve("inline-project")
+    projectDir.createDirectories()
+    projectDir.resolve("architect.yml").writeText(
+      """
+      project:
+        name: inline-project
+      tasks:
+        build:
+          description: Build the project
+          run: echo building
+      """.trimIndent()
+    )
+
+    val projectService = createProjectService(InlineTaskPluginLoader())
+
+    projectService.registerProject("inline-project", projectDir.toString())
+    val project = projectService.getProject("inline-project")
+
+    assertNotNull(project)
+    assertEquals("inline-project", project.name)
+    assertTrue(project.plugins.any { it.id == "inline-tasks" })
+    assertNotNull(project.taskRegistry.get("build"))
+  }
+
+  @Test
+  fun `should defer plugin loading until task access`() {
+    val projectDir = tempDir.resolve("lazy-project")
+    projectDir.createDirectories()
+    projectDir.resolve("architect.yml").writeText(
+      """
+      project:
+        name: lazy-project
+      tasks:
+        build:
+          description: Build lazily
+          run: echo building
+      """.trimIndent()
+    )
+
+    val pluginLoader = CountingInlineTaskPluginLoader()
+    val projectService = createProjectService(pluginLoader)
+
+    projectService.registerProject("lazy-project", projectDir.toString())
+
+    assertEquals(0, pluginLoader.loadCalls)
+
+    val project = projectService.getProject("lazy-project")
+
+    assertNotNull(project)
+    assertNotNull(project.taskRegistry.get("build"))
+    assertEquals(1, pluginLoader.loadCalls)
+  }
+
+  @Test
+  fun `should discover nested subprojects when loading root project`() {
+    val rootDir = tempDir.resolve("workspace")
+    rootDir.createDirectories()
+    rootDir.resolve("architect.yml").writeText(
+      """
+      project:
+        name: workspace
+      tasks:
+        root-task:
+          run: echo root
+      """.trimIndent()
+    )
+
+    val childDir = rootDir.resolve("service-a")
+    childDir.createDirectories()
+    childDir.resolve("architect.yml").writeText(
+      """
+      project:
+        name: service-a
+      tasks:
+        child-task:
+          run: echo child
+      """.trimIndent()
+    )
+
+    val projectService = createProjectService(InlineTaskPluginLoader())
+
+    projectService.registerProject("workspace", rootDir.toString())
+    val project = projectService.getProject("workspace")
+
+    assertNotNull(project)
+    assertEquals(1, project.subProjects.size)
+    val childProject = project.subProjects.single()
+    assertEquals("service-a", childProject.name)
+    assertNotNull(childProject.taskRegistry.get("child-task"))
+  }
+
+  @Test
+  fun `should throw validation exception on invalid config`() {
+    val projectDir = tempDir.resolve("invalid-project")
+    projectDir.createDirectories()
+    projectDir.resolve("architect.yml").writeText(
+      """
+      project:
+        description: missing required name
+      """.trimIndent()
+    )
+
+    val projectService = createProjectService(EmptyPluginLoader())
+
+    val exception = assertFailsWith<ConfigValidationException> {
+      projectService.registerProject("invalid-project", projectDir.toString())
+    }
+
+    assertTrue(exception.message.orEmpty().contains("project.name"))
+  }
+
+  @Test
+  fun `should invalidate cached project when architect config changes`() {
+    val projectDir = tempDir.resolve("watched-project")
+    projectDir.createDirectories()
+    projectDir.resolve("architect.yml").writeText(
+      """
+      project:
+        name: watched-project
+      tasks:
+        build:
+          run: echo build
+      """.trimIndent()
+    )
+
+    val projectService = ProjectService(
+      projectRepository = InMemoryProjectRepository(),
+      configLoader = ConfigLoader(YamlConfigParser()),
+      pluginLoader = InlineTaskPluginLoader(),
+      projectReporter = Optional.empty(),
+      configValidator = ConfigValidator(),
+      projectWatchDebounceMs = 50,
+    )
+
+    projectService.registerProject("watched-project", projectDir.toString())
+    assertNotNull(projectService.getProject("watched-project")!!.taskRegistry.get("build"))
+
+    projectDir.resolve("architect.yml").writeText(
+      """
+      project:
+        name: watched-project
+      tasks:
+        test:
+          run: echo test
+      """.trimIndent()
+    )
+
+    val reloaded = waitForProjectReload(projectService, "watched-project", "test")
+    assertNotNull(reloaded.taskRegistry.get("test"))
+  }
+
+  private fun createProjectService(pluginLoader: PluginLoader): ProjectService =
+    ProjectService(
+      projectRepository = InMemoryProjectRepository(),
+      configLoader = ConfigLoader(YamlConfigParser()),
+      pluginLoader = pluginLoader,
+      projectReporter = Optional.empty(),
+      configValidator = ConfigValidator(),
+    )
+
+  private class InlineTaskPluginLoader : PluginLoader {
+    override fun load(context: ProjectContext): List<ArchitectPlugin<*>> = listOf(InlineTaskPlugin())
+  }
+
+  private class CountingInlineTaskPluginLoader : PluginLoader {
+    var loadCalls: Int = 0
+
+    override fun load(context: ProjectContext): List<ArchitectPlugin<*>> {
+      loadCalls += 1
+      return listOf(InlineTaskPlugin())
+    }
+  }
+
+  private class EmptyPluginLoader : PluginLoader {
+    override fun load(context: ProjectContext): List<ArchitectPlugin<*>> = emptyList()
+  }
+
+  private fun waitForProjectReload(
+    projectService: ProjectService,
+    projectName: String,
+    expectedTaskId: String,
+  ): io.github.architectplatform.core.project.domain.Project {
+    val deadline = System.currentTimeMillis() + 3.seconds.inWholeMilliseconds
+    while (System.currentTimeMillis() < deadline) {
+      val project = projectService.getProject(projectName)
+      if (project != null && project.taskRegistry.get(expectedTaskId) != null) {
+        return project
+      }
+      Thread.sleep(50)
+    }
+    error("Timed out waiting for cached project reload of $projectName")
+  }
+}

@@ -17,10 +17,10 @@ import io.github.architectplatform.cli.graph.ProjectGraphHtmlRenderer
 import io.github.architectplatform.cli.graph.TaskGraphDotRenderer
 import io.github.architectplatform.cli.graph.TaskGraphHtmlRenderer
 import io.github.architectplatform.cli.graph.TaskPlanTreeRenderer
-import io.github.architectplatform.engine.core.execution.EmbeddedExecutionContext
-import io.github.architectplatform.engine.core.project.app.AffectedProjectResolver
-import io.github.architectplatform.engine.core.project.domain.ProjectDependencyGraph
-import io.github.architectplatform.engine.core.tasks.application.LocalOutputCache
+import io.github.architectplatform.core.execution.EmbeddedExecutionContext
+import io.github.architectplatform.core.project.app.AffectedProjectResolver
+import io.github.architectplatform.core.project.domain.ProjectDependencyGraph
+import io.github.architectplatform.core.tasks.application.LocalOutputCache
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
@@ -197,7 +197,7 @@ class ArchitectLauncher(
     }
 
     // Resolve active profile (explicit flag > CI auto-detection > default)
-    val resolvedProfile = io.github.architectplatform.engine.core.project.app.ProfileMerger.detectProfile(envProfile)
+    val resolvedProfile = io.github.architectplatform.core.project.app.ProfileMerger.detectProfile(envProfile)
     embeddedTaskExecutor.activeProfile = resolvedProfile
     embeddedTaskExecutor.outputCacheEnabled = !noCache
 
@@ -724,7 +724,7 @@ class ArchitectLauncher(
     // First execution
     try { executeBlock() } catch (_: Exception) { /* allow re-run on next change */ }
 
-    val watchService = io.github.architectplatform.engine.core.watch.FileWatchService(
+    val watchService = io.github.architectplatform.core.watch.FileWatchService(
         rootPath = java.nio.file.Paths.get(projectPath),
         debounceMs = 500,
     ) { changedPath ->
@@ -854,7 +854,7 @@ class ArchitectLauncher(
           val mapper = com.fasterxml.jackson.databind.ObjectMapper()
             .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
           val registryJson = fetcher.fetchText(registryUrl)
-          val registry = mapper.readValue(registryJson, io.github.architectplatform.engine.core.plugin.infra.PluginRegistry::class.java)
+          val registry = mapper.readValue(registryJson, io.github.architectplatform.core.plugin.infra.PluginRegistry::class.java)
           val lowerQuery = query.lowercase()
           val results = registry.plugins.filter {
             it.id.lowercase().contains(lowerQuery) ||
@@ -942,7 +942,7 @@ class ArchitectLauncher(
   }
 
   private fun handleCacheCommand() {
-    val cache = io.github.architectplatform.engine.core.tasks.application.LocalOutputCache()
+    val cache = io.github.architectplatform.core.tasks.application.LocalOutputCache()
     val subCommand = args.getOrNull(1)
     when (subCommand) {
       "clear" -> {
@@ -1521,13 +1521,13 @@ class ArchitectLauncher(
     val projectPath = System.getProperty("user.dir")
     val projectName = extractProjectName(projectPath)
 
-    val context = io.github.architectplatform.engine.core.execution.EmbeddedExecutionContext.create(
+    val context = io.github.architectplatform.core.execution.EmbeddedExecutionContext.create(
       remoteContentFetcher = io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher(),
       activeProfile = embeddedTaskExecutor.activeProfile,
     )
     context.projectService.registerProject(projectName, projectPath)
-    val allTasks = context.taskService.getAllTasks(projectName)
-    val checker = io.github.architectplatform.engine.core.tasks.application.TaskConditionChecker()
+    val allTasks = context.getAllTasks(projectName)
+    val checker = io.github.architectplatform.core.tasks.application.TaskConditionChecker()
 
     val tasksToCheck = if (taskFilter != null) {
       allTasks.filter { it.id == taskFilter }.also {

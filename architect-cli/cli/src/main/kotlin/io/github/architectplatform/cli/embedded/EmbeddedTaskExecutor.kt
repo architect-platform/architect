@@ -5,10 +5,10 @@ import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.TaskPlanStepDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.api.core.tasks.TaskResult
-import io.github.architectplatform.engine.core.execution.EmbeddedExecutionContext
-import io.github.architectplatform.engine.core.history.domain.ExecutionRecord
-import io.github.architectplatform.engine.core.tasks.domain.TaskDependencyResolver
-import io.github.architectplatform.engine.domain.events.ArchitectEvent
+import io.github.architectplatform.core.execution.EmbeddedExecutionContext
+import io.github.architectplatform.core.history.domain.ExecutionRecord
+import io.github.architectplatform.core.tasks.domain.TaskDependencyResolver
+import io.github.architectplatform.core.domain.events.ArchitectEvent
 import kotlinx.coroutines.runBlocking
 import jakarta.inject.Singleton
 

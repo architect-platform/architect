@@ -29,7 +29,6 @@ class EngineArchitectureTest {
     fun setup() {
       engineClasses = ClassFileImporter()
         .withImportOption(ImportOption.DoNotIncludeTests())
-        .withImportOption { !it.contains("/core/") } // Exclude core jar classes
         .importPackages("io.github.architectplatform.engine")
     }
   }

@@ -1,8 +1,8 @@
 package io.github.architectplatform.engine.core.project.app
 
 import io.github.architectplatform.api.core.tasks.Environment
-import io.github.architectplatform.engine.core.execution.TaskPermissionScope
-import io.github.architectplatform.engine.core.secrets.SecretResolver
+import io.github.architectplatform.core.execution.TaskPermissionScope
+import io.github.architectplatform.core.secrets.SecretResolver
 import io.micronaut.context.BeanContext
 import io.micronaut.context.event.ApplicationEventPublisher
 import jakarta.inject.Singleton

@@ -1,5 +1,6 @@
 package io.github.architectplatform.engine.core.common
 
+import io.github.architectplatform.core.common.Result
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

@@ -1,6 +1,6 @@
 package io.github.architectplatform.cli.embedded
 
-import io.github.architectplatform.engine.core.plugin.app.RemoteContentFetcher
+import io.github.architectplatform.core.plugin.app.RemoteContentFetcher
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest

@@ -1,7 +1,8 @@
 package io.github.architectplatform.engine.core.plugin.infra
 
-import io.github.architectplatform.engine.core.common.Result
-import io.github.architectplatform.engine.core.plugin.domain.PluginSourceConfig
+import io.github.architectplatform.core.common.Result
+import io.github.architectplatform.core.plugin.domain.PluginSourceConfig
+import io.github.architectplatform.core.plugin.infra.LocalPluginSource
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.writeText

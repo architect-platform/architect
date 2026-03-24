@@ -2,8 +2,8 @@ package io.github.architectplatform.cli.plugin
 
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.testing.ArchitectPluginTestKit
-import io.github.architectplatform.engine.core.plugin.app.IsolatedPluginClassLoader
-import io.github.architectplatform.engine.core.plugin.app.SpiPluginLoader
+import io.github.architectplatform.core.plugin.app.IsolatedPluginClassLoader
+import io.github.architectplatform.core.plugin.app.SpiPluginLoader
 import java.nio.file.Path
 import java.util.ServiceConfigurationError
 import java.util.jar.JarFile

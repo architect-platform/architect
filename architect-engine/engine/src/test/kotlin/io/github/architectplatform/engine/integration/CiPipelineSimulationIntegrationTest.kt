@@ -4,20 +4,20 @@ import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
-import io.github.architectplatform.engine.core.history.app.HistoryService
-import io.github.architectplatform.engine.core.project.app.ConfigLoader
-import io.github.architectplatform.engine.core.project.app.ConfigValidator
-import io.github.architectplatform.engine.core.project.app.ProjectService
-import io.github.architectplatform.engine.core.project.infra.InMemoryProjectRepository
-import io.github.architectplatform.engine.core.project.infra.YamlConfigParser
+import io.github.architectplatform.core.history.app.HistoryService
+import io.github.architectplatform.core.project.app.ConfigLoader
+import io.github.architectplatform.core.project.app.ConfigValidator
+import io.github.architectplatform.core.project.app.ProjectService
+import io.github.architectplatform.core.project.infra.InMemoryProjectRepository
+import io.github.architectplatform.core.project.infra.YamlConfigParser
 import io.github.architectplatform.engine.core.tasks.application.ExecutionEventCollector
-import io.github.architectplatform.engine.core.tasks.application.TaskCache
-import io.github.architectplatform.engine.core.tasks.application.TaskExecutor
+import io.github.architectplatform.core.tasks.application.TaskCache
+import io.github.architectplatform.core.tasks.application.TaskExecutor
 import io.github.architectplatform.engine.core.tasks.application.TaskService
-import io.github.architectplatform.engine.domain.events.ArchitectEvent
-import io.github.architectplatform.engine.domain.events.ExecutionEvent
-import io.github.architectplatform.engine.plugins.inline.InlineTaskPlugin
-import io.github.architectplatform.engine.plugins.workflows.core.CorePlugin
+import io.github.architectplatform.core.domain.events.ArchitectEvent
+import io.github.architectplatform.core.domain.events.ExecutionEvent
+import io.github.architectplatform.core.plugins.inline.InlineTaskPlugin
+import io.github.architectplatform.core.plugins.workflows.core.CorePlugin
 import io.micronaut.context.event.ApplicationEventPublisher
 import java.nio.file.Path
 import java.util.Optional
@@ -37,7 +37,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import io.github.architectplatform.engine.core.plugin.app.PluginLoader
+import io.github.architectplatform.core.plugin.app.PluginLoader
 
 class CiPipelineSimulationIntegrationTest {
 
@@ -145,13 +145,13 @@ class CiPipelineSimulationIntegrationTest {
       projectRepository = InMemoryProjectRepository(),
       configLoader = ConfigLoader(YamlConfigParser()),
       pluginLoader = PipelinePluginLoader(),
-      cloudReporter = Optional.empty(),
+      projectReporter = Optional.empty(),
       configValidator = ConfigValidator(),
     )
     val taskExecutor = TaskExecutor(
       environment = environment,
       taskCache = TaskCache(cacheEnabled = false),
-      eventPublisher = eventPublisher,
+      eventBus = { event -> eventPublisher.publishEvent(event) },
       parallelExecutionEnabled = true,
     )
     val historyService = HistoryService()

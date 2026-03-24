@@ -1,6 +1,6 @@
 package io.github.architectplatform.cli.graph
 
-import io.github.architectplatform.engine.core.project.domain.ProjectDependencyGraph
+import io.github.architectplatform.core.project.domain.ProjectDependencyGraph
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.writeText

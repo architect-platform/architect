@@ -1,5 +1,14 @@
 package io.github.architectplatform.engine.core.secrets
 
+import io.github.architectplatform.core.secrets.AwsSecretsManagerSecretResolver
+import io.github.architectplatform.core.secrets.CompositeSecretResolver
+import io.github.architectplatform.core.secrets.DotEnvLoader
+import io.github.architectplatform.core.secrets.DotEnvSecretResolver
+import io.github.architectplatform.core.secrets.GcpSecretManagerSecretResolver
+import io.github.architectplatform.core.secrets.SecretCommandResult
+import io.github.architectplatform.core.secrets.SecretCommandRunner
+import io.github.architectplatform.core.secrets.VaultSecretClient
+import io.github.architectplatform.core.secrets.VaultSecretResolver
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -10,7 +19,7 @@ class SecretResolverTest {
   @Test
   fun `environment variables take precedence over dotenv`(@TempDir tempDir: Path) {
     tempDir.resolve(".env").toFile().writeText("API_TOKEN=from-dotenv\n")
-    val resolver = CompositeSecretResolver(CompositeSecretResolver.defaultResolvers(env = mapOf("API_TOKEN" to "from-env")))
+    val resolver = CompositeSecretResolver.default(env = mapOf("API_TOKEN" to "from-env"))
 
     assertEquals("from-env", resolver.resolve("API_TOKEN", tempDir))
   }

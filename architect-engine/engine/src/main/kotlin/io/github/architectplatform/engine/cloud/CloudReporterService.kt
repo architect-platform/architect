@@ -1,8 +1,8 @@
 package io.github.architectplatform.engine.cloud
 
-import io.github.architectplatform.engine.core.history.domain.ExecutionRecord
+import io.github.architectplatform.core.history.domain.ExecutionRecord
 import io.github.architectplatform.engine.core.startup.StartupProfileRecorder
-import io.github.architectplatform.engine.domain.events.*
+import io.github.architectplatform.core.domain.events.*
 import io.micronaut.context.annotation.Property
 import io.micronaut.context.annotation.Requires
 import io.micronaut.context.event.ApplicationEventListener

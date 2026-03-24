@@ -1,7 +1,7 @@
 package io.github.architectplatform.engine.core.history.interfaces
 
-import io.github.architectplatform.engine.core.history.app.HistoryService
-import io.github.architectplatform.engine.core.history.domain.ExecutionRecord
+import io.github.architectplatform.core.history.app.HistoryService
+import io.github.architectplatform.core.history.domain.ExecutionRecord
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable

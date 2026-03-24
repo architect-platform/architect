@@ -1,8 +1,8 @@
-package io.github.architectplatform.engine.plugins.inline
+package io.github.architectplatform.core.plugins.inline
 
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.tasks.TaskPermission
-import io.github.architectplatform.engine.core.tasks.infrastructure.InMemoryTaskRegistry
+import io.github.architectplatform.core.tasks.infrastructure.InMemoryTaskRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull

@@ -100,8 +100,8 @@ jmh {
 
 pitest {
   junit5PluginVersion.set("1.2.1")
-  targetClasses.set(listOf("io.github.architectplatform.engine.*"))
-  targetTests.set(listOf("io.github.architectplatform.engine.*"))
+  targetClasses.set(listOf("io.github.architectplatform.core.*"))
+  targetTests.set(listOf("io.github.architectplatform.core.*"))
   mutators.set(listOf("DEFAULTS"))
   outputFormats.set(listOf("HTML", "XML"))
   timestampedReports.set(false)

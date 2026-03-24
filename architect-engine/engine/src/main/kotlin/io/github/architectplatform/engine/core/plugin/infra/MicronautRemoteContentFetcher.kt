@@ -1,6 +1,6 @@
 package io.github.architectplatform.engine.core.plugin.infra
 
-import io.github.architectplatform.engine.core.plugin.app.RemoteContentFetcher
+import io.github.architectplatform.core.plugin.app.RemoteContentFetcher
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.MutableHttpRequest
 import io.micronaut.http.client.HttpClient
