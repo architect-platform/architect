@@ -94,7 +94,7 @@ class PythonPluginTest {
 
     task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
-    assertEquals("ruff check .", executor.command)
+    assertEquals("ruff check '.'", executor.command)
   }
 
   @Test

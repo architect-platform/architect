@@ -54,7 +54,7 @@ class RustPluginTest {
     val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
     assertTrue(result.success)
-    assertEquals("cargo build --debug --features serde,tokio", executor.command)
+    assertEquals("cargo build --debug --features 'serde,tokio'", executor.command)
   }
 
   @Test
@@ -64,7 +64,7 @@ class RustPluginTest {
 
     task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
-    assertTrue(executor.command!!.contains("--target aarch64-apple-darwin"))
+    assertTrue(executor.command!!.contains("--target 'aarch64-apple-darwin'"))
   }
 
   @Test
@@ -74,7 +74,7 @@ class RustPluginTest {
 
     task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
-    assertEquals("cargo test --features full", executor.command)
+    assertEquals("cargo test --features 'full'", executor.command)
   }
 
   @Test

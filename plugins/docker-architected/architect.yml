@@ -1,0 +1,17 @@
+project:
+  name: my-docker-project
+  description: "Example project using docker-architected plugin"
+
+plugins:
+  - name: docker-architected
+    repo: architect-platform/docker-architected
+
+docker:
+  image: myapp
+  registry: ghcr.io/my-org
+  dockerfile: Dockerfile
+  platforms:
+    - linux/amd64
+    - linux/arm64
+  composeFile: docker-compose.yml
+  enabled: true

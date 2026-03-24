@@ -1,0 +1,14 @@
+project:
+  name: my-maven-project
+  description: "Example project using maven-architected plugin"
+
+plugins:
+  - name: maven-architected
+    repo: architect-platform/maven-architected
+
+maven:
+  profiles:
+    - production
+  settings: .mvn/settings.xml
+  skipTests: false
+  enabled: true

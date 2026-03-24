@@ -1,0 +1,14 @@
+project:
+  name: my-python-project
+  description: "Example project using python-architected plugin"
+
+plugins:
+  - name: python-architected
+    repo: architect-platform/python-architected
+
+python:
+  tool: uv
+  pythonVersion: "3.12"
+  testRunner: pytest
+  linter: ruff
+  enabled: true

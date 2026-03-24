@@ -94,7 +94,7 @@ class NxPluginTest {
 
     assertTrue(result.success)
     assertEquals(
-      "npx nx run-many --target=build --projects=apps-api,apps-web --parallel=5 --skip-nx-cache",
+      "npx nx run-many --target=build --projects='apps-api,apps-web' --parallel=5 '--skip-nx-cache'",
       commandExecutor.command,
     )
     assertEquals("/repo", commandExecutor.workingDir)
@@ -118,7 +118,7 @@ class NxPluginTest {
 
     assertTrue(result.success)
     assertEquals(
-      "npx nx affected --target=test --parallel=3 --configuration=ci",
+      "npx nx affected --target=test --parallel=3 '--configuration=ci'",
       commandExecutor.command,
     )
   }

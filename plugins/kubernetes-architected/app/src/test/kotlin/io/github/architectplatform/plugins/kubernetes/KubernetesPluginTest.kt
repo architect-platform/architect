@@ -54,7 +54,7 @@ class KubernetesPluginTest {
     val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
     assertTrue(result.success)
-    assertEquals("kubectl apply -n prod --context aws-prod -f k8s/", executor.command)
+    assertEquals("kubectl apply -n 'prod' --context 'aws-prod' -f 'k8s/'", executor.command)
   }
 
   @Test
@@ -64,7 +64,7 @@ class KubernetesPluginTest {
 
     task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
-    assertEquals("kubectl get -n default pods", executor.command)
+    assertEquals("kubectl get -n 'default' 'pods'", executor.command)
   }
 
   @Test
@@ -74,7 +74,7 @@ class KubernetesPluginTest {
 
     task.execute(TestEnvironment(executor), projectContext(), listOf("deployment/api"))
 
-    assertEquals("kubectl rollout status -n staging deployment/api", executor.command)
+    assertEquals("kubectl rollout status -n 'staging' 'deployment/api'", executor.command)
   }
 
   @Test

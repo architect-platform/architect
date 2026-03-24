@@ -47,7 +47,7 @@ class DockerPluginTest {
     val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
     assertTrue(result.success)
-    assertEquals("docker build --build-arg ENV=prod -t myapp:latest -f Dockerfile .", executor.command)
+    assertEquals("docker build --build-arg 'ENV=prod' -t 'myapp:latest' -f 'Dockerfile' .", executor.command)
   }
 
   @Test
@@ -57,7 +57,7 @@ class DockerPluginTest {
 
     task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
-    assertTrue(executor.command!!.contains("--platform linux/amd64,linux/arm64"))
+    assertTrue(executor.command!!.contains("--platform 'linux/amd64,linux/arm64'"))
   }
 
   @Test
@@ -68,7 +68,7 @@ class DockerPluginTest {
     val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
     assertTrue(result.success)
-    assertEquals("docker push myapp:v1", executor.command)
+    assertEquals("docker push 'myapp:v1'", executor.command)
   }
 
   @Test
@@ -78,7 +78,7 @@ class DockerPluginTest {
 
     task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
-    assertEquals("docker compose -f compose.prod.yml up -d", executor.command)
+    assertEquals("docker compose -f 'compose.prod.yml' up -d", executor.command)
   }
 
   @Test

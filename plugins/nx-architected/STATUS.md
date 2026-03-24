@@ -1,6 +1,6 @@
 # nx-architected status
 
-- Status: incubating
+- Status: experimental (incubating tier)
 - Last reviewed: 2026-03-24
 - Owner group: Plugin Ecosystem
 

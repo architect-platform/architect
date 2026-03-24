@@ -1,0 +1,17 @@
+project:
+  name: my-nx-project
+  description: "Example project using nx-architected plugin"
+
+plugins:
+  - name: nx-architected
+    repo: architect-platform/nx-architected
+
+nx:
+  targets:
+    - build
+    - test
+    - lint
+  parallel: 3
+  affected: false
+  nxCloud: false
+  enabled: true

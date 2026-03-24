@@ -52,7 +52,7 @@ class MavenPluginTest {
     val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
     assertTrue(result.success)
-    assertEquals("mvn verify -P release,ci -s ci-settings.xml", executor.command)
+    assertEquals("mvn verify -P 'release,ci' -s 'ci-settings.xml'", executor.command)
   }
 
   @Test
@@ -72,7 +72,7 @@ class MavenPluginTest {
 
     task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
-    assertEquals("mvn deploy -DskipTests -P release", executor.command)
+    assertEquals("mvn deploy -DskipTests -P 'release'", executor.command)
   }
 
   @Test

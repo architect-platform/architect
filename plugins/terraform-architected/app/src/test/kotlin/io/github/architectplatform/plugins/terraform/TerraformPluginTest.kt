@@ -54,7 +54,7 @@ class TerraformPluginTest {
     val result = task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
     assertTrue(result.success)
-    assertEquals("terraform init -backend-config=config.hcl", executor.command)
+    assertEquals("terraform init -backend-config='config.hcl'", executor.command)
   }
 
   @Test
@@ -65,7 +65,7 @@ class TerraformPluginTest {
     task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
     assertTrue(executor.command!!.contains("-var 'region=us-east-1'"))
-    assertTrue(executor.command!!.contains("-var-file=prod.tfvars"))
+    assertTrue(executor.command!!.contains("-var-file='prod.tfvars'"))
   }
 
   @Test

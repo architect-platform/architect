@@ -1,0 +1,13 @@
+project:
+  name: my-go-project
+  description: "Example project using go-architected plugin"
+
+plugins:
+  - name: go-architected
+    repo: architect-platform/go-architected
+
+go:
+  module: github.com/my-org/my-app
+  outputBinary: bin/my-app
+  ldflags: "-s -w"
+  enabled: true

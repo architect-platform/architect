@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 67/350 tasks completed (19.1%)
+Overall Progress: 68/350 tasks completed (19.4%)
 Current Phase: Phase 5 — Standardize the plugin platform
-Last Updated: 2026-03-24T18:10:00Z
+Last Updated: 2026-03-24T19:00:00Z
 
 ## Standards and Principles Gaps
 
@@ -279,7 +279,7 @@ Last Updated: 2026-03-24T18:10:00Z
   - [x] Standardize plugin internal package/layout patterns so plugin code is easy to scan and compare across the ecosystem. | Finished: 2026-03-24T18:10:00Z | Notes: Extracted `ArchitectureValidateTask` inner class from `ArchitecturePlugin.kt` into a top-level `ArchitectureTask.kt` following the standard three-file layout (Context/Plugin/Task). Added `ArchitecturePluginContractTest.kt` using `ArchitectPluginContractTestSuite`. Updated `docs/guides/plugin-standard.md` with an explicit "Internal Code Layout Convention" section documenting the canonical three-file minimum, rules about top-level task files, sub-package thresholds, and naming conventions. Validated with `architecture-architected` full test run (9 tasks, BUILD SUCCESSFUL).
 
 - [ ] Validation
-  - [ ] Run plugin tests in batches by maturity tier.
+  - [x] Run plugin tests in batches by maturity tier. | Finished: 2026-03-24T19:00:00Z | Notes: Ran all 16 official plugins by tier. Mature tier (docs-architected, git-architected, github-architected, gradle-architected, scripts-architected, pipelines-architected) — all BUILD SUCCESSFUL. Incubating tier (architecture-architected, docker-architected, go-architected, javascript-architected, kubernetes-architected, maven-architected, nx-architected, python-architected, rust-architected, terraform-architected) — all BUILD SUCCESSFUL after updating test assertions to match ShellUtils.escapeShellArg single-quoting behavior (security-correct behavior introduced previously; tests pre-dated it). Also fixed gradle-architected path-traversal test failure and resolved API version cache issue by bumping architect-api to 2.2.0 and adding mavenLocal() first in plugin conventions.
   - [ ] Confirm all official plugins pass contract tests.
   - [ ] Confirm every official plugin has docs/examples aligned to actual capabilities.
 

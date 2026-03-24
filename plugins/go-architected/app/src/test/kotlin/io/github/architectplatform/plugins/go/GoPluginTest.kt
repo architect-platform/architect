@@ -62,7 +62,7 @@ class GoPluginTest {
 
     task.execute(TestEnvironment(executor), projectContext(), emptyList())
 
-    assertEquals("go build -ldflags '-s -w' -o myapp ./...", executor.command)
+    assertEquals("go build -ldflags '-s -w' -o 'myapp' ./...", executor.command)
   }
 
   @Test

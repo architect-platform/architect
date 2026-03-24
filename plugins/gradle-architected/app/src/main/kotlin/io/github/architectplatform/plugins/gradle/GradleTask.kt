@@ -46,8 +46,14 @@ class GradleTask(
       projectContext: ProjectContext,
       args: List<String>
   ): TaskResult {
-    val results =
-        this.context.projects.map { singleProjectTask(environment, projectContext, args, it) }
+    val results = mutableListOf<TaskResult>()
+    for (gradleProjectContext in this.context.projects) {
+      val result = singleProjectTask(environment, projectContext, args, gradleProjectContext)
+      if (!result.success && result.message?.contains("invalid project path") == true) {
+        return result
+      }
+      results.add(result)
+    }
     val success = results.all { it.success }
     if (!success) {
       return TaskResult.failure("Gradle task: $id failed for some projects", results = results)

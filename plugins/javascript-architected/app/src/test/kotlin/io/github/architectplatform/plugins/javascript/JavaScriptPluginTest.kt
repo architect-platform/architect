@@ -87,7 +87,7 @@ class JavaScriptPluginTest {
 
     task.execute(TestEnvironment(executor), projectContext(), listOf("--coverage"))
 
-    assertEquals("npm test --coverage", executor.command)
+    assertEquals("npm test '--coverage'", executor.command)
   }
 
   @Test

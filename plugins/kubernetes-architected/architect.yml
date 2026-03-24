@@ -1,0 +1,14 @@
+project:
+  name: my-kubernetes-project
+  description: "Example project using kubernetes-architected plugin"
+
+plugins:
+  - name: kubernetes-architected
+    repo: architect-platform/kubernetes-architected
+
+kubernetes:
+  namespace: my-namespace
+  context: my-cluster-context
+  manifests: k8s/
+  kubeconfig: ""
+  enabled: true
