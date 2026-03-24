@@ -15,7 +15,7 @@ import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.builtin.SimpleTask
 import io.github.architectplatform.api.core.tasks.phase.Phase
 import io.github.architectplatform.api.core.tasks.Platform
-import io.github.architectplatform.core.plugins.inline.context.InlineTaskConfig
+import io.github.architectplatform.core.plugins.inline.InlineTaskConfig
 
 /**
  * Built-in engine plugin that reads the `tasks:` section of `architect.yml` and registers

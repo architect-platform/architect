@@ -11,8 +11,8 @@ import io.github.architectplatform.core.tasks.domain.TaskDependencyResolver
 import io.github.architectplatform.core.tasks.domain.events.ExecutionEvents.executionCompletedEvent
 import io.github.architectplatform.core.tasks.domain.events.ExecutionEvents.executionFailedEvent
 import io.github.architectplatform.core.tasks.domain.events.ExecutionEvents.executionStartedEvent
-import io.github.architectplatform.core.tasks.interfaces.dto.TaskPlanDTO
-import io.github.architectplatform.core.tasks.interfaces.dto.TaskPlanStepDTO
+import io.github.architectplatform.core.tasks.dto.TaskPlanDTO
+import io.github.architectplatform.core.tasks.dto.TaskPlanStepDTO
 import io.github.architectplatform.core.domain.events.ArchitectEvent
 import io.github.architectplatform.core.domain.events.ExecutionEvent
 import io.github.architectplatform.core.domain.events.ExecutionId

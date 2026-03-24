@@ -1,6 +1,6 @@
 package io.github.architectplatform.engine.integration
 
-import io.github.architectplatform.engine.core.project.interfaces.dto.RegisterProjectRequest
+import io.github.architectplatform.engine.core.project.dto.RegisterProjectRequest
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.HttpClient

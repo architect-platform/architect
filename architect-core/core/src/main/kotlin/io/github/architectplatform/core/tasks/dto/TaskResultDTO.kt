@@ -1,4 +1,4 @@
-package io.github.architectplatform.core.tasks.interfaces.dto
+package io.github.architectplatform.core.tasks.dto
 
 import io.github.architectplatform.api.core.tasks.TaskResult
 

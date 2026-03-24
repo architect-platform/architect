@@ -1,9 +1,9 @@
 package io.github.architectplatform.engine.core.tasks.interfaces
 
 import io.github.architectplatform.engine.core.tasks.application.TaskService
-import io.github.architectplatform.core.tasks.interfaces.dto.TaskDTO
-import io.github.architectplatform.core.tasks.interfaces.dto.TaskPlanDTO
-import io.github.architectplatform.core.tasks.interfaces.dto.toDTO
+import io.github.architectplatform.core.tasks.dto.TaskDTO
+import io.github.architectplatform.core.tasks.dto.TaskPlanDTO
+import io.github.architectplatform.core.tasks.dto.toDTO
 import io.github.architectplatform.core.domain.events.ExecutionId
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller

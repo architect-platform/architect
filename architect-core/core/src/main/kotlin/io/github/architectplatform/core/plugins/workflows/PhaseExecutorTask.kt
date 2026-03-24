@@ -6,7 +6,7 @@ import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
-import io.github.architectplatform.core.tasks.interfaces.dto.toDTO
+import io.github.architectplatform.core.tasks.dto.toDTO
 import io.github.architectplatform.core.plugins.workflows.events.PhaseCompleted
 import io.github.architectplatform.core.plugins.workflows.events.PhaseLoaded
 import io.github.architectplatform.core.plugins.workflows.events.PhaseStarted

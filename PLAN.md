@@ -1,7 +1,7 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 96/350 tasks completed (27.4%)
+Overall Progress: 97/350 tasks completed (27.7%)
 Current Phase: Phase 9 — Refactor for simplicity, readability, and smaller units
 Last Updated: 2026-03-25T03:15:00Z
 
@@ -362,7 +362,7 @@ Last Updated: 2026-03-25T03:15:00Z
   - [x] Identify the highest-cognitive-load classes/modules by size, branching, and overlapping responsibility. | Finished: 2026-03-25T03:30:00Z | Notes: Analyzed 187 Kotlin files across 6 modules. Found 6 high-complexity classes: ArchitectLauncher (1609 lines, 157 branches, 8 domains — critical), PluginScaffolder (410 lines), ProjectService (312 lines, 6 domains), ConsoleUI (300 lines), ProcessPluginAdapter (266 lines, 5 domains), TaskExecutor (220 lines, 6 domains). Documented findings in analysis.md.
   - [x] Split overloaded classes into clearer collaborators with narrower responsibilities. | Finished: 2026-03-25T04:15:00Z | Notes: Extracted 6 handler classes from ArchitectLauncher (1609→570 lines, 65% reduction): EngineCommandHandler (138), PluginCommandHandler (228), CacheCommandHandler (50), CheckCommandHandler (85), OutputFormatter (264), CliInfrastructureHandler (195). All 15 CLI tests pass green.
   - [x] Rename ambiguous types, packages, and modules to better express intent. | Finished: 2026-03-25T04:45:00Z | Notes: Renamed 4 Utils objects (ShellUtils→ShellArgumentSanitizer, SecurityUtils→InputSanitizer, GitUtils→GitCommandValidator, ScriptUtils→ShellCommandSanitizer), 4 ApiControllers (removed redundant "Api" prefix), moved impl→builtin package (SimpleTask, TaskWithArgs). 47 files changed across all modules. API 160 tests, engine 116 tests pass.
-  - [ ] Flatten deeply nested or redundant package structures where they hinder comprehension.
+  - [x] Flatten deeply nested or redundant package structures where they hinder comprehension. | Finished: 2026-03-25T05:10:00Z | Notes: Flattened interfaces.dto→dto in core (4 files) and engine (4 files), consolidated 3 single-file context packages into parent packages. 11 files moved, 13 import sites updated. Core 224 tests, engine 115 tests pass.
   - [ ] Remove stale abstractions, duplicate wrappers, and “utility dumping ground” patterns.
   - [ ] Add concise architecture comments only where code would otherwise remain hard to parse.
 

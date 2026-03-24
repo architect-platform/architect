@@ -6,7 +6,7 @@ import io.github.architectplatform.api.core.project.resolvePathWithinRoot
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
-import io.github.architectplatform.core.plugins.commits.context.CommitsContext
+import io.github.architectplatform.core.plugins.commits.CommitsContext
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.regex.Pattern

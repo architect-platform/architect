@@ -1,4 +1,4 @@
-package io.github.architectplatform.engine.core.project.interfaces.dto
+package io.github.architectplatform.engine.core.project.dto
 
 import io.github.architectplatform.api.core.project.Config
 

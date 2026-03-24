@@ -2,7 +2,7 @@ package io.github.architectplatform.core.plugins.installers
 
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.tasks.TaskRegistry
-import io.github.architectplatform.core.plugins.installers.context.InstallersContext
+import io.github.architectplatform.core.plugins.installers.InstallersContext
 import io.github.architectplatform.core.plugins.installers.tasks.CopyInstallerTask
 
 class InstallersPlugin : ArchitectPlugin<InstallersContext> {

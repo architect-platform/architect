@@ -3,10 +3,10 @@ package io.github.architectplatform.engine.core.project.interfaces
 import io.github.architectplatform.api.core.project.Config
 import io.github.architectplatform.core.project.app.ProjectService
 import io.github.architectplatform.core.project.domain.Project
-import io.github.architectplatform.engine.core.project.interfaces.dto.ProjectDTO
-import io.github.architectplatform.engine.core.project.interfaces.dto.RegisterProjectRequest
-import io.github.architectplatform.engine.core.project.interfaces.dto.ValidationResultDTO
-import io.github.architectplatform.engine.core.project.interfaces.dto.toDTO
+import io.github.architectplatform.engine.core.project.dto.ProjectDTO
+import io.github.architectplatform.engine.core.project.dto.RegisterProjectRequest
+import io.github.architectplatform.engine.core.project.dto.ValidationResultDTO
+import io.github.architectplatform.engine.core.project.dto.toDTO
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get

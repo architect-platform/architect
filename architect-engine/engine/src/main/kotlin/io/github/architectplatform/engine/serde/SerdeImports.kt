@@ -6,10 +6,10 @@ import io.github.architectplatform.core.plugin.domain.events.ArchitectEventDTO
 import io.github.architectplatform.core.plugin.domain.events.PluginEvents
 import io.github.architectplatform.core.tasks.domain.events.ExecutionEvents
 import io.github.architectplatform.core.tasks.domain.events.TaskEvents
-import io.github.architectplatform.core.tasks.interfaces.dto.TaskDTO
-import io.github.architectplatform.core.tasks.interfaces.dto.TaskPlanDTO
-import io.github.architectplatform.core.tasks.interfaces.dto.TaskPlanStepDTO
-import io.github.architectplatform.core.tasks.interfaces.dto.TaskResultDTO
+import io.github.architectplatform.core.tasks.dto.TaskDTO
+import io.github.architectplatform.core.tasks.dto.TaskPlanDTO
+import io.github.architectplatform.core.tasks.dto.TaskPlanStepDTO
+import io.github.architectplatform.core.tasks.dto.TaskResultDTO
 import io.micronaut.serde.annotation.SerdeImport
 
 /**

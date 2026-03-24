@@ -1,4 +1,4 @@
-package io.github.architectplatform.core.plugins.inline.context
+package io.github.architectplatform.core.plugins.inline
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

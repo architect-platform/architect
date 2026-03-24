@@ -2,7 +2,7 @@ package io.github.architectplatform.core.plugins.commits.tasks
 
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
-import io.github.architectplatform.core.plugins.commits.context.CommitsContext
+import io.github.architectplatform.core.plugins.commits.CommitsContext
 import java.nio.file.Files
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue

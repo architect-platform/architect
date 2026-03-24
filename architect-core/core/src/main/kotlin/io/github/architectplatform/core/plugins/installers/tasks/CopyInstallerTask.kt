@@ -8,7 +8,7 @@ import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
-import io.github.architectplatform.core.plugins.installers.context.InstallersContext
+import io.github.architectplatform.core.plugins.installers.InstallersContext
 import java.io.File
 import java.nio.file.Paths
 import org.slf4j.LoggerFactory

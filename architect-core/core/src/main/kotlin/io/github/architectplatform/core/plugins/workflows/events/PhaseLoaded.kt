@@ -2,7 +2,7 @@ package io.github.architectplatform.core.plugins.workflows.events
 
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
-import io.github.architectplatform.core.tasks.interfaces.dto.TaskDTO
+import io.github.architectplatform.core.tasks.dto.TaskDTO
 
 data class PhaseLoaded(val phase: Phase, val tasks: List<TaskDTO>) : TaskResult {
   override val success: Boolean = true

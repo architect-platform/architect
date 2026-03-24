@@ -2,7 +2,7 @@ package io.github.architectplatform.core.plugins.commits
 
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.tasks.TaskRegistry
-import io.github.architectplatform.core.plugins.commits.context.CommitsContext
+import io.github.architectplatform.core.plugins.commits.CommitsContext
 import io.github.architectplatform.core.plugins.commits.tasks.VerifyCommitMessageTask
 
 class CommitsPlugin : ArchitectPlugin<CommitsContext> {
