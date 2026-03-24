@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 50/288 tasks completed (17.4%)
+Overall Progress: 51/288 tasks completed (17.7%)
 Current Phase: Phase 3 — Re-establish architectural boundaries in the runtime stack
-Last Updated: 2026-03-24T15:38:13Z
+Last Updated: 2026-03-24T15:39:12Z
 
 ## Executive Summary
 
@@ -451,11 +451,12 @@ The repository currently contains several categories of assets:
 - 2026-03-24: repaired the remaining engine baseline regressions exposed by the convergence. Rebuilt the engine's Micronaut host wiring around the core-owned project/plugin/task/history services, resolved function-type event bus injection through `MicronautArchitectEventBus`, and restored the built-in internal plugin providers so inline `tasks:` blocks register again. Fresh validation now shows `architect-core/core` and `architect-engine/engine` `./gradlew test` both passing.
 - 2026-03-24: completed the runtime package-structure rework for discoverability. The move set now stages as renames from legacy `io.github.architectplatform.engine.*` paths to responsibility-aligned `io.github.architectplatform.core.*` paths, and targeted core/engine architecture and runtime regression tests passed after the reorganization.
 - 2026-03-24: completed targeted regression validation for plugin loading, local plugin sources, and secret resolution by running `ProjectPluginLoaderTest`, `LocalPluginSourceTest`, and `SecretResolverTest` in `architect-core/core` after the package rework.
+- 2026-03-24: validated that duplicated runtime class paths are removed across core and engine. A normalized path overlap check reported one residual overlap (`project/app/ApplicationEnvironment.kt`), and file comparison confirmed it is an intentional host-specific adapter split (core standalone map/event-bus environment vs engine Micronaut `BeanContext`/`ApplicationEventPublisher` bridge), not duplicated runtime responsibility.
 
 - [ ] Validation
   - [x] Run `architect-core/core` and `architect-engine/engine` tests. | Finished: 2026-03-24T13:42:48Z | Notes: Re-ran both module test suites after restoring host wiring; `architect-core/core` and `architect-engine/engine` now both pass, including the previously failing `ProjectsApiIntegrationTest` and `CliEngineHttpIntegrationTest` coverage inside the engine suite.
   - [x] Add targeted regression tests around plugin loading, secret resolution, and local plugin sources. | Finished: 2026-03-24T15:38:13Z | Notes: Verified and executed the focused regression suite in `architect-core/core` (`ProjectPluginLoaderTest`, `LocalPluginSourceTest`, `SecretResolverTest`) to ensure plugin loading, local plugin path hardening, and secret-resolution flows remain stable after runtime package movement.
-  - [ ] Verify no duplicated runtime class remains across core/engine for the same responsibility.
+  - [x] Verify no duplicated runtime class remains across core/engine for the same responsibility. | Finished: 2026-03-24T15:39:12Z | Notes: Compared normalized runtime-relative Kotlin path sets between `architect-core/core` and `architect-engine/engine`; overlap dropped to one intentional host adapter (`ApplicationEnvironment`). Direct file diff confirms distinct host concerns (core standalone environment wiring vs engine Micronaut bean/event integration), so duplicated authoritative runtime implementations are eliminated.
 
 ## Phase 4 — Rationalize repository portfolio and directory hygiene
 
