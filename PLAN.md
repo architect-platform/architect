@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 38/283 tasks completed (13.4%)
+Overall Progress: 39/285 tasks completed (13.7%)
 Current Phase: Phase 3 — Re-establish architectural boundaries in the runtime stack
-Last Updated: 2026-03-24T10:16:17Z
+Last Updated: 2026-03-24T10:21:10Z
 
 ## Executive Summary
 
@@ -428,7 +428,9 @@ The repository currently contains several categories of assets:
 
 - [ ] Tasks
   - [x] Inventory duplicated classes and decide canonical ownership.
-  - [ ] Extract or relocate shared runtime logic from `architect-engine` into `architect-core` where appropriate.
+  - [x] Converge identical plugin-loading support types into `architect-core`. | Finished: 2026-03-24T10:21:10Z | Notes: Removed six byte-identical plugin-loading support classes from `architect-engine/engine` (`CommonPlugin`, `PluginDownloader`, `PluginLoader`, `PluginSourceRegistry`, `GitHubPluginSource`, `LocalPluginSource`) so the engine now resolves the canonical implementations from `architect-core` instead of shadowing them locally.
+  - [ ] Split drifted plugin-loading runtime classes into `architect-core` logic plus `architect-engine` host adapters.
+  - [ ] Converge shared secret, project, and task runtime services into `architect-core`.
   - [ ] Remove shadow implementations after parity tests exist.
   - [ ] Introduce architecture rules to prevent future duplication and dependency leaks.
   - [ ] Repair the current `architect-engine` baseline blocker as part of this convergence work.
@@ -437,6 +439,7 @@ The repository currently contains several categories of assets:
 ### Phase 3 Notes
 
 - 2026-03-24: inventoried `architect-core` and `architect-engine` duplicate runtime sources and recorded canonical ownership in `docs/architecture/runtime-boundaries.md` plus ADR-013. The inventory found 78 same-path Kotlin files duplicated across the two modules, with 25 already drifted. Canonical rule: shared runtime behavior lives in `architect-core`; `architect-engine` keeps Micronaut host/transport adapters only.
+- 2026-03-24: decomposed the broad extraction task into smaller convergence workstreams because the inventory exposed 78 duplicate runtime files across multiple concern clusters. Completed the first low-risk extraction by deleting six byte-identical plugin-loading support classes from `architect-engine` so the server now consumes the canonical `architect-core` implementations for those types.
 
 - [ ] Validation
   - [ ] Run `architect-core/core` and `architect-engine/engine` tests.
