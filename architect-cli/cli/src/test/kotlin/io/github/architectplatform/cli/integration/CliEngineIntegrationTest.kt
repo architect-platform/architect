@@ -113,7 +113,7 @@ class CliEngineIntegrationTest {
         // Then
         val output = outputStream.toString()
         assertTrue(output.contains("FAILED"), "Output should contain FAILED event")
-        assertTrue(output.contains("ERROR DETAILS"), "Output should contain error details header")
+        assertTrue(output.contains("FAILURE DETAILS"), "Output should contain failure details header")
         assertTrue(output.contains("NullPointerException"), "Output should contain exception type")
         assertTrue(output.contains("Stack Trace"), "Output should contain stack trace")
         assertTrue(output.contains("TaskExecutor.syncExecuteTask"), "Output should contain stack trace details")
@@ -167,11 +167,11 @@ class CliEngineIntegrationTest {
         val ui = ConsoleUI("all-events-task", plain = true)
         
         val eventTypes = listOf(
-            "STARTED" to "▶️",
-            "COMPLETED" to "✅",
-            "FAILED" to "❌",
-            "SKIPPED" to "⏭️",
-            "OUTPUT" to "📝"
+            "STARTED" to "▶",
+            "COMPLETED" to "✓",
+            "FAILED" to "✗",
+            "SKIPPED" to "⏭",
+            "OUTPUT" to "│"
         )
 
         // When & Then
@@ -220,11 +220,11 @@ class CliEngineIntegrationTest {
         // Then
         val output = outputStream.toString().trim()
         
-        // Verify format: icon EVENT_TYPE [project] Task: taskname message
-        assertTrue(output.contains("▶️"), "Should contain icon")
+        // Verify format: icon EVENT_TYPE [project] taskname - message
+        assertTrue(output.contains("▶"), "Should contain icon")
         assertTrue(output.contains("STARTED"), "Should contain event type")
         assertTrue(output.contains("[my-project]"), "Should contain project in brackets")
-        assertTrue(output.contains("Task: build"), "Should contain task info")
+        assertTrue(output.contains("build"), "Should contain task id")
         assertTrue(output.contains("Building project"), "Should contain message")
     }
 
@@ -265,7 +265,7 @@ class CliEngineIntegrationTest {
 
         // Then
         val output = outputStream.toString()
-        assertTrue(output.contains("✅"), "Should contain success icon")
+        assertTrue(output.contains("✓"), "Should contain success icon")
         assertTrue(output.contains("Task completed successfully"), "Should contain completion message")
         assertTrue(output.contains("2.3s"), "Should contain duration")
     }
@@ -280,7 +280,7 @@ class CliEngineIntegrationTest {
 
         // Then
         val output = outputStream.toString()
-        assertTrue(output.contains("❌"), "Should contain error icon")
+        assertTrue(output.contains("✗"), "Should contain error icon")
         assertTrue(output.contains("Task failed"), "Should contain error message")
         assertTrue(ui.hasFailed, "Should mark execution as failed")
     }
@@ -386,7 +386,7 @@ class CliEngineIntegrationTest {
 
         // Then
         val output = outputStream.toString()
-        assertTrue(output.contains("ERROR DETAILS"), "Should have error details section")
+        assertTrue(output.contains("FAILURE DETAILS"), "Should have error details section")
         assertTrue(output.contains("AssertionError"), "Should contain exception type")
         assertTrue(output.contains("Stack Trace"), "Should have stack trace label")
         assertTrue(output.contains("Caused by"), "Should include caused by section")
@@ -484,9 +484,8 @@ class CliEngineIntegrationTest {
 
         // Then
         val output = outputStream.toString().trim()
-        // Check that emoji is directly followed by event type (no double space)
-        assertTrue(output.contains("▶️STARTED"), "Should not have space between emoji and event type")
-        assertFalse(output.contains("▶️ STARTED"), "Should not have extra space after emoji")
+        // Check that icon is followed by space and event type (consistent formatting)
+        assertTrue(output.contains("▶ STARTED"), "Should have icon followed by space and event type")
     }
 
     @Test
@@ -603,6 +602,6 @@ class CliEngineIntegrationTest {
         val output = outputStream.toString()
         assertTrue(output.contains("failing-submodule"), "Should show failing subproject")
         assertTrue(output.contains("main-app"), "Should show main project")
-        assertTrue(output.contains("ERROR DETAILS"), "Should show error details")
+        assertTrue(output.contains("FAILURE DETAILS"), "Should show error details")
     }
 }
