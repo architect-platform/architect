@@ -1,13 +1,13 @@
 # Architect Cloud
 
-**A centralized backend and dashboard for tracking and monitoring multiple Architect Engine instances.**
+**A centralized backend plus an incubating dashboard surface for tracking and monitoring multiple Architect Engine instances.**
 
 ## Overview
 
-Architect Cloud provides a complete solution for managing and monitoring Architect Engine deployments at scale. It consists of two main components:
+Architect Cloud provides a backend service for managing and monitoring Architect Engine deployments, plus an incubating UI surface. It consists of two main components:
 
 1. **Backend** - RESTful API service that receives and stores data from engine instances
-2. **UI** - Web-based dashboard for visualizing engine activity and execution history
+2. **UI** - Incubating web frontend for monitoring data exposed by the cloud backend
 
 ## Architecture
 
@@ -16,13 +16,13 @@ Architect Cloud provides a complete solution for managing and monitoring Archite
 │                    Architect Cloud                        │
 ├──────────────────┬───────────────────────────────────────┤
 │                  │                                        │
-│   Backend API    │          Web Dashboard                │
+│   Backend API    │         Incubating Web UI             │
 │   (Port 8080)    │          (Port 3000)                  │
 │                  │                                        │
-│   - REST API     │   - Engine monitoring                 │
-│   - H2 Database  │   - Project tracking                  │
-│   - Event Store  │   - Execution history                 │
-│                  │   - Real-time updates                 │
+│   - REST API     │   - REST polling stub                 │
+│   - H2 Database  │   - Engine/project fetch              │
+│   - Event Store  │   - Minimal error shell               │
+│                  │   - Dashboard work still in progress  │
 └──────────┬───────┴───────────────────────────────────────┘
            │
            │ Reports via HTTP
@@ -44,14 +44,15 @@ cd backend
 
 The backend will start on http://localhost:8080
 
-### 2. Start the Dashboard
+### 2. Start the UI
 
 ```bash
 cd ui
-npm run serve
+npm install
+npm run dev
 ```
 
-The dashboard will be available at http://localhost:3000
+The Vite dev server will be available at http://localhost:3000
 
 ### 3. Configure Engine to Report to Cloud
 
@@ -101,13 +102,15 @@ A Micronaut-based REST API service that:
 
 ### Dashboard UI
 
-A web-based dashboard that displays:
-- Active engine instances
-- All registered projects
-- Execution history and status
-- Real-time updates every 5 seconds
+A React + Vite monitoring stub that currently:
+- polls backend REST APIs for engines, projects, and executions
+- keeps fetched data in local component state inside one top-level component
+- exposes a minimal shell plus retryable error banner
 
-**[UI Documentation →](ui/README.md)**
+It does **not** yet provide a complete dashboard, routing model, WebSocket event subscription, or a tested supportable UI architecture.
+
+**[UI Documentation →](ui/README.md)**  
+**[UI Architecture →](ui/ARCHITECTURE.md)**
 
 ## Features
 
@@ -129,12 +132,12 @@ A web-based dashboard that displays:
 - ✅ Error details capture
 - ✅ Execution history
 
-### Dashboard Features
-- ✅ Overview statistics
-- ✅ Engine instance table
-- ✅ Recent executions view
-- ✅ Auto-refreshing data
-- ✅ Status indicators
+### Dashboard UI Status
+- ⚠️ React + Vite scaffold exists
+- ⚠️ REST polling exists in `ui/src/App.jsx`
+- ⚠️ Dashboard rendering is still incomplete
+- ❌ WebSocket event streaming is not consumed by the UI
+- ❌ Lint and test tooling are not configured yet
 
 ## Data Model
 
@@ -216,7 +219,7 @@ architect:
 
 ### UI Configuration
 
-Edit `ui/public/app.js`:
+Edit `ui/src/App.jsx`:
 
 ```javascript
 const API_BASE_URL = 'http://localhost:8080/api';
@@ -280,7 +283,7 @@ cd backend
 2. Start an engine instance with cloud reporting enabled
 3. Register a project
 4. Execute a task
-5. View the dashboard to see real-time updates
+5. Open the UI to inspect the current incubating monitoring stub
 
 ## Development
 
@@ -291,9 +294,9 @@ cd backend
 cd backend
 ./gradlew build
 
-# Package UI (already static files)
+# Build UI
 cd ui
-# No build needed
+npm run build
 ```
 
 ### Running Tests

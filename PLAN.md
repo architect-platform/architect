@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 77/350 tasks completed (22.0%)
+Overall Progress: 78/350 tasks completed (22.3%)
 Current Phase: Phase 7 — Raise product-surface quality outside the Kotlin core
-Last Updated: 2026-03-24T20:50:00Z
+Last Updated: 2026-03-24T21:00:00Z
 
 ## Standards and Principles Gaps
 
@@ -315,7 +315,7 @@ Last Updated: 2026-03-24T20:50:00Z
 - [ ] **Expected outcomes**: honest scope, real tests, better user-facing quality
 
 - [ ] Tasks
-  - [ ] For `architect-cloud/ui`, define the actual product scope and frontend architecture.
+  - [x] For `architect-cloud/ui`, define the actual product scope and frontend architecture. | Finished: 2026-03-24T21:00:00Z | Notes: Added `architect-cloud/ui/README.md` and `architect-cloud/ui/ARCHITECTURE.md` to define the UI truthfully as an incubating React + Vite monitoring stub built around one polling `App.jsx` component. Expanded `architect-cloud/ui/STATUS.md` with the concrete current scope, limitations, and graduation criteria, and corrected `architect-cloud/README.md` so the parent cloud docs no longer claim a complete real-time dashboard or stale `npm run serve` workflow.
   - [ ] Replace empty `lint` and `test` scripts with real tooling consistent with repo standards.
   - [ ] Introduce typed state/API handling and component test coverage for the cloud UI.
   - [ ] For `architect-vscode`, replace ad hoc YAML parsing with a robust parser/model strategy.
