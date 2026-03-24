@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 48/288 tasks completed (16.7%)
+Overall Progress: 49/288 tasks completed (17.0%)
 Current Phase: Phase 3 — Re-establish architectural boundaries in the runtime stack
-Last Updated: 2026-03-24T15:14:54Z
+Last Updated: 2026-03-24T15:36:14Z
 
 ## Executive Summary
 
@@ -437,7 +437,7 @@ The repository currently contains several categories of assets:
   - [x] Remove shadow implementations after parity tests exist. | Finished: 2026-03-24T12:15:00Z | Notes: Deleted 8 remaining Serdeable-only main source shadows from engine (ExecutionRecord, PluginEvents, ArchitectEventDTO, TaskDTO, TaskPlanDTO, TaskResultDTO, ExecutionEvents, TaskEvents) and 1 trivially-different test shadow (VerifyCommitMessageTaskTest). Core's SerdeImports.kt covers all serialization needs. ApplicationEnvironment legitimately differs between core (standalone/test) and engine (Micronaut production). 3 engine @MicronautTest test shadows retained as integration tests. Core tests pass (179 tests).
   - [x] Introduce architecture rules to prevent future duplication and dependency leaks. | Finished: 2026-03-24T12:30:00Z | Notes: Added ArchUnit to both core and engine build files. Created CoreArchitectureTest (enforces no Micronaut imports in core) and EngineArchitectureTest (enforces no shadow implementations of TaskExecutor, TaskCache, BashCommandExecutor, ProjectService, ConfigLoader, SecretResolver). Core architecture tests pass. Engine architecture tests will be validated after the CLI baseline blocker is fixed (task 47).
   - [x] Repair the current `architect-engine` baseline blocker as part of this convergence work. | Finished: 2026-03-24T13:42:48Z | Notes: Restored the engine host-side Micronaut wiring for converged core services by explicitly providing project/config/plugin/history beans, bound core task/plugin services to the Micronaut event bus adapter, and reinstated the built-in `CommonPlugin` set so inline `tasks:` registration and CLI HTTP execution flows work again. Verified with `architect-core/core` and `architect-engine/engine` test suites plus targeted `ProjectsApiIntegrationTest` and `CliEngineHttpIntegrationTest` runs.
-  - [ ] Rework package structure where needed so runtime concerns are discoverable and responsibility-aligned.
+  - [x] Rework package structure where needed so runtime concerns are discoverable and responsibility-aligned. | Finished: 2026-03-24T15:36:14Z | Notes: Completed a runtime package reorganization by moving shared runtime sources from legacy `io.github.architectplatform.engine.*` paths into responsibility-aligned `io.github.architectplatform.core.*` namespaces, with git recording the move as coherent renames. Re-validated targeted boundaries with `architect-core/core` tests (`ProjectPluginLoaderTest`, `LocalPluginSourceTest`, `SecretResolverTest`, `CoreArchitectureTest`) and `architect-engine/engine` `EngineArchitectureTest`.
 
 ### Phase 3 Notes
 
@@ -449,7 +449,7 @@ The repository currently contains several categories of assets:
 - 2026-03-24: completed the project lifecycle convergence by deleting the engine-local ProjectService and 6 identical project domain types, adding engine-only methods (reloadProject, hasLocalPlugins) to core's richer ProjectService, and creating a Micronaut factory bean to wire configuration and adapt CloudReporterService to the core ProjectRegistrationReporter interface.
 - 2026-03-24: completed the task execution/cache/events convergence. Deleted 41 identical files and 13 drifted engine shadow classes across multiple concern areas: task execution (TaskExecutor, TaskCache, BashCommandExecutor), inline plugins (InlineTaskPlugin, InlineTaskConfig), domain events and DTOs (8 Serdeable-annotated types). Merged InlineTaskRequirements feature into core, created RuntimeServiceFactory for Micronaut property-driven construction, and introduced centralized SerdeImports for core types needing Micronaut serialization. Made TaskPermissionScope/TaskPermissionContext public to support ApplicationEnvironment cross-module access.
 - 2026-03-24: repaired the remaining engine baseline regressions exposed by the convergence. Rebuilt the engine's Micronaut host wiring around the core-owned project/plugin/task/history services, resolved function-type event bus injection through `MicronautArchitectEventBus`, and restored the built-in internal plugin providers so inline `tasks:` blocks register again. Fresh validation now shows `architect-core/core` and `architect-engine/engine` `./gradlew test` both passing.
-- 2026-03-24: package-structure rework is in progress for runtime discoverability. Current git state is intentionally split between staged deletions of legacy `io.github.architectplatform.engine.core.*` paths and matching untracked additions under `io.github.architectplatform.core.*`; this task remains open until the move set is fully staged together, regression validation is re-run, and one atomic commit captures the reorganization.
+- 2026-03-24: completed the runtime package-structure rework for discoverability. The move set now stages as renames from legacy `io.github.architectplatform.engine.*` paths to responsibility-aligned `io.github.architectplatform.core.*` paths, and targeted core/engine architecture and runtime regression tests passed after the reorganization.
 
 - [ ] Validation
   - [x] Run `architect-core/core` and `architect-engine/engine` tests. | Finished: 2026-03-24T13:42:48Z | Notes: Re-ran both module test suites after restoring host wiring; `architect-core/core` and `architect-engine/engine` now both pass, including the previously failing `ProjectsApiIntegrationTest` and `CliEngineHttpIntegrationTest` coverage inside the engine suite.
