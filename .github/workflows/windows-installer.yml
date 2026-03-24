@@ -1,0 +1,101 @@
+name: Build Windows Installer
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build MSI for (e.g. v1.2.3)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-msi:
+    name: Build Windows MSI installer
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+
+      - name: Extract version from tag
+        id: version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.event.release.tag_name }}"
+          if (-not $tag) { $tag = "${{ inputs.tag }}" }
+          $version = $tag -replace '^v', ''
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+          echo "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Download windows-x86_64 native binary from release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ steps.version.outputs.tag }}"
+          gh release download $tag --pattern "architect-windows-x86_64.exe" --output architect.exe
+
+      - name: Create jpackage input directory
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force "jpackage-input"
+          Copy-Item architect.exe "jpackage-input\architect.exe"
+
+      - name: Build MSI with jpackage
+        id: msi
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # jpackage requires a 4-part version for Windows (major.minor.patch.build)
+          $pkgVersion = $env:VERSION -replace '[^0-9.]', ''
+          $parts = $pkgVersion.Split('.')
+          while ($parts.Length -lt 3) { $parts += '0' }
+          $winVersion = ($parts[0..2] -join '.') + '.0'
+
+          jpackage `
+            --type msi `
+            --name "Architect" `
+            --app-version "$winVersion" `
+            --description "Plugin-based task execution framework for developer workflows" `
+            --vendor "Architect Platform" `
+            --input "jpackage-input" `
+            --main-jar "architect.exe" `
+            --dest "dist" `
+            --win-dir-chooser `
+            --win-menu `
+            --win-shortcut `
+            --win-per-user-install `
+            --install-dir "Architect"
+
+          $msiFile = (Get-ChildItem dist -Filter "*.msi" | Select-Object -First 1).FullName
+          $msiName = "architect-$($env:VERSION)-windows-x86_64.msi"
+          Move-Item $msiFile $msiName
+          echo "msi=$msiName" >> $env:GITHUB_OUTPUT
+
+      - name: Compute SHA256 checksum
+        shell: pwsh
+        run: |
+          $msi = "${{ steps.msi.outputs.msi }}"
+          $hash = (Get-FileHash $msi -Algorithm SHA256).Hash.ToLower()
+          $hash | Out-File -FilePath "$msi.sha256" -NoNewline
+
+      - name: Upload MSI to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          files: |
+            ${{ steps.msi.outputs.msi }}
+            ${{ steps.msi.outputs.msi }}.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

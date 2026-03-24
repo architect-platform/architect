@@ -1,0 +1,83 @@
+name: Update Homebrew Formula
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  update-homebrew:
+    name: Update Homebrew formula for ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download release assets and compute SHA256
+        id: sha256
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          platforms=(macos-arm64 macos-x86_64 linux-arm64 linux-x86_64)
+          for platform in "${platforms[@]}"; do
+            asset="architect-${platform}"
+            gh release download "v${VERSION}" --pattern "${asset}" --output "/tmp/${asset}"
+            sha=$(sha256sum "/tmp/${asset}" | awk '{print $1}')
+            echo "${platform}=${sha}" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Update formula version and checksums
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          SHA_MACOS_ARM64: ${{ steps.sha256.outputs.macos-arm64 }}
+          SHA_MACOS_X86_64: ${{ steps.sha256.outputs.macos-x86_64 }}
+          SHA_LINUX_ARM64: ${{ steps.sha256.outputs.linux-arm64 }}
+          SHA_LINUX_X86_64: ${{ steps.sha256.outputs.linux-x86_64 }}
+        run: |
+          FORMULA="homebrew/Formula/architect.rb"
+
+          # Update version
+          sed -i "s/version \".*\"/version \"${VERSION}\"/" "$FORMULA"
+
+          # Update SHA256 per platform (replace occurrences in order: macos-arm64, macos-x86_64, linux-arm64, linux-x86_64)
+          python3 - <<'PYEOF'
+          import re, os
+
+          formula_path = os.environ['FORMULA']
+          content = open(formula_path).read()
+
+          replacements = [
+            ('macos-arm64',   os.environ['SHA_MACOS_ARM64']),
+            ('macos-x86_64',  os.environ['SHA_MACOS_X86_64']),
+            ('linux-arm64',   os.environ['SHA_LINUX_ARM64']),
+            ('linux-x86_64',  os.environ['SHA_LINUX_X86_64']),
+          ]
+
+          for platform, sha in replacements:
+            # Replace sha256 line that appears after the url line for this platform
+            pattern = r'(url "https://github\.com/architect-platform/architect/releases/download/v\$\{version\}/architect-' + re.escape(platform) + r'")\s+sha256 "[0-9a-f]*"'
+            replacement = r'\1\n      sha256 "' + sha + r'"'
+            content = re.sub(pattern, replacement, content)
+
+          open(formula_path, 'w').write(content)
+          print("Formula updated successfully")
+          PYEOF
+
+      - name: Commit and push updated formula
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add homebrew/Formula/architect.rb
+          git commit -m "chore(homebrew): bump formula to v${VERSION}"
+          git push origin HEAD:main

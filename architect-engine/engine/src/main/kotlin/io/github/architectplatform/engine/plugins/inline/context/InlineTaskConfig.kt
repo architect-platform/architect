@@ -1,16 +1,24 @@
 package io.github.architectplatform.engine.plugins.inline.context
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 /**
  * Configuration for a single inline task defined in architect.yml under the `tasks:` key.
  *
  * Example:
  * ```yaml
  * tasks:
- *   deploy:
- *     description: "Deploy to staging"
- *     phase: PUBLISH
- *     depends: [build, test]
- *     run: "kubectl apply -f k8s/"
+ *   docker-build:
+ *     description: "Build the Docker image"
+ *     phase: BUILD
+ *     depends: [test]
+ *     run: "docker build -t myapp ."
+ *     requires:
+ *       tools: [docker]
+ *       min-tool-versions:
+ *         docker: "20.0.0"
+ *       env: [DOCKER_REGISTRY]
+ *       platform: [linux, darwin]
  * ```
  */
 data class InlineTaskConfig(
@@ -19,4 +27,18 @@ data class InlineTaskConfig(
     val phase: String? = null,
     val depends: List<String> = emptyList(),
     val permissions: List<String> = emptyList(),
+    val requires: InlineTaskRequirements? = null,
 )
+
+/**
+ * Inline YAML representation of task runtime requirements.
+ * Maps to [io.github.architectplatform.api.core.tasks.TaskRequirements] after resolution.
+ */
+data class InlineTaskRequirements(
+    val tools: List<String> = emptyList(),
+    @JsonProperty("min-tool-versions")
+    val minToolVersions: Map<String, String> = emptyMap(),
+    val env: List<String> = emptyList(),
+    val platform: List<String> = emptyList(),
+)
+

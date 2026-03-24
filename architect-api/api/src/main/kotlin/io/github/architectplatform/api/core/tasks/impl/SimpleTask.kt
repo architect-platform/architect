@@ -4,6 +4,7 @@ import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskPermission
+import io.github.architectplatform.api.core.tasks.TaskRequirements
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
 
@@ -47,6 +48,7 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
  * @param phase The lifecycle phase this task belongs to (optional, null for standalone tasks)
  * @param customDependencies Additional dependencies beyond phase dependencies (optional)
  * @param permissions Permissions required to execute the task (defaults to full access)
+ * @param requirements Runtime preconditions checked before execution (optional)
  * @param task Lambda function containing the task logic
  */
 class SimpleTask(
@@ -55,6 +57,7 @@ class SimpleTask(
   private val phase: Phase? = null,
   private val customDependencies: List<String> = emptyList(),
   private val permissions: Set<TaskPermission> = TaskPermission.all(),
+  private val requirements: TaskRequirements? = null,
   private val task: (Environment, ProjectContext) -> TaskResult,
 ) : Task {
   override fun phase(): Phase? = phase
@@ -62,6 +65,8 @@ class SimpleTask(
   override fun description(): String = description
 
   override fun requiredPermissions(): Set<TaskPermission> = permissions
+
+  override fun requires(): TaskRequirements? = requirements
 
   override fun depends(): List<String> {
     // Combine phase dependencies with custom dependencies

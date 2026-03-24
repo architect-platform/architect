@@ -124,6 +124,17 @@ interface Task {
   fun cacheDescriptor(): CacheDescriptor? = null
 
   /**
+   * Returns runtime requirements that must be satisfied before this task can execute.
+   *
+   * When non-null, [io.github.architectplatform.api.core.tasks.TaskRequirements] are checked
+   * before the task runs. On failure, a precise, actionable message is shown (e.g.
+   * "install docker", "set DOCKER_REGISTRY").
+   *
+   * @return The task's requirements, or null if none are declared
+   */
+  fun requires(): TaskRequirements? = null
+
+  /**
    * Executes the task's work.
    *
    * This method contains the main logic of the task. It receives the execution environment,

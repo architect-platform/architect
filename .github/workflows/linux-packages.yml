@@ -1,0 +1,154 @@
+name: Build Linux Packages
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build packages for (e.g. v1.2.3)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux-packages:
+    name: Build .deb and .rpm packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: linux-packages-gradle-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties') }}
+          restore-keys: linux-packages-gradle-
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME:-${{ inputs.tag }}}" | sed 's|refs/tags/v||' >> "$GITHUB_OUTPUT"
+
+      - name: Download linux-x86_64 native binary from release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          TAG="${GITHUB_REF_NAME:-${{ inputs.tag }}}"
+          gh release download "${TAG}" --pattern "architect-linux-x86_64" --output architect-linux-x86_64
+          chmod +x architect-linux-x86_64
+
+      - name: Build .deb package
+        id: deb
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          PKG_NAME="architect_${VERSION}_amd64"
+          mkdir -p "${PKG_NAME}/usr/local/bin"
+          mkdir -p "${PKG_NAME}/DEBIAN"
+          mkdir -p "${PKG_NAME}/usr/share/bash-completion/completions"
+          mkdir -p "${PKG_NAME}/usr/share/zsh/vendor-completions"
+          mkdir -p "${PKG_NAME}/usr/share/fish/completions"
+
+          cp architect-linux-x86_64 "${PKG_NAME}/usr/local/bin/architect"
+
+          # Generate shell completions
+          ./architect-linux-x86_64 completion bash  > "${PKG_NAME}/usr/share/bash-completion/completions/architect" 2>/dev/null || true
+          ./architect-linux-x86_64 completion zsh   > "${PKG_NAME}/usr/share/zsh/vendor-completions/_architect"  2>/dev/null || true
+          ./architect-linux-x86_64 completion fish  > "${PKG_NAME}/usr/share/fish/completions/architect.fish"    2>/dev/null || true
+
+          cat > "${PKG_NAME}/DEBIAN/control" <<EOF
+          Package: architect
+          Version: ${VERSION}
+          Section: devel
+          Priority: optional
+          Architecture: amd64
+          Maintainer: Architect Platform <noreply@github.com>
+          Homepage: https://github.com/architect-platform/architect
+          Description: Plugin-based task execution framework for developer workflows
+           Architect automates project workflows, CI/CD pipelines, and development
+           operations. It follows convention-over-configuration principles and provides
+           a unified way to manage documentation, releases, builds, tests, and
+           deployment across diverse technology stacks.
+          EOF
+
+          dpkg-deb --build "${PKG_NAME}"
+          echo "deb=${PKG_NAME}.deb" >> "$GITHUB_OUTPUT"
+
+      - name: Build .rpm package
+        id: rpm
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Install rpmbuild
+          sudo apt-get install -y rpm
+
+          RPM_ROOT="${HOME}/rpmbuild"
+          mkdir -p "${RPM_ROOT}"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          mkdir -p "${RPM_ROOT}/BUILDROOT/architect-${VERSION}-1.x86_64/usr/bin"
+
+          cp architect-linux-x86_64 "${RPM_ROOT}/BUILDROOT/architect-${VERSION}-1.x86_64/usr/bin/architect"
+
+          cat > "${RPM_ROOT}/SPECS/architect.spec" <<EOF
+          Name:           architect
+          Version:        ${VERSION}
+          Release:        1%{?dist}
+          Summary:        Plugin-based task execution framework for developer workflows
+          License:        MIT
+          URL:            https://github.com/architect-platform/architect
+
+          %description
+          Architect automates project workflows, CI/CD pipelines, and development
+          operations with a plugin-based task execution framework.
+
+          %install
+          install -D -m 0755 %{_builddir}/../BUILDROOT/architect-${VERSION}-1.x86_64/usr/bin/architect \\
+            %{buildroot}/usr/bin/architect
+
+          %files
+          /usr/bin/architect
+
+          %changelog
+          * $(date "+%a %b %d %Y") Architect Platform <noreply@github.com> - ${VERSION}-1
+          - Release ${VERSION}
+          EOF
+
+          rpmbuild -bb \
+            --define "_topdir ${RPM_ROOT}" \
+            --define "_builddir ${RPM_ROOT}/BUILD" \
+            "${RPM_ROOT}/SPECS/architect.spec"
+
+          RPM_FILE=$(find "${RPM_ROOT}/RPMS" -name "*.rpm" | head -1)
+          cp "${RPM_FILE}" "architect-${VERSION}-1.x86_64.rpm"
+          echo "rpm=architect-${VERSION}-1.x86_64.rpm" >> "$GITHUB_OUTPUT"
+
+      - name: Compute checksums
+        env:
+          DEB: ${{ steps.deb.outputs.deb }}
+          RPM: ${{ steps.rpm.outputs.rpm }}
+        run: |
+          sha256sum "${DEB}" | awk '{print $1}' > "${DEB}.sha256"
+          sha256sum "${RPM}" | awk '{print $1}' > "${RPM}.sha256"
+
+      - name: Upload packages to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name || inputs.tag }}
+          files: |
+            ${{ steps.deb.outputs.deb }}
+            ${{ steps.deb.outputs.deb }}.sha256
+            ${{ steps.rpm.outputs.rpm }}
+            ${{ steps.rpm.outputs.rpm }}.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

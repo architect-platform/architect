@@ -1,0 +1,148 @@
+name: Build Native Images
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build native images for (e.g. v1.2.3)"
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  JAVA_VERSION: "21"
+
+jobs:
+  build-native:
+    name: Native image — ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-arm64
+            runner: macos-latest
+            os: macos
+            arch: aarch64
+          - platform: macos-x86_64
+            runner: macos-13
+            os: macos
+            arch: x86_64
+          - platform: linux-x86_64
+            runner: ubuntu-latest
+            os: linux
+            arch: x86_64
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+            os: linux
+            arch: aarch64
+
+    steps:
+      - name: Checkout repository
+        uses: ./.github/actions/setup-architect
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up GraalVM ${{ env.JAVA_VERSION }}
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: graalvm-community
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          native-image-job-reports: "true"
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Build GraalVM native image
+        working-directory: architect-cli/cli
+        env:
+          GITHUB_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew nativeCompile --no-daemon -Pplatform=${{ matrix.platform }}
+
+      - name: Locate compiled binary
+        id: binary
+        run: |
+          bin=$(find architect-cli/cli/build/native/nativeCompile -maxdepth 1 -type f -name "architect*" | head -1)
+          echo "path=${bin}" >> "$GITHUB_OUTPUT"
+          echo "name=architect-${{ matrix.platform }}" >> "$GITHUB_OUTPUT"
+
+      - name: Compute SHA256 checksum
+        id: checksum
+        run: |
+          sha256sum "${{ steps.binary.outputs.path }}" | awk '{print $1}' > "${{ steps.binary.outputs.name }}.sha256"
+          echo "sha256=$(cat '${{ steps.binary.outputs.name }}.sha256')" >> "$GITHUB_OUTPUT"
+
+      - name: Upload binary to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name || inputs.tag }}
+          files: |
+            ${{ steps.binary.outputs.path }}
+            ${{ steps.binary.outputs.name }}.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  windows-native:
+    name: Native image — windows-x86_64
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM ${{ env.JAVA_VERSION }}
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: graalvm-community
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\.gradle\caches
+            ~\.gradle\wrapper
+          key: windows-gradle-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties') }}
+          restore-keys: windows-gradle-
+
+      - name: Build GraalVM native image
+        working-directory: architect-cli/cli
+        env:
+          GITHUB_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .\gradlew.bat nativeCompile --no-daemon
+
+      - name: Locate compiled binary
+        id: binary
+        shell: pwsh
+        run: |
+          $bin = Get-ChildItem "architect-cli/cli/build/native/nativeCompile" -Filter "architect*.exe" | Select-Object -First 1 -ExpandProperty FullName
+          echo "path=$bin" >> $env:GITHUB_OUTPUT
+
+      - name: Compute SHA256 checksum
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash "${{ steps.binary.outputs.path }}" -Algorithm SHA256).Hash.ToLower()
+          $hash | Out-File -FilePath "architect-windows-x86_64.exe.sha256" -NoNewline
+
+      - name: Upload binary to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name || inputs.tag }}
+          files: |
+            ${{ steps.binary.outputs.path }}
+            architect-windows-x86_64.exe.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

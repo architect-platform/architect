@@ -244,6 +244,21 @@ class ArchitectLauncher(
       return
     }
 
+    if (command == "completion") {
+      handleCompletionCommand()
+      return
+    }
+
+    if (command == "upgrade") {
+      handleUpgradeCommand()
+      return
+    }
+
+    if (command == "check") {
+      handleCheckCommand()
+      return
+    }
+
     val useEmbeddedExecution = embedded || (noDaemon && !engineHealthChecker.isRunning())
     if (useEmbeddedExecution) {
       runEmbeddedMode()
@@ -1294,6 +1309,281 @@ class ArchitectLauncher(
     } catch (e: Exception) {
       println("Failed to execute command: $command - ${e.message}")
     }
+  }
+
+  /**
+   * Generates shell completion scripts for architect.
+   * Usage: architect completion [bash|zsh|fish]
+   */
+  private fun handleCompletionCommand() {
+    val shell = args.getOrNull(1)?.lowercase() ?: "bash"
+    when (shell) {
+      "bash" -> {
+        val script = picocli.AutoComplete.bash("architect", CommandLine(this))
+        println(script)
+      }
+      "zsh" -> {
+        val bashScript = picocli.AutoComplete.bash("architect", CommandLine(this))
+        println("# Generated zsh completion for architect")
+        println("# Add to ~/.zshrc: eval \"\$(architect completion zsh)\"")
+        println("autoload -U +X bashcompinit && bashcompinit")
+        println("autoload -U +X compinit && compinit")
+        println(bashScript)
+      }
+      "fish" -> {
+        println("# Generated fish completion for architect")
+        println("# Save to: ~/.config/fish/completions/architect.fish")
+        println()
+        // Top-level subcommands
+        val subcommands = listOf(
+          "tasks" to "List available tasks",
+          "info" to "Show project information",
+          "plan" to "Show execution plan for a task",
+          "graph" to "Render task dependency graph",
+          "validate" to "Validate project configuration",
+          "history" to "Show execution history",
+          "run" to "Run a task",
+          "watch" to "Watch and re-run task on changes",
+          "affected" to "List affected projects",
+          "cache" to "Manage task output cache",
+          "engine" to "Manage the Architect Engine",
+          "plugin" to "Manage plugins",
+          "completion" to "Generate shell completion scripts",
+          "upgrade" to "Upgrade architect to the latest release",
+        )
+        subcommands.forEach { (sub, desc) ->
+          println("complete -c architect -f -n '__fish_use_subcommand architect' -a $sub -d '$desc'")
+        }
+        println()
+        // Global flags
+        println("complete -c architect -l json -d 'Output in JSON format'")
+        println("complete -c architect -l no-color -d 'Disable colored output'")
+        println("complete -c architect -l embedded -d 'Run in embedded mode'")
+        println("complete -c architect -l no-daemon -d 'Skip daemon startup'")
+        println("complete -c architect -l watch -s w -d 'Watch and re-run on changes'")
+        println("complete -c architect -l version -s v -d 'Print version information'")
+        println("complete -c architect -l filter -d 'Filter tasks by phase'")
+        println("complete -c architect -l env -d 'Active environment profile'")
+        println("complete -c architect -l affected -d 'Only run for affected projects'")
+        println("complete -c architect -l base -d 'Base ref for affected detection'")
+        println("complete -c architect -l no-cache -d 'Bypass task output cache'")
+      }
+      else -> {
+        println("Unsupported shell: $shell")
+        println("Supported: bash, zsh, fish")
+        exitProcess(1)
+      }
+    }
+  }
+
+  /**
+   * Upgrades the architect CLI to the latest GitHub release.
+   * Usage: architect upgrade [--check]
+   */
+  private fun handleUpgradeCommand() {
+    val checkOnly = args.contains("--check")
+    val currentVersion = javaClass.`package`?.implementationVersion ?: "dev"
+
+    println("Checking for updates...")
+
+    try {
+      val url = java.net.URI("https://api.github.com/repos/architect-platform/architect/releases/latest").toURL()
+      val connection = url.openConnection() as java.net.HttpURLConnection
+      connection.setRequestProperty("Accept", "application/vnd.github.v3+json")
+      connection.setRequestProperty("User-Agent", "architect-cli/$currentVersion")
+      connection.connectTimeout = 10_000
+      connection.readTimeout = 10_000
+
+      if (connection.responseCode != 200) {
+        println("Failed to check for updates (HTTP ${connection.responseCode})")
+        exitProcess(1)
+      }
+
+      val responseBody = connection.inputStream.bufferedReader().readText()
+      val mapper = com.fasterxml.jackson.databind.ObjectMapper()
+        .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+      val release = mapper.readValue(responseBody, Map::class.java)
+
+      val latestTag = release["tag_name"] as? String ?: run {
+        println("Could not determine latest version")
+        exitProcess(1)
+      }
+      val latestVersion = latestTag.removePrefix("v")
+
+      println("Current version : $currentVersion")
+      println("Latest version  : $latestVersion")
+
+      if (currentVersion == latestVersion || currentVersion == "dev") {
+        if (currentVersion == "dev") {
+          println("Running a dev build — skipping upgrade.")
+        } else {
+          println("✅ Already up to date.")
+        }
+        return
+      }
+
+      if (checkOnly) {
+        println("Upgrade available: $latestTag")
+        return
+      }
+
+      println("Upgrading architect from $currentVersion → $latestVersion ...")
+
+      // Detect OS and arch
+      val osName = System.getProperty("os.name").lowercase()
+      val osArch = System.getProperty("os.arch").lowercase()
+      val platform = when {
+        osName.contains("mac") && (osArch.contains("aarch64") || osArch.contains("arm")) -> "macos-arm64"
+        osName.contains("mac") -> "macos-x86_64"
+        osName.contains("linux") && (osArch.contains("aarch64") || osArch.contains("arm")) -> "linux-arm64"
+        osName.contains("linux") -> "linux-x86_64"
+        osName.contains("win") -> "windows-x86_64"
+        else -> {
+          println("Unsupported platform: $osName $osArch")
+          exitProcess(1)
+        }
+      }
+      val assetName = if (osName.contains("win")) "architect-$platform.exe" else "architect-$platform"
+
+      @Suppress("UNCHECKED_CAST")
+      val assets = release["assets"] as? List<Map<String, Any>> ?: emptyList()
+      val asset = assets.firstOrNull { (it["name"] as? String) == assetName } ?: run {
+        println("No release asset found for platform: $platform")
+        println("Available assets:")
+        assets.forEach { a -> println("  - ${a["name"]}") }
+        exitProcess(1)
+      }
+      val downloadUrl = asset["browser_download_url"] as? String ?: run {
+        println("Could not determine download URL for $assetName")
+        exitProcess(1)
+      }
+
+      // Find current binary location
+      val currentBinary = ProcessHandle.current().info().command().orElse(null)
+        ?.let { java.io.File(it) }
+        ?: java.io.File(System.getProperty("user.home"), ".architect/bin/architect")
+
+      val tempFile = java.io.File.createTempFile("architect-upgrade-", if (osName.contains("win")) ".exe" else "")
+      tempFile.deleteOnExit()
+
+      println("Downloading $assetName ...")
+      val dlUrl = java.net.URI(downloadUrl).toURL()
+      val dlConn = dlUrl.openConnection() as java.net.HttpURLConnection
+      dlConn.setRequestProperty("User-Agent", "architect-cli/$currentVersion")
+      dlConn.connectTimeout = 30_000
+      dlConn.readTimeout = 60_000
+      dlConn.inputStream.use { inp -> tempFile.outputStream().use { out -> inp.copyTo(out) } }
+
+      // Verify SHA256 checksum if available
+      val checksumAssetName = "$assetName.sha256"
+      val checksumAsset = assets.firstOrNull { (it["name"] as? String) == checksumAssetName }
+      if (checksumAsset != null) {
+        val checksumUrl = checksumAsset["browser_download_url"] as? String
+        if (checksumUrl != null) {
+          val expectedHash = java.net.URI(checksumUrl).toURL().openStream()
+            .bufferedReader().readText().trim().split("\\s+".toRegex()).first()
+          val digest = java.security.MessageDigest.getInstance("SHA-256")
+          val actualHash = digest.digest(tempFile.readBytes())
+            .joinToString("") { "%02x".format(it) }
+          if (expectedHash != actualHash) {
+            println("❌ Checksum mismatch — upgrade aborted for security")
+            tempFile.delete()
+            exitProcess(1)
+          }
+          println("✅ Checksum verified")
+        }
+      }
+
+      // Replace current binary
+      tempFile.setExecutable(true)
+      val backupFile = java.io.File("${currentBinary.absolutePath}.bak")
+      if (currentBinary.exists()) currentBinary.copyTo(backupFile, overwrite = true)
+      tempFile.copyTo(currentBinary, overwrite = true)
+      backupFile.delete()
+
+      println("✅ Upgraded to $latestVersion")
+    } catch (e: java.net.UnknownHostException) {
+      println("No network access — cannot check for updates")
+      exitProcess(1)
+    } catch (e: Exception) {
+      println("Upgrade failed: ${e.message}")
+      exitProcess(1)
+    }
+  }
+
+  /**
+   * Runs all task precondition checks without executing any task.
+   * Reports which tasks are runnable and which are blocked.
+   * Usage: architect check [task-id]
+   */
+  private fun handleCheckCommand() {
+    val taskFilter = args.getOrNull(1)
+    val projectPath = System.getProperty("user.dir")
+    val projectName = extractProjectName(projectPath)
+
+    val context = io.github.architectplatform.engine.core.execution.EmbeddedExecutionContext.create(
+      remoteContentFetcher = io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher(),
+      activeProfile = embeddedTaskExecutor.activeProfile,
+    )
+    context.projectService.registerProject(projectName, projectPath)
+    val allTasks = context.taskService.getAllTasks(projectName)
+    val checker = io.github.architectplatform.engine.core.tasks.application.TaskConditionChecker()
+
+    val tasksToCheck = if (taskFilter != null) {
+      allTasks.filter { it.id == taskFilter }.also {
+        if (it.isEmpty()) {
+          println("No task found with id '$taskFilter'")
+          exitProcess(1)
+        }
+      }
+    } else {
+      allTasks
+    }
+
+    val results = checker.checkAll(tasksToCheck)
+
+    if (json) {
+      val mapper = com.fasterxml.jackson.databind.ObjectMapper()
+        .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+      println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(results))
+      return
+    }
+
+    val ok = results.filter { it.satisfied }
+    val blocked = results.filter { !it.satisfied }
+
+    println()
+    println("━".repeat(80))
+    println("🔍 Task Precondition Check — $projectName")
+    println("━".repeat(80))
+    println()
+
+    if (blocked.isNotEmpty()) {
+      println("  ❌ BLOCKED (${blocked.size})")
+      println()
+      blocked.forEach { result ->
+        println("  ╔══ ${result.taskId}")
+        result.issues.forEach { issue ->
+          println("  ║  ⚠  ${issue.message}")
+          println("  ║     → ${issue.hint}")
+        }
+        println("  ╚══")
+        println()
+      }
+    }
+
+    if (ok.isNotEmpty()) {
+      println("  ✅ READY (${ok.size})")
+      ok.chunked(4).forEach { chunk ->
+        println("    " + chunk.joinToString("  ") { it.taskId })
+      }
+      println()
+    }
+
+    println("  ${ok.size} ready, ${blocked.size} blocked")
+    println()
+
+    if (blocked.isNotEmpty()) exitProcess(1)
   }
 
   companion object {
