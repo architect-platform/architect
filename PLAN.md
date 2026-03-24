@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 76/350 tasks completed (21.7%)
-Current Phase: Phase 6 — Simplify CI/CD and delivery automation
-Last Updated: 2026-03-24T20:40:00Z
+Overall Progress: 77/350 tasks completed (22.0%)
+Current Phase: Phase 7 — Raise product-surface quality outside the Kotlin core
+Last Updated: 2026-03-24T20:50:00Z
 
 ## Standards and Principles Gaps
 
@@ -302,7 +302,7 @@ Last Updated: 2026-03-24T20:40:00Z
 
 - [ ] Validation
   - [x] Dry-run equivalent CI paths for API, engine, CLI, cloud, and plugin modules. | Finished: 2026-03-24T20:40:00Z | Notes: Replayed the reusable workflow build/test paths locally across representative surfaces. `architect-api/api`, `architect-engine/engine`, `architect-cloud/backend`, `plugins/docs-architected/app`, and `plugins/javascript-architected/app` all pass when run in isolation. `architect-cli/cli` still fails reproducibly with 8 `CliEngineIntegrationTest` assertion failures, confirming the CLI baseline remains red. `architect-cloud/ui` still is not a trustworthy CI surface in this environment: `npm run build` fails with `vite: command not found`, and its `lint`/`test` scripts remain empty. An initial parallel false negative on `docs-architected` was eliminated by rerunning serially because these Gradle builds share included projects.
-  - [ ] Confirm workflow count or repeated step volume drops materially.
+  - [x] Confirm workflow count or repeated step volume drops materially. | Finished: 2026-03-24T20:50:00Z | Notes: Compared the current workflow tree against pre-refactor commit `67b361e4297700e310303219798c884e81a7de35` (the parent of the reusable-workflow introduction). Workflow files increased from 19 to 22 because the shared policy now lives in `reusable-kotlin-pipeline.yml`, `reusable-kotlin-no-release-pipeline.yml`, and the drift-check workflow, but total workflow YAML lines dropped from 1925 to 1226 (~36%). Repeated setup/pipeline steps also fell sharply: checkout 31→11, setup-java 27→6, setup-node 14→3, setup-architect 25→4, and each explicit `architect init|verify|build|test --plain` invocation 13→2.
 
 ## Phase 7 — Raise product-surface quality outside the Kotlin core
 
