@@ -625,7 +625,7 @@ class ArchitectLauncherTest {
     }
   }
 
-  // ─── resolveEngineBinary ──────────────────────────────────────────────────
+  // ─── resolveEngineBinary (now on EngineCommandHandler) ─────────────────────
 
   @Test
   fun `resolveEngineBinary returns local bin path when binary exists and is executable`(
@@ -636,9 +636,13 @@ class ArchitectLauncherTest {
     bin.createNewFile()
     bin.setExecutable(true)
 
-    val launcher = launcher()
+    val handler = io.github.architectplatform.cli.command.EngineCommandHandler(
+      engineCommandClient = StubEngineCommandClient(),
+      engineHealthChecker = stubHealthChecker(running = false),
+      extractProjectName = { it.substringAfterLast("/") },
+    )
     withUserHome(tmpDir.toAbsolutePath().toString()) {
-      assertEquals(bin.absolutePath, launcher.resolveEngineBinary())
+      assertEquals(bin.absolutePath, handler.resolveEngineBinary())
     }
   }
 
@@ -651,9 +655,13 @@ class ArchitectLauncherTest {
     bin.createNewFile()
     bin.setExecutable(false) // not executable
 
-    val launcher = launcher()
+    val handler = io.github.architectplatform.cli.command.EngineCommandHandler(
+      engineCommandClient = StubEngineCommandClient(),
+      engineHealthChecker = stubHealthChecker(running = false),
+      extractProjectName = { it.substringAfterLast("/") },
+    )
     withUserHome(tmpDir.toAbsolutePath().toString()) {
-      val result = launcher.resolveEngineBinary()
+      val result = handler.resolveEngineBinary()
       // The non-executable file must NOT be returned; PATH result is fine (null if not installed)
       assertNotEquals(bin.absolutePath, result)
     }
@@ -661,23 +669,28 @@ class ArchitectLauncherTest {
 
   @Test
   fun `resolveEngineBinary returns null when binary absent and not on PATH`(@TempDir tmpDir: Path) {
-    // Fresh temp dir has no .architect/bin/architect-engine
-    // PATH lookup: if architect-engine is installed on the test machine we get a non-null result,
-    // otherwise null. We just verify it doesn't throw and either branch is acceptable.
-    val launcher = launcher()
+    val handler = io.github.architectplatform.cli.command.EngineCommandHandler(
+      engineCommandClient = StubEngineCommandClient(),
+      engineHealthChecker = stubHealthChecker(running = false),
+      extractProjectName = { it.substringAfterLast("/") },
+    )
     withUserHome(tmpDir.toAbsolutePath().toString()) {
-      val result = launcher.resolveEngineBinary()
+      val result = handler.resolveEngineBinary()
       assertTrue(result == null || result.isNotBlank(), "Expected null or a valid path, got: $result")
     }
   }
 
   @Test
   fun `resolveEngineBinary returns null when user home is unavailable`() {
-    val launcher = launcher()
+    val handler = io.github.architectplatform.cli.command.EngineCommandHandler(
+      engineCommandClient = StubEngineCommandClient(),
+      engineHealthChecker = stubHealthChecker(running = false),
+      extractProjectName = { it.substringAfterLast("/") },
+    )
     val original = System.getProperty("user.home")
     System.clearProperty("user.home")
     try {
-      assertNull(launcher.resolveEngineBinary())
+      assertNull(handler.resolveEngineBinary())
     } finally {
       System.setProperty("user.home", original)
     }

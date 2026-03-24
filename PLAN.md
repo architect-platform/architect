@@ -1,7 +1,7 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 94/350 tasks completed (26.9%)
+Overall Progress: 95/350 tasks completed (27.1%)
 Current Phase: Phase 9 — Refactor for simplicity, readability, and smaller units
 Last Updated: 2026-03-25T03:15:00Z
 
@@ -360,7 +360,7 @@ Last Updated: 2026-03-25T03:15:00Z
 
 - [x] Tasks
   - [x] Identify the highest-cognitive-load classes/modules by size, branching, and overlapping responsibility. | Finished: 2026-03-25T03:30:00Z | Notes: Analyzed 187 Kotlin files across 6 modules. Found 6 high-complexity classes: ArchitectLauncher (1609 lines, 157 branches, 8 domains — critical), PluginScaffolder (410 lines), ProjectService (312 lines, 6 domains), ConsoleUI (300 lines), ProcessPluginAdapter (266 lines, 5 domains), TaskExecutor (220 lines, 6 domains). Documented findings in analysis.md.
-  - [ ] Split overloaded classes into clearer collaborators with narrower responsibilities.
+  - [x] Split overloaded classes into clearer collaborators with narrower responsibilities. | Finished: 2026-03-25T04:15:00Z | Notes: Extracted 6 handler classes from ArchitectLauncher (1609→570 lines, 65% reduction): EngineCommandHandler (138), PluginCommandHandler (228), CacheCommandHandler (50), CheckCommandHandler (85), OutputFormatter (264), CliInfrastructureHandler (195). All 15 CLI tests pass green.
   - [ ] Rename ambiguous types, packages, and modules to better express intent.
   - [ ] Flatten deeply nested or redundant package structures where they hinder comprehension.
   - [ ] Remove stale abstractions, duplicate wrappers, and “utility dumping ground” patterns.
