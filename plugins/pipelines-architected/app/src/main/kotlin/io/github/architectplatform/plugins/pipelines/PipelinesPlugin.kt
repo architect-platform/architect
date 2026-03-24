@@ -33,6 +33,7 @@ class PipelinesPlugin : ArchitectPlugin<PipelinesContext> {
     companion object {
         private val log = LoggerFactory.getLogger(PipelinesPlugin::class.java)
     }
+
     override val id = "pipelines-plugin"
     override val contextKey: String = "pipelines"
     override val ctxClass: Class<PipelinesContext> = PipelinesContext::class.java

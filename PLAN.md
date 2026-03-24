@@ -1,9 +1,9 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 56/288 tasks completed (19.4%)
+Overall Progress: 57/288 tasks completed (19.8%)
 Current Phase: Phase 5 — Standardize the plugin platform
-Last Updated: 2026-03-24T16:08:55Z
+Last Updated: 2026-03-24T16:15:01Z
 
 ## Executive Summary
 
@@ -497,7 +497,7 @@ The repository currently contains several categories of assets:
     - [x] plugin contract test
     - [x] version alignment
     - [x] release/publish metadata
-  - [ ] Apply the standard to all mature plugins first.
+  - [x] Apply the standard to all mature plugins first. | Finished: 2026-03-24T16:15:01Z | Notes: Applied baseline standardization to mature plugins by adding missing `STATUS.md` files for `docs-architected`, `git-architected`, `gradle-architected`, `scripts-architected`, `github-architected`, and `pipelines-architected`; added missing contract tests for docs/github/pipelines plugins; and fixed `pipelines-architected` compile drift by restoring its SLF4J API dependency needed by existing logger usage. Validated via targeted contract test runs in each updated mature plugin module.
   - [ ] For thin/template plugins, choose one:
     - [ ] promote and complete
     - [ ] mark experimental
