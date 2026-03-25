@@ -1,738 +1,277 @@
 # Architect
 
-A powerful, plugin-based task execution framework for automating project workflows, CI/CD pipelines, and development operations.
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.org/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.9.25-purple.svg)](https://kotlinlang.org/)
+[![API Build](https://github.com/architect-platform/architect/actions/workflows/architect-api-pipeline.yml/badge.svg)](https://github.com/architect-platform/architect/actions/workflows/architect-api-pipeline.yml)
 
-## Overview
+Architect is a plugin-based task execution framework for automating project
+workflows. It provides a unified CLI and an optional REST API for managing
+documentation, releases, builds, tests, and deployments across technology stacks
+through an extensible plugin architecture. Written in Kotlin, it runs on the JVM
+and uses a YAML-driven configuration model (`architect.yml`).
 
-Architect is a comprehensive automation platform that brings **convention over configuration** to your development workflow. It provides a unified way to manage documentation, releases, builds, tests, and deployment across diverse technology stacks through an extensible plugin architecture.
+## Repository Topology
 
-### Key Features
-
-- 🔌 **Plugin Architecture**: Extensible system with support for custom plugins
-- 📋 **Task Management**: Organize work into phases with dependency resolution
-- 🔄 **Workflow Automation**: Pre-built workflows for common development tasks
-- 🚀 **CI/CD Integration**: Seamless integration with GitHub Actions and other CI platforms
-- 📚 **Documentation Management**: Multi-framework documentation building and publishing
-- 🔐 **Security First**: Built-in security validation and best practices
-- 🎯 **Convention Based**: Sensible defaults with full customization options
-
-## Architecture
-
-Architect consists of four core platform components, plus product surfaces, plugins, and SDKs:
+> **There is no root Gradle wrapper.** Each module is independently built from
+> its own directory. See [STATUS.md](STATUS.md) for the complete support matrix.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      Architect CLI                           │
-│  Command-line interface for project interaction              │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Architect Engine                          │
-│  REST API server for task execution and project management   │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Architect Core                            │
-│  Shared runtime: plugin loading, execution, config, secrets  │
-└─────────────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     Architect API                            │
-│  Core abstractions and interfaces for plugin development     │
-└─────────────────────────────────────────────────────────────┘
-             │
-             ▼
-      ┌────────────┴────────────┐
-      ▼                          ▼
-  ┌──────────────┐          ┌──────────────┐
-  │ Official     │          │ Third-party  │
-  │ Plugins      │          │ Plugins      │
-  └──────────────┘          └──────────────┘
+architect/
+├── architect-api/api/            Core contracts & SPI                      [active]
+├── architect-core/core/          Shared runtime (plugin loading, config)   [active]
+├── architect-engine/engine/      REST API execution host (Micronaut)       [incubating]
+├── architect-cli/cli/            Command-line interface (PicoCLI)          [incubating]
+├── architect-cloud/              Cloud product surface
+│   ├── backend/                    Hexagonal backend service               [beta]
+│   ├── ui/                         Web UI                                  [incubating]
+│   └── agents/                     AI agent integrations                   [incubating]
+├── architect-vscode/             VS Code extension (reference)             [incubating]
+├── architect-intellij/           IntelliJ plugin (reference)               [incubating]
+├── plugins/                      Official plugins (16)
+│   ├── docs-architected/           Docs (MkDocs, Docusaurus, VuePress)    [active]
+│   ├── git-architected/            Git integration                        [active]
+│   ├── github-architected/         GitHub CI/CD & releases                [active]
+│   ├── gradle-architected/         Gradle build integration               [active]
+│   ├── scripts-architected/        Custom shell scripts                   [active]
+│   ├── pipelines-architected/      Pipeline management                    [active]
+│   ├── javascript-architected/     npm / yarn / pnpm                      [incubating]
+│   ├── architecture-architected/   Architecture validation                [incubating]
+│   ├── docker-architected/         Docker                                 [incubating]
+│   ├── go-architected/             Go builds                              [incubating]
+│   ├── kubernetes-architected/     Kubernetes                             [incubating]
+│   ├── maven-architected/          Maven builds                           [incubating]
+│   ├── nx-architected/             Nx monorepo                            [incubating]
+│   ├── python-architected/         Python tooling                         [incubating]
+│   ├── rust-architected/           Rust tooling                           [incubating]
+│   └── terraform-architected/      Terraform                              [incubating]
+├── sdk/                          Language SDKs for plugin authoring
+│   ├── typescript/                                                        [incubating]
+│   ├── python/                                                            [incubating]
+│   └── go/                                                                [incubating]
+├── docs/                         MkDocs documentation source              [active]
+├── homebrew/                     Homebrew formula for CLI                  [active]
+├── gradle/                       Shared Gradle conventions & version catalog
+├── scripts/                      Repo maintenance scripts
+├── architect.yml                 Root project configuration
+└── mkdocs.yml                    Documentation site configuration
 ```
 
-### Components
-
-- **[Architect API](architect-api/)**: Active contracts library for task/plugin interfaces
-- **[Architect Core](architect-core/)**: Active shared runtime used by CLI and Engine
-- **[Architect Engine](architect-engine/)**: Incubating execution host and REST API server
-- **[Architect CLI](architect-cli/)**: Incubating end-user command-line interface
-- **[Architect Cloud](architect-cloud/)**: Product surface (backend beta, UI incubating)
-- **[Architect VS Code](architect-vscode/)** and **[Architect IntelliJ](architect-intellij/)**: Incubating IDE/editor reference integrations, not yet supported products
-- **[Plugins](plugins/)**: Official plugin ecosystem (mixed active and incubating maturity)
-- **[SDKs](sdk/)**: Language SDKs (currently incubating)
-
-Support status for all modules is tracked in [STATUS.md](STATUS.md).
+**Note:** Incubating plugins without a version number in STATUS.md are
+template-level scaffolds — they define the plugin structure and configuration
+schema but have minimal or no runtime implementation.
 
 ## Quick Start
 
 ### Prerequisites
 
 - Java 17 or higher
-- Gradle 8.x (included via wrapper)
 - Git
 
-###  One‑Line Installer Script
+### Install the CLI
+
+**Homebrew (macOS):**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/architect-platform/architect/main/architect-cli/.installers/bash | bash
+brew tap architect-platform/architect
+brew install architect
 ```
 
-## Optional: Install & Run the Engine
+**From source:**
+
 ```bash
-architect engine install
-architect engine start
-# architect engine stop/clean
+cd architect-cli/cli
+./gradlew installDist
+# Binary: build/install/cli/bin/cli
 ```
 
-## Embedded Mode (No Engine Required)
-```bash
-architect --embedded build
-# or automatic fallback when daemon is unavailable
-architect --no-daemon build
-```
+### Create a Project
 
-### Your First Project
-
-1. **Create a project configuration** (`architect.yml`):
+Create an `architect.yml` in your project root:
 
 ```yaml
 project:
-  name: my-awesome-project
-  description: "My first Architect project"
+  name: my-project
+  description: "My project"
 
 plugins:
   - name: git-architected
     repo: architect-platform/architect
-  - name: github-architected
-    repo: architect-platform/architect
   - name: docs-architected
     repo: architect-platform/architect
 
-git:
-  config:
-    user.name: "Your Name"
-    user.email: "your.email@example.com"
-
 docs:
   build:
     framework: "mkdocs"
-    siteName: "My Project Documentation"
-    siteAuthor: "Your Name"
+    siteName: "My Project Docs"
   publish:
     enabled: true
     githubPages: true
 ```
 
-2. **Initialize your project:**
-```bash
-architect init
-```
-
-3. **Run tasks:**
-```bash
-# Build documentation
-architect docs-build
-
-# Publish to GitHub Pages
-architect docs-publish
-```
-
-## Available Plugins
-
-Architect includes a mature official plugin set and an incubating set.
-See [STATUS.md](STATUS.md) for the current support tier of each plugin.
-
-### Core Plugins
-
-#### [git-architected](plugins/git-architected/)
-Integrates Git version control operations with Architect workflows.
-
-**Features:**
-- Configure Git settings through Architect
-- Execute Git commands via Architect CLI
-- Workflow integration for Git operations
-
-**Example:**
-```yaml
-git:
-  config:
-    user.name: "John Doe"
-    user.email: "john@example.com"
-```
-
-#### [github-architected](plugins/github-architected/)
-Provides GitHub-specific automation for CI/CD pipelines, releases, and dependency management.
-
-**Features:**
-- Automated release management with semantic-release
-- GitHub Actions workflow initialization
-- Renovate configuration for dependency updates
-
-**Example:**
-```yaml
-github:
-  release:
-    enabled: true
-    assets:
-      - name: "app.jar"
-        path: "build/libs/app.jar"
-  pipelines:
-    - name: "ci"
-      type: "standard"
-      branch: "main"
-```
-
-#### [gradle-architected](plugins/gradle-architected/)
-Integrates Gradle build automation with Architect workflows.
-
-**Features:**
-- Multi-project Gradle builds
-- Task execution and lifecycle management
-- Build configuration through Architect
-
-#### [javascript-architected](plugins/javascript-architected/)
-Integrates JavaScript/Node.js package managers with Architect workflows.
-
-**Features:**
-- Support for npm, yarn, and pnpm
-- Standard JavaScript workflows (install, build, test, lint)
-- Custom working directory configuration
-
-**Example:**
-```yaml
-javascript:
-  packageManager: "npm"
-  workingDirectory: "."
-```
-
-#### [docs-architected](plugins/docs-architected/)
-Comprehensive documentation management with multi-framework support.
-
-**Features:**
-- Multiple frameworks: MkDocs, Docusaurus, VuePress
-- GitHub Pages publishing
-- Custom domain support
-- Template-based configuration
-- Automated workflow generation
-
-**Example:**
-```yaml
-docs:
-  build:
-    framework: "mkdocs"
-    siteName: "My Documentation"
-    siteDescription: "Complete project guide"
-    siteAuthor: "Dev Team"
-    repoUrl: "https://github.com/user/repo"
-    primaryColor: "blue"
-  publish:
-    enabled: true
-    githubPages: true
-    domain: "docs.myproject.com"
-```
-
-#### [scripts-architected](plugins/scripts-architected/) ⭐ NEW
-Execute custom shell scripts with full workflow integration.
-
-**Features:**
-- Define custom scripts in configuration
-- Attach scripts to workflow phases (INIT, BUILD, TEST, etc.)
-- Standalone script execution
-- Environment variable support
-- Custom working directory configuration
-- Command-line argument passing
-
-**Example:**
-```yaml
-scripts:
-  scripts:
-    build:
-      command: "npm run build"
-      description: "Build the application"
-      phase: "BUILD"
-    deploy:
-      command: "./deploy.sh"
-      description: "Deploy to production"
-      phase: "PUBLISH"
-      environment:
-        ENV: "production"
-        REGION: "us-east-1"
-    custom:
-      command: "echo 'Custom task'"
-      description: "Standalone custom script"
-```
-
-## Use Cases
-
-### Documentation Automation
-
-Architect makes documentation a first-class citizen:
+Run tasks:
 
 ```bash
-# Initialize documentation structure
-architect docs-init
-
-# Write your docs in docs/
-
-# Build and preview
-architect docs-build
-
-# Publish to GitHub Pages
-architect docs-publish
+architect              # List available tasks
+architect docs-build   # Build documentation
+architect docs-publish # Publish to GitHub Pages
 ```
 
-### Release Management
+### Optional: Run the Engine
 
-Automate your release process:
-
-```yaml
-github:
-  release:
-    enabled: true
-    message: "chore(release): ${nextRelease.version}"
-    assets:
-      - name: "distribution.zip"
-        path: "build/distributions/*.zip"
-```
+The CLI can operate standalone (embedded mode) or connect to the Engine for
+persistent project management:
 
 ```bash
-architect github-release-task
+architect engine install
+architect engine start
+# architect engine stop
 ```
 
-### CI/CD Integration
-
-Generate GitHub Actions workflows:
-
-```yaml
-github:
-  pipelines:
-    - name: "build-and-test"
-      type: "standard"
-      branch: "main"
-      path: "src/**"
-```
-
-```bash
-architect github-init-pipelines
-```
-
-### Multi-Project Management
-
-Handle complex project structures:
-
-```yaml
-gradle:
-  projects:
-    - name: backend
-      path: backend/
-    - name: frontend
-      path: frontend/
-    - name: shared
-      path: shared/
-```
-
-## Configuration
-
-### Project Configuration File
-
-Every Architect project uses an `architect.yml` file:
-
-```yaml
-project:
-  name: project-name
-  description: "Project description"
-
-plugins:
-  - name: plugin-name
-    repo: owner/repository
-
-# Plugin-specific configuration
-plugin-name:
-  setting: value
-```
-
-### Global Settings
-
-Configure the engine through `architect-engine/src/main/resources/application.yml`:
-
-```yaml
-micronaut:
-  server:
-    port: 9292
-
-engine:
-  project:
-    cache:
-      enabled: true
-```
-
-## Workflows
-
-Architect organizes tasks into workflow phases:
-
-### Core Workflow
+## Architecture
 
 ```
-INIT → LINT → VERIFY → BUILD → TEST/RUN → RELEASE → PUBLISH
+┌──────────────────────────────────────────────────────────┐
+│                     Architect CLI                         │
+│              (PicoCLI command-line interface)             │
+└──────────────────────┬───────────────────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────────────────┐
+│                   Architect Engine                        │
+│            (Micronaut REST API — optional)                │
+└──────────────────────┬───────────────────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────────────────┐
+│                    Architect Core                         │
+│      (Plugin loading, execution, config, secrets)        │
+└──────────────────────┬───────────────────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────────────────┐
+│                     Architect API                         │
+│         (Contracts, interfaces, SPI for plugins)         │
+└──────────────────────┬───────────────────────────────────┘
+                       │
+           ┌───────────┴───────────┐
+           ▼                       ▼
+    ┌─────────────┐         ┌─────────────┐
+    │  Official   │         │  Language    │
+    │  Plugins    │         │  SDKs       │
+    │  (16)       │         │  (3)        │
+    └─────────────┘         └─────────────┘
 ```
 
-**Phases:**
-- **INIT**: Initialize project structure and configuration
-- **LINT**: Code quality checks and linting
-- **VERIFY**: Security scans and validation
-- **BUILD**: Compile and build artifacts
-- **TEST/RUN**: Execute tests or run application
-- **RELEASE**: Version tagging and release preparation
-- **PUBLISH**: Deploy and publish artifacts
+### Workflow Phases
 
-### Hooks Workflow
+Tasks are organized into a linear workflow:
 
-Git hook integration:
+```
+INIT → LINT → VERIFY → BUILD → TEST → RUN → RELEASE → PUBLISH
+```
+
+Plugins register tasks against these phases. A hooks workflow integrates with
+Git:
 
 ```
 PRE_COMMIT → PREPARE_COMMIT_MSG → COMMIT_MSG → POST_COMMIT → PRE_PUSH
 ```
 
-## Development
+## Support Tiers
 
-### Project Structure
+See [STATUS.md](STATUS.md) for the complete module-by-module support matrix.
 
-```
-architect/
-├── architect-api/          # Core API and interfaces
-├── architect-cli/          # Command-line interface
-├── architect-engine/       # Execution engine (REST API)
-├── architect-cloud/        # Secondary product (backend beta, UI incubating)
-├── architect-vscode/       # Incubating VS Code extension
-├── architect-intellij/     # Incubating IntelliJ plugin
-├── plugins/                # Official plugins
-│   ├── git-architected/
-│   ├── github-architected/
-│   ├── gradle-architected/
-│   └── docs-architected/
-├── architect.yml           # Root project configuration
-└── README.md              # This file
-```
+| Tier            | Meaning                                                    |
+| --------------- | ---------------------------------------------------------- |
+| **active**      | Fully supported, tests passing, versioned, maintained      |
+| **beta**        | Feature-complete but not yet stabilised; tests pass        |
+| **incubating**  | Work in progress; partial features, possibly failing tests |
+| **placeholder** | Scaffolded but not implemented                             |
+| **deprecated**  | Scheduled for removal                                      |
 
-Incubating areas are intentionally called out above so they are not mistaken
-for production-stable surfaces.
+**Current state:** The API and Core are active and stable. The CLI and Engine
+are incubating with known compilation issues (see STATUS.md). Six plugins are
+active; ten are incubating at template level. All three language SDKs are
+incubating.
 
-### Building Components
+## Building
 
-> There is no root Gradle wrapper or supported root build/test orchestrator. Each module is independently built from its own directory.
+There is no root Gradle wrapper. Each module is built independently:
 
 ```bash
-# Build the API library
-cd architect-api/api && ./gradlew build
+# Core platform (active — tests pass)
+cd architect-api/api      && ./gradlew build
+cd architect-core/core    && ./gradlew build
 
-# Build the core runtime
-cd architect-core/core && ./gradlew build
-
-# Build the engine
+# CLI and Engine (incubating — compilation currently broken)
+cd architect-cli/cli      && ./gradlew build
 cd architect-engine/engine && ./gradlew build
 
-# Build the CLI
-cd architect-cli/cli && ./gradlew build
-
-# Run tests for a specific module
-cd architect-engine/engine && ./gradlew test
-
-# Run tests with coverage
-cd architect-api/api && ./gradlew test jacocoTestReport
+# Cloud backend (beta — tests pass)
+cd architect-cloud/backend && ./gradlew build
 ```
 
-The root `architect.yml` configures documentation and automation metadata; it is
-not a repository-wide build runner.
+Each `./gradlew build` runs compilation, tests, and static analysis (Detekt).
 
-### Creating a Custom Plugin
-
-1. **Create plugin structure:**
-```
-my-plugin/
-├── app/
-│   ├── src/main/kotlin/com/example/MyPlugin.kt
-│   └── src/main/resources/
-│       └── META-INF/services/
-│           └── io.github.architectplatform.api.core.plugins.ArchitectPlugin
-└── architect.yml
-```
-
-2. **Implement the plugin:**
-```kotlin
-class MyPlugin : ArchitectPlugin<MyContext> {
-    override val id = "my-plugin"
-    override val contextKey = "myplugin"
-    override val ctxClass = MyContext::class.java
-    override var context: MyContext = MyContext()
-
-    override fun register(registry: TaskRegistry) {
-        registry.add(SimpleTask(
-            id = "my-task",
-            description = "My custom task",
-            phase = CoreWorkflow.BUILD,
-            task = ::executeMyTask
-        ))
-    }
-
-    private fun executeMyTask(
-        environment: Environment,
-        projectContext: ProjectContext
-    ): TaskResult {
-        // Task implementation
-        return TaskResult.success("Task completed!")
-    }
-}
-```
-
-3. **Register the plugin:**
-```
-# In META-INF/services/io.github.architectplatform.api.core.plugins.ArchitectPlugin
-com.example.MyPlugin
-```
-
-## CLI Commands
-
-### Project Commands
+## Testing
 
 ```bash
-# Show available tasks
-architect
+# Unit tests for stable modules
+cd architect-api/api       && ./gradlew test              # passes
+cd architect-core/core     && ./gradlew test              # 179 tests
 
-# Execute a task
-architect <task-name> [args...]
+# Test with coverage report
+cd architect-api/api       && ./gradlew test jacocoTestReport
 
-# Run in plain mode (for CI)
-architect --plain <task-name>
+# Cloud backend
+cd architect-cloud/backend && ./gradlew test              # 57 tests
+
+# IDE extensions
+cd architect-vscode        && npm test                    # 3 tests
+cd architect-intellij      && ./gradlew test              # 4 tests
+
+# Repo-level checks
+./scripts/convention-check.sh
+./scripts/release-readiness-check.sh
 ```
 
-### Engine Management
+See `docs/guides/testing-standard.md` for the full testing matrix.
+
+## Documentation
+
+The documentation site uses [MkDocs](https://www.mkdocs.org/) with the Material
+theme and the monorepo plugin:
 
 ```bash
-# Install engine (optional)
-architect engine install
+# Install dependencies
+pip install mkdocs mkdocs-material mkdocs-monorepo-plugin
 
-# Start engine
-architect engine start
+# Serve locally (http://127.0.0.1:8000)
+mkdocs serve
 
-# Stop engine
-architect engine stop
-
-# Clean engine data
-architect engine clean
+# Build static site (output: site/)
+mkdocs build
 ```
 
-### Plugin-Specific Commands
-
-```bash
-# Git commands
-architect git-status
-architect git-add -- .
-architect git-commit -- -m "message"
-
-# Documentation
-architect docs-init
-architect docs-build
-architect docs-publish
-
-# GitHub
-architect github-init-pipelines
-architect github-release-task
-```
-
-## REST API
-
-The Architect Engine exposes a RESTful API:
-
-### Projects
-
-- `GET /api/projects` - List all projects
-- `POST /api/projects` - Register a project
-- `GET /api/projects/{name}` - Get project details
-
-### Tasks
-
-- `GET /api/projects/{projectName}/tasks` - List tasks
-- `POST /api/projects/{projectName}/tasks/{taskName}` - Execute task
-
-### Execution
-
-- `GET /api/executions/{executionId}/events` - Stream execution events (SSE)
-
-## Examples
-
-### Example 1: Simple Documentation Project
-
-```yaml
-project:
-  name: docs-only
-
-plugins:
-  - name: docs-architected
-    repo: architect-platform/architect
-
-docs:
-  build:
-    framework: "mkdocs"
-    siteName: "Simple Docs"
-  publish:
-    enabled: true
-    githubPages: true
-```
-
-### Example 2: Full-Stack Project
-
-```yaml
-project:
-  name: fullstack-app
-
-plugins:
-  - name: git-architected
-    repo: architect-platform/architect
-  - name: github-architected
-    repo: architect-platform/architect
-  - name: gradle-architected
-    repo: architect-platform/architect
-  - name: docs-architected
-    repo: architect-platform/architect
-
-gradle:
-  projects:
-    - name: backend
-      path: backend/
-    - name: frontend
-      path: frontend/
-
-github:
-  pipelines:
-    - name: ci
-      type: standard
-      branch: main
-  release:
-    enabled: true
-
-docs:
-  build:
-    framework: "docusaurus"
-    siteName: "Full Stack App"
-  publish:
-    enabled: true
-```
-
-### Example 3: Open Source Project
-
-```yaml
-project:
-  name: open-source-project
-  description: "An awesome open source project"
-
-plugins:
-  - name: git-architected
-    repo: architect-platform/architect
-  - name: github-architected
-    repo: architect-platform/architect
-  - name: docs-architected
-    repo: architect-platform/architect
-
-git:
-  config:
-    user.name: "OSS Bot"
-    user.email: "bot@project.org"
-
-github:
-  pipelines:
-    - name: ci
-      type: standard
-      branch: main
-    - name: docs
-      type: docs
-      branch: main
-  deps:
-    type: renovate
-    enabled: true
-  release:
-    enabled: true
-    assets:
-      - name: "release.jar"
-        path: "build/libs/*.jar"
-
-docs:
-  build:
-    framework: "mkdocs"
-    siteName: "Project Documentation"
-    siteDescription: "Comprehensive project guide"
-    repoUrl: "https://github.com/user/project"
-    repoName: "user/project"
-    primaryColor: "green"
-  publish:
-    enabled: true
-    githubPages: true
-    domain: "docs.project.org"
-```
+The navigation structure is defined in `mkdocs.yml`. Component docs are pulled
+in from `architect-api/`, `architect-engine/`, and `architect-cli/` via the
+monorepo plugin.
 
 ## Contributing
 
-We welcome contributions! Please see our contributing guidelines:
+We welcome contributions. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for
+guidelines on:
 
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
-3. **Commit your changes** (`git commit -m 'feat: add amazing feature'`)
-4. **Push to the branch** (`git push origin feature/amazing-feature`)
-5. **Open a Pull Request**
+- Bug reports and feature requests
+- Pull request workflow (fork → branch → test → PR)
+- Coding standards (Kotlin, 2-space indent, 120-char lines)
+- Conventional Commits format (`feat:`, `fix:`, `docs:`, etc.)
 
-### Commit Convention
-
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
-
-## Community
-
-- **Issues**: [GitHub Issues](https://github.com/architect-platform/architect/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/architect-platform/architect/discussions)
-- **Documentation**: Check individual component READMEs
-
-## Roadmap
-
-- [ ] Additional plugins (Maven, npm, Docker, Kubernetes)
-- [ ] Web UI for engine management
-- [ ] Plugin marketplace
-- [ ] Enhanced CI/CD integrations
-- [ ] Native binary distributions
+Development prerequisites: Java 17+, Gradle 8.x (via wrapper), Git,
+Node.js 18+ (for VS Code extension / Cloud UI), Python 3.x (for docs).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-Built with:
-- [Kotlin](https://kotlinlang.org/) - Modern programming language
-- [Micronaut](https://micronaut.io/) - Lightweight framework
-- [Gradle](https://gradle.org/) - Build automation
-- [PicoCLI](https://picocli.info/) - CLI framework
-
-## Support
-
-- 📖 **Documentation**: See individual component READMEs
-- 💬 **Community**: GitHub Discussions
-- 🐛 **Issues**: GitHub Issues
-- ✉️ **Contact**: Open an issue for questions
-
----
-
-**Made with ❤️ by the Architect Platform Team**
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for
+details.
