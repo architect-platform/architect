@@ -1,7 +1,7 @@
 # Architect Repository — Consistency, Self-Hosting & Reference Quality Plan
 
 ## Status
-Overall Progress: 8/85 tasks completed (9%)
+Overall Progress: 13/85 tasks completed (15%)
 Current Phase: Phase 1
 Last Updated: 2026-03-25T19:20:00Z
 
@@ -16,7 +16,7 @@ Transform the Architect repository into a **reference monorepo** that:
 ---
 
 ## Phase 1 — Module Structure Consistency
-Phase Status: in_progress (8/14 tasks)
+Phase Status: in_progress (13/14 tasks)
 
 Every module gets the same structural skeleton: README.md, architect.yml, docs/, STATUS.md.
 
@@ -33,11 +33,11 @@ Every module gets the same structural skeleton: README.md, architect.yml, docs/,
   - [x] Add docs/ directory to architect-cloud/backend and architect-cloud/ui | Finished: 2026-03-25T19:36:00Z with index.md
 
 ### IDE & SDK Gaps
-  - [ ] Add architect.yml to architect-vscode with javascript-architected plugin
-  - [ ] Add architect.yml to architect-intellij with gradle-architected plugin
-  - [ ] Add docs/ directory to architect-vscode and architect-intellij with index.md each
-  - [ ] Add architect.yml to sdk/typescript/plugin-sdk, sdk/python/architect-plugin-sdk, sdk/go/plugin-sdk-go
-  - [ ] Add docs/ directory to each SDK module with index.md
+  - [x] Add architect.yml to architect-vscode with javascript-architected | Finished: 2026-03-25T19:37:00Z plugin
+  - [x] Add architect.yml to architect-intellij with gradle-architected | Finished: 2026-03-25T19:37:00Z plugin
+  - [x] Add docs/ directory to architect-vscode and architect-intellij | Finished: 2026-03-25T19:37:00Z with index.md each
+  - [x] Add architect.yml to sdk/typescript | Finished: 2026-03-25T19:37:00Z/plugin-sdk, sdk/python/architect-plugin-sdk, sdk/go/plugin-sdk-go
+  - [x] Add docs/ directory to each SDK module | Finished: 2026-03-25T19:37:00Z with index.md
 
 ### Validation
   - [ ] Run audit: every module has README.md, architect.yml, docs/index.md, STATUS.md — zero exceptions
@@ -158,7 +158,7 @@ All 16 plugins follow the exact same internal patterns.
   - [ ] Run contract tests for all 16 plugins — all pass
 
 ## Phase 7 — Reference Quality Polish
-Phase Status: in_progress (8/14 tasks)
+Phase Status: in_progress (13/14 tasks)
 
 Final polish to make the repository a true reference for complex monorepo management.
 

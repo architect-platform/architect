@@ -1,0 +1,15 @@
+project:
+  name: architect-intellij
+  description: "IntelliJ IDEA plugin for the Architect platform"
+
+plugins:
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
+
+github:
+  pipelines:
+    - name: "ci"
+      type: "pipeline"
+      branch: "main"

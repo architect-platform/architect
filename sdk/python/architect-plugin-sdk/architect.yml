@@ -1,0 +1,21 @@
+project:
+  name: architect-python-sdk
+  description: "Python Plugin SDK for the Architect platform"
+
+plugins:
+  - name: python-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
+
+python:
+  tool: uv
+  pythonVersion: "3.11"
+  testRunner: pytest
+  enabled: true
+
+github:
+  pipelines:
+    - name: "ci"
+      type: "pipeline"
+      branch: "main"

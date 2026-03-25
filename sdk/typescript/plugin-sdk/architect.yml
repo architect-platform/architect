@@ -1,0 +1,19 @@
+project:
+  name: architect-typescript-sdk
+  description: "TypeScript Plugin SDK for the Architect platform"
+
+plugins:
+  - name: javascript-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
+
+javascript:
+  packageManager: npm
+  workingDirectory: .
+
+github:
+  pipelines:
+    - name: "ci"
+      type: "pipeline"
+      branch: "main"

@@ -1,0 +1,19 @@
+project:
+  name: architect-go-sdk
+  description: "Go Plugin SDK for the Architect platform"
+
+plugins:
+  - name: go-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
+
+go:
+  module: github.com/architect-platform/plugin-sdk-go
+  enabled: true
+
+github:
+  pipelines:
+    - name: "ci"
+      type: "pipeline"
+      branch: "main"
