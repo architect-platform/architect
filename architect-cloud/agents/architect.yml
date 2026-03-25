@@ -1,0 +1,11 @@
+project:
+  name: architect-cloud-agents
+  description: "Docker Compose and Kubernetes agent definitions for remote Architect execution"
+
+plugins:
+  - name: docker-architected
+    repo: architect-platform/architect
+  - name: scripts-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect

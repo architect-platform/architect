@@ -1,0 +1,9 @@
+project:
+  name: architect-cloud-api
+  description: "Shared API types and contracts for the Architect Cloud platform"
+
+plugins:
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect

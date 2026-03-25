@@ -1,7 +1,7 @@
 # Architect Repository — Consistency, Self-Hosting & Reference Quality Plan
 
 ## Status
-Overall Progress: 4/85 tasks completed (5%)
+Overall Progress: 8/85 tasks completed (9%)
 Current Phase: Phase 1
 Last Updated: 2026-03-25T19:20:00Z
 
@@ -16,7 +16,7 @@ Transform the Architect repository into a **reference monorepo** that:
 ---
 
 ## Phase 1 — Module Structure Consistency
-Phase Status: in_progress (4/14 tasks)
+Phase Status: in_progress (8/14 tasks)
 
 Every module gets the same structural skeleton: README.md, architect.yml, docs/, STATUS.md.
 
@@ -27,10 +27,10 @@ Every module gets the same structural skeleton: README.md, architect.yml, docs/,
   - [x] Add STATUS.md to architect-api | Finished: 2026-03-25T19:35:00Z (active tier, version 2.2.0)
 
 ### Cloud Sub-Module Gaps
-  - [ ] Add README.md and architect.yml to architect-cloud/agents
-  - [ ] Add README.md and architect.yml to architect-cloud/api
-  - [ ] Add STATUS.md to architect-cloud root, backend, ui, agents, api (each with correct tier)
-  - [ ] Add docs/ directory to architect-cloud/backend and architect-cloud/ui with index.md
+  - [x] Add README.md and architect.yml to architect-cloud/agents | Finished: 2026-03-25T19:36:00Z
+  - [x] Add README.md and architect.yml to architect-cloud/api | Finished: 2026-03-25T19:36:00Z
+  - [x] Add STATUS.md to architect-cloud root, backend, ui, agents, api | Finished: 2026-03-25T19:36:00Z (each with correct tier)
+  - [x] Add docs/ directory to architect-cloud/backend and architect-cloud/ui | Finished: 2026-03-25T19:36:00Z with index.md
 
 ### IDE & SDK Gaps
   - [ ] Add architect.yml to architect-vscode with javascript-architected plugin
@@ -158,7 +158,7 @@ All 16 plugins follow the exact same internal patterns.
   - [ ] Run contract tests for all 16 plugins — all pass
 
 ## Phase 7 — Reference Quality Polish
-Phase Status: in_progress (4/14 tasks)
+Phase Status: in_progress (8/14 tasks)
 
 Final polish to make the repository a true reference for complex monorepo management.
 
