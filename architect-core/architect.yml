@@ -1,0 +1,23 @@
+project:
+  name: architect-core
+  description: "Shared runtime library for the Architect platform"
+
+plugins:
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
+
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "Architect Core"
+    siteDescription: "Shared runtime library for plugin loading, task execution, and project configuration"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+  publish:
+    enabled: true
+    githubPages: true

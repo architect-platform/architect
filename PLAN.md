@@ -1,7 +1,7 @@
 # Architect Repository — Consistency, Self-Hosting & Reference Quality Plan
 
 ## Status
-Overall Progress: 0/85 tasks completed (0%)
+Overall Progress: 4/85 tasks completed (5%)
 Current Phase: Phase 1
 Last Updated: 2026-03-25T19:20:00Z
 
@@ -16,15 +16,15 @@ Transform the Architect repository into a **reference monorepo** that:
 ---
 
 ## Phase 1 — Module Structure Consistency
-Phase Status: pending (0/14 tasks)
+Phase Status: in_progress (4/14 tasks)
 
 Every module gets the same structural skeleton: README.md, architect.yml, docs/, STATUS.md.
 
 ### Core Platform Gaps
-  - [ ] Add README.md to architect-core (currently the only core module without one)
-  - [ ] Add architect.yml to architect-core with gradle-architected and github-architected plugins
-  - [ ] Add docs/ directory to architect-core with at least an index.md describing its role as shared runtime
-  - [ ] Add STATUS.md to architect-api (active tier, version 2.2.0)
+  - [x] Add README.md to architect-core | Finished: 2026-03-25T19:35:00Z (currently the only core module without one)
+  - [x] Add architect.yml to architect-core with gradle-architected | Finished: 2026-03-25T19:35:00Z and github-architected plugins
+  - [x] Add docs/ directory to architect-core with | Finished: 2026-03-25T19:35:00Z at least an index.md describing its role as shared runtime
+  - [x] Add STATUS.md to architect-api | Finished: 2026-03-25T19:35:00Z (active tier, version 2.2.0)
 
 ### Cloud Sub-Module Gaps
   - [ ] Add README.md and architect.yml to architect-cloud/agents
@@ -158,7 +158,7 @@ All 16 plugins follow the exact same internal patterns.
   - [ ] Run contract tests for all 16 plugins — all pass
 
 ## Phase 7 — Reference Quality Polish
-Phase Status: pending (0/14 tasks)
+Phase Status: in_progress (4/14 tasks)
 
 Final polish to make the repository a true reference for complex monorepo management.
 
