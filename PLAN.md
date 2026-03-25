@@ -1,7 +1,7 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 103/350 tasks completed (29.4%)
+Overall Progress: 104/350 tasks completed (29.7%)
 Current Phase: Phase 10 — Refactor for simplicity, readability, and smaller units
 Last Updated: 2026-03-25T17:50:00Z
 
@@ -382,7 +382,7 @@ Last Updated: 2026-03-25T17:50:00Z
 - [ ] **Expected outcomes**: consistent engineering behavior across teams and modules
 
   - [x] Define logging and error-handling conventions by module type. | Finished: 2026-03-25T18:00:00Z | Notes: Created docs/guides/logging-error-handling.md defining logging framework (SLF4J), log levels, error model (TaskResult + ArchitectException + Result), conventions per module type (API, core, engine, CLI, plugins), anti-patterns. Added to mkdocs.yml.
-  - [ ] Define logging and error-handling conventions by module type.
+  - [x] Define observability expectations for engine/cloud surfaces. | Finished: 2026-03-25T18:10:00Z | Notes: Created docs/guides/observability.md defining 3 pillars (logging, metrics, health checks), mandatory log points, SSE event types, metric definitions (Micrometer), health endpoint contracts, error visibility channels, current gaps.
   - [ ] Define observability expectations for engine/cloud surfaces.
   - [ ] Define security requirements for remote downloads, signatures, secrets, and generated workflows.
   - [ ] Define performance-testing triggers and ownership.
