@@ -1,7 +1,7 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 114/350 tasks completed (32.6%)
+Overall Progress: 115/350 tasks completed (32.9%)
 Current Phase: Phase 11 — Refactor for simplicity, readability, and smaller units
 Last Updated: 2026-03-25T17:50:00Z
 
@@ -408,7 +408,7 @@ Last Updated: 2026-03-25T17:50:00Z
   - [x] Document the final repository decomposition and boundary model explicitly. | Finished: 2026-03-25T19:05:00Z | Notes: Created docs/architecture/boundary-model.md (273 lines). Covers 5 bounded contexts, dependency graph, cross-boundary rules, forbidden patterns, stewardship groups, new-module checklist. Added to mkdocs.yml.
     - [x] Add a supported-products/modules matrix. | Finished: 2026-03-25T19:15:00Z | Notes: Created docs/architecture/module-matrix.md (99 lines). 15 modules across 4 contexts with build system, version, test status, CI coverage, tier definitions, promotion criteria.
     - [x] Add a plugin maturity/support matrix. | Finished: 2026-03-25T19:15:00Z | Notes: Created docs/architecture/plugin-matrix.md (112 lines). 16 plugins (6 active, 10 incubating) with test/contract/README/schema columns, quality gates, promotion path.
-  - [ ] Add architecture decision records or equivalent for key boundary decisions.
+    - [x] Add architecture decision records or equivalent for key boundary decisions. | Finished: 2026-03-25T19:25:00Z | Notes: Created 5 ADRs in docs/architecture/decisions/ (333 lines total): monorepo structure, api-as-contract, SPI plugin loading, process plugin protocol, support tier governance. Added index and mkdocs.yml entries.
 
 - [ ] Validation
   - [ ] Perform a fresh onboarding walkthrough from docs only.

@@ -101,6 +101,13 @@ nav:
 
   - Architecture:
     - Decision Log: architecture/decision-log.md
+    - Decisions:
+      - architecture/decisions/index.md
+      - architecture/decisions/001-monorepo-structure.md
+      - architecture/decisions/002-api-as-published-contract.md
+      - architecture/decisions/003-plugin-loading-via-spi.md
+      - architecture/decisions/004-process-plugin-protocol.md
+      - architecture/decisions/005-support-tier-governance.md
     - Repository Status Matrix: architecture/status-matrix.md
     - Repository Map: architecture/repository-map.md
     - Ownership Map: architecture/ownership-map.md
