@@ -125,6 +125,54 @@ for module in architect-api/api architect-core/core architect-engine/engine; do
   fi
 done
 
+# ─── 9. Module Structure Checks ──────────────────────────────────────────────
+echo "=== Checking: Module structure consistency ==="
+
+# Check core modules have required files
+CORE_MODULES="architect-api architect-core architect-cli architect-engine architect-cloud architect-vscode architect-intellij"
+MODULE_FAIL=0
+
+for module in $CORE_MODULES; do
+  for file in README.md architect.yml; do
+    if [ ! -f "$REPO_ROOT/$module/$file" ]; then
+      info "FAIL: $module/$file missing"
+      MODULE_FAIL=1
+    fi
+  done
+  if [ ! -d "$REPO_ROOT/$module/docs" ]; then
+    info "FAIL: $module/docs/ directory missing"
+    MODULE_FAIL=1
+  fi
+done
+
+if [ "$MODULE_FAIL" = "0" ]; then
+  pass "All core modules have required structure"
+else
+  VIOLATIONS=$((VIOLATIONS + 1))
+  fail "Some core modules are missing required structure (see above)"
+fi
+
+# ─── 10. Plugin Self-Hosting Pattern ────────────────────────────────────────
+echo "=== Checking: Plugin self-hosting pattern ==="
+PLUGIN_FAIL=0
+for plugin in "$REPO_ROOT"/plugins/*/; do
+  name=$(basename "$plugin")
+  if [ ! -f "$plugin/architect.yml" ]; then
+    info "FAIL: plugins/$name/architect.yml missing"
+    PLUGIN_FAIL=1
+  elif ! grep -q "gradle-architected" "$plugin/architect.yml" 2>/dev/null; then
+    info "FAIL: plugins/$name/architect.yml missing gradle-architected plugin"
+    PLUGIN_FAIL=1
+  fi
+done
+
+if [ "$PLUGIN_FAIL" = "0" ]; then
+  pass "All plugins use self-hosting pattern"
+else
+  VIOLATIONS=$((VIOLATIONS + 1))
+  fail "Some plugins are missing self-hosting pattern (see above)"
+fi
+
 # ─── Summary ─────────────────────────────────────────────────────────────────
 echo ""
 echo "═══════════════════════════════════════════"

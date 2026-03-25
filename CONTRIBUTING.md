@@ -45,49 +45,47 @@ cd architect
 
 ## Building
 
-Build each module from its own directory.
-`./gradlew build` compiles, runs tests, and executes detekt analysis.
+The recommended way to build is via Architect commands, which handle all modules
+automatically:
 
 ```bash
-# Core platform (Kotlin/JVM)
+architect gradle-build        # Build all Kotlin/JVM modules (compile + test + detekt)
+```
+
+You can still build individual modules directly if needed:
+
+```bash
+# Individual module build (from module directory)
 cd architect-api/api     && ./gradlew build
 cd architect-core/core   && ./gradlew build
-cd architect-engine/engine && ./gradlew build
-cd architect-cli/cli     && ./gradlew build
-
-# Cloud backend (Kotlin/JVM)
-cd architect-cloud/backend && ./gradlew build
 
 # Cloud UI (Node.js)
 cd architect-cloud/ui && npm ci && npm run build
-
-# Plugins (Kotlin/JVM)
-cd plugins/<plugin>/app && ./gradlew build
 ```
 
 ## Testing
 
-Run tests per module — there is no root-level test task.
+Use Architect commands to run all tests across the repository:
+
+```bash
+architect gradle-test         # Run all Kotlin/JVM module tests
+```
+
 See [`docs/guides/testing-standard.md`](docs/guides/testing-standard.md) for the
 full minimum-test matrix by module type.
 
-```bash
-# Kotlin/JVM module tests
-cd architect-core/core && ./gradlew test
+For targeted testing, you can still run tests per module:
 
+```bash
 # Run a single test class
 cd architect-api/api && ./gradlew test --tests TaskServiceTest
 
 # Coverage report (modules that support it)
 cd architect-api/api && ./gradlew test jacocoTestReport
 
-# Plugin tests
-cd plugins/docs-architected/app && ./gradlew test
-
 # Frontend / IDE extension tests
 cd architect-cloud/ui && npm test
 cd architect-vscode   && npm test
-cd architect-intellij && gradle test
 ```
 
 ### What the testing standard requires
@@ -100,8 +98,15 @@ cd architect-intellij && gradle test
 
 ## Code Style
 
-Kotlin modules enforce style automatically via **ktlint** and **detekt** (run
-as part of `./gradlew build`). Key settings from [`detekt.yml`](detekt.yml):
+Kotlin modules enforce style automatically via **ktlint** and **detekt**. You can
+run them explicitly via Architect commands:
+
+```bash
+architect scripts-ktlint      # Run ktlint checks
+architect scripts-detekt      # Run detekt static analysis
+```
+
+Both also run as part of `architect gradle-build`. Key settings from [`detekt.yml`](detekt.yml):
 
 - 2-space indentation, no tabs
 - 120-character max line length
@@ -156,7 +161,8 @@ The release-readiness script validates README, STATUS.md, version declaration,
 test presence, SPI registration (plugins), and absence of blocking TODOs:
 
 ```bash
-./scripts/release-readiness-check.sh <module-path> --tier active
+architect scripts-convention-check                          # Run all convention checks
+./scripts/release-readiness-check.sh <module-path> --tier active  # Per-module readiness
 ```
 
 See [`docs/guides/release-readiness.md`](docs/guides/release-readiness.md) for
@@ -186,9 +192,12 @@ Standard checklist: [`docs/guides/plugin-standard.md`](docs/guides/plugin-standa
 Docs are built with [MkDocs](https://www.mkdocs.org/) + Material theme:
 
 ```bash
+architect docs-build           # Build documentation site
+architect docs-publish         # Publish to GitHub Pages
+
+# For local preview, install dependencies and use mkdocs directly:
 pip install mkdocs mkdocs-material mkdocs-monorepo-plugin
-mkdocs serve       # local preview at http://127.0.0.1:8000
-mkdocs build       # production build
+mkdocs serve                   # local preview at http://127.0.0.1:8000
 ```
 
 When changing code, update relevant docs and component READMEs.
@@ -197,11 +206,16 @@ When changing code, update relevant docs and component READMEs.
 
 1. Branch from `main`; use a descriptive branch name (`feat/secret-rotation`)
 2. Make focused commits following the [commit convention](#commit-convention)
-3. Ensure the [quality gates](#quality-gates) for your module's tier pass locally
-4. Open a PR with a clear title in Conventional Commits format and a description
+3. Run `architect scripts-convention-check` to validate repository conventions
+4. Ensure the [quality gates](#quality-gates) for your module's tier pass locally
+5. Open a PR with a clear title in Conventional Commits format and a description
    of **what** changed and **why**
-5. At least one maintainer review is required
-6. Security-sensitive changes require an additional security review
+6. At least one maintainer review is required
+7. Security-sensitive changes require an additional security review
+
+> **Note:** All CI pipelines use Architect commands (e.g. `architect gradle-build`,
+> `architect gradle-test`). Running these locally before pushing ensures your
+> changes will pass CI.
 
 ## Standards References
 

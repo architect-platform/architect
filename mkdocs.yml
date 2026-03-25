@@ -99,6 +99,7 @@ nav:
     - Release Process: guides/release-process.md
     - CI/CD Integration: guides/ci-cd-integration.md
     - Migrating from Make: guides/migrating-from-make.md
+    - Monorepo Patterns: guides/monorepo-patterns.md
     - Migrating from Nx: guides/migrating-from-nx.md
 
   - Architecture:

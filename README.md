@@ -178,6 +178,22 @@ Git:
 PRE_COMMIT → PREPARE_COMMIT_MSG → COMMIT_MSG → POST_COMMIT → PRE_PUSH
 ```
 
+## Self-Hosting
+
+This repository uses Architect to manage itself. All standard operations are available as Architect commands:
+
+| Operation | Command |
+|-----------|---------|
+| Build all Kotlin modules | `architect gradle-build` |
+| Test all modules | `architect gradle-test` |
+| Lint (ktlint) | `architect scripts-ktlint` |
+| Static analysis (detekt) | `architect scripts-detekt` |
+| Convention checks | `architect scripts-convention-check` |
+| Build documentation | `architect docs-build` |
+| Publish documentation | `architect docs-publish` |
+
+Configuration is centralized in `architect.yml` — see [Architect Commands Guide](docs/guides/architect-commands.md).
+
 ## Support Tiers
 
 See [STATUS.md](STATUS.md) for the complete module-by-module support matrix.
@@ -270,6 +286,20 @@ guidelines on:
 
 Development prerequisites: Java 17+, Gradle 8.x (via wrapper), Git,
 Node.js 18+ (for VS Code extension / Cloud UI), Python 3.x (for docs).
+
+## Repository as Reference
+
+This monorepo demonstrates several patterns for managing complex multi-product repositories:
+
+- **Module Structure Consistency** — Every module has README.md, architect.yml, docs/, STATUS.md
+- **Self-Hosting** — The repository dogfoods Architect for all operations
+- **Config Generation** — CI workflows generated from templates with drift detection
+- **Plugin Architecture** — 16 plugins following identical Context/Plugin/Task patterns
+- **Documentation Integration** — Module docs aggregated via MkDocs monorepo plugin
+- **Reusable CI Pipelines** — Thin generated wrappers + hand-maintained reusable workflows
+- **Release Automation** — All releases via `architect release` and `architect publish`
+
+See [Monorepo Patterns Guide](docs/guides/monorepo-patterns.md) for detailed documentation.
 
 ## License
 
