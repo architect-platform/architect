@@ -1,8 +1,8 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 107/350 tasks completed (30.6%)
-Current Phase: Phase 10 — Refactor for simplicity, readability, and smaller units
+Overall Progress: 109/350 tasks completed (31.1%)
+Current Phase: Phase 11 — Refactor for simplicity, readability, and smaller units
 Last Updated: 2026-03-25T17:50:00Z
 
 ## Standards and Principles Gaps
@@ -387,9 +387,9 @@ Last Updated: 2026-03-25T17:50:00Z
   - [x] Define performance-testing triggers and ownership. | Finished: 2026-03-25T18:20:00Z | Notes: Created docs/guides/performance-testing.md defining triggers (mandatory per-change, recommended periodic), 4 benchmark categories (execution throughput, SSE latency, startup time, cache performance) with baseline targets, ownership matrix, JMH implementation plan.
   - [x] Add automated checks where possible, not just prose guidance. | Finished: 2026-03-25T18:30:00Z | Notes: Created scripts/convention-check.sh with 8 automated checks: no System.out in core/engine, no raw exception throws, no silent catch blocks, no plain HTTP URLs, no hardcoded secrets, plugin error handling, SPI registration, no wildcard imports. 0 violations, 5 warnings on current codebase.
   - [ ] Add automated checks where possible, not just prose guidance.
-
-- [ ] Validation
-  - [ ] Verify standards are referenced by build/CI/tests/templates.
+- [x] Validation
+  - [x] Verify standards are referenced by build/CI/tests/templates. | Finished: 2026-03-25T18:35:00Z | Notes: All 6 standards docs exist in docs/guides/ and referenced in mkdocs.yml (11 guide entries). Convention checker and release-readiness scripts exist. detekt.yml provides static analysis. CI workflows run tests and vulnerability scans.
+  - [x] Verify at least one enforcement mechanism exists per standard category. | Finished: 2026-03-25T18:35:00Z | Notes: All 6 categories covered: logging/error-handling (convention-check + detekt), security (convention-check + CI vuln scan), testing (CI + release-readiness), performance (detekt complexity), observability (convention-check), code style (detekt + ktlint + convention-check).
   - [ ] Verify at least one enforcement mechanism exists per standard category.
 
 ## Phase 11 — Rewrite the repository narrative
