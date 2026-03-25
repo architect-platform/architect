@@ -96,6 +96,7 @@ nav:
     - Observability Standards: guides/observability.md
     - Security Requirements: guides/security-requirements.md
     - Performance Testing: guides/performance-testing.md
+    - Release Process: guides/release-process.md
     - CI/CD Integration: guides/ci-cd-integration.md
     - Migrating from Make: guides/migrating-from-make.md
     - Migrating from Nx: guides/migrating-from-nx.md

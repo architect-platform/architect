@@ -1,0 +1,54 @@
+# Hand-maintained: full monorepo validation pipeline
+name: Monorepo Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: monorepo-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  convention-check:
+    name: Convention Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run convention checks
+        run: bash scripts/convention-check.sh
+
+  structure-audit:
+    name: Module Structure Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify all modules have required files
+        run: |
+          FAIL=0
+          for dir in architect-api architect-core architect-cli architect-engine architect-cloud architect-vscode architect-intellij; do
+            for file in README.md architect.yml; do
+              if [ ! -f "$dir/$file" ]; then
+                echo "MISSING: $dir/$file"
+                FAIL=1
+              fi
+            done
+          done
+          if [ "$FAIL" = "1" ]; then exit 1; fi
+          echo "All modules pass structure audit"
+
+  workflow-drift:
+    name: Workflow Drift Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check generated workflows match templates
+        run: |
+          python3 .github/scripts/gen_workflows.py
+          if ! git diff --exit-code .github/workflows/; then
+            echo "Generated workflows have drifted from templates!"
+            exit 1
+          fi

@@ -15,6 +15,7 @@ workflows = [
     ('javascript-architected', 'plugins/javascript-architected', True),
     ('pipelines-architected', 'plugins/pipelines-architected', True),
     ('scripts-architected', 'plugins/scripts-architected', True),
+    ('architect-core-pipeline', 'architect-core', False),
     ('architect-cloud-backend', 'architect-cloud/backend', False),
     ('architect-cloud-ui', 'architect-cloud/ui', False),
 ]
