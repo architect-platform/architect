@@ -49,7 +49,30 @@ See the source under `src/architect_plugin_sdk/` for the public API surface.
 Full protocol specification:
 [Plugin Protocol v1](https://github.com/architect-platform/architect/blob/main/docs/architecture/plugin-protocol.md)
 
-## Status
+## Configuration
 
-**Incubating** — protocol coverage is documented; tests and examples present.
-See `STATUS.md` at the repository root.
+Python plugins are declared in the project's `architect.yml` as process
+plugins. The engine launches the plugin as a child process and communicates
+over stdin/stdout:
+
+```yaml
+plugins:
+  - name: my-plugin
+    type: process
+    command: "python -m my_plugin"
+```
+
+## Development
+
+```bash
+cd sdk/python/architect-plugin-sdk
+pip install -e .          # install in editable mode
+pip install -e ".[dev]"   # install with dev dependencies
+pytest                    # run test suite
+```
+
+## Links
+
+- [Plugin Protocol v1](https://github.com/architect-platform/architect/blob/main/docs/architecture/plugin-protocol.md)
+- [STATUS.md](../../../../STATUS.md)
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

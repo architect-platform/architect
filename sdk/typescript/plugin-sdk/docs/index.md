@@ -50,7 +50,30 @@ browse the source under `src/`.
 Full protocol specification:
 [Plugin Protocol v1](https://github.com/architect-platform/architect/blob/main/docs/architecture/plugin-protocol.md)
 
-## Status
+## Configuration
 
-**Incubating** — protocol coverage is documented; tests and examples present.
-See `STATUS.md` at the repository root.
+TypeScript plugins are declared in the project's `architect.yml` as process
+plugins. The engine launches the plugin as a child process and communicates
+over stdin/stdout:
+
+```yaml
+plugins:
+  - name: my-plugin
+    type: process
+    command: "node dist/index.js"
+```
+
+## Development
+
+```bash
+cd sdk/typescript/plugin-sdk
+npm install
+npm run build        # compile TypeScript
+npm run test         # run test suite
+```
+
+## Links
+
+- [Plugin Protocol v1](https://github.com/architect-platform/architect/blob/main/docs/architecture/plugin-protocol.md)
+- [STATUS.md](../../../../STATUS.md)
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

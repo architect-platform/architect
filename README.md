@@ -275,3 +275,9 @@ Node.js 18+ (for VS Code extension / Cloud UI), Python 3.x (for docs).
 
 This project is licensed under the MIT License — see [LICENSE](LICENSE) for
 details.
+
+## Links
+
+- [Documentation](docs/)
+- [Status](STATUS.md)
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

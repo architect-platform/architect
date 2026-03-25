@@ -37,7 +37,19 @@ cd architect-intellij
 
 The plugin targets JDK 17 and Kotlin 1.9.
 
+## Configuration
+
+The plugin associates `architect.yml` / `architect.yaml` files with the
+Architect JSON Schema automatically. No additional IDE configuration is
+required beyond having the `architect` CLI on your PATH.
+
 ## Status
 
 **Incubating** — thin reference integration demonstrating IDE capabilities.
 Not a supported product; see `STATUS.md` at the repository root.
+
+## Links
+
+- [IntelliJ Plugin README](../README.md)
+- [STATUS.md](../../STATUS.md)
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

@@ -137,3 +137,9 @@ When engine mode is used, the endpoint is configured via Micronaut HTTP client s
 - Kotlin Coroutines for async operations
 - Jackson for JSON serialization
 - Logback for logging
+
+## Links
+
+- [Documentation](docs/)
+- [Status](../STATUS.md)
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

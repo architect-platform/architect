@@ -1,0 +1,4 @@
+site_name: Go Plugin SDK
+
+nav:
+  - Overview: index.md

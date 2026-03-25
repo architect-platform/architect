@@ -1,0 +1,4 @@
+site_name: TypeScript Plugin SDK
+
+nav:
+  - Overview: index.md

@@ -187,3 +187,9 @@ Contributions are welcome! Please ensure:
 - Code follows Kotlin coding conventions
 - All tests pass
 - New features include appropriate tests and documentation
+
+## Links
+
+- [Documentation](docs/)
+- [Status](../STATUS.md)
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

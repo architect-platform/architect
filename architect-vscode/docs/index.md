@@ -49,3 +49,9 @@ npm run test    # run test suite
 
 **Incubating** — thin reference integration demonstrating IDE capabilities.
 Not a supported product; see `STATUS.md` at the repository root.
+
+## Links
+
+- [VS Code Extension README](../README.md)
+- [STATUS.md](../../STATUS.md)
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

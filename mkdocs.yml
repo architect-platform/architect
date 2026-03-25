@@ -120,6 +120,20 @@ nav:
     - Config Generation: architecture/config-generation.md
 
   - Components:
-    - Architect API: "!include ./architect-api/docs/mkdocs.yml"
-    - Architect Engine: "!include ./architect-engine/docs/mkdocs.yml"
-    - Architect CLI: "!include ./architect-cli/docs/mkdocs.yml"
+      - Core Platform:
+          - Architect API: '!include ./architect-api/docs/mkdocs.yml'
+          - Architect Core: '!include ./architect-core/docs/mkdocs.yml'
+          - Architect Engine: '!include ./architect-engine/docs/mkdocs.yml'
+          - Architect CLI: '!include ./architect-cli/docs/mkdocs.yml'
+      - Cloud:
+          - Cloud Backend: '!include ./architect-cloud/backend/docs/mkdocs.yml'
+          - Cloud UI: '!include ./architect-cloud/ui/docs/mkdocs.yml'
+          - Cloud Agents: '!include ./architect-cloud/agents/docs/mkdocs.yml'
+          - Cloud API: '!include ./architect-cloud/api/docs/mkdocs.yml'
+      - IDE Extensions:
+          - VS Code Extension: '!include ./architect-vscode/docs/mkdocs.yml'
+          - IntelliJ Plugin: '!include ./architect-intellij/docs/mkdocs.yml'
+      - SDKs:
+          - TypeScript SDK: '!include ./sdk/typescript/plugin-sdk/docs/mkdocs.yml'
+          - Python SDK: '!include ./sdk/python/architect-plugin-sdk/docs/mkdocs.yml'
+          - Go SDK: '!include ./sdk/go/plugin-sdk-go/docs/mkdocs.yml'

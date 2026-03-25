@@ -58,7 +58,30 @@ go doc ./sdk/...
 Full protocol specification:
 [Plugin Protocol v1](https://github.com/architect-platform/architect/blob/main/docs/architecture/plugin-protocol.md)
 
-## Status
+## Configuration
 
-**Incubating** — protocol coverage is documented; tests and examples present.
-See `STATUS.md` at the repository root.
+Go plugins are declared in the project's `architect.yml` as process plugins.
+The engine launches the compiled binary as a child process and communicates
+over stdin/stdout:
+
+```yaml
+plugins:
+  - name: my-plugin
+    type: process
+    command: "./my-plugin"
+```
+
+## Development
+
+```bash
+cd sdk/go/plugin-sdk-go
+go build ./...    # build all packages
+go test ./...     # run test suite
+go vet ./...      # static analysis
+```
+
+## Links
+
+- [Plugin Protocol v1](https://github.com/architect-platform/architect/blob/main/docs/architecture/plugin-protocol.md)
+- [STATUS.md](../../../../STATUS.md)
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

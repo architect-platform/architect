@@ -375,3 +375,9 @@ MIT License - see [LICENSE](../LICENSE) for details.
 - **Documentation**: Check component READMEs
 - **Issues**: GitHub Issues
 - **Discussions**: GitHub Discussions
+
+## Links
+
+- [Documentation](docs/)
+- [Status](STATUS.md)
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

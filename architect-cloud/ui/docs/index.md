@@ -54,7 +54,18 @@ npm run preview      # serve the production build locally
 See [ARCHITECTURE.md](../ARCHITECTURE.md) for the frontend architecture and
 [STATUS.md](../STATUS.md) for support level and graduation criteria.
 
-## Further Reading
+## Configuration
+
+The UI connects to the Cloud Backend API. Configure the backend URL through
+environment variables or the Vite `.env` file:
+
+```bash
+VITE_API_BASE_URL=http://localhost:8080   # Cloud Backend endpoint
+```
+
+## Links
 
 - [UI README](../README.md) — detailed scope and local development guide
 - [Cloud README](../../README.md) — umbrella module overview
+- [STATUS.md](../STATUS.md) — current support level and graduation criteria
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

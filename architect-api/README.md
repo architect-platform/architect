@@ -153,3 +153,9 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Links
+
+- [Documentation](docs/)
+- [Status](../STATUS.md)
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

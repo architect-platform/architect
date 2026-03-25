@@ -43,6 +43,44 @@ Ships the default workflow definitions consumed by the engine and CLI:
 - **CodeWorkflow** — code-specific sub-phases mapped to core phases
 - **HooksWorkflow** — Git hook phases (pre-commit, pre-push, commit-msg)
 
+## Getting Started
+
+### Prerequisites
+
+- JDK 17+
+- Gradle 8.x (via wrapper)
+
+### Building
+
+```bash
+cd architect-core
+architect gradle-build
+```
+
+### Testing
+
+```bash
+cd architect-core
+architect gradle-test
+```
+
+## Configuration
+
+Architect Core reads project configuration from `architect.yml`. The core module is registered as a Gradle project in the root configuration:
+
+```yaml
+gradle:
+  projects:
+    - name: architect-core
+      path: architect-core/core
+```
+
 ## Architecture
 
 Architect Core depends on **architect-api** and is consumed by **architect-engine** and **architect-cli**. See the [architecture documentation](../../docs/) for the full platform overview.
+
+## Links
+
+- [Architecture Documentation](../../docs/)
+- [STATUS.md](../../STATUS.md)
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

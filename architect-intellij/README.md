@@ -23,3 +23,9 @@ cd architect-intellij
 ./gradlew buildPlugin    # Build the plugin
 ./gradlew runIde          # Launch a sandbox IDE with the plugin installed
 ```
+
+## Links
+
+- [Documentation](docs/)
+- [Status](../STATUS.md)
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

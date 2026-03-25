@@ -53,8 +53,21 @@ backend/
 └── settings.gradle.kts  # Composite-build wiring
 ```
 
-## Further Reading
+## Configuration
+
+The backend is configured through `application.yml` (Micronaut) and registered
+as a Gradle project in the root `architect.yml`:
+
+```yaml
+gradle:
+  projects:
+    - name: architect-cloud-backend
+      path: architect-cloud/backend
+```
+
+## Links
 
 - [Backend README](../README.md) — API endpoints, data model, example usage
 - [Cloud README](../../README.md) — umbrella module overview
 - [STATUS.md](../STATUS.md) — current support level and graduation criteria
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)

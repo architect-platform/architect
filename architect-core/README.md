@@ -96,3 +96,9 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](../LICE
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
+
+## Links
+
+- [Documentation](docs/)
+- [Status](../STATUS.md)
+- [Architect Platform Docs](https://architect-platform.github.io/architect/)
