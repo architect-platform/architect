@@ -117,6 +117,7 @@ nav:
     - Baseline Failures: architecture/baseline-failures.md
     - Module Matrix: architecture/module-matrix.md
     - Plugin Matrix: architecture/plugin-matrix.md
+    - Config Generation: architecture/config-generation.md
 
   - Components:
     - Architect API: "!include ./architect-api/docs/mkdocs.yml"

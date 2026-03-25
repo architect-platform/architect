@@ -139,7 +139,7 @@ style:
     values:
       - 'FIXME:'
       - 'STOPSHIP:'
-    allowedPatterns: ''
+    allowedPatterns: []
   MaxLineLength:
     active: true
     maxLineLength: 120
