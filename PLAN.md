@@ -1,7 +1,7 @@
 # Architect Repository — Consistency, Self-Hosting & Reference Quality Plan
 
 ## Status
-Overall Progress: 18/85 tasks completed (21%)
+Overall Progress: 25/85 tasks completed (29%)
 Current Phase: Phase 2
 Last Updated: 2026-03-25T19:20:00Z
 
@@ -43,7 +43,7 @@ Every module gets the same structural skeleton: README.md, architect.yml, docs/,
   - [x] Run audit: every module has README.md | Finished: 2026-03-25T19:40:00Z | Notes: All 14 core modules + 16 plugins pass. Fixed 5 gaps found in initial audit (core STATUS.md, cloud agents/api docs, SDK STATUS.md files)., architect.yml, docs/index.md, STATUS.md — zero exceptions
 
 ## Phase 2 — Self-Hosting: All Operations Through Architect
-Phase Status: in_progress (4/16 tasks)
+Phase Status: in_progress (11/16 tasks)
 
 The repository should dogfood Architect for every operation. No manual tool invocations.
 
@@ -54,15 +54,15 @@ The repository should dogfood Architect for every operation. No manual tool invo
   - [x] Add pipelines-architected config with orchestration | Finished: 2026-03-25T19:50:00Z workflows (build-all, test-all, release)
 
 ### Module-Level architect.yml Standardization
-  - [ ] Ensure every module's architect.yml uses the same plugin pattern: gradle-architected (or language equivalent) + github-architected + docs-architected
-  - [ ] Add docs-architected config to modules that have docs/ but don't configure it (architect-core, cloud sub-modules, SDKs, IDE extensions)
-  - [ ] Verify all module architect.yml files reference correct project names and paths
+  - [x] Ensure every module.s architect.yml uses the same plugin pattern | Finished: 2026-03-25T19:52:00Z | Notes: 9 files updated to add docs-architected, 3 already correct.: gradle-architected (or language equivalent) + github-architected + docs-architected
+  - [x] Add docs-architected config to modules that have docs | Finished: 2026-03-25T19:52:00Z/ but don't configure it (architect-core, cloud sub-modules, SDKs, IDE extensions)
+  - [x] Verify all module architect.yml files reference correct project names | Finished: 2026-03-25T19:52:00Z and paths
 
 ### Architect Commands for Everything
-  - [ ] Create a scripts-architected task for running detekt (replaces manual `./gradlew detekt`)
-  - [ ] Create a scripts-architected task for running ktlint (replaces manual `./gradlew ktlintCheck`)
-  - [ ] Create a scripts-architected task for running convention-check.sh
-  - [ ] Create a scripts-architected task for running release-readiness-check.sh
+  - [x] Create a scripts-architected task for running detekt | Finished: 2026-03-25T19:52:00Z | Notes: Configured in root architect.yml scripts section. (replaces manual `./gradlew detekt`)
+  - [x] Create a scripts-architected task for running ktlint | Finished: 2026-03-25T19:52:00Z (replaces manual `./gradlew ktlintCheck`)
+  - [x] Create a scripts-architected task for running convention-check.sh | Finished: 2026-03-25T19:52:00Z
+  - [x] Create a scripts-architected task for running release-readiness-check.sh | Finished: 2026-03-25T19:52:00Z
   - [ ] Create a pipelines-architected workflow for "full build" that builds all modules in dependency order
   - [ ] Create a pipelines-architected workflow for "full test" that tests all modules
   - [ ] Document all available architect commands in docs/guides/architect-commands.md

@@ -2,6 +2,12 @@ project:
   name: architect-cloud
   description: "Cloud infrastructure for Architect Platform."
 
+plugins:
+  - name: github-architected
+    repo: architect-platform/architect
+  - name: docs-architected
+    repo: architect-platform/architect
+
 # Documentation configuration
 docs:
   build:

@@ -87,6 +87,7 @@ nav:
     - Schema: schema/architect.yml.json
 
   - Guides:
+    - Architect Commands: guides/architect-commands.md
     - Plugin Authoring: guides/authoring-plugins.md
     - Official Plugin Standard: guides/plugin-standard.md
     - Repository Testing Standard: guides/testing-standard.md

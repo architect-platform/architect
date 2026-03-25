@@ -7,3 +7,5 @@ plugins:
     repo: architect-platform/architect
   - name: github-architected
     repo: architect-platform/architect
+  - name: docs-architected
+    repo: architect-platform/architect
