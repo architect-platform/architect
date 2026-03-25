@@ -1,7 +1,7 @@
 # Architect Repository — Consistency, Self-Hosting & Reference Quality Plan
 
 ## Status
-Overall Progress: 14/85 tasks completed (16%)
+Overall Progress: 18/85 tasks completed (21%)
 Current Phase: Phase 2
 Last Updated: 2026-03-25T19:20:00Z
 
@@ -43,15 +43,15 @@ Every module gets the same structural skeleton: README.md, architect.yml, docs/,
   - [x] Run audit: every module has README.md | Finished: 2026-03-25T19:40:00Z | Notes: All 14 core modules + 16 plugins pass. Fixed 5 gaps found in initial audit (core STATUS.md, cloud agents/api docs, SDK STATUS.md files)., architect.yml, docs/index.md, STATUS.md — zero exceptions
 
 ## Phase 2 — Self-Hosting: All Operations Through Architect
-Phase Status: pending (0/16 tasks)
+Phase Status: in_progress (4/16 tasks)
 
 The repository should dogfood Architect for every operation. No manual tool invocations.
 
 ### Root architect.yml Enhancement
-  - [ ] Audit the root architect.yml and add all missing plugin configurations (currently only docs, git, github — needs gradle, scripts, pipelines)
-  - [ ] Add gradle-architected config to root architect.yml with all Kotlin/JVM sub-projects listed
-  - [ ] Add scripts-architected config for convention-check, release-readiness-check, and any other repo scripts
-  - [ ] Add pipelines-architected config with orchestration workflows (build-all, test-all, release)
+  - [x] Audit the root architect.yml and add all missing plugin configurations | Finished: 2026-03-25T19:50:00Z (currently only docs, git, github — needs gradle, scripts, pipelines)
+  - [x] Add gradle-architected config to root architect.yml | Finished: 2026-03-25T19:50:00Z with all Kotlin/JVM sub-projects listed
+  - [x] Add scripts-architected config for convention-check | Finished: 2026-03-25T19:50:00Z, release-readiness-check, and any other repo scripts
+  - [x] Add pipelines-architected config with orchestration | Finished: 2026-03-25T19:50:00Z workflows (build-all, test-all, release)
 
 ### Module-Level architect.yml Standardization
   - [ ] Ensure every module's architect.yml uses the same plugin pattern: gradle-architected (or language equivalent) + github-architected + docs-architected

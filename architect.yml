@@ -21,6 +21,24 @@ plugins:
     version: latest
     asset: github-architected.jar
     pattern: "github-architected-"
+  - name: gradle-architected
+    type: github
+    repo: architect-platform/architect
+    version: latest
+    asset: gradle-architected.jar
+    pattern: "gradle-architected-"
+  - name: scripts-architected
+    type: github
+    repo: architect-platform/architect
+    version: latest
+    asset: scripts-architected.jar
+    pattern: "scripts-architected-"
+  - name: pipelines-architected
+    type: github
+    repo: architect-platform/architect
+    version: latest
+    asset: pipelines-architected.jar
+    pattern: "pipelines-architected-"
 
 # Documentation configuration with auto-discovery
 docs:
@@ -58,3 +76,99 @@ github:
       branch: "main"
   release:
     enabled: true
+
+# Gradle configuration for all Kotlin/JVM sub-projects
+gradle:
+  projects:
+    - name: architect-api
+      path: architect-api/api
+    - name: architect-core
+      path: architect-core/core
+    - name: architect-engine
+      path: architect-engine/engine
+    - name: architect-cli
+      path: architect-cli/cli
+    - name: architect-cloud-backend
+      path: architect-cloud/backend
+
+# Scripts configuration for automated tasks
+scripts:
+  enabled: true
+  scripts:
+    convention-check:
+      command: "./scripts/convention-check.sh"
+      description: "Run repository convention checks"
+      phase: "LINT"
+    release-readiness:
+      command: "./scripts/release-readiness-check.sh"
+      description: "Run release readiness verification"
+      phase: "VERIFY"
+    detekt:
+      command: "./gradlew detekt"
+      description: "Run detekt static analysis across modules"
+      phase: "LINT"
+    ktlint-check:
+      command: "./gradlew ktlintCheck"
+      description: "Run ktlint code style checks"
+      phase: "LINT"
+
+# Pipelines configuration for orchestration workflows
+pipelines:
+  workflows:
+    - name: build-all
+      description: "Build all modules in dependency order"
+      steps:
+        - name: build-api
+          task: gradle-build
+          args: ["-p", "architect-api/api"]
+        - name: build-core
+          task: gradle-build
+          args: ["-p", "architect-core/core"]
+          dependsOn:
+            - build-api
+        - name: build-engine
+          task: gradle-build
+          args: ["-p", "architect-engine/engine"]
+          dependsOn:
+            - build-core
+        - name: build-cli
+          task: gradle-build
+          args: ["-p", "architect-cli/cli"]
+          dependsOn:
+            - build-engine
+        - name: build-cloud-backend
+          task: gradle-build
+          args: ["-p", "architect-cloud/backend"]
+          dependsOn:
+            - build-cli
+    - name: test-all
+      description: "Test all modules"
+      steps:
+        - name: test-api
+          task: gradle-test
+          args: ["-p", "architect-api/api"]
+        - name: test-core
+          task: gradle-test
+          args: ["-p", "architect-core/core"]
+        - name: test-engine
+          task: gradle-test
+          args: ["-p", "architect-engine/engine"]
+        - name: test-cli
+          task: gradle-test
+          args: ["-p", "architect-cli/cli"]
+        - name: test-cloud-backend
+          task: gradle-test
+          args: ["-p", "architect-cloud/backend"]
+    - name: full-validation
+      description: "Run convention checks, build all modules, then test all modules"
+      steps:
+        - name: convention-check
+          task: scripts-convention-check
+        - name: build-all
+          task: gradle-build
+          dependsOn:
+            - convention-check
+        - name: test-all
+          task: gradle-test
+          dependsOn:
+            - build-all
