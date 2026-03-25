@@ -105,6 +105,7 @@ nav:
     - Repository Map: architecture/repository-map.md
     - Ownership Map: architecture/ownership-map.md
     - Runtime Boundaries: architecture/runtime-boundaries.md
+    - Boundary Model: architecture/boundary-model.md
     - Baseline Failures: architecture/baseline-failures.md
 
   - Components:

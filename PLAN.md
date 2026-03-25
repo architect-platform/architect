@@ -1,7 +1,7 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 111/350 tasks completed (31.7%)
+Overall Progress: 112/350 tasks completed (32.0%)
 Current Phase: Phase 11 — Refactor for simplicity, readability, and smaller units
 Last Updated: 2026-03-25T17:50:00Z
 
@@ -405,7 +405,7 @@ Last Updated: 2026-03-25T17:50:00Z
 - [ ] Tasks
   - [x] Rewrite the root `README.md` around the real repository topology. | Finished: 2026-03-25T18:45:00Z | Notes: Rewrote README from 738 to 277 lines (62% reduction). Added real directory topology with support tiers, honest overview, working build commands. Removed aspirational features, marketing content, duplicated docs, non-existent install methods.
   - [x] Rewrite `CONTRIBUTING.md` around real workflows, support tiers, and quality gates. | Finished: 2026-03-25T18:55:00Z | Notes: Rewrote from 269 to 225 lines. Added support tiers, quality gates by tier (active/beta/incubating), actual prerequisites, per-module build/test commands, detekt thresholds, standards references table linking 9 guides.
-  - [ ] Document the final repository decomposition and boundary model explicitly.
+  - [x] Document the final repository decomposition and boundary model explicitly. | Finished: 2026-03-25T19:05:00Z | Notes: Created docs/architecture/boundary-model.md (273 lines). Covers 5 bounded contexts, dependency graph, cross-boundary rules, forbidden patterns, stewardship groups, new-module checklist. Added to mkdocs.yml.
   - [ ] Add a supported-products/modules matrix.
   - [ ] Add a plugin maturity/support matrix.
   - [ ] Add architecture decision records or equivalent for key boundary decisions.
