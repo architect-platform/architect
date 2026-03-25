@@ -1,0 +1,4 @@
+site_name: urust Plugin
+
+nav:
+  - Overview: index.md
