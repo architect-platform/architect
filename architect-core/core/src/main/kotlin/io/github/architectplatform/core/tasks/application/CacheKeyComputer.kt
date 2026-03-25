@@ -16,6 +16,8 @@ import java.security.MessageDigest
  */
 object CacheKeyComputer {
 
+  // Four input types: FileSet (glob of files), ConfigValue, EnvVar, CommandOutput.
+  // Inputs are sorted by type+identity so key is independent of declaration order.
   fun compute(descriptor: CacheDescriptor, projectDir: String, config: Map<String, Any?>): String {
     val digest = MessageDigest.getInstance("SHA-256")
     for (input in descriptor.inputs.sortedBy { it.javaClass.simpleName + inputIdentity(it) }) {
@@ -57,8 +59,10 @@ object CacheKeyComputer {
       }
     })
 
+    // Files MUST be sorted before hashing — filesystem walk order is non-deterministic.
     matched.sortBy { it.toString() }
     for (file in matched) {
+      // Use relative filename, not absolute path, so caches are portable across machines.
       digest.update(file.fileName.toString().toByteArray(Charsets.UTF_8))
       digest.update(Files.readAllBytes(file))
     }

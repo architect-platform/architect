@@ -12,6 +12,8 @@ import io.github.architectplatform.api.core.tasks.TaskRegistry
  * - Performing topological sort to determine correct execution order
  * - Detecting circular dependencies in both dependencies and child relationships
  */
+// The task DAG has two edge types: dependencies ("must run before") and children ("is composed of").
+// Dependencies define batch ordering; children are executed inline after their parent succeeds.
 class TaskDependencyResolver {
 
     /**
@@ -73,6 +75,7 @@ class TaskDependencyResolver {
      */
     fun topologicalSort(tasks: Map<String, Task>): List<Task> {
         val visited = mutableSetOf<String>()
+        // `visiting` tracks the current DFS path — a revisit means a cycle.
         val visiting = mutableSetOf<String>()
         val result = mutableListOf<Task>()
 
@@ -94,11 +97,11 @@ class TaskDependencyResolver {
                 dfs(dependency)
             }
             
-            // Check children for circular references (but don't add them to result here)
+            // Children aren't in the `visiting` set (they're not dependency edges), so
+            // we need an explicit check for direct mutual parent↔child references.
             for (childId in current.children()) {
                 val child = tasks[childId]
                     ?: throw IllegalStateException("Missing task for id $childId")
-                // Detect circular reference through children
                 if (childId == current.id || child.children().contains(current.id)) {
                     throw IllegalStateException(
                         "Circular child relationship detected: ${current.id} <-> $childId"
@@ -130,6 +133,7 @@ class TaskDependencyResolver {
      * @return Map of task ID to batch index
      */
     fun toBatches(orderedTasks: List<Task>): Map<String, Int> {
+        // B(task) = max(B(dep) for dep in task.depends()) + 1; leaves get batch 0.
         val batchOf = mutableMapOf<String, Int>()
         for (task in orderedTasks) {
             val maxDepBatch = task.depends()

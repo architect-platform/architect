@@ -54,6 +54,8 @@ open class GpgPluginSignatureVerifier(
         ),
       )
 
+    // Exit code 0 = GPG considers signature cryptographically valid, but we still
+    // policy-check that the signer key is in the plugin's trusted-keys list.
     if (result.exitCode != 0) {
       throw IllegalArgumentException(
         "Signature verification failed for plugin '${plugin.name}': ${result.output.trim()}",
@@ -67,6 +69,7 @@ open class GpgPluginSignatureVerifier(
       )
     }
 
+    // Suffix-match accommodates short (16-hex) and long (40-hex fingerprint) key IDs.
     val trustedKeys = plugin.trustedKeys.map(::normalizeKey)
     val matchesTrustedKey = signerKeyIds.any { signerKey -> trustedKeys.any { signerKey.endsWith(it) } }
     if (!matchesTrustedKey) {
@@ -76,6 +79,8 @@ open class GpgPluginSignatureVerifier(
     }
   }
 
+  // GPG emits VALIDSIG (full fingerprint) and GOODSIG (short key ID) — we parse both
+  // to handle all GPG versions consistently.
   internal fun parseSignerKeyIds(output: String): Set<String> =
     output
       .lineSequence()
@@ -94,6 +99,7 @@ open class GpgPluginSignatureVerifier(
       .filter { it.isNotBlank() }
       .toSet()
 
+  // Strip non-hex chars (spaces, "0x" prefix) for robustness across GPG output formats.
   internal fun normalizeKey(key: String): String =
     key.replace("0x", "", ignoreCase = true).replace(Regex("[^A-Fa-f0-9]"), "").uppercase()
 }

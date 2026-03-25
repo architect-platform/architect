@@ -19,6 +19,11 @@ import kotlinx.coroutines.runBlocking
 import kotlin.io.path.exists
 import org.slf4j.LoggerFactory
 
+// Plugin loading strategies by type:
+//   process → shell command, no isolation, no verification (no discrete artifact)
+//   npm     → npx invocation, no isolation, no verification (no discrete artifact)
+//   github  → GitHub release download, isolated classloader, optional GPG verification
+//   local   → filesystem JAR, isolated classloader, optional GPG verification
 @Singleton
 class ProjectPluginLoader(
     private val spiLoader: SpiPluginLoader,
@@ -45,6 +50,7 @@ class ProjectPluginLoader(
                 }
             }
 
+        // Async loading preserves YAML declaration order via mapIndexed + sortedBy.
         val loadedPlugins =
             runBlocking {
                 plugins.mapIndexed { index, plugin ->

@@ -76,6 +76,7 @@ class TaskExecutor(
       val batches = dependencyResolver.toBatches(executionOrder)
       val tasksByBatch = executionOrder.groupBy { batches[it.id] ?: 0 }.toSortedMap()
 
+      // Batches run sequentially (deps satisfied); tasks within a batch run in parallel.
       val allResults = mutableListOf<TaskResult>()
       for ((batchIndex, batchTasks) in tasksByBatch) {
         if (parallelExecutionEnabled && batchTasks.size > 1) {
@@ -126,6 +127,8 @@ class TaskExecutor(
       taskRegistry: TaskRegistry,
       parentProject: String?,
   ): TaskResult {
+    // Cache lookup order: task cache → local output cache → remote output cache.
+    // On a remote hit, populate local cache so subsequent runs avoid network round-trips.
     if (taskCache.isCached(currentTask.id)) {
       eventBus(taskSkippedEvent(projectName, executionId, currentTask.id, message = "Task ${currentTask.id} skipped (cached)", subProject = parentProject))
       val cached = taskCache.get(currentTask.id)
@@ -162,6 +165,7 @@ class TaskExecutor(
       val result = TaskPermissionScope.withTask(currentTask, projectContext.dir) {
         currentTask.execute(environment, projectContext, args)
       }
+      // Children execute after parent succeeds; results merge into a composite TaskResult.
       val childResults = if (currentTask.children().isNotEmpty()) {
         dependencyResolver.resolveChildren(currentTask, taskRegistry).map { child ->
           eventBus(taskStartedEvent(projectName, executionId, child.id, message = "Starting child task: ${child.id} (parent: ${currentTask.id})", subProject = parentProject))

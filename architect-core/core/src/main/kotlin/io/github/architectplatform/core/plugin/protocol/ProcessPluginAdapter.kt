@@ -142,7 +142,7 @@ class ProcessPluginAdapter(
         val event = try {
           objectMapper.readValue(line, TaskEvent::class.java)
         } catch (_: Exception) {
-          // Not a structured event — treat as raw output
+          // Non-JSON lines are raw diagnostic output, not errors — plugins may mix plain text.
           logger.info("[{}] {}", pluginId, line)
           continue
         }
@@ -181,6 +181,8 @@ class ProcessPluginAdapter(
   private fun <T> withProcess(block: (BufferedReader, OutputStreamWriter) -> T): T {
     val launchedProcess = SandboxedProcessLauncher.launch(command, workingDir, redirectErrorStream = false)
     val process = launchedProcess.process
+    // Drain stderr on a separate thread to prevent OS pipe buffer overflow, which
+    // would block the subprocess and deadlock the main thread waiting on stdout.
     val stderrDrainer = thread(name = "process-plugin-${pluginId}-stderr", isDaemon = true) {
       process.errorStream.bufferedReader().useLines { lines ->
         lines.forEach { logger.warn("[{}] {}", pluginId, it) }
@@ -191,6 +193,7 @@ class ProcessPluginAdapter(
       val writer = OutputStreamWriter(process.outputStream)
       return block(reader, writer)
     } finally {
+      // Graceful destroy first; forcible kill after timeout prevents zombie processes.
       process.destroy()
       if (!process.waitFor(5, java.util.concurrent.TimeUnit.SECONDS)) {
         process.destroyForcibly()
