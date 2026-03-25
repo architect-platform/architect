@@ -1,7 +1,7 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 110/350 tasks completed (31.4%)
+Overall Progress: 111/350 tasks completed (31.7%)
 Current Phase: Phase 11 — Refactor for simplicity, readability, and smaller units
 Last Updated: 2026-03-25T17:50:00Z
 
@@ -404,7 +404,7 @@ Last Updated: 2026-03-25T17:50:00Z
 
 - [ ] Tasks
   - [x] Rewrite the root `README.md` around the real repository topology. | Finished: 2026-03-25T18:45:00Z | Notes: Rewrote README from 738 to 277 lines (62% reduction). Added real directory topology with support tiers, honest overview, working build commands. Removed aspirational features, marketing content, duplicated docs, non-existent install methods.
-  - [ ] Rewrite `CONTRIBUTING.md` around real workflows, support tiers, and quality gates.
+  - [x] Rewrite `CONTRIBUTING.md` around real workflows, support tiers, and quality gates. | Finished: 2026-03-25T18:55:00Z | Notes: Rewrote from 269 to 225 lines. Added support tiers, quality gates by tier (active/beta/incubating), actual prerequisites, per-module build/test commands, detekt thresholds, standards references table linking 9 guides.
   - [ ] Document the final repository decomposition and boundary model explicitly.
   - [ ] Add a supported-products/modules matrix.
   - [ ] Add a plugin maturity/support matrix.

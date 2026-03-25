@@ -1,269 +1,225 @@
 # Contributing to Architect Platform
 
-Thank you for your interest in contributing to the Architect Platform! This document provides guidelines and instructions for contributing.
+Welcome — and thank you for contributing!
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
 
-## Code of Conduct
+## Repository Layout
 
-Please be respectful and constructive in all interactions. We're building a welcoming community.
+This is a multi-module repository with **no root Gradle wrapper**.
+Each module builds independently from its own directory.
+See the **Repository Topology** section in [README.md](README.md) for the full map.
 
-## How Can I Contribute?
+## Support Tiers
 
-### Reporting Bugs
+Every module declares a support tier in [STATUS.md](STATUS.md).
+The tier determines what quality gates apply (see [Quality Gates](#quality-gates) below).
 
-Before creating a bug report, please check if the issue already exists. When creating a bug report, include:
+| Tier | Meaning |
+|---|---|
+| **active** | Fully supported, tests green, versioned, maintained |
+| **beta** | Feature-complete, tests passing, not yet stabilised |
+| **incubating** | Work in progress; partial features, may have failing tests |
 
-- **Clear title and description**
-- **Steps to reproduce** the behavior
-- **Expected behavior**
-- **Actual behavior**
-- **Environment details** (OS, Java version, Architect version)
-- **Stack traces or logs** if applicable
-
-### Suggesting Enhancements
-
-Enhancement suggestions are welcome! Please provide:
-
-- **Clear use case** for the enhancement
-- **Proposed solution** or API design
-- **Alternatives considered**
-- **Examples** of how it would be used
-
-### Pull Requests
-
-1. **Fork the repository** and create your branch from `main`
-2. **Make your changes** with clear, focused commits
-3. **Add tests** for new functionality
-4. **Update documentation** if needed
-5. **Ensure tests pass** locally
-6. **Submit a pull request** with a clear description
+New modules must declare their tier in both their `README.md` and `STATUS.md`
+before they can be merged.
 
 ## Development Setup
 
 ### Prerequisites
 
-- Java 17 or higher
-- Gradle 8.x
-- Git
-- Node.js 18+ (for documentation)
-- Python 3.x (for MkDocs documentation)
+| Tool | Version | Used by |
+|---|---|---|
+| JDK | 17+ | All Kotlin/JVM modules |
+| Gradle | 8.x (via wrapper) | All Kotlin/JVM modules |
+| Kotlin | 1.9.25 | All Kotlin/JVM modules |
+| Node.js | 18+ | `architect-cloud/ui`, `architect-vscode` |
+| Python | 3.x | MkDocs documentation |
+| Git | any recent | Everything |
 
-### Clone and Build
-
-> There is no root Gradle wrapper or supported root build/test task. Each module must be built from its own directory.
+### Clone
 
 ```bash
-# Clone the repository
 git clone https://github.com/architect-platform/architect.git
 cd architect
+```
 
-# Build specific components
-cd architect-cli/cli && ./gradlew build
+## Building
+
+Build each module from its own directory.
+`./gradlew build` compiles, runs tests, and executes detekt analysis.
+
+```bash
+# Core platform (Kotlin/JVM)
+cd architect-api/api     && ./gradlew build
+cd architect-core/core   && ./gradlew build
 cd architect-engine/engine && ./gradlew build
-cd architect-api/api && ./gradlew build
-cd architect-core/core && ./gradlew build
+cd architect-cli/cli     && ./gradlew build
+
+# Cloud backend (Kotlin/JVM)
+cd architect-cloud/backend && ./gradlew build
+
+# Cloud UI (Node.js)
+cd architect-cloud/ui && npm ci && npm run build
+
+# Plugins (Kotlin/JVM)
+cd plugins/<plugin>/app && ./gradlew build
 ```
 
-### Running Tests
+## Testing
 
-> Run tests per module — there is no root-level test task.
+Run tests per module — there is no root-level test task.
+See [`docs/guides/testing-standard.md`](docs/guides/testing-standard.md) for the
+full minimum-test matrix by module type.
 
 ```bash
-# Run tests for a specific module
-cd architect-engine/engine && ./gradlew test
+# Kotlin/JVM module tests
+cd architect-core/core && ./gradlew test
 
-# Run tests for a specific test class
-cd architect-engine/engine && ./gradlew test --tests TaskServiceTest
+# Run a single test class
+cd architect-api/api && ./gradlew test --tests TaskServiceTest
 
-# Run with coverage (architect-api supports jacocoTestReport)
+# Coverage report (modules that support it)
 cd architect-api/api && ./gradlew test jacocoTestReport
+
+# Plugin tests
+cd plugins/docs-architected/app && ./gradlew test
+
+# Frontend / IDE extension tests
+cd architect-cloud/ui && npm test
+cd architect-vscode   && npm test
+cd architect-intellij && gradle test
 ```
 
-The root `architect.yml` is repository metadata for docs/git/GitHub automation,
-not a monorepo build orchestrator.
+### What the testing standard requires
 
-### Building Documentation
+- **Libraries / Core**: unit tests for public API + at least one negative-path test
+- **Services**: unit + HTTP boundary tests + config smoke test
+- **Plugins**: positive-path task execution + error/validation-path + `ArchitectPluginContractTestSuite`
+- **Frontend**: lint + typecheck + component tests + production build smoke test
+- **IDE extensions**: config parsing tests + behaviour tests
 
-```bash
-# Install MkDocs
-pip install mkdocs mkdocs-material mkdocs-monorepo-plugin
+## Code Style
 
-# Build documentation
-mkdocs build
+Kotlin modules enforce style automatically via **ktlint** and **detekt** (run
+as part of `./gradlew build`). Key settings from [`detekt.yml`](detekt.yml):
 
-# Serve locally
-mkdocs serve
-```
+- 2-space indentation, no tabs
+- 120-character max line length
+- Max 80 lines per method, max 8 parameters, max 20 functions per file
+- No wildcard imports (except `java.util.*`, `kotlinx.coroutines.*`)
+- `FIXME:` and `STOPSHIP:` comments are forbidden (`maxIssues: 0`)
+- Test functions may use backtick names (`@Test fun \`should do X\`()`)
 
-## Coding Standards
+Naming conventions: `<Name>Plugin.kt`, `<Name>Context.kt`, `<Name>Task.kt`,
+`<Name>Utils.kt` — see [`docs/guides/plugin-standard.md`](docs/guides/plugin-standard.md).
 
-### Kotlin Style
+## Commit Convention
 
-- Follow [Kotlin Coding Conventions](https://kotlinlang.org/docs/coding-conventions.html)
-- Use 2 spaces for indentation
-- Maximum line length: 120 characters
-- Use meaningful variable and function names
-
-### Code Quality
-
-- Write clear, self-documenting code
-- Add comments for complex logic
-- Keep functions small and focused
-- Follow SOLID principles
-- Avoid code duplication
-
-### Testing
-
-- Follow the module-type minimum matrix in
-  [`docs/guides/testing-standard.md`](docs/guides/testing-standard.md)
-- Write tests for all new functionality and bug fixes in the affected module
-- Use descriptive test names
-- Follow Arrange-Act-Assert pattern
-- Run the module-local validation command(s) before opening a PR
-
-```kotlin
-@Test
-fun `should build documentation successfully when config is valid`() {
-    // Arrange
-    val config = BuildContext(framework = "mkdocs")
-    
-    // Act
-    val result = buildDocs(config)
-    
-    // Assert
-    assertEquals(TaskResult.Status.SUCCESS, result.status)
-}
-```
-
-## Commit Guidelines
-
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-### Format
+We use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
 <type>(<scope>): <subject>
-
-<body>
-
-<footer>
 ```
 
-### Types
+| Type | Purpose |
+|---|---|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `docs` | Documentation only |
+| `refactor` | Code change that neither fixes a bug nor adds a feature |
+| `test` | Adding or updating tests |
+| `chore` | Build, CI, or tooling changes |
+| `perf` | Performance improvement |
 
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, etc.)
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
-- `chore`: Maintenance tasks
-- `perf`: Performance improvements
-- `ci`: CI/CD changes
+Examples:
 
-### Examples
+```
+feat(core): add secret-rotation support for Vault provider
+fix(engine): prevent NPE when task condition evaluator receives null context
+docs(plugins): update gradle-architected README with test commands
+test(api): add contract regression tests for TaskResult serialisation
+```
+
+## Quality Gates
+
+What must pass before a PR can merge, **by tier**:
+
+| Gate | active | beta | incubating |
+|---|---|---|---|
+| Module builds | ✅ | ✅ | ✅ |
+| All module tests pass | ✅ | ✅ | basic / best-effort |
+| ktlint | ✅ | ✅ | — |
+| detekt (`maxIssues: 0`) | ✅ | — | — |
+| Release-readiness check | ✅ | — | — |
+
+The release-readiness script validates README, STATUS.md, version declaration,
+test presence, SPI registration (plugins), and absence of blocking TODOs:
 
 ```bash
-feat(docs): add monorepo documentation support
-
-- Implemented mkdocs-monorepo-plugin integration
-- Added component documentation configuration
-- Updated workflow templates
-
-Closes #123
+./scripts/release-readiness-check.sh <module-path> --tier active
 ```
 
-```bash
-fix(engine): resolve memory leak in task executor
-
-Fixed issue where task contexts were not being properly cleaned up
-after execution, causing memory to grow over time.
-
-Fixes #456
-```
+See [`docs/guides/release-readiness.md`](docs/guides/release-readiness.md) for
+the full checklist.
 
 ## Plugin Development
 
-### Creating a New Plugin
+Use the scaffolding command to create a new plugin:
 
-1. **Create plugin structure**:
-```
-my-plugin/
-├── app/
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── kotlin/
-│   │   │   └── resources/
-│   │   └── test/
-│   ├── build.gradle.kts
-│   └── settings.gradle.kts
-├── docs/
-│   ├── index.md
-│   └── mkdocs.yml
-├── architect.yml
-└── README.md
+```bash
+architect plugin create my-plugin                      # Kotlin JVM
+architect plugin create my-process-plugin typescript   # TypeScript process plugin
 ```
 
-2. **Implement ArchitectPlugin interface**:
-```kotlin
-class MyPlugin : ArchitectPlugin<MyContext> {
-    override val id = "my-plugin"
-    override val contextKey = "myplugin"
-    override val ctxClass = MyContext::class.java
-    override var context: MyContext = MyContext()
-    
-    override fun register(registry: TaskRegistry) {
-        // Register your tasks
-    }
-}
-```
+Key steps:
 
-3. **Register via SPI**:
-Create `META-INF/services/io.github.architectplatform.api.core.plugins.ArchitectPlugin`:
-```
-com.example.MyPlugin
-```
+1. Implement `ArchitectPlugin<C>` and register via Java SPI
+2. Write tests using `ArchitectPluginTestKit` (JVM) or protocol-level tests (process)
+3. Run `architect plugin validate` before submitting
+4. Add a docs page under `docs/reference/plugins/`
 
-4. **Add documentation**:
-- Create README.md with plugin description
-- Add docs/index.md with usage guide
-- Include configuration examples
-
-5. **Write tests**:
-- Unit tests for plugin logic
-- Integration tests for task execution
-- Configuration validation tests
+Full guide: [`docs/guides/authoring-plugins.md`](docs/guides/authoring-plugins.md)
+Standard checklist: [`docs/guides/plugin-standard.md`](docs/guides/plugin-standard.md)
 
 ## Documentation
 
-- Update relevant documentation for code changes
-- Add code examples for new features
-- Keep README files up to date
-- Document breaking changes
+Docs are built with [MkDocs](https://www.mkdocs.org/) + Material theme:
 
-## Review Process
+```bash
+pip install mkdocs mkdocs-material mkdocs-monorepo-plugin
+mkdocs serve       # local preview at http://127.0.0.1:8000
+mkdocs build       # production build
+```
 
-1. Automated checks must pass (tests, linting)
-2. Code review by at least one maintainer
-3. Documentation review
-4. Security review for sensitive changes
+When changing code, update relevant docs and component READMEs.
 
-## Release Process
+## Pull Request Process
 
-Releases follow semantic versioning:
-- **Major**: Breaking changes
-- **Minor**: New features (backwards compatible)
-- **Patch**: Bug fixes (backwards compatible)
+1. Branch from `main`; use a descriptive branch name (`feat/secret-rotation`)
+2. Make focused commits following the [commit convention](#commit-convention)
+3. Ensure the [quality gates](#quality-gates) for your module's tier pass locally
+4. Open a PR with a clear title in Conventional Commits format and a description
+   of **what** changed and **why**
+5. At least one maintainer review is required
+6. Security-sensitive changes require an additional security review
 
-## Getting Help
+## Standards References
 
-- **Issues**: [GitHub Issues](https://github.com/architect-platform/architect/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/architect-platform/architect/discussions)
-- **Documentation**: Check component READMEs
+All project standards live in `docs/guides/`:
+
+| Guide | Covers |
+|---|---|
+| [testing-standard.md](docs/guides/testing-standard.md) | Minimum test matrix per module type |
+| [plugin-standard.md](docs/guides/plugin-standard.md) | Plugin layout, naming, checklist |
+| [authoring-plugins.md](docs/guides/authoring-plugins.md) | End-to-end plugin authoring guide |
+| [release-readiness.md](docs/guides/release-readiness.md) | Release-readiness criteria and script |
+| [ci-cd-integration.md](docs/guides/ci-cd-integration.md) | CI/CD pipeline integration |
+| [security-requirements.md](docs/guides/security-requirements.md) | Security requirements |
+| [logging-error-handling.md](docs/guides/logging-error-handling.md) | Logging and error handling |
+| [observability.md](docs/guides/observability.md) | Observability and metrics |
+| [performance-testing.md](docs/guides/performance-testing.md) | Performance testing |
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the project's **Apache 2.0 License**.
-
----
-
-Thank you for contributing to Architect Platform! 🎉
+By contributing you agree that your contributions will be licensed under the
+project's [Apache 2.0 License](LICENSE).
