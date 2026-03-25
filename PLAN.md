@@ -1,7 +1,7 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 106/350 tasks completed (30.3%)
+Overall Progress: 107/350 tasks completed (30.6%)
 Current Phase: Phase 10 — Refactor for simplicity, readability, and smaller units
 Last Updated: 2026-03-25T17:50:00Z
 
@@ -385,7 +385,7 @@ Last Updated: 2026-03-25T17:50:00Z
   - [x] Define observability expectations for engine/cloud surfaces. | Finished: 2026-03-25T18:10:00Z | Notes: Created docs/guides/observability.md defining 3 pillars (logging, metrics, health checks), mandatory log points, SSE event types, metric definitions (Micrometer), health endpoint contracts, error visibility channels, current gaps.
   - [x] Define security requirements for remote downloads, signatures, secrets, and generated workflows. | Finished: 2026-03-25T18:15:00Z | Notes: Created docs/guides/security-requirements.md covering 6 areas: remote downloads (HTTPS-only, domain allowlist), GPG signatures (key formats, verification failure = hard stop), secret management (never log, never persist), generated workflow safety (template-based, no secret interpolation), classloader isolation, security review checklist.
   - [x] Define performance-testing triggers and ownership. | Finished: 2026-03-25T18:20:00Z | Notes: Created docs/guides/performance-testing.md defining triggers (mandatory per-change, recommended periodic), 4 benchmark categories (execution throughput, SSE latency, startup time, cache performance) with baseline targets, ownership matrix, JMH implementation plan.
-  - [ ] Define performance-testing triggers and ownership.
+  - [x] Add automated checks where possible, not just prose guidance. | Finished: 2026-03-25T18:30:00Z | Notes: Created scripts/convention-check.sh with 8 automated checks: no System.out in core/engine, no raw exception throws, no silent catch blocks, no plain HTTP URLs, no hardcoded secrets, plugin error handling, SPI registration, no wildcard imports. 0 violations, 5 warnings on current codebase.
   - [ ] Add automated checks where possible, not just prose guidance.
 
 - [ ] Validation
