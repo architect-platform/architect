@@ -107,6 +107,8 @@ nav:
     - Runtime Boundaries: architecture/runtime-boundaries.md
     - Boundary Model: architecture/boundary-model.md
     - Baseline Failures: architecture/baseline-failures.md
+    - Module Matrix: architecture/module-matrix.md
+    - Plugin Matrix: architecture/plugin-matrix.md
 
   - Components:
     - Architect API: "!include ./architect-api/docs/mkdocs.yml"
