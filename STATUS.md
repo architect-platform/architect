@@ -21,7 +21,7 @@ It is the authoritative reference for Phase 0 of the refactor plan (PLAN.md).
 
 | Module | Path | Status | Version | Tests | Notes |
 |---|---|---|---|---|---|
-| architect-api | `architect-api/api` | **active** | 2.1.0 | ✅ pass | Published to GitHub Packages; authoritative contracts |
+| architect-api | `architect-api/api` | **active** | 2.2.0 | ✅ pass | Published to GitHub Packages; authoritative contracts |
 | architect-core | `architect-core/core` | **active** | 1.6.1 | ✅ pass (179) | Shared runtime; JMH benchmarks present |
 | architect-engine | `architect-engine/engine` | **incubating** | 1.6.1 | ❌ broken | `./gradlew test` currently fails in composite-built CLI compilation (`ArchitectLauncher.kt` task-condition block); see `docs/architecture/baseline-failures.md` |
 | architect-cli | `architect-cli/cli` | **incubating** | 1.1.0 | ❌ broken | `./gradlew test` currently fails at `ArchitectLauncher.kt` compilation (`taskService`, `TaskConditionChecker`, ambiguous `forEach`); see `docs/architecture/baseline-failures.md` |

@@ -1,8 +1,8 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 115/350 tasks completed (32.9%)
-Current Phase: Phase 11 — Refactor for simplicity, readability, and smaller units
+Overall Progress: 117/350 tasks completed (33.4%)
+Current Phase: Complete — Refactor for simplicity, readability, and smaller units
 Last Updated: 2026-03-25T17:50:00Z
 
 ## Standards and Principles Gaps
@@ -393,8 +393,8 @@ Last Updated: 2026-03-25T17:50:00Z
   - [ ] Verify at least one enforcement mechanism exists per standard category.
 
 ## Phase 11 — Rewrite the repository narrative
-
-- [ ] **Priority**: Medium
+- [x] **Priority**: Medium
+- [x] **Goal**: Make docs reflect the actual platform and its support levels.
 - [ ] **Goal**: Make docs reflect the actual platform and its support levels.
 - [ ] **Rationale**: Documentation drift currently hides the true shape of the repo.
 - [ ] **Impacted areas**: root docs, component docs, plugin docs, architecture docs
@@ -411,8 +411,8 @@ Last Updated: 2026-03-25T17:50:00Z
     - [x] Add architecture decision records or equivalent for key boundary decisions. | Finished: 2026-03-25T19:25:00Z | Notes: Created 5 ADRs in docs/architecture/decisions/ (333 lines total): monorepo structure, api-as-contract, SPI plugin loading, process plugin protocol, support tier governance. Added index and mkdocs.yml entries.
 
 - [ ] Validation
-  - [ ] Perform a fresh onboarding walkthrough from docs only.
-  - [ ] Confirm no core instruction points to a missing or misleading workflow.
+    - [x] Perform a fresh onboarding walkthrough from docs only. | Finished: 2026-03-25T19:35:00Z | Notes: Walkthrough found 2 blockers: CONTRIBUTING.md said Apache 2.0 (actually MIT) — fixed. STATUS.md had architect-api at 2.1.0 (actually 2.2.0) — fixed. All mkdocs.yml references valid, all cross-links working.
+    - [x] Confirm no core instruction points to a missing or misleading workflow. | Finished: 2026-03-25T19:35:00Z | Notes: All build commands reference existing files. All guide links resolve. Pre-existing detekt.yml issue (not Phase 11 scope) noted for future fix.
 
 ## Risks / Dependencies / Sequencing Notes
 
