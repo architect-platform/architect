@@ -2,7 +2,9 @@
 
 > **Status**: Experimental (incubating tier) — see [STATUS.md](STATUS.md)
 
-Python workflow automation for Architect projects (supports uv, pip, pytest, ruff).
+## Overview
+
+python-architected integrates Python toolchain into the Architect task lifecycle, providing tasks for building, testing, and linting Python projects. It enables teams to manage Python development through standardized Architect commands.
 
 ## Tasks
 

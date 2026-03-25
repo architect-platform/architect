@@ -1,14 +1,23 @@
 project:
-  name: my-rust-project
-  description: "Example project using rust-architected plugin"
+  name: rust-architected
+  description: "The Architect plugin for Rust"
 
 plugins:
-  - name: rust-architected
-    repo: architect-platform/rust-architected
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
 
-rust:
-  profile: release
-  features:
-    - serde
-  target: x86_64-unknown-linux-gnu
-  enabled: true
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "Rust Architected Plugin"
+    siteDescription: "Rust build and test integration"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+  publish:
+    enabled: true
+    githubPages: true

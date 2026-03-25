@@ -2,7 +2,9 @@
 
 > **Status**: Experimental (incubating tier) — see [STATUS.md](STATUS.md)
 
-Terraform workflow automation for Architect projects.
+## Overview
+
+terraform-architected integrates HashiCorp Terraform into the Architect task lifecycle, providing tasks for planning, applying, and destroying infrastructure. It enables teams to manage infrastructure-as-code through standardized Architect commands.
 
 ## Tasks
 

@@ -2,7 +2,9 @@
 
 > **Status**: Experimental (incubating tier) — see [STATUS.md](STATUS.md)
 
-Kubernetes deployment workflow automation for Architect projects.
+## Overview
+
+kubernetes-architected integrates Kubernetes into the Architect task lifecycle, providing tasks for deploying, scaling, and managing Kubernetes resources. It enables teams to manage cluster operations through standardized Architect commands.
 
 ## Tasks
 

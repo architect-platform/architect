@@ -2,7 +2,9 @@
 
 > **Status**: Experimental (incubating tier) — see [STATUS.md](STATUS.md)
 
-Rust workflow automation for Architect projects.
+## Overview
+
+rust-architected integrates Rust/Cargo into the Architect task lifecycle, providing tasks for building, testing, and linting Rust projects. It enables teams to manage Rust development through standardized Architect commands.
 
 ## Tasks
 

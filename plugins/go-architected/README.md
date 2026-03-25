@@ -2,7 +2,9 @@
 
 > **Status**: Experimental (incubating tier) — see [STATUS.md](STATUS.md)
 
-Go build, test, lint, and release workflow automation for Architect projects.
+## Overview
+
+go-architected integrates Go toolchain into the Architect task lifecycle, providing tasks for building, testing, linting, and formatting Go projects. It enables teams to manage Go development through standardized Architect commands.
 
 ## Tasks
 

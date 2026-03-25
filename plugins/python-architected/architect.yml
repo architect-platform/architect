@@ -1,14 +1,23 @@
 project:
-  name: my-python-project
-  description: "Example project using python-architected plugin"
+  name: python-architected
+  description: "The Architect plugin for Python"
 
 plugins:
-  - name: python-architected
-    repo: architect-platform/python-architected
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
 
-python:
-  tool: uv
-  pythonVersion: "3.12"
-  testRunner: pytest
-  linter: ruff
-  enabled: true
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "Python Architected Plugin"
+    siteDescription: "Python build and test integration"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+  publish:
+    enabled: true
+    githubPages: true

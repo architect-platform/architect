@@ -2,7 +2,9 @@
 
 > **Status**: Experimental (incubating tier) — see [STATUS.md](STATUS.md)
 
-JavaScript and Node.js workflow automation for Architect projects.
+## Overview
+
+javascript-architected integrates JavaScript/Node.js toolchain into the Architect task lifecycle, providing tasks for building, testing, and linting npm/yarn/pnpm projects. It enables teams to manage JavaScript development through standardized Architect commands.
 
 ## Tasks
 

@@ -1,11 +1,23 @@
 project:
-  name: my-javascript-project
-  description: "Example project using javascript-architected plugin"
+  name: javascript-architected
+  description: "The Architect plugin for JavaScript/Node.js"
 
 plugins:
-  - name: javascript-architected
-    repo: architect-platform/javascript-architected
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
 
-javascript:
-  packageManager: npm
-  workingDirectory: .
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "JavaScript Architected Plugin"
+    siteDescription: "JavaScript/Node.js build integration"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+  publish:
+    enabled: true
+    githubPages: true

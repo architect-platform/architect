@@ -1,17 +1,23 @@
 project:
-  name: my-docker-project
-  description: "Example project using docker-architected plugin"
+  name: docker-architected
+  description: "The Architect plugin for Docker"
 
 plugins:
-  - name: docker-architected
-    repo: architect-platform/docker-architected
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
 
-docker:
-  image: myapp
-  registry: ghcr.io/my-org
-  dockerfile: Dockerfile
-  platforms:
-    - linux/amd64
-    - linux/arm64
-  composeFile: docker-compose.yml
-  enabled: true
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "Docker Architected Plugin"
+    siteDescription: "Docker container management"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+  publish:
+    enabled: true
+    githubPages: true

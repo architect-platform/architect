@@ -1,17 +1,23 @@
 project:
-  name: my-terraform-project
-  description: "Example project using terraform-architected plugin"
+  name: terraform-architected
+  description: "The Architect plugin for Terraform"
 
 plugins:
-  - name: terraform-architected
-    repo: architect-platform/terraform-architected
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
 
-terraform:
-  workspace: production
-  backend: infra/backend.hcl
-  vars:
-    environment: production
-    region: eu-west-1
-  varFile: infra/production.tfvars
-  autoApprove: false
-  enabled: true
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "Terraform Architected Plugin"
+    siteDescription: "Terraform infrastructure management"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+  publish:
+    enabled: true
+    githubPages: true

@@ -2,7 +2,9 @@
 
 > **Status**: Experimental (incubating tier) — see [STATUS.md](STATUS.md)
 
-Architecture validation workflow automation for Architect projects.
+## Overview
+
+architecture-architected integrates architecture validation into the Architect task lifecycle, providing tasks for enforcing architectural rules and boundaries. It enables teams to validate architecture decisions through standardized Architect commands.
 
 ## Tasks
 

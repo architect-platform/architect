@@ -1,14 +1,23 @@
 project:
-  name: my-kubernetes-project
-  description: "Example project using kubernetes-architected plugin"
+  name: kubernetes-architected
+  description: "The Architect plugin for Kubernetes"
 
 plugins:
-  - name: kubernetes-architected
-    repo: architect-platform/kubernetes-architected
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
 
-kubernetes:
-  namespace: my-namespace
-  context: my-cluster-context
-  manifests: k8s/
-  kubeconfig: ""
-  enabled: true
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "Kubernetes Architected Plugin"
+    siteDescription: "Kubernetes deployment management"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+  publish:
+    enabled: true
+    githubPages: true

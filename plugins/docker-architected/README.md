@@ -2,7 +2,9 @@
 
 > **Status**: Experimental (incubating tier) — see [STATUS.md](STATUS.md)
 
-Docker build, push, and compose workflow automation for Architect projects.
+## Overview
+
+docker-architected integrates Docker into the Architect task lifecycle, providing tasks for building images, running containers, and managing Docker Compose services. It enables teams to manage containerization through standardized Architect commands.
 
 ## Tasks
 

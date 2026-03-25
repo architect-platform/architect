@@ -1,17 +1,23 @@
 project:
-  name: my-nx-project
-  description: "Example project using nx-architected plugin"
+  name: nx-architected
+  description: "The Architect plugin for Nx"
 
 plugins:
-  - name: nx-architected
-    repo: architect-platform/nx-architected
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
 
-nx:
-  targets:
-    - build
-    - test
-    - lint
-  parallel: 3
-  affected: false
-  nxCloud: false
-  enabled: true
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "Nx Architected Plugin"
+    siteDescription: "Nx monorepo build integration"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+  publish:
+    enabled: true
+    githubPages: true

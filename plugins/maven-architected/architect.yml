@@ -1,14 +1,23 @@
 project:
-  name: my-maven-project
-  description: "Example project using maven-architected plugin"
+  name: maven-architected
+  description: "The Architect plugin for Maven"
 
 plugins:
-  - name: maven-architected
-    repo: architect-platform/maven-architected
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
 
-maven:
-  profiles:
-    - production
-  settings: .mvn/settings.xml
-  skipTests: false
-  enabled: true
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "Maven Architected Plugin"
+    siteDescription: "Maven build integration"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+  publish:
+    enabled: true
+    githubPages: true

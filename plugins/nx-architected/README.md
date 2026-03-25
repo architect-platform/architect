@@ -2,7 +2,9 @@
 
 > **Status**: Experimental (incubating tier) — see [STATUS.md](STATUS.md)
 
-Nx monorepo workflow integration for Architect projects.
+## Overview
+
+nx-architected integrates Nx monorepo tooling into the Architect task lifecycle, providing tasks for building, testing, and linting Nx workspaces. It enables teams to manage Nx monorepos through standardized Architect commands.
 
 ## Tasks
 

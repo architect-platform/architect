@@ -1,13 +1,23 @@
 project:
-  name: my-go-project
-  description: "Example project using go-architected plugin"
+  name: go-architected
+  description: "The Architect plugin for Go"
 
 plugins:
-  - name: go-architected
-    repo: architect-platform/go-architected
+  - name: gradle-architected
+    repo: architect-platform/architect
+  - name: github-architected
+    repo: architect-platform/architect
 
-go:
-  module: github.com/my-org/my-app
-  outputBinary: bin/my-app
-  ldflags: "-s -w"
-  enabled: true
+# Documentation configuration
+docs:
+  build:
+    enabled: true
+    framework: "mkdocs"
+    siteName: "Go Architected Plugin"
+    siteDescription: "Go build and test integration"
+    siteAuthor: "Architect Platform Team"
+    repoUrl: "https://github.com/architect-platform/architect"
+    repoName: "architect-platform/architect"
+  publish:
+    enabled: true
+    githubPages: true

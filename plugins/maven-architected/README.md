@@ -2,7 +2,9 @@
 
 > **Status**: Experimental (incubating tier) — see [STATUS.md](STATUS.md)
 
-Maven build and lifecycle automation for Architect projects.
+## Overview
+
+maven-architected integrates Apache Maven into the Architect task lifecycle, providing tasks for building, testing, and packaging Maven projects. It enables teams to manage Java/Maven builds through standardized Architect commands.
 
 ## Tasks
 
