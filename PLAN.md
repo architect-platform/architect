@@ -1,7 +1,7 @@
 # Architect Repository Refactor Plan
 
 ## Status
-Overall Progress: 104/350 tasks completed (29.7%)
+Overall Progress: 105/350 tasks completed (30.0%)
 Current Phase: Phase 10 — Refactor for simplicity, readability, and smaller units
 Last Updated: 2026-03-25T17:50:00Z
 
@@ -383,7 +383,7 @@ Last Updated: 2026-03-25T17:50:00Z
 
   - [x] Define logging and error-handling conventions by module type. | Finished: 2026-03-25T18:00:00Z | Notes: Created docs/guides/logging-error-handling.md defining logging framework (SLF4J), log levels, error model (TaskResult + ArchitectException + Result), conventions per module type (API, core, engine, CLI, plugins), anti-patterns. Added to mkdocs.yml.
   - [x] Define observability expectations for engine/cloud surfaces. | Finished: 2026-03-25T18:10:00Z | Notes: Created docs/guides/observability.md defining 3 pillars (logging, metrics, health checks), mandatory log points, SSE event types, metric definitions (Micrometer), health endpoint contracts, error visibility channels, current gaps.
-  - [ ] Define observability expectations for engine/cloud surfaces.
+  - [x] Define security requirements for remote downloads, signatures, secrets, and generated workflows. | Finished: 2026-03-25T18:15:00Z | Notes: Created docs/guides/security-requirements.md covering 6 areas: remote downloads (HTTPS-only, domain allowlist), GPG signatures (key formats, verification failure = hard stop), secret management (never log, never persist), generated workflow safety (template-based, no secret interpolation), classloader isolation, security review checklist.
   - [ ] Define security requirements for remote downloads, signatures, secrets, and generated workflows.
   - [ ] Define performance-testing triggers and ownership.
   - [ ] Add automated checks where possible, not just prose guidance.
