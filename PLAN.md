@@ -131,7 +131,7 @@
   - Prompt for project name, description, plugins to enable
   - Support `--yes` flag for non-interactive mode with auto-detected defaults
 
-- [ ] **T-1.1.2** 🔴 `L` — Add `architect help` and per-command `--help` with examples
+- [x] **T-1.1.2** 🔴 `L` — Add `architect help` and per-command `--help` with examples | Finished: 2026-03-26T19:50:00Z | Notes: HelpCommandHandler with overview, tasks topic, plugins topic, and per-command detailed help for all 15 commands
   - Structured help with usage, description, examples, related commands
   - `architect help <command>` shows detailed docs
   - `architect help tasks` explains the task system
