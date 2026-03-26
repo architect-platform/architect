@@ -255,6 +255,10 @@ class ArchitectLauncher(
 
     val useEmbeddedExecution = embedded || (noDaemon && !engineHealthChecker.isRunning())
 
+    // --output / --tee: redirect stdout to file
+    val originalOut = System.out
+    val fileOut = setupOutputRedirection()
+
     // --dry-run: show execution plan without running
     if (dryRun && command != null && command !in listOf("tasks", "info", "plan", "graph", "validate")) {
       val projectPath = System.getProperty("user.dir")
@@ -349,6 +353,37 @@ class ArchitectLauncher(
     output.json = json
     output.filter = filter
     output.verbosity = verbosity
+  }
+
+  /**
+   * Sets up output redirection for --output and --tee flags.
+   * Returns the FileOutputStream if active, null otherwise.
+   */
+  private fun setupOutputRedirection(): java.io.FileOutputStream? {
+    val filePath = outputFile ?: return null
+    val file = java.io.File(filePath)
+    file.parentFile?.mkdirs()
+    val fileStream = java.io.FileOutputStream(file)
+    val printStream = if (tee) {
+      // Tee mode: write to both terminal and file
+      val teeStream = object : java.io.OutputStream() {
+        val original = System.out
+        override fun write(b: Int) { original.write(b); fileStream.write(b) }
+        override fun write(b: ByteArray) { original.write(b); fileStream.write(b) }
+        override fun write(b: ByteArray, off: Int, len: Int) { original.write(b, off, len); fileStream.write(b, off, len) }
+        override fun flush() { original.flush(); fileStream.flush() }
+      }
+      java.io.PrintStream(teeStream, true)
+    } else {
+      // Output-only: write only to file
+      java.io.PrintStream(fileStream, true)
+    }
+    System.setOut(printStream)
+    Runtime.getRuntime().addShutdownHook(Thread {
+      System.out.flush()
+      fileStream.close()
+    })
+    return fileStream
   }
 
   /**

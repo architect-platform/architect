@@ -143,7 +143,7 @@
   - Show task description, phase, dependencies inline
   - Fallback to plain list in CI mode
 
-- [ ] **T-1.1.4** 🟠 `M` — Add `architect doctor` diagnostic command
+- [x] **T-1.1.4** 🟠 `M` — Add `architect doctor` diagnostic command
   - Check: engine running, plugins loaded, config valid, tools available, versions compatible
   - Output: checklist with ✅/❌ per check + remediation hints
   - `architect doctor --fix` attempts auto-remediation (install engine, fix config)
@@ -164,7 +164,7 @@
   - Level 2 (`-vv`): command details + stdout
   - Level 3 (`-vvv`): full debug (HTTP calls, plugin loading, config resolution)
 
-- [ ] **T-1.2.2** 🟠 `M` — Add `--output <file>` and `--tee` flags for output persistence
+- [x] **T-1.2.2** 🟠 `M` — Add `--output <file>` and `--tee` flags for output persistence
   - Save execution output to file while displaying on terminal
   - JSON mode: structured execution log with timestamps
   - Useful for CI artifact collection
@@ -219,7 +219,7 @@
   - `architect retry --from <task>` resumes from specific failed task
   - Useful for flaky tests or transient network failures
 
-- [ ] **T-1.4.4** 🟡 `S` — Add `--parallel <N>` flag to control task parallelism
+- [x] **T-1.4.4** 🟡 `S` — Add `--parallel <N>` flag to control task parallelism
   - Override engine's default parallel execution behavior
   - `--parallel 1` for sequential debugging
   - `--parallel 0` for unlimited (use all cores)
@@ -268,7 +268,7 @@
   - Counters: `architect.tasks.executed`, `architect.tasks.failed`
   - Histograms: `architect.tasks.duration`, `architect.cache.lookup.duration`
 
-- [ ] **T-2.2.2** 🟠 `M` — Add health check endpoint
+- [x] **T-2.2.2** 🟠 `M` — Add health check endpoint
   - `GET /api/health` — engine health with subsystem checks
   - Checks: plugin loader, project repository, event system, cloud connectivity
   - Returns: `{ status: "UP/DOWN", checks: [...] }`
