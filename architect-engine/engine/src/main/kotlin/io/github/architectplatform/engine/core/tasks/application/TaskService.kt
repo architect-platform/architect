@@ -3,6 +3,7 @@ package io.github.architectplatform.engine.core.tasks.application
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskNotFoundException
 import io.github.architectplatform.api.core.tasks.TaskResult
+import io.github.architectplatform.engine.audit.AuditService
 import io.github.architectplatform.engine.cloud.CloudReporterService
 import io.github.architectplatform.core.history.app.HistoryService
 import io.github.architectplatform.core.history.domain.ExecutionRecord
@@ -53,6 +54,7 @@ class TaskService(
     private val eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>,
     private val historyService: HistoryService,
     private val metricsService: io.github.architectplatform.engine.core.metrics.MetricsService,
+    private val auditService: AuditService,
     private val cloudReporter: Optional<CloudReporterService> = Optional.empty(),
 ) {
 
@@ -177,6 +179,14 @@ class TaskService(
         } else {
           metricsService.incrementCounter("architect.tasks.failed")
         }
+        auditService.record(
+            projectName = projectName,
+            taskName = taskId,
+            status = if (result.success) "SUCCESS" else "FAILURE",
+            durationMs = durationMs,
+            executionId = executionId,
+            message = result.message,
+        )
         if (!result.success) {
             eventPublisher.publishEvent(
                 executionFailedEvent(

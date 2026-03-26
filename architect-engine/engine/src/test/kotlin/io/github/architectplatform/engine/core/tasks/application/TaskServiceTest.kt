@@ -4,6 +4,7 @@ import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskResult
+import io.github.architectplatform.engine.audit.AuditService
 import io.github.architectplatform.engine.cloud.CloudReporterService
 import io.github.architectplatform.core.history.app.HistoryService
 import io.github.architectplatform.core.history.domain.ExecutionRecord
@@ -51,7 +52,7 @@ class TaskServiceTest {
         eventPublisher = mock()
         historyService = mock()
         cloudReporter = mock()
-        taskService = TaskService(projectService, taskExecutor, eventCollector, eventPublisher, historyService, io.github.architectplatform.engine.core.metrics.MetricsService(), Optional.of(cloudReporter))
+        taskService = TaskService(projectService, taskExecutor, eventCollector, eventPublisher, historyService, io.github.architectplatform.engine.core.metrics.MetricsService(), AuditService(), Optional.of(cloudReporter))
     }
 
     @Test
