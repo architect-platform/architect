@@ -177,7 +177,7 @@ class MonorepoExecutionIntegrationTest {
       parallelExecutionEnabled = true,
     )
     val historyService = HistoryService()
-    val taskService = TaskService(projectService, taskExecutor, eventCollector, eventPublisher, historyService)
+    val taskService = TaskService(projectService, taskExecutor, eventCollector, eventPublisher, historyService, io.github.architectplatform.engine.core.metrics.MetricsService())
 
     return Fixture(projectService, taskService, eventCollector, historyService)
   }

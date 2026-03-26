@@ -261,7 +261,7 @@
 
 ### 2.2 — Observability & Metrics
 
-- [ ] **T-2.2.1** 🔴 `L` — Add structured metrics collection
+- [x] **T-2.2.1** 🔴 `L` — Add structured metrics collection | Finished: 2026-03-26T21:25:00Z | Notes: MetricsService (counters+histograms), GET /api/metrics (Prometheus) + /api/metrics/json, wired into TaskService execution pipeline, 7 tests
   - Task execution duration, success/failure rates, cache hit ratio
   - Expose via `GET /api/metrics` (Prometheus format)
   - Micrometer integration with Micronaut

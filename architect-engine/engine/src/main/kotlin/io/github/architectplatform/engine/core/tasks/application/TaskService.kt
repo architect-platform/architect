@@ -52,6 +52,7 @@ class TaskService(
     private val eventCollector: ExecutionEventCollector,
     private val eventPublisher: ApplicationEventPublisher<ArchitectEvent<*>>,
     private val historyService: HistoryService,
+    private val metricsService: io.github.architectplatform.engine.core.metrics.MetricsService,
     private val cloudReporter: Optional<CloudReporterService> = Optional.empty(),
 ) {
 
@@ -169,6 +170,13 @@ class TaskService(
         )
         historyService.record(record)
         cloudReporter.ifPresent { reporter -> reporter.reportAuditRecord(record) }
+        metricsService.incrementCounter("architect.tasks.executed")
+        metricsService.recordDuration("architect.tasks.duration", durationMs)
+        if (result.success) {
+          metricsService.incrementCounter("architect.tasks.succeeded")
+        } else {
+          metricsService.incrementCounter("architect.tasks.failed")
+        }
         if (!result.success) {
             eventPublisher.publishEvent(
                 executionFailedEvent(
