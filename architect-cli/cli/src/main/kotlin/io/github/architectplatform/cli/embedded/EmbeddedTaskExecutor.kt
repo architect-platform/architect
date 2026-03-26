@@ -4,6 +4,7 @@ import io.github.architectplatform.cli.dto.TaskDTO
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.TaskPlanStepDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
+import io.github.architectplatform.api.core.tasks.TaskNotFoundException
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.core.execution.EmbeddedExecutionContext
 import io.github.architectplatform.core.history.domain.ExecutionRecord
@@ -50,7 +51,7 @@ class EmbeddedTaskExecutor(
     val project = context.projectService.getProject(projectName)
       ?: throw IllegalArgumentException("Project $projectName is not registered")
     val task = project.taskRegistry.get(taskName)
-      ?: throw IllegalArgumentException("Task '$taskName' not found in project '$projectName'")
+      ?: throw TaskNotFoundException(taskName, projectName, project.taskRegistry.all().map { it.id })
 
     val allTasks = dependencyResolver.resolveAllDependencies(task, project.taskRegistry)
     val executionOrder = dependencyResolver.topologicalSort(allTasks)
@@ -86,7 +87,7 @@ class EmbeddedTaskExecutor(
     val project = context.projectService.getProject(projectName)
       ?: throw IllegalArgumentException("Project $projectName is not registered")
     val task = project.taskRegistry.get(taskName)
-      ?: throw IllegalArgumentException("Task '$taskName' not found in project '$projectName'")
+      ?: throw TaskNotFoundException(taskName, projectName, project.taskRegistry.all().map { it.id })
 
     val unsubscribe = context.eventBus.subscribe(onEvent)
 

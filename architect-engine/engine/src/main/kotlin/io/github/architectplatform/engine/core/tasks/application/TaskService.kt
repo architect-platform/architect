@@ -1,6 +1,7 @@
 package io.github.architectplatform.engine.core.tasks.application
 
 import io.github.architectplatform.api.core.tasks.Task
+import io.github.architectplatform.api.core.tasks.TaskNotFoundException
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.engine.cloud.CloudReporterService
 import io.github.architectplatform.core.history.app.HistoryService
@@ -78,7 +79,8 @@ class TaskService(
     val project =
         projectService.getProject(projectName)
             ?: throw IllegalArgumentException("Project not found")
-    return project.taskRegistry.get(taskId) ?: throw IllegalArgumentException("Task not found")
+    return project.taskRegistry.get(taskId)
+      ?: throw TaskNotFoundException(taskId, projectName, project.taskRegistry.all().map { it.id })
   }
 
   /**
@@ -97,7 +99,7 @@ class TaskService(
     val project = projectService.getProject(projectName)
         ?: throw IllegalArgumentException("Project not found")
     val task = project.taskRegistry.get(taskId)
-        ?: throw IllegalArgumentException("Task '$taskId' not found")
+        ?: throw TaskNotFoundException(taskId, projectName, project.taskRegistry.all().map { it.id })
 
     val resolver = TaskDependencyResolver()
     val allTasks = resolver.resolveAllDependencies(task, project.taskRegistry)
@@ -205,7 +207,7 @@ class TaskService(
         // Execute task in the current project only if present
         val task = project.taskRegistry.all().firstOrNull { it.id == taskId }
         if (task == null) {
-            return TaskResult.success("Task $taskId not found in project ${project.name}, skipping execution.")
+            return TaskResult.skipped("Task '$taskId' not found in project '${project.name}', skipping.")
         }
 
         // Execute using shared executionId

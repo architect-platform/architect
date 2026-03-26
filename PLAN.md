@@ -254,7 +254,7 @@
   - Cancels entire execution if wall-clock time exceeded
   - Prevents runaway monorepo executions
 
-- [ ] **T-2.1.5** 🟡 `S` — Fix "task not found silently returns success" behavior
+- [x] **T-2.1.5** 🟡 `S` — Fix "task not found silently returns success" behavior | Finished: 2026-03-26T19:58:00Z | Notes: Created TaskNotFoundException with Levenshtein-based suggestions; updated all 4 lookup sites; subproject uses TaskResult.skipped()
   - Currently questionable: missing tasks don't fail
   - Change to: throw `TaskNotFoundException` with helpful message
   - Suggest similar task names (Levenshtein distance)
