@@ -3,6 +3,7 @@ package io.github.architectplatform.api.core.tasks
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.cache.CacheDescriptor
 import io.github.architectplatform.api.core.tasks.phase.Phase
+import java.time.Duration
 
 /**
  * Core abstraction for a unit of work in the Architect platform.
@@ -166,6 +167,17 @@ interface Task {
    * @return The desired failure handling strategy
    */
   fun onFailure(): FailureStrategy = FailureStrategy.ABORT
+
+  /**
+   * Returns the maximum duration this task is allowed to run.
+   *
+   * When non-null, overrides the global `executor.timeout-seconds` setting.
+   * If the task exceeds this duration the engine cancels it and returns
+   * [TaskResult.failure] with a timeout message.
+   *
+   * @return The per-task timeout, or null to use the global default
+   */
+  fun timeout(): Duration? = null
 
   /**
    * Executes the task's work.

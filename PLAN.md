@@ -92,7 +92,7 @@
   - Values: `ABORT` (default), `CONTINUE`, `RETRY(maxAttempts)`
   - Engine respects strategy during composite/pipeline execution
 
-- [ ] **T-0.4.3** 🟡 `S` — Add `Task.timeout(): Duration?` for per-task timeouts
+- [x] **T-0.4.3** 🟡 `S` — Add `Task.timeout(): Duration?` for per-task timeouts | Finished: 2026-03-26T19:15:00Z | Notes: Added to Task interface with null default; TaskExecutor enforces via Future.get() with TimeoutException handling
   - Overrides global `executor.timeout-seconds`
   - Engine cancels task if exceeded, returns `TaskResult.failure("Timeout")`
 

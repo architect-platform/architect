@@ -19,6 +19,10 @@ import io.github.architectplatform.core.tasks.domain.events.TaskEvents.taskStart
 import io.github.architectplatform.core.domain.events.ArchitectEvent
 import io.github.architectplatform.core.domain.events.ExecutionId
 import io.github.architectplatform.core.domain.events.generateExecutionId
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -194,8 +198,25 @@ class TaskExecutor(
     var lastResult: TaskResult = TaskResult.failure("Task '${currentTask.id}' did not execute")
     for (attempt in 1..maxAttempts) {
       lastResult = try {
-        val result = TaskPermissionScope.withTask(currentTask, projectContext.dir) {
-          currentTask.execute(environment, projectContext, args)
+        val taskTimeout = currentTask.timeout()
+        val result = if (taskTimeout != null) {
+          val executor = Executors.newSingleThreadExecutor()
+          try {
+            val future = executor.submit(Callable {
+              TaskPermissionScope.withTask(currentTask, projectContext.dir) {
+                currentTask.execute(environment, projectContext, args)
+              }
+            })
+            future.get(taskTimeout.toMillis(), TimeUnit.MILLISECONDS)
+          } catch (e: TimeoutException) {
+            TaskResult.failure("Task '${currentTask.id}' timed out after ${taskTimeout.seconds}s")
+          } finally {
+            executor.shutdownNow()
+          }
+        } else {
+          TaskPermissionScope.withTask(currentTask, projectContext.dir) {
+            currentTask.execute(environment, projectContext, args)
+          }
         }
         // Children execute after parent succeeds; results merge into a composite TaskResult.
         val childResults = if (currentTask.children().isNotEmpty()) {
