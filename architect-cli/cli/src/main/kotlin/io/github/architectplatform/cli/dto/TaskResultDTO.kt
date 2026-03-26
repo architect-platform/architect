@@ -30,9 +30,10 @@ data class TaskResultDTO(
     val subResults: List<TaskResultDTO> = emptyList(),
     val metadata: TaskMetadataDTO? = null,
     val data: Map<String, Any> = emptyMap(),
+    val status: String = if (success) "SUCCESS" else "FAILURE",
 ) {
   /**
-   * Renders the task result as a tree structure with success/failure icons.
+   * Renders the task result as a tree structure with success/failure/skipped icons.
    */
   override fun toString(): String = render()
 
@@ -45,7 +46,10 @@ data class TaskResultDTO(
    */
   private fun render(indent: String = "", isLast: Boolean = true): String {
     val branch = if (isLast) "└── " else "├── "
-    val statusIcon = if (success) "✅" else "❌"
+    val statusIcon = when (status) {
+      "SKIPPED" -> "⏭️"
+      else -> if (success) "✅" else "❌"
+    }
     val msg = message?.let { ": $it" } ?: ""
 
     val sb = StringBuilder()

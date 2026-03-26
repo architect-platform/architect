@@ -14,6 +14,9 @@ package io.github.architectplatform.api.core.tasks
  * // Failure result
  * TaskResult.failure("Build failed: compilation error")
  *
+ * // Skipped result (task decided not to execute)
+ * TaskResult.skipped("No changes detected since last build")
+ *
  * // Result with sub-results
  * TaskResult.success("All tests passed", listOf(
  *   TaskResult.success("Unit tests: 10 passed"),
@@ -24,6 +27,7 @@ package io.github.architectplatform.api.core.tasks
 interface TaskResult {
   /**
    * Indicates whether the task execution was successful.
+   * Skipped tasks are considered successful (they did not fail).
    */
   val success: Boolean
 
@@ -62,6 +66,32 @@ interface TaskResult {
   val data: Map<String, Any>
     get() = emptyMap()
 
+  /**
+   * The execution status of the task, providing finer granularity than [success].
+   *
+   * - [Status.SUCCESS]: Task completed successfully
+   * - [Status.FAILURE]: Task failed
+   * - [Status.SKIPPED]: Task was skipped (no work performed, not a failure)
+   *
+   * Defaults to [Status.SUCCESS] or [Status.FAILURE] based on [success] for backward compatibility.
+   */
+  val status: Status
+    get() = if (success) Status.SUCCESS else Status.FAILURE
+
+  /**
+   * Represents the execution status of a task.
+   */
+  enum class Status {
+    /** Task completed successfully. */
+    SUCCESS,
+
+    /** Task failed during execution. */
+    FAILURE,
+
+    /** Task was skipped (e.g., no changes detected, condition not met). */
+    SKIPPED,
+  }
+
   companion object {
     /**
      * Internal implementation of TaskResult.
@@ -72,6 +102,7 @@ interface TaskResult {
       override val results: List<TaskResult> = emptyList(),
       override val metadata: TaskMetadata? = null,
       override val data: Map<String, Any> = emptyMap(),
+      override val status: Status = if (success) Status.SUCCESS else Status.FAILURE,
     ) : TaskResult
 
     /**
@@ -89,7 +120,14 @@ interface TaskResult {
       metadata: TaskMetadata? = null,
       data: Map<String, Any> = emptyMap(),
     ): TaskResult =
-      TaskResultImpl(success = true, message = message, results = results, metadata = metadata, data = data)
+      TaskResultImpl(
+        success = true,
+        message = message,
+        results = results,
+        metadata = metadata,
+        data = data,
+        status = Status.SUCCESS,
+      )
 
     /**
      * Creates a failed task result.
@@ -106,6 +144,30 @@ interface TaskResult {
       metadata: TaskMetadata? = null,
       data: Map<String, Any> = emptyMap(),
     ): TaskResult =
-      TaskResultImpl(success = false, message = message, results = results, metadata = metadata, data = data)
+      TaskResultImpl(
+        success = false,
+        message = message,
+        results = results,
+        metadata = metadata,
+        data = data,
+        status = Status.FAILURE,
+      )
+
+    /**
+     * Creates a skipped task result, indicating the task chose not to execute.
+     *
+     * Skipped tasks are considered successful ([success] = true) but can be
+     * distinguished from actual executions via [status] = [Status.SKIPPED].
+     * The engine renders skipped tasks differently in output.
+     *
+     * @param reason Explanation of why the task was skipped
+     * @return A skipped TaskResult
+     */
+    fun skipped(reason: String): TaskResult =
+      TaskResultImpl(
+        success = true,
+        message = reason,
+        status = Status.SKIPPED,
+      )
   }
 }

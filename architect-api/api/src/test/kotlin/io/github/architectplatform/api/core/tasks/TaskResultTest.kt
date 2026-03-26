@@ -221,4 +221,51 @@ class TaskResultTest {
     @Suppress("UNCHECKED_CAST")
     assertEquals("value", (result.data["nested"] as Map<String, Any>)["inner"])
   }
+
+  @Test
+  fun `skipped creates a skipped TaskResult with reason`() {
+    val result = TaskResult.skipped("No changes detected since last build")
+
+    assertTrue(result.success)
+    assertEquals("No changes detected since last build", result.message)
+    assertEquals(TaskResult.Status.SKIPPED, result.status)
+    assertTrue(result.results.isEmpty())
+    assertTrue(result.data.isEmpty())
+    assertNull(result.metadata)
+  }
+
+  @Test
+  fun `skipped is distinct from success via status`() {
+    val skipped = TaskResult.skipped("Nothing to do")
+    val success = TaskResult.success("Task completed")
+
+    assertTrue(skipped.success)
+    assertTrue(success.success)
+    assertEquals(TaskResult.Status.SKIPPED, skipped.status)
+    assertEquals(TaskResult.Status.SUCCESS, success.status)
+    assertNotEquals(skipped.status, success.status)
+  }
+
+  @Test
+  fun `success has SUCCESS status by default`() {
+    val result = TaskResult.success("Done")
+    assertEquals(TaskResult.Status.SUCCESS, result.status)
+  }
+
+  @Test
+  fun `failure has FAILURE status by default`() {
+    val result = TaskResult.failure("Error")
+    assertEquals(TaskResult.Status.FAILURE, result.status)
+  }
+
+  @Test
+  fun `status defaults based on success for backward compatibility`() {
+    // Custom implementation that only provides success (no explicit status)
+    val customResult = object : TaskResult {
+      override val success = true
+      override val message = "custom"
+      override val results = emptyList<TaskResult>()
+    }
+    assertEquals(TaskResult.Status.SUCCESS, customResult.status)
+  }
 }

@@ -38,7 +38,7 @@
   - Enables downstream tasks to read outputs from upstream tasks
   - Engine must propagate `data` through dependency chain into `TaskContext`
 
-- [ ] **T-0.1.3** 🟠 `S` — Add `TaskResult.skipped(reason)` factory method
+- [x] **T-0.1.3** 🟠 `S` — Add `TaskResult.skipped(reason)` factory method | Finished: 2026-03-26T18:32:00Z | Notes: Added Status enum (SUCCESS/FAILURE/SKIPPED), skipped() factory, CLI renders ⏭️ icon for skipped, 5 new tests
   - Currently no way to distinguish "did nothing" from "succeeded"
   - Engine should render skipped tasks differently in output
 

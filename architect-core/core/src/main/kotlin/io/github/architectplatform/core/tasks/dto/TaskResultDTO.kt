@@ -17,6 +17,7 @@ data class TaskResultDTO(
     val subResults: List<TaskResultDTO> = emptyList(),
     val metadata: TaskMetadataDTO? = null,
     val data: Map<String, Any> = emptyMap(),
+    val status: String = if (success) "SUCCESS" else "FAILURE",
 )
 
 fun TaskMetadata.toDTO(): TaskMetadataDTO =
@@ -35,5 +36,6 @@ fun TaskResult.toDTO(): TaskResultDTO {
       subResults = results.map { it.toDTO() },
       metadata = metadata?.toDTO(),
       data = data,
+      status = status.name,
   )
 }
