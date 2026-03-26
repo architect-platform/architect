@@ -169,16 +169,16 @@
   - JSON mode: structured execution log with timestamps
   - Useful for CI artifact collection
 
-- [ ] **T-1.2.3** 🟠 `S` — Add `--dry-run` flag for all task executions
+- [x] **T-1.2.3** 🟠 `S` — Add `--dry-run` flag for all task executions
   - Show what would execute without actually running
   - Display: task order, commands, environment, working directories
   - Helps debug pipeline issues before committing
 
-- [ ] **T-1.2.4** 🟡 `S` — Add `--timing` flag to show task execution breakdown
+- [x] **T-1.2.4** 🟡 `S` — Add `--timing` flag to show task execution breakdown
   - Waterfall view: which tasks ran in parallel, durations, critical path
   - ASCII-art timeline in terminal, HTML in `--json` mode
 
-- [ ] **T-1.2.5** 🟡 `S` — Add command aliasing support
+- [x] **T-1.2.5** 🟡 `S` — Add command aliasing support
   - `architect.yml` section for aliases: `aliases: { b: build, t: test, bt: "build test" }`
   - `architect b` expands to `architect build`
 

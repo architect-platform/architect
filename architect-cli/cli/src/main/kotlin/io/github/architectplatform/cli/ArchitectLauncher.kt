@@ -208,6 +208,9 @@ class ArchitectLauncher(
     // Sync handler options
     syncHandlerOptions()
 
+    // Resolve command aliases from architect.yml
+    command = resolveAlias(command)
+
     if (version) {
       output.printVersion()
       return
@@ -321,6 +324,25 @@ class ArchitectLauncher(
     output.json = json
     output.filter = filter
     output.verbosity = verbosity
+  }
+
+  /**
+   * Resolves a command alias from the `aliases` section in architect.yml.
+   * Falls back to the original command if no alias matches.
+   */
+  @Suppress("UNCHECKED_CAST")
+  private fun resolveAlias(cmd: String?): String? {
+    if (cmd == null) return null
+    return try {
+      val configFile = java.io.File(System.getProperty("user.dir"), "architect.yml")
+      if (!configFile.exists()) return cmd
+      val yaml = org.yaml.snakeyaml.Yaml()
+      val config = yaml.load<Map<String, Any>>(configFile.inputStream()) ?: return cmd
+      val aliases = config["aliases"] as? Map<String, String> ?: return cmd
+      aliases[cmd] ?: cmd
+    } catch (_: Exception) {
+      cmd
+    }
   }
 
   private fun handleHistory() {
