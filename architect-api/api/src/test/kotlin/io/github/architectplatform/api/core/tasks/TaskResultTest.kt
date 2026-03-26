@@ -1,5 +1,7 @@
 package io.github.architectplatform.api.core.tasks
 
+import java.time.Duration
+import java.time.Instant
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -14,6 +16,7 @@ class TaskResultTest {
     assertTrue(result.success)
     assertNull(result.message)
     assertTrue(result.results.isEmpty())
+    assertNull(result.metadata)
   }
 
   @Test
@@ -46,6 +49,7 @@ class TaskResultTest {
     assertFalse(result.success)
     assertNull(result.message)
     assertTrue(result.results.isEmpty())
+    assertNull(result.metadata)
   }
 
   @Test
@@ -87,5 +91,81 @@ class TaskResultTest {
     assertEquals(1, topResult.results.size)
     assertEquals(1, topResult.results[0].results.size)
     assertEquals(deepResult, topResult.results[0].results[0])
+  }
+
+  @Test
+  fun `success with metadata creates TaskResult with metadata`() {
+    val now = Instant.now()
+    val metadata = TaskMetadata(
+      duration = Duration.ofMillis(1500),
+      exitCode = 0,
+      startedAt = now.minusMillis(1500),
+      finishedAt = now,
+      executorInfo = "BashCommandExecutor",
+    )
+    val result = TaskResult.success("Build completed", metadata = metadata)
+
+    assertTrue(result.success)
+    assertEquals("Build completed", result.message)
+    assertNotNull(result.metadata)
+    assertEquals(Duration.ofMillis(1500), result.metadata!!.duration)
+    assertEquals(0, result.metadata!!.exitCode)
+    assertEquals("BashCommandExecutor", result.metadata!!.executorInfo)
+    assertNotNull(result.metadata!!.startedAt)
+    assertNotNull(result.metadata!!.finishedAt)
+  }
+
+  @Test
+  fun `failure with metadata creates TaskResult with metadata`() {
+    val metadata = TaskMetadata(
+      duration = Duration.ofMillis(500),
+      exitCode = 1,
+      executorInfo = "BashCommandExecutor",
+    )
+    val result = TaskResult.failure("Build failed", metadata = metadata)
+
+    assertFalse(result.success)
+    assertEquals("Build failed", result.message)
+    assertNotNull(result.metadata)
+    assertEquals(1, result.metadata!!.exitCode)
+    assertEquals(Duration.ofMillis(500), result.metadata!!.duration)
+  }
+
+  @Test
+  fun `metadata defaults to null for backward compatibility`() {
+    val success = TaskResult.success("Done")
+    val failure = TaskResult.failure("Failed")
+
+    assertNull(success.metadata)
+    assertNull(failure.metadata)
+  }
+
+  @Test
+  fun `TaskMetadata has proper equality`() {
+    val meta1 = TaskMetadata(duration = Duration.ofMillis(100), exitCode = 0)
+    val meta2 = TaskMetadata(duration = Duration.ofMillis(100), exitCode = 0)
+
+    assertEquals(meta1, meta2)
+  }
+
+  @Test
+  fun `TaskMetadata allows all fields to be null`() {
+    val metadata = TaskMetadata()
+
+    assertNull(metadata.duration)
+    assertNull(metadata.exitCode)
+    assertNull(metadata.startedAt)
+    assertNull(metadata.finishedAt)
+    assertNull(metadata.executorInfo)
+  }
+
+  @Test
+  fun `results with same content but different metadata are not equal`() {
+    val meta1 = TaskMetadata(exitCode = 0)
+    val meta2 = TaskMetadata(exitCode = 1)
+    val result1 = TaskResult.success("Done", metadata = meta1)
+    val result2 = TaskResult.success("Done", metadata = meta2)
+
+    assertNotEquals(result1, result2)
   }
 }

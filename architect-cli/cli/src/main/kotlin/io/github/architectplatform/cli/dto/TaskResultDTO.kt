@@ -2,6 +2,15 @@ package io.github.architectplatform.cli.dto
 
 import io.micronaut.serde.annotation.Serdeable
 
+@Serdeable
+data class TaskMetadataDTO(
+    val durationMs: Long?,
+    val exitCode: Int?,
+    val startedAt: String?,
+    val finishedAt: String?,
+    val executorInfo: String?,
+)
+
 /**
  * Hierarchical result of task execution.
  *
@@ -11,12 +20,14 @@ import io.micronaut.serde.annotation.Serdeable
  * @property success Whether the task completed successfully
  * @property message Optional message describing the result
  * @property subResults Results of any sub-tasks executed as part of this task
+ * @property metadata Optional execution metadata (timing, exit code, executor info)
  */
 @Serdeable
 data class TaskResultDTO(
     val success: Boolean,
     val message: String?,
     val subResults: List<TaskResultDTO> = emptyList(),
+    val metadata: TaskMetadataDTO? = null,
 ) {
   /**
    * Renders the task result as a tree structure with success/failure icons.

@@ -29,7 +29,7 @@
 ### 0.1 — Enhanced Task Result Model
 > Tasks currently return `success + message`. We need structured data, metadata, and inter-task data passing.
 
-- [ ] **T-0.1.1** 🔴 `M` — Add `TaskMetadata` data class to API (`duration`, `exitCode`, `startedAt`, `finishedAt`, `executorInfo`)
+- [x] **T-0.1.1** 🔴 `M` — Add `TaskMetadata` data class to API (`duration`, `exitCode`, `startedAt`, `finishedAt`, `executorInfo`) | Finished: 2026-03-26T18:20:00Z | Notes: Created TaskMetadata data class, added metadata field to TaskResult interface with null default, updated TaskResultImpl, factory methods, both DTOs (core + CLI), added 6 new tests
   - File: `architect-api/api/src/main/kotlin/io/github/architectplatform/api/core/tasks/TaskResult.kt`
   - Add `metadata: TaskMetadata?` field to `TaskResult` interface
   - All existing implementations must return `null` by default (backward compatible)

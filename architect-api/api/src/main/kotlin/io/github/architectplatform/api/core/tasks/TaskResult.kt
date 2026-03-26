@@ -37,6 +37,13 @@ interface TaskResult {
    */
   val results: List<TaskResult>
 
+  /**
+   * Optional metadata about the task execution (timing, exit code, executor info).
+   * Returns null by default for backward compatibility.
+   */
+  val metadata: TaskMetadata?
+    get() = null
+
   companion object {
     /**
      * Internal implementation of TaskResult.
@@ -45,6 +52,7 @@ interface TaskResult {
       override val success: Boolean,
       override val message: String? = null,
       override val results: List<TaskResult> = emptyList(),
+      override val metadata: TaskMetadata? = null,
     ) : TaskResult
 
     /**
@@ -52,23 +60,27 @@ interface TaskResult {
      *
      * @param message Optional success message
      * @param results Optional list of sub-results
+     * @param metadata Optional execution metadata
      * @return A successful TaskResult
      */
     fun success(
       message: String? = null,
       results: List<TaskResult> = emptyList(),
-    ): TaskResult = TaskResultImpl(success = true, message = message, results = results)
+      metadata: TaskMetadata? = null,
+    ): TaskResult = TaskResultImpl(success = true, message = message, results = results, metadata = metadata)
 
     /**
      * Creates a failed task result.
      *
      * @param message Optional failure message describing what went wrong
      * @param results Optional list of sub-results
+     * @param metadata Optional execution metadata
      * @return A failed TaskResult
      */
     fun failure(
       message: String? = null,
       results: List<TaskResult> = emptyList(),
-    ): TaskResult = TaskResultImpl(success = false, message = message, results = results)
+      metadata: TaskMetadata? = null,
+    ): TaskResult = TaskResultImpl(success = false, message = message, results = results, metadata = metadata)
   }
 }
