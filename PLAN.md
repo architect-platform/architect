@@ -42,7 +42,7 @@
   - Currently no way to distinguish "did nothing" from "succeeded"
   - Engine should render skipped tasks differently in output
 
-- [ ] **T-0.1.4** 🟠 `S` — Add `TaskResult.warning(message)` for non-fatal issues
+- [x] **T-0.1.4** 🟠 `S` — Add `TaskResult.warning(message)` for non-fatal issues | Finished: 2026-03-26T18:35:00Z | Notes: Added WARNING status, warning() factory with metadata/data/results support, CLI renders ⚠️ icon, 4 new tests
   - Separate from success (clean) and failure (broken)
   - CLI renders warnings in yellow with ⚠️ icon
 

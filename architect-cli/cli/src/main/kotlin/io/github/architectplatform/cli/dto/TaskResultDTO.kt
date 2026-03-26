@@ -48,6 +48,7 @@ data class TaskResultDTO(
     val branch = if (isLast) "└── " else "├── "
     val statusIcon = when (status) {
       "SKIPPED" -> "⏭️"
+      "WARNING" -> "⚠️"
       else -> if (success) "✅" else "❌"
     }
     val msg = message?.let { ": $it" } ?: ""

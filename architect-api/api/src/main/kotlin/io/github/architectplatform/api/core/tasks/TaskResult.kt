@@ -90,6 +90,9 @@ interface TaskResult {
 
     /** Task was skipped (e.g., no changes detected, condition not met). */
     SKIPPED,
+
+    /** Task completed with warnings (non-fatal issues detected). */
+    WARNING,
   }
 
   companion object {
@@ -168,6 +171,34 @@ interface TaskResult {
         success = true,
         message = reason,
         status = Status.SKIPPED,
+      )
+
+    /**
+     * Creates a warning task result for non-fatal issues.
+     *
+     * Warning results are considered successful ([success] = true) but signal
+     * that something noteworthy occurred. The CLI renders warnings with a ⚠️ icon
+     * in yellow to draw attention without blocking execution.
+     *
+     * @param message Description of the warning condition
+     * @param results Optional list of sub-results
+     * @param metadata Optional execution metadata
+     * @param data Optional key-value data for downstream tasks
+     * @return A warning TaskResult
+     */
+    fun warning(
+      message: String,
+      results: List<TaskResult> = emptyList(),
+      metadata: TaskMetadata? = null,
+      data: Map<String, Any> = emptyMap(),
+    ): TaskResult =
+      TaskResultImpl(
+        success = true,
+        message = message,
+        results = results,
+        metadata = metadata,
+        data = data,
+        status = Status.WARNING,
       )
   }
 }

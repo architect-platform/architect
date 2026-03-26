@@ -268,4 +268,48 @@ class TaskResultTest {
     }
     assertEquals(TaskResult.Status.SUCCESS, customResult.status)
   }
+
+  @Test
+  fun `warning creates a warning TaskResult`() {
+    val result = TaskResult.warning("Deprecation notice: use newApi() instead")
+
+    assertTrue(result.success)
+    assertEquals("Deprecation notice: use newApi() instead", result.message)
+    assertEquals(TaskResult.Status.WARNING, result.status)
+    assertTrue(result.results.isEmpty())
+  }
+
+  @Test
+  fun `warning is distinct from success via status`() {
+    val warning = TaskResult.warning("Something looks off")
+    val success = TaskResult.success("All good")
+
+    assertTrue(warning.success)
+    assertTrue(success.success)
+    assertEquals(TaskResult.Status.WARNING, warning.status)
+    assertEquals(TaskResult.Status.SUCCESS, success.status)
+    assertNotEquals(warning.status, success.status)
+  }
+
+  @Test
+  fun `warning can carry metadata and data`() {
+    val metadata = TaskMetadata(duration = Duration.ofMillis(200))
+    val data = mapOf("deprecated" to "oldMethod" as Any)
+    val result = TaskResult.warning("Deprecation", metadata = metadata, data = data)
+
+    assertEquals(TaskResult.Status.WARNING, result.status)
+    assertNotNull(result.metadata)
+    assertEquals(Duration.ofMillis(200), result.metadata!!.duration)
+    assertEquals("oldMethod", result.data["deprecated"])
+  }
+
+  @Test
+  fun `warning can have sub-results`() {
+    val sub1 = TaskResult.success("Check 1 passed")
+    val sub2 = TaskResult.warning("Check 2 has warnings")
+    val result = TaskResult.warning("Completed with warnings", results = listOf(sub1, sub2))
+
+    assertEquals(2, result.results.size)
+    assertEquals(TaskResult.Status.WARNING, result.status)
+  }
 }
