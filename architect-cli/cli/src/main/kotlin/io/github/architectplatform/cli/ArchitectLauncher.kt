@@ -6,6 +6,7 @@ import io.github.architectplatform.cli.command.CheckCommandHandler
 import io.github.architectplatform.cli.command.CliInfrastructureHandler
 import io.github.architectplatform.cli.command.EngineCommandHandler
 import io.github.architectplatform.cli.command.HelpCommandHandler
+import io.github.architectplatform.cli.command.InitCommandHandler
 import io.github.architectplatform.cli.command.OutputFormatter
 import io.github.architectplatform.cli.command.PluginCommandHandler
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
@@ -56,6 +57,7 @@ class ArchitectLauncher(
   private val checkHandler = CheckCommandHandler(embeddedTaskExecutor, ::extractProjectName)
   private val cliHandler = CliInfrastructureHandler()
   private val helpHandler = HelpCommandHandler()
+  private val initHandler = InitCommandHandler()
   private val output = OutputFormatter()
 
   @Property(name = "architect.engine.startup-timeout-seconds", defaultValue = "30")
@@ -199,6 +201,7 @@ class ArchitectLauncher(
 
     when (command) {
       "help" -> { helpHandler.handle(args); return }
+      "init" -> { initHandler.handle(args); return }
       "engine" -> { engineHandler.handle(args); return }
       "plugin" -> { pluginHandler.handle(args); return }
       "cache" -> { cacheHandler.handle(args); return }

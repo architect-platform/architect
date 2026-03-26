@@ -124,7 +124,7 @@
 ### 1.1 — Interactive Mode & Smart Defaults
 > The CLI has zero interactivity. No menus, no prompts, no guidance.
 
-- [ ] **T-1.1.1** 🔴 `XL` — Implement `architect init` interactive project scaffolding wizard
+- [x] **T-1.1.1** 🔴 `XL` — Implement `architect init` interactive project scaffolding wizard | Finished: 2026-03-26T19:35:00Z | Notes: Stack detection (13 languages/tools), plugin auto-suggestion, interactive prompts, --yes flag, YAML generation with 16 tests
   - Detect existing project type (package.json, build.gradle, Cargo.toml, etc.)
   - Auto-suggest plugins based on detected stack
   - Generate `architect.yml` with sensible defaults
