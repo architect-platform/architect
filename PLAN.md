@@ -107,7 +107,7 @@
   - Resolve environment variables and project properties in YAML values
   - Support default values: `${env.PORT:8080}`
 
-- [ ] **T-0.5.3** 🟠 `M` — Add config profiles/environments (`architect.yml` + `architect.ci.yml` overlay)
+- [x] **T-0.5.3** 🟠 `M` — Add config profiles/environments (`architect.yml` + `architect.ci.yml` overlay) | Finished: 2026-03-26T19:35:00Z | Notes: File-based overlays in ConfigLoader, ProjectService passes activeProfile
   - `--env ci` merges `architect.ci.yml` over `architect.yml`
   - Supports: `architect.staging.yml`, `architect.production.yml`
 

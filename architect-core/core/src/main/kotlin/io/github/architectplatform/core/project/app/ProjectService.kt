@@ -57,7 +57,7 @@ class ProjectService(
 
   private fun loadProject(name: String, path: String): Project? {
     logger.info("Loading project $name from path $path")
-    val loadResult = configLoader.loadWithRaw(path) ?: return null
+    val loadResult = configLoader.loadWithRaw(path, activeProfile) ?: return null
     val rawConfig = loadResult.config
     val lineMap = YamlLineTracker.trackLines(loadResult.rawYaml)
 

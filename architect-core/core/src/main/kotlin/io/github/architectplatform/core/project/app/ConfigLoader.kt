@@ -15,12 +15,42 @@ class ConfigLoader(private val configParser: ConfigParser) {
 
   fun load(path: String): Config? = loadWithRaw(path)?.config
 
-  fun loadWithRaw(path: String): LoadResult? {
+  fun loadWithRaw(path: String, profileName: String? = null): LoadResult? {
     val yamlContext = getExternalConfiguration(path)
     if (yamlContext.isEmpty()) {
       return null
     }
-    return LoadResult(ConfigInterpolator.interpolate(configParser.parse(yamlContext)), yamlContext)
+    var config = ConfigInterpolator.interpolate(configParser.parse(yamlContext))
+
+    // Apply file-based profile overlay (e.g. architect.ci.yml)
+    val resolvedProfile = profileName ?: ProfileMerger.detectProfile(null)
+    if (resolvedProfile != "default") {
+      val overlayYaml = loadProfileOverlay(path, resolvedProfile)
+      if (overlayYaml != null) {
+        val overlayConfig = ConfigInterpolator.interpolate(configParser.parse(overlayYaml))
+        config = ProfileMerger.deepMerge(config, overlayConfig)
+        logger.info("Applied profile overlay architect.$resolvedProfile.yml")
+      }
+    }
+
+    return LoadResult(config, yamlContext)
+  }
+
+  /**
+   * Loads an environment-specific overlay file: `architect.{profile}.yml` or `.yaml`.
+   */
+  private fun loadProfileOverlay(projectPath: String, profile: String): String? {
+    val overlay = File(projectPath, "architect.$profile.yml").takeIf { it.exists() }
+      ?: File(projectPath, "architect.$profile.yaml").takeIf { it.exists() }
+      ?: return null
+
+    return try {
+      val content = overlay.readText()
+      if (content.isBlank()) null else content
+    } catch (e: Exception) {
+      logger.error("Failed to read profile overlay ${overlay.name}, skipping.", e)
+      null
+    }
   }
 
   private fun getExternalConfiguration(projectPath: String = "."): String {
