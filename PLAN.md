@@ -52,7 +52,7 @@
 - [x] **T-0.2.1** 🔴 `M` — Define `CommandResult` data class (`exitCode: Int`, `stdout: String`, `stderr: String`, `durationMs: Long`) | Finished: 2026-03-26T18:38:00Z | Notes: Created CommandResult in api/components/execution, added success computed property, 6 tests
   - File: `architect-api/api/src/main/kotlin/io/github/architectplatform/api/core/execution/CommandResult.kt`
 
-- [ ] **T-0.2.2** 🔴 `M` — Update `CommandExecutor` interface to return `CommandResult`
+- [x] **T-0.2.2** 🔴 `M` — Update `CommandExecutor` interface to return `CommandResult` | Finished: 2026-03-26T18:41:00Z | Notes: Added executeWithResult() with timeout/env params, default impl wraps execute() for backward compat, kept original execute() unchanged
   - Add overloads: `execute(command, workingDir?, timeout?, env?: Map<String, String>)`
   - Backward-compatible: default timeout = 300s, default env = inherit
 
