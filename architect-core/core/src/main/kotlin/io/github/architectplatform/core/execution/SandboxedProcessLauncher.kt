@@ -19,6 +19,7 @@ internal object SandboxedProcessLauncher {
     command: List<String>,
     workingDir: String? = null,
     redirectErrorStream: Boolean = false,
+    env: Map<String, String> = emptyMap(),
   ): LaunchedProcess {
     val permissionContext = TaskPermissionScope.current()
     permissionContext?.let { context ->
@@ -39,6 +40,9 @@ internal object SandboxedProcessLauncher {
     val processBuilder = ProcessBuilder(actualCommand)
     workingDir?.let { processBuilder.directory(File(it)) }
     processBuilder.redirectErrorStream(redirectErrorStream)
+    if (env.isNotEmpty()) {
+      processBuilder.environment().putAll(env)
+    }
 
     val process = processBuilder.start()
     return LaunchedProcess(process) {

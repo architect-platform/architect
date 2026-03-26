@@ -1,6 +1,7 @@
 package io.github.architectplatform.core.execution
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
+import io.github.architectplatform.api.components.execution.CommandResult
 import io.github.architectplatform.core.config.EngineConfiguration
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory
  * - Optional error stream redirection
  * - Detailed logging of command execution
  * - Thread-safe command execution
+ * - Structured [CommandResult] via [executeWithResult]
  */
 open class BashCommandExecutor(
     private val timeoutSeconds: Long = EngineConfiguration.CommandExecutor.DEFAULT_TIMEOUT_SECONDS,
@@ -23,58 +25,87 @@ open class BashCommandExecutor(
   private val logger = LoggerFactory.getLogger(this::class.java)
 
   /**
-   * Executes a command and returns exit code and output.
-   * 
-   * @param command The bash command to execute
-   * @param workingDir Optional working directory for command execution
-   * @return Pair of exit code and command output
+   * Executes a command and returns exit code, stdout, and stderr.
    */
-  private fun executeCommand(command: String, workingDir: String? = null): Pair<Int, String> {
+  private fun executeCommand(
+      command: String,
+      workingDir: String? = null,
+      timeout: Long = timeoutSeconds,
+      env: Map<String, String> = emptyMap(),
+  ): Triple<Int, String, String> {
     val launchedProcess = SandboxedProcessLauncher.launch(
       command = listOf("sh", "-c", command),
       workingDir = workingDir,
       redirectErrorStream = redirectErrorStream,
+      env = env,
     )
     val process = launchedProcess.process
 
-    val output = StringBuilder()
-    val reader = process.inputStream.bufferedReader()
+    val stdout = StringBuilder()
+    val stderr = StringBuilder()
+    val stdoutReader = process.inputStream.bufferedReader()
+    val stderrReader = if (!redirectErrorStream) process.errorStream.bufferedReader() else null
 
-    // Read process output line by line
-    val outputThread = Thread { 
-      reader.forEachLine { line -> 
-        output.appendLine(line) 
+    val stdoutThread = Thread { 
+      stdoutReader.forEachLine { line -> 
+        stdout.appendLine(line) 
       } 
     }
+    val stderrThread = stderrReader?.let {
+      Thread { it.forEachLine { line -> stderr.appendLine(line) } }
+    }
 
-    outputThread.start()
-    val completed = process.waitFor(timeoutSeconds, TimeUnit.SECONDS)
+    stdoutThread.start()
+    stderrThread?.start()
+    val completed = process.waitFor(timeout, TimeUnit.SECONDS)
     
     try {
       if (!completed) {
         process.destroyForcibly()
-        outputThread.interrupt()
-        outputThread.join(1000)
+        stdoutThread.interrupt()
+        stderrThread?.interrupt()
+        stdoutThread.join(1000)
+        stderrThread?.join(1000)
         throw IllegalStateException(
-          "Command timed out after $timeoutSeconds seconds: $command"
+          "Command timed out after $timeout seconds: $command"
         )
       }
 
-      outputThread.join()
+      stdoutThread.join()
+      stderrThread?.join()
       val exitCode = process.exitValue()
 
-      return exitCode to output.toString().trim()
+      return Triple(exitCode, stdout.toString().trim(), stderr.toString().trim())
     } finally {
       launchedProcess.cleanup()
     }
   }
 
   override fun execute(command: String, workingDir: String?) {
-    val (exitCode, result) = executeCommand(command, workingDir)
-    logger.debug("Executed command: {}\nExit code: {}\nResult:\n{}", command, exitCode, result)
+    val (exitCode, stdout, stderr) = executeCommand(command, workingDir)
+    val output = if (redirectErrorStream) stdout else "$stdout\n$stderr".trim()
+    logger.debug("Executed command: {}\nExit code: {}\nResult:\n{}", command, exitCode, output)
     if (exitCode != 0) {
-      logger.debug("Command failed with exit code {}\nResult:\n{}", exitCode, result)
-      error("Command failed with exit code $exitCode\nResult:\n$result")
+      logger.debug("Command failed with exit code {}\nResult:\n{}", exitCode, output)
+      error("Command failed with exit code $exitCode\nResult:\n$output")
+    }
+  }
+
+  override fun executeWithResult(
+      command: String,
+      workingDir: String?,
+      timeoutSeconds: Long,
+      env: Map<String, String>,
+  ): CommandResult {
+    val startTime = System.currentTimeMillis()
+    return try {
+      val (exitCode, stdout, stderr) = executeCommand(command, workingDir, timeoutSeconds, env)
+      val durationMs = System.currentTimeMillis() - startTime
+      logger.debug("Executed command: {}\nExit code: {}\nDuration: {}ms", command, exitCode, durationMs)
+      CommandResult(exitCode = exitCode, stdout = stdout, stderr = stderr, durationMs = durationMs)
+    } catch (e: IllegalStateException) {
+      val durationMs = System.currentTimeMillis() - startTime
+      CommandResult(exitCode = -1, stdout = "", stderr = e.message ?: "Command timed out", durationMs = durationMs)
     }
   }
 }

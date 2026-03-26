@@ -56,7 +56,7 @@
   - Add overloads: `execute(command, workingDir?, timeout?, env?: Map<String, String>)`
   - Backward-compatible: default timeout = 300s, default env = inherit
 
-- [ ] **T-0.2.3** 🟠 `S` — Update `BashCommandExecutor` in engine to implement new contract
+- [x] **T-0.2.3** 🟠 `S` — Update `BashCommandExecutor` in engine to implement new contract | Finished: 2026-03-26T18:44:00Z | Notes: Native executeWithResult() override with separate stdout/stderr capture, env var support via SandboxedProcessLauncher, timeout handling returns CommandResult(-1)
   - Map existing implementation to new `CommandResult` return type
 
 ### 0.3 — Environment Service Enrichment
