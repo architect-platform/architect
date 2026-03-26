@@ -90,4 +90,29 @@ interface Environment {
       throwable: Throwable,
     ) {}
   }
+
+  /**
+   * Subscribes to events of a specific type.
+   *
+   * Enables inter-task communication without tight coupling. Tasks can subscribe
+   * to event types and react when those events are published by other tasks or
+   * the engine.
+   *
+   * Example usage:
+   * ```kotlin
+   * environment.subscribe(BuildCompletedEvent::class.java) { event ->
+   *   println("Build completed: ${event.artifactPath}")
+   * }
+   * ```
+   *
+   * @param E The event type to subscribe to
+   * @param type The class of the event type
+   * @param handler The handler function invoked when an event of this type is published
+   */
+  fun <E> subscribe(
+    type: Class<E>,
+    handler: (E) -> Unit,
+  ) {
+    // No-op default. Engine implementation routes events to handlers.
+  }
 }

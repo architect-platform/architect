@@ -67,7 +67,7 @@
   - Engine implementation delegates to SLF4J
   - Tasks get structured logging for free
 
-- [ ] **T-0.3.2** 🟠 `M` — Add event subscription to `Environment`
+- [x] **T-0.3.2** 🟠 `M` — Add event subscription to `Environment` | Finished: 2026-03-26T18:52:00Z | Notes: Added subscribe(type, handler) to Environment with no-op default, ApplicationEnvironment routes published events to type-matched handlers
   - `fun <E> subscribe(type: Class<E>, handler: (E) -> Unit)`
   - Enables inter-task communication without tight coupling
 

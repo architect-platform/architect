@@ -17,15 +17,33 @@ class ApplicationEnvironment(
     private val secretResolver: SecretResolver = CompositeSecretResolver.default(),
 ) : Environment {
 
+    private val subscribers = mutableMapOf<Class<*>, MutableList<(Any) -> Unit>>()
+
     override fun <T> service(type: Class<T>): T =
         (services[type] as? T)
             ?: throw IllegalArgumentException("Service of type ${type.name} not registered in environment")
 
-    override fun publish(event: Any) = eventBus(event)
+    override fun publish(event: Any) {
+        eventBus(event)
+        // Dispatch to type-matched subscribers
+        subscribers.forEach { (type, handlers) ->
+            if (type.isInstance(event)) {
+                handlers.forEach { handler -> handler(event) }
+            }
+        }
+    }
 
     override fun secret(name: String): String? = secretResolver.resolve(name, TaskPermissionScope.current()?.projectDir)
 
     override fun profile(): String = activeProfile
 
     override fun logger(tag: String): ArchitectLogger = Slf4jArchitectLogger(tag)
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <E> subscribe(
+        type: Class<E>,
+        handler: (E) -> Unit,
+    ) {
+        subscribers.getOrPut(type) { mutableListOf() }.add(handler as (Any) -> Unit)
+    }
 }
