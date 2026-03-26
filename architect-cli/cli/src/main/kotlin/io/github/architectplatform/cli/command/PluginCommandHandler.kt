@@ -4,6 +4,10 @@ import io.github.architectplatform.cli.plugin.PluginDocumentationGenerator
 import io.github.architectplatform.cli.plugin.PluginJarValidator
 import io.github.architectplatform.cli.plugin.PluginScaffolder
 import io.github.architectplatform.cli.plugin.PluginTemplate
+import io.github.architectplatform.api.testing.PluginGraduationChecker
+import io.github.architectplatform.core.plugin.app.IsolatedPluginClassLoader
+import io.github.architectplatform.core.plugin.app.SpiPluginLoader
+import java.nio.file.Path
 import kotlin.system.exitProcess
 
 /**
@@ -26,8 +30,9 @@ class PluginCommandHandler(
       "create" -> handleCreate(args)
       "search" -> handleSearch(args)
       "install" -> handleInstall(args)
+      "graduate" -> handleGraduate(args)
       else -> {
-        println("Usage: architect plugin <create|docs|validate|search|install> [args]")
+        println("Usage: architect plugin <create|docs|validate|search|install|graduate> [args]")
         println()
         println("Commands:")
         println("  docs <path>              Generate PLUGIN_REFERENCE.md from plugin metadata")
@@ -35,6 +40,7 @@ class PluginCommandHandler(
         println("  create <name> [template]  Scaffold a new plugin (kotlin, typescript, go)")
         println("  search <query>       Search the plugin registry")
         println("  install <plugin-id>  Add a plugin to architect.yml")
+        println("  graduate <jar-path>  Check if plugin meets graduation checklist")
         exitProcess(1)
       }
     }
@@ -224,5 +230,58 @@ class PluginCommandHandler(
 
   companion object {
     private const val DEFAULT_REGISTRY_URL = "https://registry.architect.dev/registry.json"
+  }
+
+  private fun handleGraduate(args: List<String>) {
+    val jarPath = args.getOrNull(2)
+    if (jarPath == null) {
+      println("Usage: architect plugin graduate <jar-path> [--plugin-dir <dir>]")
+      exitProcess(1)
+    }
+
+    val pluginDir = args.indexOf("--plugin-dir").let { idx ->
+      if (idx >= 0) args.getOrNull(idx + 1) else null
+    } ?: Path.of(jarPath).parent?.toString() ?: "."
+
+    println("🎓 Running graduation checklist for: $jarPath")
+    println()
+
+    // Load plugins from JAR
+    val classLoader = IsolatedPluginClassLoader(
+      urls = arrayOf(Path.of(jarPath).toUri().toURL()),
+      parent = javaClass.classLoader,
+    )
+    val plugins = classLoader.use { SpiPluginLoader().loadFrom(it) }
+
+    if (plugins.isEmpty()) {
+      println("❌ No plugins found in JAR")
+      exitProcess(1)
+    }
+
+    var allPassed = true
+    for (plugin in plugins) {
+      val result = PluginGraduationChecker.check(plugin, Path.of(pluginDir))
+      println("Plugin: ${result.pluginId}")
+      println("─".repeat(40))
+
+      for (check in result.checks) {
+        val icon = if (check.passed) "✅" else if (check.severity == PluginGraduationChecker.Severity.WARNING) "⚠️" else "❌"
+        println("  $icon ${check.name}: ${check.description}")
+        check.detail?.let { println("     └─ $it") }
+      }
+
+      println()
+      if (result.passed) {
+        println("✅ Plugin '${result.pluginId}' meets graduation requirements!")
+      } else {
+        val errorCount = result.failures.count { it.severity == PluginGraduationChecker.Severity.ERROR }
+        val warnCount = result.warnings.size
+        println("❌ Plugin '${result.pluginId}' has $errorCount error(s) and $warnCount warning(s)")
+        allPassed = false
+      }
+      println()
+    }
+
+    if (!allPassed) exitProcess(1)
   }
 }
