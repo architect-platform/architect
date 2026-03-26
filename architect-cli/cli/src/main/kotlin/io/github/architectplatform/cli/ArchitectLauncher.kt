@@ -181,6 +181,20 @@ class ArchitectLauncher(
   )
   var quiet: Boolean = false
 
+  @CommandLine.Option(
+      names = ["--dry-run"],
+      description = ["Show execution plan without running tasks"],
+      defaultValue = "false",
+  )
+  var dryRun: Boolean = false
+
+  @CommandLine.Option(
+      names = ["--timing"],
+      description = ["Show detailed task execution timing breakdown"],
+      defaultValue = "false",
+  )
+  var timing: Boolean = false
+
   override fun run() {
     if (noColor || System.getenv("NO_COLOR") != null || System.getenv("CI") != null) {
       plain = true
@@ -213,6 +227,31 @@ class ArchitectLauncher(
     }
 
     val useEmbeddedExecution = embedded || (noDaemon && !engineHealthChecker.isRunning())
+
+    // --dry-run: show execution plan without running
+    if (dryRun && command != null && command !in listOf("tasks", "info", "plan", "graph", "validate")) {
+      val projectPath = System.getProperty("user.dir")
+      val projectName = extractProjectName(projectPath)
+      println()
+      println("━".repeat(80))
+      println("🔍 DRY RUN — showing execution plan for: $command")
+      println("📦 Project: $projectName")
+      println("━".repeat(80))
+      println()
+      val plan = if (useEmbeddedExecution) {
+        embeddedTaskExecutor.plan(projectName, projectPath, command!!)
+      } else {
+        engineHandler.ensureEngineRunning()
+        val request = RegisterProjectRequest(name = projectName, path = projectPath)
+        engineCommandClient.registerProject(request)
+        engineCommandClient.planTask(projectName, command!!)
+      }
+      output.printPlanTree(plan)
+      println()
+      println("ℹ️  No tasks were executed (--dry-run mode)")
+      return
+    }
+
     if (useEmbeddedExecution) {
       runEmbeddedMode()
       return
@@ -462,7 +501,7 @@ class ArchitectLauncher(
   }
 
   private fun executeTask(projectName: String, taskName: String, taskArgs: List<String>) {
-    val ui = ConsoleUI(taskName, plain, verbosity)
+    val ui = ConsoleUI(taskName, plain, verbosity, timing)
 
     println()
     println("━".repeat(80))
@@ -507,7 +546,7 @@ class ArchitectLauncher(
       taskName: String,
       taskArgs: List<String>,
   ) {
-    val ui = EmbeddedConsoleUI(taskName, plain, verbosity)
+    val ui = EmbeddedConsoleUI(taskName, plain, verbosity, timing)
 
     println()
     println("━".repeat(80))

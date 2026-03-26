@@ -12,8 +12,9 @@ class EmbeddedConsoleUI(
   taskName: String,
   plain: Boolean = false,
   verbosity: Int = 1,
+  timing: Boolean = false,
 ) {
-  private val delegate = ConsoleUI(taskName, plain, verbosity)
+  private val delegate = ConsoleUI(taskName, plain, verbosity, timing)
   private val objectMapper = ObjectMapper().registerKotlinModule()
 
   val hasFailed: Boolean

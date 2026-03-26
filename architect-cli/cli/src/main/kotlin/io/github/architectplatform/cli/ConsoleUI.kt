@@ -20,6 +20,7 @@ class ConsoleUI(
   private val taskName: String,
   private val plain: Boolean = false,
   var verbosity: Int = 1,
+  var timing: Boolean = false,
 ) {
 
   /**
@@ -53,6 +54,7 @@ class ConsoleUI(
   }
 
   private val taskStates = linkedMapOf<String, TaskState>()
+  private val executionStartMs = System.currentTimeMillis()
   private var currentBatch = 0
   private var batchTaskCount = 0
 
@@ -60,7 +62,6 @@ class ConsoleUI(
   private var currentSubProject: String? = null
   private var currentTask: String? = null
   private var failed = false
-  private val executionStartMs = System.currentTimeMillis()
 
   val hasFailed: Boolean
     get() = failed
@@ -294,6 +295,7 @@ class ConsoleUI(
    */
   fun complete(finalMessage: String) {
     printSummary()
+    if (timing) printTimingWaterfall()
     println(colorize("✓ $finalMessage", "${AnsiColors.BOLD}${AnsiColors.GREEN}"))
   }
 
@@ -302,8 +304,57 @@ class ConsoleUI(
    */
   fun completeWithError(errorMessage: String) {
     printSummary()
+    if (timing) printTimingWaterfall()
     println(colorize("✗ $errorMessage", "${AnsiColors.BOLD}${AnsiColors.RED}"))
     failed = true
+  }
+
+  /**
+   * Prints an ASCII waterfall timeline showing parallel execution and durations.
+   */
+  fun printTimingWaterfall() {
+    if (taskStates.isEmpty()) return
+    val totalMs = System.currentTimeMillis() - executionStartMs
+    if (totalMs <= 0) return
+
+    println()
+    println(colorize("  ⏱ Timing Waterfall", AnsiColors.BOLD))
+    println("  ${"─".repeat(76)}")
+
+    val barWidth = 50
+    for ((_, state) in taskStates) {
+      val offsetMs = state.startTimeMs - executionStartMs
+      val startFraction = (offsetMs.toDouble() / totalMs).coerceIn(0.0, 1.0)
+      val durationFraction = (state.durationMs.toDouble() / totalMs).coerceIn(0.0, 1.0 - startFraction)
+
+      val startPos = (startFraction * barWidth).toInt()
+      val barLen = (durationFraction * barWidth).toInt().coerceAtLeast(1)
+
+      val barChar = when (state.status) {
+        TaskStatus.COMPLETED -> "█"
+        TaskStatus.FAILED -> "▓"
+        TaskStatus.CANCELLED -> "░"
+        TaskStatus.SKIPPED -> "·"
+        TaskStatus.RUNNING -> "▒"
+      }
+      val barColor = when (state.status) {
+        TaskStatus.COMPLETED -> AnsiColors.GREEN
+        TaskStatus.FAILED -> AnsiColors.RED
+        TaskStatus.CANCELLED -> AnsiColors.YELLOW
+        TaskStatus.SKIPPED -> AnsiColors.DIM
+        TaskStatus.RUNNING -> AnsiColors.CYAN
+      }
+
+      val bar = " ".repeat(startPos) + barChar.repeat(barLen)
+      val taskLabel = state.taskId.take(20).padEnd(20)
+      val duration = formatDuration(state.durationMs)
+
+      println("  $taskLabel │${colorize(bar.padEnd(barWidth), barColor)}│ $duration")
+    }
+
+    println("  ${"─".repeat(76)}")
+    println("  ${"".padEnd(20)} │${"0".padEnd(barWidth / 2)}${formatDuration(totalMs).padStart(barWidth / 2)}│")
+    println()
   }
 
   companion object {
