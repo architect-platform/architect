@@ -44,6 +44,24 @@ interface TaskResult {
   val metadata: TaskMetadata?
     get() = null
 
+  /**
+   * Arbitrary key-value data produced by this task for consumption by downstream tasks.
+   *
+   * Tasks can populate this map to pass structured data to dependent tasks.
+   * The engine propagates this data through the dependency chain, making it
+   * available via [TaskContext.upstreamData].
+   *
+   * Example usage:
+   * ```kotlin
+   * TaskResult.success(
+   *   message = "Build completed",
+   *   data = mapOf("artifactPath" to "/build/output.jar", "version" to "1.2.3")
+   * )
+   * ```
+   */
+  val data: Map<String, Any>
+    get() = emptyMap()
+
   companion object {
     /**
      * Internal implementation of TaskResult.
@@ -53,6 +71,7 @@ interface TaskResult {
       override val message: String? = null,
       override val results: List<TaskResult> = emptyList(),
       override val metadata: TaskMetadata? = null,
+      override val data: Map<String, Any> = emptyMap(),
     ) : TaskResult
 
     /**
@@ -61,13 +80,16 @@ interface TaskResult {
      * @param message Optional success message
      * @param results Optional list of sub-results
      * @param metadata Optional execution metadata
+     * @param data Optional key-value data for downstream tasks
      * @return A successful TaskResult
      */
     fun success(
       message: String? = null,
       results: List<TaskResult> = emptyList(),
       metadata: TaskMetadata? = null,
-    ): TaskResult = TaskResultImpl(success = true, message = message, results = results, metadata = metadata)
+      data: Map<String, Any> = emptyMap(),
+    ): TaskResult =
+      TaskResultImpl(success = true, message = message, results = results, metadata = metadata, data = data)
 
     /**
      * Creates a failed task result.
@@ -75,12 +97,15 @@ interface TaskResult {
      * @param message Optional failure message describing what went wrong
      * @param results Optional list of sub-results
      * @param metadata Optional execution metadata
+     * @param data Optional key-value data for downstream tasks
      * @return A failed TaskResult
      */
     fun failure(
       message: String? = null,
       results: List<TaskResult> = emptyList(),
       metadata: TaskMetadata? = null,
-    ): TaskResult = TaskResultImpl(success = false, message = message, results = results, metadata = metadata)
+      data: Map<String, Any> = emptyMap(),
+    ): TaskResult =
+      TaskResultImpl(success = false, message = message, results = results, metadata = metadata, data = data)
   }
 }

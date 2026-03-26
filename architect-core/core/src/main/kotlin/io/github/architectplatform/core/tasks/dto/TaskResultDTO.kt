@@ -16,6 +16,7 @@ data class TaskResultDTO(
     val message: String?,
     val subResults: List<TaskResultDTO> = emptyList(),
     val metadata: TaskMetadataDTO? = null,
+    val data: Map<String, Any> = emptyMap(),
 )
 
 fun TaskMetadata.toDTO(): TaskMetadataDTO =
@@ -33,5 +34,6 @@ fun TaskResult.toDTO(): TaskResultDTO {
       message = message,
       subResults = results.map { it.toDTO() },
       metadata = metadata?.toDTO(),
+      data = data,
   )
 }

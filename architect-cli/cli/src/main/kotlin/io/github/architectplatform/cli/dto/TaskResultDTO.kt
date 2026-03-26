@@ -21,6 +21,7 @@ data class TaskMetadataDTO(
  * @property message Optional message describing the result
  * @property subResults Results of any sub-tasks executed as part of this task
  * @property metadata Optional execution metadata (timing, exit code, executor info)
+ * @property data Arbitrary key-value data produced by the task for downstream consumption
  */
 @Serdeable
 data class TaskResultDTO(
@@ -28,6 +29,7 @@ data class TaskResultDTO(
     val message: String?,
     val subResults: List<TaskResultDTO> = emptyList(),
     val metadata: TaskMetadataDTO? = null,
+    val data: Map<String, Any> = emptyMap(),
 ) {
   /**
    * Renders the task result as a tree structure with success/failure icons.

@@ -34,7 +34,7 @@
   - Add `metadata: TaskMetadata?` field to `TaskResult` interface
   - All existing implementations must return `null` by default (backward compatible)
 
-- [ ] **T-0.1.2** 🔴 `M` — Add `data: Map<String, Any>` to `TaskResult` for inter-task data passing
+- [x] **T-0.1.2** 🔴 `M` — Add `data: Map<String, Any>` to `TaskResult` for inter-task data passing | Finished: 2026-03-26T18:28:00Z | Notes: Added data field with empty default to TaskResult, updated DTOs, enhanced TaskContext with upstreamData, added upstream data collection in TaskExecutor, added 5 new tests
   - Enables downstream tasks to read outputs from upstream tasks
   - Engine must propagate `data` through dependency chain into `TaskContext`
 

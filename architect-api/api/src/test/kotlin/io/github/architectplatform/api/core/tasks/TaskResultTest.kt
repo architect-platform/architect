@@ -168,4 +168,57 @@ class TaskResultTest {
 
     assertNotEquals(result1, result2)
   }
+
+  @Test
+  fun `success with data creates TaskResult with data map`() {
+    val data = mapOf("artifactPath" to "/build/output.jar" as Any, "version" to "1.2.3" as Any)
+    val result = TaskResult.success("Build completed", data = data)
+
+    assertTrue(result.success)
+    assertEquals("Build completed", result.message)
+    assertEquals(2, result.data.size)
+    assertEquals("/build/output.jar", result.data["artifactPath"])
+    assertEquals("1.2.3", result.data["version"])
+  }
+
+  @Test
+  fun `failure with data creates TaskResult with data map`() {
+    val data = mapOf("errorCode" to 42 as Any)
+    val result = TaskResult.failure("Build failed", data = data)
+
+    assertFalse(result.success)
+    assertEquals(42, result.data["errorCode"])
+  }
+
+  @Test
+  fun `data defaults to empty map for backward compatibility`() {
+    val success = TaskResult.success("Done")
+    val failure = TaskResult.failure("Failed")
+
+    assertTrue(success.data.isEmpty())
+    assertTrue(failure.data.isEmpty())
+  }
+
+  @Test
+  fun `results with same content but different data are not equal`() {
+    val result1 = TaskResult.success("Done", data = mapOf("key" to "value1" as Any))
+    val result2 = TaskResult.success("Done", data = mapOf("key" to "value2" as Any))
+
+    assertNotEquals(result1, result2)
+  }
+
+  @Test
+  fun `data can hold complex nested values`() {
+    val data = mapOf(
+      "outputs" to listOf("file1.jar", "file2.jar") as Any,
+      "count" to 42 as Any,
+      "nested" to mapOf("inner" to "value") as Any,
+    )
+    val result = TaskResult.success("Done", data = data)
+
+    assertEquals(listOf("file1.jar", "file2.jar"), result.data["outputs"])
+    assertEquals(42, result.data["count"])
+    @Suppress("UNCHECKED_CAST")
+    assertEquals("value", (result.data["nested"] as Map<String, Any>)["inner"])
+  }
 }

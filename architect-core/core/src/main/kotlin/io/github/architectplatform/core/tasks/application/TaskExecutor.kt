@@ -76,6 +76,9 @@ class TaskExecutor(
       val batches = dependencyResolver.toBatches(executionOrder)
       val tasksByBatch = executionOrder.groupBy { batches[it.id] ?: 0 }.toSortedMap()
 
+      // Collect upstream task data as tasks complete for inter-task data passing.
+      val upstreamData = mutableMapOf<String, Map<String, Any>>()
+
       // Batches run sequentially (deps satisfied); tasks within a batch run in parallel.
       val allResults = mutableListOf<TaskResult>()
       for ((batchIndex, batchTasks) in tasksByBatch) {
@@ -84,6 +87,12 @@ class TaskExecutor(
         }
         val batchResults = executeBatch(batchTasks, executionId, projectName, projectContext, args, taskRegistry, parentProject)
         allResults.addAll(batchResults)
+        // Collect data from completed tasks for downstream consumption.
+        batchTasks.zip(batchResults).forEach { (t, r) ->
+          if (r.data.isNotEmpty()) {
+            upstreamData[t.id] = r.data
+          }
+        }
         if (batchResults.any { !it.success }) break
       }
 
