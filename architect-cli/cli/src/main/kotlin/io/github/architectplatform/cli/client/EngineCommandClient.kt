@@ -7,6 +7,7 @@ import io.github.architectplatform.cli.dto.TaskDTO
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.micronaut.http.annotation.Body
+import io.micronaut.http.annotation.Delete
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Post
@@ -129,4 +130,13 @@ interface EngineCommandClient {
 
   @Post("/projects/{projectName}/reload-plugins")
   fun reloadProjectPlugins(@PathVariable projectName: String): ProjectDTO
+
+  /**
+   * Cancels a running execution.
+   *
+   * @param executionId The execution identifier to cancel
+   * @return Map with executionId and cancelled status
+   */
+  @Delete("/executions/{executionId}")
+  fun cancelExecution(@PathVariable executionId: ExecutionId): Map<String, Any>
 }

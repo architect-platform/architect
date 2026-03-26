@@ -231,7 +231,7 @@
 
 ### 2.1 — Execution Lifecycle Improvements
 
-- [ ] **T-2.1.1** 🔴 `L` — Implement execution cancellation API
+- [x] **T-2.1.1** 🔴 `L` — Implement execution cancellation API | Finished: 2026-03-26T21:20:00Z | Notes: CANCELLED event type, DELETE /api/executions/{id} endpoint, Job tracking in TaskService, CLI cancelExecution client method, ConsoleUI CANCELLED rendering
   - `DELETE /api/executions/{executionId}` — cancel running execution
   - Propagate cancellation to running `BashCommandExecutor` processes
   - Emit `execution.cancelled` event

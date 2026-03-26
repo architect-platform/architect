@@ -9,6 +9,7 @@ import io.github.architectplatform.core.history.domain.ExecutionRecord
 import io.github.architectplatform.core.project.app.ProjectService
 import io.github.architectplatform.core.project.domain.Project
 import io.github.architectplatform.core.tasks.domain.TaskDependencyResolver
+import io.github.architectplatform.core.tasks.domain.events.ExecutionEvents.executionCancelledEvent
 import io.github.architectplatform.core.tasks.domain.events.ExecutionEvents.executionCompletedEvent
 import io.github.architectplatform.core.tasks.domain.events.ExecutionEvents.executionFailedEvent
 import io.github.architectplatform.core.tasks.domain.events.ExecutionEvents.executionStartedEvent
@@ -25,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.async
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -52,6 +54,9 @@ class TaskService(
     private val historyService: HistoryService,
     private val cloudReporter: Optional<CloudReporterService> = Optional.empty(),
 ) {
+
+  private val runningJobs = java.util.concurrent.ConcurrentHashMap<ExecutionId, Job>()
+  private val executionProjects = java.util.concurrent.ConcurrentHashMap<ExecutionId, String>()
 
   /**
    * Retrieves all available tasks for a project.
@@ -139,7 +144,8 @@ class TaskService(
 
     // Generate a single execution ID for the entire execution tree
     val executionId = generateExecutionId()
-      CoroutineScope(IO).launch {
+      executionProjects[executionId] = projectName
+      val job = CoroutineScope(IO).launch {
           val startTime = System.currentTimeMillis()
           eventPublisher.publishEvent(
               executionStartedEvent(
@@ -180,7 +186,10 @@ class TaskService(
                     message = "All tasks completed successfully")
             )
         }
+        runningJobs.remove(executionId)
+        executionProjects.remove(executionId)
       }
+      runningJobs[executionId] = job
 
     return executionId
   }
@@ -216,6 +225,26 @@ class TaskService(
 
         return deferredResult.await()
     }
+
+  /**
+   * Cancels a running execution by its ID.
+   *
+   * @param executionId The execution ID to cancel
+   * @return true if the execution was found and cancelled, false if not found
+   */
+  fun cancelExecution(executionId: ExecutionId): Boolean {
+    val job = runningJobs.remove(executionId) ?: return false
+    val projectName = executionProjects.remove(executionId) ?: "unknown"
+    job.cancel()
+    eventPublisher.publishEvent(
+      executionCancelledEvent(
+        projectName,
+        executionId,
+        message = "Execution cancelled by user"
+      )
+    )
+    return true
+  }
 
   private fun generateExecutionId(): ExecutionId = UUID.randomUUID().toString()
 

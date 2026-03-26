@@ -37,7 +37,7 @@ class ConsoleUI(
 
   // ── Task state tracking ─────────────────────────────────────────
 
-  enum class TaskStatus { RUNNING, COMPLETED, FAILED, SKIPPED }
+  enum class TaskStatus { RUNNING, COMPLETED, FAILED, SKIPPED, CANCELLED }
 
   data class TaskState(
       val taskId: String,
@@ -152,13 +152,18 @@ class ConsoleUI(
           taskStates[taskId] = (prev ?: TaskState(taskId, TaskStatus.SKIPPED, batch = currentBatch))
               .copy(status = TaskStatus.SKIPPED, endTimeMs = System.currentTimeMillis(), message = message)
         }
+        "CANCELLED" -> {
+          val prev = taskStates[taskId]
+          taskStates[taskId] = (prev ?: TaskState(taskId, TaskStatus.CANCELLED, batch = currentBatch))
+              .copy(status = TaskStatus.CANCELLED, endTimeMs = System.currentTimeMillis(), message = message)
+        }
       }
     }
 
     // ── Render progress line (verbosity-gated) ──────────────────
     // Level 0: only failures; Level 1: task names+durations; Level 2: +messages; Level 3: all
     val shouldPrint = when (executionEventType) {
-      "FAILED" -> true // Always show failures
+      "FAILED", "CANCELLED" -> true // Always show failures and cancellations
       "STARTED", "COMPLETED", "SKIPPED" -> verbosity >= 1
       "OUTPUT" -> verbosity >= 2
       else -> verbosity >= 3
@@ -169,6 +174,7 @@ class ConsoleUI(
         "STARTED" -> "▶"
         "COMPLETED" -> "✓"
         "FAILED" -> "✗"
+        "CANCELLED" -> "⊘"
         "SKIPPED" -> "⏭"
         "OUTPUT" -> "│"
         else -> "·"
@@ -178,6 +184,7 @@ class ConsoleUI(
         "STARTED" -> AnsiColors.CYAN
         "COMPLETED" -> AnsiColors.GREEN
         "FAILED" -> AnsiColors.RED
+        "CANCELLED" -> AnsiColors.YELLOW
         "SKIPPED" -> AnsiColors.YELLOW
         else -> ""
       }
@@ -238,6 +245,7 @@ class ConsoleUI(
         TaskStatus.COMPLETED -> colorize("✓", AnsiColors.GREEN)
         TaskStatus.FAILED -> colorize("✗", AnsiColors.RED)
         TaskStatus.SKIPPED -> colorize("⏭", AnsiColors.YELLOW)
+        TaskStatus.CANCELLED -> colorize("⊘", AnsiColors.YELLOW)
         TaskStatus.RUNNING -> colorize("…", AnsiColors.CYAN)
       }
       val duration = formatDuration(state.durationMs)
@@ -250,12 +258,14 @@ class ConsoleUI(
     val taskCount = taskStates.size
     val failedCount = taskStates.values.count { it.status == TaskStatus.FAILED }
     val skippedCount = taskStates.values.count { it.status == TaskStatus.SKIPPED }
+    val cancelledCount = taskStates.values.count { it.status == TaskStatus.CANCELLED }
     val successCount = taskStates.values.count { it.status == TaskStatus.COMPLETED }
 
     val summary = buildString {
       append("  $taskCount task(s): ")
       append(colorize("$successCount passed", AnsiColors.GREEN))
       if (failedCount > 0) append(", ${colorize("$failedCount failed", AnsiColors.RED)}")
+      if (cancelledCount > 0) append(", ${colorize("$cancelledCount cancelled", AnsiColors.YELLOW)}")
       if (skippedCount > 0) append(", ${colorize("$skippedCount skipped", AnsiColors.YELLOW)}")
       append("  Total: ${formatDuration(totalDuration)}")
     }

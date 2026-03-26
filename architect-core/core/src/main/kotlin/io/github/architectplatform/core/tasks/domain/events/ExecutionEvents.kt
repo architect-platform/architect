@@ -78,4 +78,23 @@ object ExecutionEvents {
                 parentProject = subProject,
             ))
   }
+
+  fun executionCancelledEvent(
+      project: String,
+      executionId: String,
+      message: String? = null,
+      subProject: String? = null,
+  ): ArchitectEvent<ExecutionEvent> {
+    return ArchitectEventDTO(
+        id = "execution.cancelled",
+        event =
+            ExecutionEventDTO(
+                project = project,
+                executionId = executionId,
+                success = false,
+                executionEventType = ExecutionEventType.CANCELLED,
+                message = message ?: "Execution cancelled",
+                parentProject = subProject,
+            ))
+  }
 }

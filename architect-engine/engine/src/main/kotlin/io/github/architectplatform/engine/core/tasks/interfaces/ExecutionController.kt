@@ -6,6 +6,7 @@ import io.github.architectplatform.core.domain.events.ExecutionEvent
 import io.github.architectplatform.core.domain.events.ExecutionEventType
 import io.github.architectplatform.core.domain.events.ExecutionId
 import io.micronaut.http.annotation.Controller
+import io.micronaut.http.annotation.Delete
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.scheduling.TaskExecutors
@@ -29,7 +30,7 @@ class ExecutionController(private val taskService: TaskService) {
     val sharedFlow = taskService.getExecutionFlow(executionId)
 
     // Emit events downstream. Stop cleanly when the root execution reaches a terminal state
-    // (COMPLETED or FAILED on the top-level project — parentProject == null).
+    // (COMPLETED, FAILED, or CANCELLED on the top-level project — parentProject == null).
     // Using transformWhile avoids throwing an exception as control flow.
     return sharedFlow
       .filter { it.event is ExecutionEvent }
@@ -37,13 +38,20 @@ class ExecutionController(private val taskService: TaskService) {
         emit(eventWrapper)
         val event = eventWrapper.event as ExecutionEvent
         logger.debug("SSE event for execution {}: type={}", executionId, event.executionEventType)
-        // Continue while the event is NOT a terminal root-level execution event.
-        // Task-level failures should still flow through so clients receive the final
-        // execution.failed event that summarizes the overall run.
         !(event.parentProject == null &&
-          (eventWrapper.id == "execution.completed" || eventWrapper.id == "execution.failed") &&
+          (eventWrapper.id == "execution.completed" || eventWrapper.id == "execution.failed" || eventWrapper.id == "execution.cancelled") &&
           (event.executionEventType == ExecutionEventType.COMPLETED ||
-            event.executionEventType == ExecutionEventType.FAILED))
+            event.executionEventType == ExecutionEventType.FAILED ||
+            event.executionEventType == ExecutionEventType.CANCELLED))
       }
+  }
+
+  @Delete("/{executionId}")
+  fun cancelExecution(@PathVariable executionId: ExecutionId): Map<String, Any> {
+    val cancelled = taskService.cancelExecution(executionId)
+    return mapOf(
+      "executionId" to executionId,
+      "cancelled" to cancelled,
+    )
   }
 }
