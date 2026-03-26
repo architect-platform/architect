@@ -135,6 +135,27 @@ interface Task {
   fun requires(): TaskRequirements? = null
 
   /**
+   * Determines whether this task should execute at runtime.
+   *
+   * Evaluated by the engine just before execution (after dependency resolution).
+   * When this returns false, the engine skips the task with
+   * [TaskResult.skipped] instead of executing it.
+   *
+   * Use this for conditional execution logic such as:
+   * - Only run if source files changed since last execution
+   * - Only run in certain environment profiles
+   * - Only run when a specific tool is available
+   *
+   * @param environment The execution environment
+   * @param projectContext Context containing project directory and configuration
+   * @return true if the task should execute, false to skip
+   */
+  fun shouldExecute(
+    environment: Environment,
+    projectContext: ProjectContext,
+  ): Boolean = true
+
+  /**
    * Executes the task's work.
    *
    * This method contains the main logic of the task. It receives the execution environment,

@@ -83,7 +83,7 @@
 ### 0.4 — Task Conditions & Runtime Guards
 > Tasks need runtime conditions beyond static `requires()`.
 
-- [ ] **T-0.4.1** 🟠 `M` — Add `Task.shouldExecute(env, ctx): Boolean` with default `true`
+- [x] **T-0.4.1** 🟠 `M` — Add `Task.shouldExecute(env, ctx): Boolean` with default `true` | Finished: 2026-03-26T19:02:00Z | Notes: Added to Task interface with true default; TaskExecutor checks before execution, skips with TaskResult.skipped()
   - Evaluated at execution time, not registration time
   - Engine skips task with `TaskResult.skipped(reason)` if false
   - Example: "only run if `src/` changed since last execution"

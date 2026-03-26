@@ -169,6 +169,15 @@ class TaskExecutor(
       }
     }
 
+    // Runtime condition check: skip task if shouldExecute() returns false
+    if (!currentTask.shouldExecute(environment, projectContext)) {
+      val skipResult = TaskResult.skipped("Task '${currentTask.id}' skipped: shouldExecute() returned false")
+      taskCache.store(currentTask.id, skipResult)
+      eventBus(taskSkippedEvent(projectName, executionId, currentTask.id, message = "Task ${currentTask.id} skipped (condition not met)", subProject = parentProject))
+      eventBus(taskCompletedEvent(projectName, executionId, currentTask.id, message = "Task ${currentTask.id} skipped (condition not met)", subProject = parentProject))
+      return skipResult
+    }
+
     eventBus(taskStartedEvent(projectName, executionId, currentTask.id, message = "Starting task: ${currentTask.id}", subProject = parentProject))
     return try {
       val result = TaskPermissionScope.withTask(currentTask, projectContext.dir) {
