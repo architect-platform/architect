@@ -1,6 +1,7 @@
 package io.github.architectplatform.api.core.tasks
 
 import io.github.architectplatform.api.core.logging.ArchitectLogger
+import io.github.architectplatform.api.core.progress.ProgressReporter
 
 /**
  * Execution environment providing access to services and event publishing.
@@ -102,6 +103,16 @@ interface Environment {
    * @return The variable value, or null if not set
    */
   fun variable(name: String): String? = System.getenv(name)
+
+  /**
+   * Returns a [ProgressReporter] for reporting progress of long-running tasks.
+   *
+   * Tasks can use this to provide incremental progress updates that the engine
+   * routes to the appropriate output channel (CLI progress bar, SSE events, etc.).
+   *
+   * @return A ProgressReporter instance (no-op by default)
+   */
+  fun progressReporter(): ProgressReporter = ProgressReporter.NOOP
 
   /**
    * Subscribes to events of a specific type.

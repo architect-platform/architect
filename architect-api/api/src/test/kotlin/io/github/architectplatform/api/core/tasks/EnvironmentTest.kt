@@ -56,4 +56,13 @@ class EnvironmentTest {
     // Should not throw
     defaultEnv.subscribe(String::class.java) { _ -> }
   }
+
+  @Test
+  fun `progressReporter returns NOOP by default`() {
+    val reporter = defaultEnv.progressReporter()
+    assertNotNull(reporter)
+    // Should not throw
+    reporter.report(1, 10, "step 1")
+    reporter.report(10, 10, "done")
+  }
 }

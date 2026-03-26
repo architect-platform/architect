@@ -75,7 +75,7 @@
   - Distinct from `secret()` — public config vs sensitive values
   - Validates variable exists, logs access for audit
 
-- [ ] **T-0.3.4** 🟡 `M` — Add `Environment.progressReporter()` for long-running tasks
+- [x] **T-0.3.4** 🟡 `M` — Add `Environment.progressReporter()` for long-running tasks | Finished: 2026-03-26T18:58:00Z | Notes: Created ProgressReporter interface with NOOP default, added progressReporter() to Environment
   - Interface: `report(current: Int, total: Int, message: String)`
   - CLI renders as progress bar; JSON mode emits progress events
   - SSE streams progress to connected clients
