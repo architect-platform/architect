@@ -4,6 +4,7 @@ import io.github.architectplatform.cli.client.EngineCommandClient
 import io.github.architectplatform.cli.command.CacheCommandHandler
 import io.github.architectplatform.cli.command.CheckCommandHandler
 import io.github.architectplatform.cli.command.CliInfrastructureHandler
+import io.github.architectplatform.cli.command.DoctorCommandHandler
 import io.github.architectplatform.cli.command.EngineCommandHandler
 import io.github.architectplatform.cli.command.HelpCommandHandler
 import io.github.architectplatform.cli.command.InitCommandHandler
@@ -33,6 +34,7 @@ import picocli.CommandLine.Parameters
  * - [PluginCommandHandler] for plugin management
  * - [CacheCommandHandler] for cache management
  * - [CheckCommandHandler] for precondition checks
+ * - [DoctorCommandHandler] for environment diagnostics
  * - [CliInfrastructureHandler] for completion/upgrade
  * - [OutputFormatter] for all display/formatting
  *
@@ -58,6 +60,7 @@ class ArchitectLauncher(
   private val cliHandler = CliInfrastructureHandler()
   private val helpHandler = HelpCommandHandler()
   private val initHandler = InitCommandHandler()
+  private val doctorHandler = DoctorCommandHandler(engineHealthChecker)
   private val output = OutputFormatter()
 
   @Property(name = "architect.engine.startup-timeout-seconds", defaultValue = "30")
@@ -195,6 +198,26 @@ class ArchitectLauncher(
   )
   var timing: Boolean = false
 
+  @CommandLine.Option(
+      names = ["--parallel"],
+      description = ["Control task parallelism (0=unlimited, 1=sequential)"],
+      defaultValue = "-1",
+  )
+  var parallel: Int = -1
+
+  @CommandLine.Option(
+      names = ["--output", "-o"],
+      description = ["Save execution output to file"],
+  )
+  var outputFile: String? = null
+
+  @CommandLine.Option(
+      names = ["--tee"],
+      description = ["Save output to file while also displaying on terminal"],
+      defaultValue = "false",
+  )
+  var tee: Boolean = false
+
   override fun run() {
     if (noColor || System.getenv("NO_COLOR") != null || System.getenv("CI") != null) {
       plain = true
@@ -225,6 +248,7 @@ class ArchitectLauncher(
       "completion" -> { cliHandler.handleCompletion(args, this); return }
       "upgrade" -> { cliHandler.handleUpgrade(args); return }
       "check" -> { checkHandler.handle(args); return }
+      "doctor" -> { doctorHandler.handle(args); return }
       "history" -> { handleHistory(); return }
       "affected" -> { handleAffectedCommand(); return }
     }
@@ -321,6 +345,7 @@ class ArchitectLauncher(
     pluginHandler.json = json
     cacheHandler.json = json
     checkHandler.json = json
+    doctorHandler.plain = plain
     output.json = json
     output.filter = filter
     output.verbosity = verbosity
