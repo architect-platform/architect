@@ -62,7 +62,7 @@
 ### 0.3 — Environment Service Enrichment
 > Tasks need logging, metrics, and event subscriptions — not just `publish()`.
 
-- [ ] **T-0.3.1** 🔴 `M` — Add `Logger` interface to API and `Environment.logger(tag)` factory
+- [x] **T-0.3.1** 🔴 `M` — Add `Logger` interface to API and `Environment.logger(tag)` factory | Finished: 2026-03-26T18:48:00Z | Notes: Created ArchitectLogger interface (debug/info/warn/error), added Environment.logger(tag) with no-op default, SLF4J impl in architect-core, wired into ApplicationEnvironment
   - Levels: `debug`, `info`, `warn`, `error`
   - Engine implementation delegates to SLF4J
   - Tasks get structured logging for free
