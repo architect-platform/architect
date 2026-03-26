@@ -22,6 +22,9 @@ class ConfigLoader(private val configParser: ConfigParser) {
     }
     var config = ConfigInterpolator.interpolate(configParser.parse(yamlContext))
 
+    // Apply parent config inheritance for monorepos
+    config = applyInheritance(config, path)
+
     // Apply file-based profile overlay (e.g. architect.ci.yml)
     val resolvedProfile = profileName ?: ProfileMerger.detectProfile(null)
     if (resolvedProfile != "default") {
@@ -51,6 +54,52 @@ class ConfigLoader(private val configParser: ConfigParser) {
       logger.error("Failed to read profile overlay ${overlay.name}, skipping.", e)
       null
     }
+  }
+
+  /**
+   * Applies monorepo config inheritance.
+   *
+   * When the config contains `inherit: true`, walks up parent directories to find
+   * a parent `architect.yml` and deep-merges it as the base. The child config
+   * overrides the parent at leaf level.
+   */
+  @Suppress("UNCHECKED_CAST")
+  private fun applyInheritance(config: Config, childPath: String): Config {
+    val inherit = config["inherit"]
+    if (inherit != true && inherit != "true") return config
+
+    val parentYaml = findParentConfig(childPath) ?: run {
+      logger.debug("inherit: true set but no parent architect.yml found")
+      return config - "inherit"
+    }
+
+    val parentConfig = ConfigInterpolator.interpolate(configParser.parse(parentYaml))
+    logger.info("Inheriting config from parent architect.yml")
+    // Parent is the base; child overrides
+    return ProfileMerger.deepMerge(parentConfig, config - "inherit")
+  }
+
+  /**
+   * Walks up from [childPath] looking for a parent directory containing architect.yml.
+   */
+  private fun findParentConfig(childPath: String): String? {
+    var dir = File(childPath).absoluteFile.parentFile
+    // Walk up at most 10 levels to avoid infinite loops
+    repeat(10) {
+      dir = dir?.parentFile ?: return null
+      val parentYml = File(dir, "architect.yml").takeIf { it.exists() }
+        ?: File(dir, "architect.yaml").takeIf { it.exists() }
+      if (parentYml != null) {
+        return try {
+          val content = parentYml.readText()
+          if (content.isBlank()) null else content
+        } catch (e: Exception) {
+          logger.error("Failed to read parent ${parentYml.absolutePath}, skipping.", e)
+          null
+        }
+      }
+    }
+    return null
   }
 
   private fun getExternalConfiguration(projectPath: String = "."): String {

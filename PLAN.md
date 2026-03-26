@@ -111,7 +111,7 @@
   - `--env ci` merges `architect.ci.yml` over `architect.yml`
   - Supports: `architect.staging.yml`, `architect.production.yml`
 
-- [ ] **T-0.5.4** 🟡 `S` — Add config inheritance for monorepos
+- [x] **T-0.5.4** 🟡 `S` — Add config inheritance for monorepos | Finished: 2026-03-26T19:40:00Z | Notes: inherit:true walks up parent dirs, deep-merges parent architect.yml as base
   - Child `architect.yml` inherits parent plugin config
   - `inherit: true` flag per plugin section
   - Reduces duplication in large monorepos
