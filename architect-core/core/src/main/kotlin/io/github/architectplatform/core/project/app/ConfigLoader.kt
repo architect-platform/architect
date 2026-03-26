@@ -20,7 +20,7 @@ class ConfigLoader(private val configParser: ConfigParser) {
     if (yamlContext.isEmpty()) {
       return null
     }
-    return LoadResult(configParser.parse(yamlContext), yamlContext)
+    return LoadResult(ConfigInterpolator.interpolate(configParser.parse(yamlContext)), yamlContext)
   }
 
   private fun getExternalConfiguration(projectPath: String = "."): String {

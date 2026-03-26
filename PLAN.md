@@ -103,7 +103,7 @@
   - Validate: `project`, `plugins`, `tasks`, `scripts`, `pipelines` sections
   - Publish schema to SchemaStore for IDE auto-completion
 
-- [ ] **T-0.5.2** 🟠 `M` — Add config interpolation support (`${env.VAR}`, `${project.name}`)
+- [x] **T-0.5.2** 🟠 `M` — Add config interpolation support (`${env.VAR}`, `${project.name}`) | Finished: 2026-03-26T19:28:00Z | Notes: Created ConfigInterpolator, wired into ConfigLoader.loadWithRaw(), 11 tests
   - Resolve environment variables and project properties in YAML values
   - Support default values: `${env.PORT:8080}`
 
