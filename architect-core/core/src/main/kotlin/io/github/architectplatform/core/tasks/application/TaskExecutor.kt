@@ -3,6 +3,7 @@ package io.github.architectplatform.core.tasks.application
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.project.getKey
 import io.github.architectplatform.api.core.tasks.Environment
+import io.github.architectplatform.api.core.tasks.FailureStrategy
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
@@ -93,7 +94,12 @@ class TaskExecutor(
             upstreamData[t.id] = r.data
           }
         }
-        if (batchResults.any { !it.success }) break
+        // Abort only if any failed task uses ABORT strategy (default).
+        // Tasks with CONTINUE strategy allow execution to proceed.
+        val shouldAbort = batchTasks.zip(batchResults).any { (t, r) ->
+          !r.success && t.onFailure() is FailureStrategy.ABORT
+        }
+        if (shouldAbort) break
       }
 
       if (allResults.all { it.success }) {
@@ -179,64 +185,75 @@ class TaskExecutor(
     }
 
     eventBus(taskStartedEvent(projectName, executionId, currentTask.id, message = "Starting task: ${currentTask.id}", subProject = parentProject))
-    return try {
-      val result = TaskPermissionScope.withTask(currentTask, projectContext.dir) {
-        currentTask.execute(environment, projectContext, args)
-      }
-      // Children execute after parent succeeds; results merge into a composite TaskResult.
-      val childResults = if (currentTask.children().isNotEmpty()) {
-        dependencyResolver.resolveChildren(currentTask, taskRegistry).map { child ->
-          eventBus(taskStartedEvent(projectName, executionId, child.id, message = "Starting child task: ${child.id} (parent: ${currentTask.id})", subProject = parentProject))
-          val childResult = TaskPermissionScope.withTask(child, projectContext.dir) {
-            child.execute(environment, projectContext, args)
-          }
-          if (childResult.success) {
-            eventBus(taskCompletedEvent(projectName, executionId, child.id, message = childResult.message ?: "Child task ${child.id} completed", subProject = parentProject))
-          } else {
-            eventBus(taskFailedEvent(projectName, executionId, child.id, message = childResult.message ?: "Child task ${child.id} failed", errorDetails = childResult.message ?: "", parentProject = parentProject))
-          }
-          taskCache.store(child.id, childResult)
-          childResult
-        }
-      } else emptyList()
 
-      val finalResult = if (childResults.isNotEmpty()) {
-        val combined = listOf(result) + childResults
-        val failedCount = combined.count { !it.success }
-        if (combined.all { it.success }) {
-          TaskResult.success(result.message ?: "Task ${currentTask.id} and ${childResults.size} children completed", combined)
-        } else {
-          TaskResult.failure("$failedCount task(s) failed for ${currentTask.id}", combined)
-        }
-      } else result
-
-      logger.debug("Executed task '${currentTask.id}' with result: $finalResult")
-      if (finalResult.success) {
-        eventBus(taskCompletedEvent(projectName, executionId, currentTask.id, message = finalResult.message ?: "Task ${currentTask.id} completed successfully", subProject = parentProject))
-      } else {
-        val errMsg = finalResult.message ?: "Task failed without message"
-        logger.error("Task '${currentTask.id}' failed in project '$projectName': $errMsg")
-        eventBus(taskFailedEvent(projectName, executionId, currentTask.id, message = errMsg, errorDetails = errMsg, parentProject = parentProject))
-      }
-      taskCache.store(currentTask.id, finalResult)
-
-      // Store in content-hash output cache on success
-      if (outputCacheEnabled && outputCache != null && finalResult.success) {
-        val descriptor = currentTask.cacheDescriptor()
-        if (descriptor != null) {
-          val cacheKey = CacheKeyComputer.compute(descriptor, projectContext.dir.toString(), projectContext.config)
-          outputCache.store(cacheKey, finalResult, stdout = finalResult.message)
-          remoteOutputCache?.storeResult(cacheKey, finalResult, stdout = finalResult.message)
-        }
-      }
-
-      finalResult
-    } catch (e: Exception) {
-      val errMsg = e.message ?: "Unknown error"
-      val stack = e.stackTraceToString()
-      eventBus(taskFailedEvent(projectName, executionId, currentTask.id, message = "Task '${currentTask.id}' failed with exception: $errMsg", errorDetails = "Exception: $errMsg\n\nStack Trace:\n$stack", parentProject = parentProject))
-      logger.error("Exception during execution of task '${currentTask.id}'", e)
-      TaskResult.failure("Task '${currentTask.id}' failed with exception: $errMsg")
+    val maxAttempts = when (val strategy = currentTask.onFailure()) {
+      is FailureStrategy.RETRY -> strategy.maxAttempts + 1 // initial + retries
+      else -> 1
     }
+
+    var lastResult: TaskResult = TaskResult.failure("Task '${currentTask.id}' did not execute")
+    for (attempt in 1..maxAttempts) {
+      lastResult = try {
+        val result = TaskPermissionScope.withTask(currentTask, projectContext.dir) {
+          currentTask.execute(environment, projectContext, args)
+        }
+        // Children execute after parent succeeds; results merge into a composite TaskResult.
+        val childResults = if (currentTask.children().isNotEmpty()) {
+          dependencyResolver.resolveChildren(currentTask, taskRegistry).map { child ->
+            eventBus(taskStartedEvent(projectName, executionId, child.id, message = "Starting child task: ${child.id} (parent: ${currentTask.id})", subProject = parentProject))
+            val childResult = TaskPermissionScope.withTask(child, projectContext.dir) {
+              child.execute(environment, projectContext, args)
+            }
+            if (childResult.success) {
+              eventBus(taskCompletedEvent(projectName, executionId, child.id, message = childResult.message ?: "Child task ${child.id} completed", subProject = parentProject))
+            } else {
+              eventBus(taskFailedEvent(projectName, executionId, child.id, message = childResult.message ?: "Child task ${child.id} failed", errorDetails = childResult.message ?: "", parentProject = parentProject))
+            }
+            taskCache.store(child.id, childResult)
+            childResult
+          }
+        } else emptyList()
+
+        if (childResults.isNotEmpty()) {
+          val combined = listOf(result) + childResults
+          val failedCount = combined.count { !it.success }
+          if (combined.all { it.success }) {
+            TaskResult.success(result.message ?: "Task ${currentTask.id} and ${childResults.size} children completed", combined)
+          } else {
+            TaskResult.failure("$failedCount task(s) failed for ${currentTask.id}", combined)
+          }
+        } else result
+      } catch (e: Exception) {
+        val errMsg = e.message ?: "Unknown error"
+        val stack = e.stackTraceToString()
+        logger.error("Exception during execution of task '${currentTask.id}' (attempt $attempt/$maxAttempts)", e)
+        TaskResult.failure("Task '${currentTask.id}' failed with exception: $errMsg")
+      }
+
+      if (lastResult.success || attempt == maxAttempts) break
+      logger.info("Retrying task '${currentTask.id}' (attempt ${attempt + 1}/$maxAttempts)")
+    }
+
+    logger.debug("Executed task '${currentTask.id}' with result: $lastResult")
+    if (lastResult.success) {
+      eventBus(taskCompletedEvent(projectName, executionId, currentTask.id, message = lastResult.message ?: "Task ${currentTask.id} completed successfully", subProject = parentProject))
+    } else {
+      val errMsg = lastResult.message ?: "Task failed without message"
+      logger.error("Task '${currentTask.id}' failed in project '$projectName': $errMsg")
+      eventBus(taskFailedEvent(projectName, executionId, currentTask.id, message = errMsg, errorDetails = errMsg, parentProject = parentProject))
+    }
+    taskCache.store(currentTask.id, lastResult)
+
+    // Store in content-hash output cache on success
+    if (outputCacheEnabled && outputCache != null && lastResult.success) {
+      val descriptor = currentTask.cacheDescriptor()
+      if (descriptor != null) {
+        val cacheKey = CacheKeyComputer.compute(descriptor, projectContext.dir.toString(), projectContext.config)
+        outputCache.store(cacheKey, lastResult, stdout = lastResult.message)
+        remoteOutputCache?.storeResult(cacheKey, lastResult, stdout = lastResult.message)
+      }
+    }
+
+    return lastResult
   }
 }

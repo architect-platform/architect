@@ -88,7 +88,7 @@
   - Engine skips task with `TaskResult.skipped(reason)` if false
   - Example: "only run if `src/` changed since last execution"
 
-- [ ] **T-0.4.2** 🟠 `S` — Add `Task.onFailure(): FailureStrategy` enum
+- [x] **T-0.4.2** 🟠 `S` — Add `Task.onFailure(): FailureStrategy` enum | Finished: 2026-03-26T19:10:00Z | Notes: Sealed class ABORT/CONTINUE/RETRY; TaskExecutor respects strategy in batch loop and retries
   - Values: `ABORT` (default), `CONTINUE`, `RETRY(maxAttempts)`
   - Engine respects strategy during composite/pipeline execution
 

@@ -156,6 +156,18 @@ interface Task {
   ): Boolean = true
 
   /**
+   * Returns the failure strategy for this task.
+   *
+   * Controls engine behaviour when the task fails:
+   * - [FailureStrategy.ABORT]: Stop execution immediately (default)
+   * - [FailureStrategy.CONTINUE]: Mark failed but keep executing
+   * - [FailureStrategy.RETRY]: Retry up to N times before aborting
+   *
+   * @return The desired failure handling strategy
+   */
+  fun onFailure(): FailureStrategy = FailureStrategy.ABORT
+
+  /**
    * Executes the task's work.
    *
    * This method contains the main logic of the task. It receives the execution environment,
