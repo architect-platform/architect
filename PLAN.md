@@ -158,7 +158,7 @@
 ### 1.2 — Output & Debugging Experience
 > No verbose mode, no output persistence, limited debugging.
 
-- [ ] **T-1.2.1** 🔴 `M` — Add `--verbose` / `-vvv` graduated verbosity levels
+- [x] **T-1.2.1** 🔴 `M` — Add `--verbose` / `-q` graduated verbosity levels | Finished: 2026-03-26T19:30:00Z | Notes: Default v1 (backward compat), --quiet/-q for v0, --verbose for v2, --verbose 3 for debug
   - Level 0 (default): summary output only
   - Level 1 (`-v`): task names + durations
   - Level 2 (`-vv`): command details + stdout

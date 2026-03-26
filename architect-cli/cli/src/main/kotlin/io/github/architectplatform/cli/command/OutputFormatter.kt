@@ -25,6 +25,7 @@ class OutputFormatter(
 
   var json: Boolean = false
   var filter: String? = null
+  var verbosity: Int = 0
 
   fun printPlan(plan: TaskPlanDTO) {
     println()

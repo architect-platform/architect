@@ -16,7 +16,11 @@ import io.github.architectplatform.cli.client.ExecutionId
  * @property taskName The name of the task being executed
  * @property plain If true, disables ANSI colors for CI environments
  */
-class ConsoleUI(private val taskName: String, private val plain: Boolean = false) {
+class ConsoleUI(
+  private val taskName: String,
+  private val plain: Boolean = false,
+  var verbosity: Int = 1,
+) {
 
   /**
    * ANSI color codes for terminal output formatting.
@@ -151,48 +155,58 @@ class ConsoleUI(private val taskName: String, private val plain: Boolean = false
       }
     }
 
-    // ── Render progress line ───────────────────────────────────
-    val icon = when (executionEventType) {
-      "STARTED" -> "▶"
-      "COMPLETED" -> "✓"
-      "FAILED" -> "✗"
-      "SKIPPED" -> "⏭"
-      "OUTPUT" -> "│"
-      else -> "·"
+    // ── Render progress line (verbosity-gated) ──────────────────
+    // Level 0: only failures; Level 1: task names+durations; Level 2: +messages; Level 3: all
+    val shouldPrint = when (executionEventType) {
+      "FAILED" -> true // Always show failures
+      "STARTED", "COMPLETED", "SKIPPED" -> verbosity >= 1
+      "OUTPUT" -> verbosity >= 2
+      else -> verbosity >= 3
     }
 
-    val statusColor = when (executionEventType) {
-      "STARTED" -> AnsiColors.CYAN
-      "COMPLETED" -> AnsiColors.GREEN
-      "FAILED" -> AnsiColors.RED
-      "SKIPPED" -> AnsiColors.YELLOW
-      else -> ""
-    }
-
-    val elapsed = if (taskId != null) {
-      val state = taskStates[taskId]
-      if (state != null) " ${colorize(formatDuration(state.durationMs), AnsiColors.DIM)}" else ""
-    } else ""
-
-    val projectContext = buildString {
-      if (subProject != null) {
-        append(colorize(subProject, AnsiColors.CYAN))
-        project?.let { append(" → ${colorize(it, AnsiColors.YELLOW)}") }
-      } else {
-        currentProject?.let { append(colorize(it, AnsiColors.CYAN)) }
+    if (shouldPrint) {
+      val icon = when (executionEventType) {
+        "STARTED" -> "▶"
+        "COMPLETED" -> "✓"
+        "FAILED" -> "✗"
+        "SKIPPED" -> "⏭"
+        "OUTPUT" -> "│"
+        else -> "·"
       }
+
+      val statusColor = when (executionEventType) {
+        "STARTED" -> AnsiColors.CYAN
+        "COMPLETED" -> AnsiColors.GREEN
+        "FAILED" -> AnsiColors.RED
+        "SKIPPED" -> AnsiColors.YELLOW
+        else -> ""
+      }
+
+      val elapsed = if (taskId != null) {
+        val state = taskStates[taskId]
+        if (state != null) " ${colorize(formatDuration(state.durationMs), AnsiColors.DIM)}" else ""
+      } else ""
+
+      val projectContext = buildString {
+        if (subProject != null) {
+          append(colorize(subProject, AnsiColors.CYAN))
+          project?.let { append(" → ${colorize(it, AnsiColors.YELLOW)}") }
+        } else {
+          currentProject?.let { append(colorize(it, AnsiColors.CYAN)) }
+        }
+      }
+
+      val parts = mutableListOf<String>()
+      parts.add(colorize("$icon ${executionEventType ?: "EVENT"}", statusColor))
+      if (projectContext.isNotEmpty()) parts.add("[${projectContext}]")
+      if (taskId != null) parts.add(colorize(taskId, AnsiColors.BOLD))
+      if (verbosity >= 2) message?.let { parts.add("- $it") }
+      parts.add(elapsed)
+
+      println(parts.joinToString(" ").trimEnd())
     }
 
-    val parts = mutableListOf<String>()
-    parts.add(colorize("$icon ${executionEventType ?: "EVENT"}", statusColor))
-    if (projectContext.isNotEmpty()) parts.add("[${projectContext}]")
-    if (taskId != null) parts.add(colorize(taskId, AnsiColors.BOLD))
-    message?.let { parts.add("- $it") }
-    parts.add(elapsed)
-
-    println(parts.joinToString(" ").trimEnd())
-
-    // ── Failure details ────────────────────────────────────────
+    // ── Failure details (always shown inline) ──────────────────
     if (!errorDetails.isNullOrEmpty()) {
       println()
       println(colorize("  FAILURE DETAILS ($taskId):", "${AnsiColors.BOLD}${AnsiColors.RED}"))

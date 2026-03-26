@@ -164,7 +164,7 @@ class CliEngineIntegrationTest {
     @Test
     fun `should handle all event types correctly`() {
         // Given
-        val ui = ConsoleUI("all-events-task", plain = true)
+        val ui = ConsoleUI("all-events-task", plain = true, verbosity = 2)
         
         val eventTypes = listOf(
             "STARTED" to "▶",
@@ -200,7 +200,7 @@ class CliEngineIntegrationTest {
     @Test
     fun `should format output consistently in plain mode`() {
         // Given
-        val ui = ConsoleUI("consistency-test", plain = true)
+        val ui = ConsoleUI("consistency-test", plain = true, verbosity = 2)
         
         val event = mapOf(
             "id" to "task.started",

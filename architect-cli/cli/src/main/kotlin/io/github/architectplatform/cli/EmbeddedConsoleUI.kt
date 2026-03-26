@@ -11,8 +11,9 @@ import io.github.architectplatform.core.domain.events.ArchitectEvent
 class EmbeddedConsoleUI(
   taskName: String,
   plain: Boolean = false,
+  verbosity: Int = 1,
 ) {
-  private val delegate = ConsoleUI(taskName, plain)
+  private val delegate = ConsoleUI(taskName, plain, verbosity)
   private val objectMapper = ObjectMapper().registerKotlinModule()
 
   val hasFailed: Boolean

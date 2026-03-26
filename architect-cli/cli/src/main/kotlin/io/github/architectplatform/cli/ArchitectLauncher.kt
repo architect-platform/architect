@@ -163,10 +163,27 @@ class ArchitectLauncher(
   )
   var noCache: Boolean = false
 
+  @CommandLine.Option(
+      names = ["--verbose"],
+      description = ["Set verbosity level: 1=tasks (default), 2=details+stdout, 3=debug"],
+      defaultValue = "1",
+      arity = "0..1",
+      fallbackValue = "2",
+  )
+  var verbosity: Int = 1
+
+  @CommandLine.Option(
+      names = ["-q", "--quiet"],
+      description = ["Quiet mode: only show summary and failures"],
+      defaultValue = "false",
+  )
+  var quiet: Boolean = false
+
   override fun run() {
     if (noColor || System.getenv("NO_COLOR") != null || System.getenv("CI") != null) {
       plain = true
     }
+    if (quiet) verbosity = 0
 
     val resolvedProfile = io.github.architectplatform.core.project.app.ProfileMerger.detectProfile(envProfile)
     embeddedTaskExecutor.activeProfile = resolvedProfile
@@ -261,6 +278,7 @@ class ArchitectLauncher(
     checkHandler.json = json
     output.json = json
     output.filter = filter
+    output.verbosity = verbosity
   }
 
   private fun handleHistory() {
@@ -441,12 +459,15 @@ class ArchitectLauncher(
   }
 
   private fun executeTask(projectName: String, taskName: String, taskArgs: List<String>) {
-    val ui = ConsoleUI(taskName, plain)
+    val ui = ConsoleUI(taskName, plain, verbosity)
 
     println()
     println("━".repeat(80))
     println("▶  Executing task: $taskName")
     println("📦 Project: $projectName")
+    if (verbosity >= 3) {
+      println("🔧 Verbosity: $verbosity | Plain: $plain | No-cache: $noCache | Profile: ${embeddedTaskExecutor.activeProfile ?: "default"}")
+    }
     println("━".repeat(80))
     println()
     
@@ -483,12 +504,16 @@ class ArchitectLauncher(
       taskName: String,
       taskArgs: List<String>,
   ) {
-    val ui = EmbeddedConsoleUI(taskName, plain)
+    val ui = EmbeddedConsoleUI(taskName, plain, verbosity)
 
     println()
     println("━".repeat(80))
     println("▶  Executing task: $taskName")
     println("📦 Project: $projectName")
+    if (verbosity >= 3) {
+      println("🔧 Verbosity: $verbosity | Plain: $plain | No-cache: $noCache | Profile: ${embeddedTaskExecutor.activeProfile ?: "default"}")
+      println("📁 Project path: $projectPath")
+    }
     println("━".repeat(80))
     println()
 

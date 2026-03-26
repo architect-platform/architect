@@ -86,7 +86,7 @@ class ConsoleUITest {
 
   @Test
   fun `progress line includes task id and event type`() {
-    val ui = ConsoleUI("test", plain = true)
+    val ui = ConsoleUI("test", plain = true, verbosity = 1)
     val output = captureOutput {
       ui.process(event(taskId = "build", type = "STARTED", message = "Starting"))
     }
@@ -96,7 +96,7 @@ class ConsoleUITest {
 
   @Test
   fun `progress line includes elapsed time indicator`() {
-    val ui = ConsoleUI("test", plain = true)
+    val ui = ConsoleUI("test", plain = true, verbosity = 1)
     val output = captureOutput {
       ui.process(event(taskId = "build", type = "STARTED"))
       Thread.sleep(10)
@@ -163,7 +163,7 @@ class ConsoleUITest {
 
   @Test
   fun `plain mode suppresses ANSI codes`() {
-    val ui = ConsoleUI("test", plain = true)
+    val ui = ConsoleUI("test", plain = true, verbosity = 1)
     val output = captureOutput {
       ui.process(event(taskId = "build", type = "STARTED"))
     }
@@ -172,7 +172,7 @@ class ConsoleUITest {
 
   @Test
   fun `interactive mode includes ANSI codes`() {
-    val ui = ConsoleUI("test", plain = false)
+    val ui = ConsoleUI("test", plain = false, verbosity = 1)
     val output = captureOutput {
       ui.process(event(taskId = "build", type = "STARTED"))
     }
@@ -317,5 +317,57 @@ class ConsoleUITest {
     val ui = ConsoleUI("test", plain = true)
     val output = captureOutput { ui.printSummary() }
     assertEquals("", output)
+  }
+
+  // ── Verbosity levels ──────────────────────────────────────────────
+
+  @Test
+  fun `verbosity 0 suppresses non-failure events`() {
+    val ui = ConsoleUI("test", plain = true, verbosity = 0)
+    val output = captureOutput {
+      ui.process(event(taskId = "build", type = "STARTED"))
+      ui.process(event(taskId = "build", type = "COMPLETED"))
+    }
+    assertFalse(output.contains("STARTED"))
+    assertFalse(output.contains("COMPLETED"))
+  }
+
+  @Test
+  fun `verbosity 0 still shows failures`() {
+    val ui = ConsoleUI("test", plain = true, verbosity = 0)
+    val output = captureOutput {
+      ui.process(event(taskId = "build", type = "FAILED", errorDetails = "boom"))
+    }
+    assertTrue(output.contains("FAILED"))
+    assertTrue(output.contains("FAILURE DETAILS"))
+  }
+
+  @Test
+  fun `verbosity 1 shows task events but not messages`() {
+    val ui = ConsoleUI("test", plain = true, verbosity = 1)
+    val output = captureOutput {
+      ui.process(event(taskId = "build", type = "STARTED", message = "Starting build"))
+    }
+    assertTrue(output.contains("STARTED"))
+    assertTrue(output.contains("build"))
+    assertFalse(output.contains("Starting build"))
+  }
+
+  @Test
+  fun `verbosity 2 shows task events with messages`() {
+    val ui = ConsoleUI("test", plain = true, verbosity = 2)
+    val output = captureOutput {
+      ui.process(event(taskId = "build", type = "STARTED", message = "Starting build"))
+    }
+    assertTrue(output.contains("Starting build"))
+  }
+
+  @Test
+  fun `verbosity 3 shows debug events`() {
+    val ui = ConsoleUI("test", plain = true, verbosity = 3)
+    val output = captureOutput {
+      ui.process(event(taskId = "build", type = "UPDATED"))
+    }
+    assertTrue(output.contains("UPDATED"))
   }
 }
