@@ -92,6 +92,18 @@ interface Environment {
   }
 
   /**
+   * Reads an environment variable by name.
+   *
+   * Provides a platform-abstracted way for tasks to access environment variables
+   * without directly calling `System.getenv()`. This allows the engine to
+   * intercept, override, or sandbox variable access.
+   *
+   * @param name The environment variable name (e.g., "HOME", "CI")
+   * @return The variable value, or null if not set
+   */
+  fun variable(name: String): String? = System.getenv(name)
+
+  /**
    * Subscribes to events of a specific type.
    *
    * Enables inter-task communication without tight coupling. Tasks can subscribe

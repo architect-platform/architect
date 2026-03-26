@@ -71,7 +71,7 @@
   - `fun <E> subscribe(type: Class<E>, handler: (E) -> Unit)`
   - Enables inter-task communication without tight coupling
 
-- [ ] **T-0.3.3** 🟠 `S` — Add `Environment.variable(name): String?` for explicit env var access
+- [x] **T-0.3.3** 🟠 `S` — Add `Environment.variable(name): String?` for explicit env var access | Finished: 2026-03-26T18:55:00Z | Notes: Default delegates to System.getenv(); engine can override for sandboxing. Added 6 EnvironmentTest tests.
   - Distinct from `secret()` — public config vs sensitive values
   - Validates variable exists, logs access for audit
 
