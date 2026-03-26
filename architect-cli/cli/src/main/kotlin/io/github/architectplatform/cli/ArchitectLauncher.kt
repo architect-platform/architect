@@ -4,6 +4,7 @@ import io.github.architectplatform.cli.client.EngineCommandClient
 import io.github.architectplatform.cli.command.CacheCommandHandler
 import io.github.architectplatform.cli.command.CheckCommandHandler
 import io.github.architectplatform.cli.command.CliInfrastructureHandler
+import io.github.architectplatform.cli.command.ConfigCommandHandler
 import io.github.architectplatform.cli.command.DoctorCommandHandler
 import io.github.architectplatform.cli.command.EngineCommandHandler
 import io.github.architectplatform.cli.command.HelpCommandHandler
@@ -60,8 +61,13 @@ class ArchitectLauncher(
   private val cliHandler = CliInfrastructureHandler()
   private val helpHandler = HelpCommandHandler()
   private val initHandler = InitCommandHandler()
+  private val configHandler = ConfigCommandHandler()
   private val doctorHandler = DoctorCommandHandler(engineHealthChecker)
   private val output = OutputFormatter()
+
+  // Graceful cancellation state
+  @Volatile private var cancelRequested = false
+  @Volatile private var activeExecutionId: String? = null
 
   @Property(name = "architect.engine.startup-timeout-seconds", defaultValue = "30")
   var startupTimeoutSeconds: Int = 30
@@ -231,6 +237,17 @@ class ArchitectLauncher(
     // Sync handler options
     syncHandlerOptions()
 
+    // Install Ctrl+C graceful cancellation handler
+    Runtime.getRuntime().addShutdownHook(Thread {
+      if (!cancelRequested) {
+        cancelRequested = true
+        System.err.println("\n⚠️  Cancelling... (press Ctrl+C again to force)")
+        activeExecutionId?.let { execId ->
+          try { engineCommandClient.cancelExecution(execId) } catch (_: Exception) {}
+        }
+      }
+    })
+
     // Resolve command aliases from architect.yml
     command = resolveAlias(command)
 
@@ -249,6 +266,8 @@ class ArchitectLauncher(
       "upgrade" -> { cliHandler.handleUpgrade(args); return }
       "check" -> { checkHandler.handle(args); return }
       "doctor" -> { doctorHandler.handle(args); return }
+      "config" -> { configHandler.handle(args); return }
+      "retry" -> { handleRetry(); return }
       "history" -> { handleHistory(); return }
       "affected" -> { handleAffectedCommand(); return }
     }
@@ -350,6 +369,8 @@ class ArchitectLauncher(
     cacheHandler.json = json
     checkHandler.json = json
     doctorHandler.plain = plain
+    configHandler.json = json
+    configHandler.plain = plain
     output.json = json
     output.filter = filter
     output.verbosity = verbosity
@@ -417,6 +438,34 @@ class ArchitectLauncher(
       }
     }
     output.printHistory(records)
+  }
+
+  private fun handleRetry() {
+    val records = localHistoryReader.getAll().ifEmpty {
+      runCatching { engineCommandClient.getHistory() }.getOrElse { emptyList() }
+    }
+    val lastFailed = records.firstOrNull { it.status == "FAILURE" || it.status == "FAILED" }
+    if (lastFailed == null) {
+      println("ℹ️  No failed executions found in history")
+      return
+    }
+    val fromTask = args.indexOf("--from").let { if (it >= 0) args.getOrNull(it + 1) else null }
+    val taskName = fromTask ?: lastFailed.taskName
+    val projectPath = System.getProperty("user.dir")
+    val projectName = lastFailed.projectName ?: extractProjectName(projectPath)
+
+    println("🔄 Retrying: $taskName (project: $projectName)")
+    println()
+
+    val useEmbedded = embedded || (noDaemon && !engineHealthChecker.isRunning())
+    if (useEmbedded) {
+      executeTaskEmbedded(projectName, projectPath, taskName, emptyList())
+    } else {
+      engineHandler.ensureEngineRunning()
+      val request = RegisterProjectRequest(name = projectName, path = projectPath)
+      engineCommandClient.registerProject(request)
+      executeTask(projectName, taskName, emptyList())
+    }
   }
 
   private fun handleAffectedCommand() {
@@ -599,6 +648,7 @@ class ArchitectLauncher(
       val startTime = System.currentTimeMillis()
       try {
         val executionId = engineCommandClient.execute(projectName, taskName, taskArgs)
+        activeExecutionId = executionId
         val flow = engineCommandClient.getExecutionFlow(executionId)
         flow.collect { ui.process(it) }
 
