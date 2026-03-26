@@ -1,0 +1,357 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/architect-platform/architect/main/sdk/schema/architect.schema.json",
+  "title": "Architect Configuration",
+  "description": "Schema for architect.yml — the project configuration file for the Architect task execution framework.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "object",
+      "description": "Project metadata.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique project name (used as identifier in the engine).",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable project description."
+        },
+        "version": {
+          "type": "string",
+          "description": "Project version (semver recommended)."
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": true
+    },
+    "plugins": {
+      "type": "array",
+      "description": "List of Architect plugins to load.",
+      "items": {
+        "$ref": "#/definitions/pluginConfig"
+      }
+    },
+    "docs": {
+      "type": "object",
+      "description": "Documentation build configuration (consumed by docs-architected plugin).",
+      "properties": {
+        "build": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether documentation building is enabled."
+            },
+            "framework": {
+              "type": "string",
+              "enum": ["mkdocs", "docusaurus", "vuepress", "custom"],
+              "description": "Documentation framework to use."
+            },
+            "sourceDir": {
+              "type": "string",
+              "default": "docs",
+              "description": "Directory containing documentation source files."
+            },
+            "outputDir": {
+              "type": "string",
+              "default": "site",
+              "description": "Directory for generated documentation output."
+            },
+            "installDeps": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether to install documentation dependencies before building."
+            },
+            "siteName": {
+              "type": "string",
+              "description": "Site title for the generated documentation."
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "git": {
+      "type": "object",
+      "description": "Git integration configuration (consumed by git-architected plugin).",
+      "properties": {
+        "config": {
+          "type": "object",
+          "description": "Git config key-value pairs applied before operations.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "github": {
+      "type": "object",
+      "description": "GitHub CI/CD and release configuration (consumed by github-architected plugin).",
+      "properties": {
+        "pipelines": {
+          "type": "array",
+          "description": "GitHub Actions pipeline definitions.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Pipeline name."
+              },
+              "type": {
+                "type": "string",
+                "description": "Pipeline type (e.g. docs, build, release)."
+              },
+              "branch": {
+                "type": "string",
+                "description": "Git branch that triggers this pipeline."
+              }
+            },
+            "required": ["name"],
+            "additionalProperties": true
+          }
+        },
+        "release": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "Whether GitHub release creation is enabled."
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "gradle": {
+      "type": "object",
+      "description": "Gradle build configuration (consumed by gradle-architected plugin).",
+      "properties": {
+        "projects": {
+          "type": "array",
+          "description": "List of Gradle sub-projects to manage.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Sub-project name."
+              },
+              "path": {
+                "type": "string",
+                "description": "Relative path to the Gradle project root."
+              }
+            },
+            "required": ["name", "path"],
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "scripts": {
+      "type": "object",
+      "description": "Custom script definitions (consumed by scripts-architected plugin).",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether the scripts plugin is enabled."
+        },
+        "scripts": {
+          "type": "object",
+          "description": "Named script definitions.",
+          "additionalProperties": {
+            "$ref": "#/definitions/scriptDefinition"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "pipelines": {
+      "type": "object",
+      "description": "Pipeline/workflow definitions (consumed by pipelines-architected plugin).",
+      "properties": {
+        "workflows": {
+          "type": "array",
+          "description": "Workflow definitions containing ordered steps.",
+          "items": {
+            "$ref": "#/definitions/workflowDefinition"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "tasks": {
+      "type": "object",
+      "description": "Inline task definitions (for simple tasks without a plugin).",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "Shell command to execute."
+          },
+          "description": {
+            "type": "string",
+            "description": "Task description."
+          },
+          "phase": {
+            "type": "string",
+            "description": "Lifecycle phase this task belongs to."
+          },
+          "depends": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Task IDs this task depends on."
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": ["project"],
+  "additionalProperties": true,
+  "definitions": {
+    "pluginConfig": {
+      "type": "object",
+      "description": "Plugin dependency declaration.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Plugin identifier (e.g. git-architected)."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["github", "local", "maven", "npm"],
+          "default": "github",
+          "description": "Plugin source type."
+        },
+        "repo": {
+          "type": "string",
+          "description": "GitHub repository (owner/repo format)."
+        },
+        "version": {
+          "type": "string",
+          "default": "latest",
+          "description": "Plugin version constraint."
+        },
+        "asset": {
+          "type": "string",
+          "description": "Release asset filename."
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Asset name prefix pattern for version matching."
+        },
+        "path": {
+          "type": "string",
+          "description": "Local filesystem path (for type: local)."
+        },
+        "registry": {
+          "type": "string",
+          "description": "Custom registry URL."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Direct download URL."
+        },
+        "sha256": {
+          "type": "string",
+          "description": "Expected SHA-256 hash for integrity verification."
+        },
+        "verify-signature": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to verify the plugin's cryptographic signature."
+        },
+        "trusted-keys": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Trusted public key fingerprints for signature verification."
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": true
+    },
+    "scriptDefinition": {
+      "type": "object",
+      "description": "A named shell script definition.",
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "Shell command to execute."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable script description."
+        },
+        "phase": {
+          "type": "string",
+          "description": "Lifecycle phase (e.g. BUILD, TEST, LINT)."
+        },
+        "workingDirectory": {
+          "type": "string",
+          "description": "Working directory relative to project root."
+        },
+        "environment": {
+          "type": "object",
+          "description": "Environment variables passed to the script.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["command"],
+      "additionalProperties": true
+    },
+    "workflowDefinition": {
+      "type": "object",
+      "description": "A named workflow containing ordered execution steps.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Workflow name."
+        },
+        "description": {
+          "type": "string",
+          "description": "Workflow description."
+        },
+        "steps": {
+          "type": "array",
+          "description": "Ordered list of execution steps.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Step name."
+              },
+              "task": {
+                "type": "string",
+                "description": "Task ID to execute."
+              },
+              "args": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Arguments passed to the task."
+              }
+            },
+            "required": ["name", "task"],
+            "additionalProperties": true
+          }
+        }
+      },
+      "required": ["name", "steps"],
+      "additionalProperties": true
+    }
+  }
+}

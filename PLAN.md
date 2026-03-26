@@ -99,7 +99,7 @@
 ### 0.5 — Configuration & Schema Validation
 > `architect.yml` has no schema enforcement. Typos silently fail.
 
-- [ ] **T-0.5.1** 🔴 `L` — Define JSON Schema for `architect.yml` root structure
+- [x] **T-0.5.1** 🔴 `L` — Define JSON Schema for `architect.yml` root structure | Finished: 2026-03-26T19:22:00Z | Notes: Created Draft-07 schema at sdk/schema/architect.schema.json covering project, plugins, docs, git, github, gradle, scripts, pipelines, tasks sections
   - Validate: `project`, `plugins`, `tasks`, `scripts`, `pipelines` sections
   - Publish schema to SchemaStore for IDE auto-completion
 
