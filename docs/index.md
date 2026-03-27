@@ -34,6 +34,7 @@ For the authoritative module support set, see the
 - **[javascript-architected](plugins/javascript-architected/index.md)** - JavaScript/Node.js package manager integration
 - **[security-architected](reference/plugins/security-architected.md)** - Security scanning, dependency auditing, and SBOM generation
 - **[quality-architected](reference/plugins/quality-architected.md)** - Unified linting, static analysis, and quality-gate checks
+- **[release-architected](reference/plugins/release-architected.md)** - Conventional-commit-aware release preparation and multi-artifact publishing
 - **[testing-architected](reference/plugins/testing-architected.md)** - Cross-language unit, integration, e2e, and coverage orchestration
 - **[pipelines-architected](plugins/pipelines-architected/index.md)** - Pipeline workflow management
 - **[scripts-architected](plugins/scripts-architected/index.md)** - Custom shell script execution

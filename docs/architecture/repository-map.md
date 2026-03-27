@@ -256,6 +256,7 @@ Local plugin development path:
 | `rust-architected/` | Rust build and test |
 | `security-architected/` | Security scanning, dependency audits, and SBOM generation |
 | `quality-architected/` | Linting, analysis, reporting, and quality gates |
+| `release-architected/` | Release preparation, publishing, and rollback automation |
 | `testing-architected/` | Cross-language testing and coverage tasks |
 | `terraform-architected/` | Terraform apply/plan |
 

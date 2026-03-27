@@ -67,6 +67,7 @@ It is the authoritative reference for Phase 0 of the refactor plan (PLAN.md).
 | rust-architected | `plugins/rust-architected` | **incubating** | — | Rust tooling; template-level |
 | security-architected | `plugins/security-architected` | **incubating** | 1.0.0 | Security scanning, dependency audits, and SBOM generation with severity thresholds |
 | quality-architected | `plugins/quality-architected` | **incubating** | 1.0.0 | Unified linting, static analysis, reporting, and quality-gate checks |
+| release-architected | `plugins/release-architected` | **incubating** | 1.0.0 | Conventional-commit-aware release preparation, changelog generation, and multi-artifact publishing |
 | testing-architected | `plugins/testing-architected` | **incubating** | 1.0.0 | Unified testing tasks with coverage aggregation and threshold enforcement |
 | terraform-architected | `plugins/terraform-architected` | **incubating** | — | Terraform; template-level |
 

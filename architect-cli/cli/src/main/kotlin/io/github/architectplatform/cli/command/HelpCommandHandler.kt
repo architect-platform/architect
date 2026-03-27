@@ -172,6 +172,7 @@ class HelpCommandHandler {
       |  javascript-architected   npm/yarn/pnpm integration
       |  security-architected     Security scanning, dependency audits, and SBOM generation
       |  quality-architected      Linting, static analysis, and quality gates
+      |  release-architected      Release preparation, changelog, and multi-artifact publishing
       |  testing-architected      Cross-language testing and coverage orchestration
       |  docs-architected         Documentation (MkDocs, Docusaurus, VuePress)
       |  scripts-architected      Custom shell script execution

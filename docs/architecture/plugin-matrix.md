@@ -21,7 +21,7 @@ Gradle (Kotlin DSL).
 | github-architected | 1.0.3 | **active** | ✅ | ✅ | ✅ | ✅ `architect.yml` | GitHub CI/CD and release automation |
 | pipelines-architected | 1.0.0 | **active** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Pipeline orchestration and management |
 
-### Incubating Plugins (11)
+### Incubating Plugins (14)
 
 | Plugin | Version | Support Tier | Tests | Contract Tests | README | Config Schema | Notes |
 |---|---|---|---|---|---|---|---|
@@ -36,6 +36,7 @@ Gradle (Kotlin DSL).
 | rust-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Rust build and test (cargo) |
 | security-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Security scanning, dependency audits, and SBOM generation with severity thresholds |
 | quality-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Unified linting, static analysis, reporting, and quality-gate checks |
+| release-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Conventional-commit-aware release preparation, changelog generation, and multi-artifact publishing |
 | testing-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Unified testing interface with coverage aggregation and threshold enforcement |
 | terraform-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Terraform plan / apply / destroy |
 
@@ -54,6 +55,7 @@ The following plugins have dedicated CI workflows in `.github/workflows/`:
 | javascript-architected | `javascript-architected.yml` |
 | security-architected | `security-architected.yml` |
 | quality-architected | `quality-architected.yml` |
+| release-architected | `release-architected.yml` |
 | testing-architected | `testing-architected.yml` |
 | pipelines-architected | `pipelines-architected.yml` |
 | scripts-architected | `scripts-architected.yml` |

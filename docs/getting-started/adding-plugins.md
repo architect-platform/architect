@@ -85,6 +85,7 @@ github-architected:
 | `python-architected` | install, lint, test, build, publish |
 | `security-architected` | security scanning, dependency audits, and SBOM generation with severity thresholds |
 | `quality-architected` | linting, static analysis, reporting, and explicit quality-gate enforcement |
+| `release-architected` | semantic release preparation, changelog generation, and coordinated npm/Docker/GitHub publishing |
 | `testing-architected` | unit, integration, e2e, and coverage orchestration with threshold enforcement |
 | `nx-architected` | affected, run-many, graph, cache |
 | `architecture-architected` | arch-unit validation, dependency constraints |

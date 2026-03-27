@@ -21,6 +21,7 @@ Architect ships a suite of official plugins. Each plugin is hosted as an indepen
 | [python-architected](python-architected.md) | incubating | `architect-platform/python-architected` | pip install, lint, test, build, publish |
 | [security-architected](security-architected.md) | incubating | `architect-platform/security-architected` | Security scanning, dependency audits, and CycloneDX/SPDX SBOM generation |
 | [quality-architected](quality-architected.md) | incubating | `architect-platform/quality-architected` | Linting, static analysis, reporting, and explicit quality-gate checks |
+| [release-architected](release-architected.md) | incubating | `architect-platform/release-architected` | Conventional-commit-aware release preparation, changelog generation, and multi-artifact publishing |
 | [testing-architected](testing-architected.md) | incubating | `architect-platform/testing-architected` | Unified unit/integration/e2e/coverage tasks across Gradle, pytest, Jest, Vitest, Go, and Cargo |
 | [nx-architected](nx-architected.md) | incubating | `architect-platform/nx-architected` | Nx affected, run-many, graph |
 | [architecture-architected](architecture-architected.md) | incubating | `architect-platform/architecture-architected` | Arch-unit rules, dependency constraints |
