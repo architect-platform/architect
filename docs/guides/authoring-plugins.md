@@ -242,6 +242,7 @@ Architect now ships authoring helpers for plugin packaging:
 ```bash
 architect plugin docs path/to/plugin
 architect plugin validate path/to/plugin.jar
+architect plugin test path/to/plugin.jar
 ```
 
 `architect plugin validate` checks:
@@ -250,7 +251,9 @@ architect plugin validate path/to/plugin.jar
 - at least one `ArchitectPlugin` implementation can be discovered
 - the plugin context can initialize from config using `ArchitectPluginTestKit`
 
-Use it before publishing any JVM plugin artifact.
+`architect plugin test` extends this with contract-oriented checks for schema and task registration.
+
+Use both before publishing any JVM plugin artifact.
 
 ## Publishing Checklist
 
@@ -260,7 +263,7 @@ Before publishing a plugin, confirm all of the following:
 2. The plugin exposes at least one meaningful task with descriptions.
 3. Tests pass locally.
 4. `architect plugin docs` generates an accurate `PLUGIN_REFERENCE.md`.
-5. `architect plugin validate` passes for the packaged JAR.
+5. `architect plugin validate` and `architect plugin test` pass for the packaged JAR.
 6. The plugin README explains configuration, tasks, and local development.
 7. Process plugins document their runtime requirements and entrypoint command.
 

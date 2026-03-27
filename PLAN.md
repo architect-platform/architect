@@ -351,7 +351,7 @@
   - Validates SPI wiring, schema, task registration
   - Useful for plugin developers before publishing
 
-- [ ] **T-3.1.3** 🟠 `M` — Create plugin development guide documentation
+- [x] **T-3.1.3** 🟠 `M` — Create plugin development guide documentation | Finished: 2026-03-27T15:06:11Z | Notes: Added comprehensive Plugin Development guide (`docs/guides/plugin-development.md`) covering scaffold → implement → test → publish workflow, API contract examples, and release checklist; wired guide into MkDocs navigation; updated CLI reference and authoring docs to include `architect plugin test`; added cross-links under Guides for discoverability.
   - Step-by-step: scaffold → implement → test → publish
   - Template project with best practices
   - Document all API contracts with examples

@@ -88,6 +88,7 @@ nav:
 
   - Guides:
     - Architect Commands: guides/architect-commands.md
+    - Plugin Development: guides/plugin-development.md
     - Plugin Authoring: guides/authoring-plugins.md
     - Official Plugin Standard: guides/plugin-standard.md
     - Repository Testing Standard: guides/testing-standard.md

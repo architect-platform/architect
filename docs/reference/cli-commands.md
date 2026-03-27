@@ -309,6 +309,24 @@ architect plugin validate ./my-plugin/build/libs/my-plugin.jar
 
 ---
 
+### `architect plugin test <path>`
+
+Run plugin graduation-oriented checks against a local plugin JAR.
+
+```bash
+architect plugin test ./my-plugin/build/libs/my-plugin.jar
+architect plugin test ./my-plugin/build/libs/my-plugin.jar --json
+```
+
+Checks include:
+
+- SPI wiring and plugin discovery
+- plugin contract verification
+- `configSchema()` shape validation
+- task registration checks
+
+---
+
 ### `architect plugin create <name>`
 
 Scaffold a new plugin project.
