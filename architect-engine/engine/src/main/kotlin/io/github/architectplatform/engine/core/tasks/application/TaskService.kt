@@ -302,4 +302,9 @@ class TaskService(
   fun getExecutionFlow(executionId: ExecutionId): Flow<ArchitectEvent<ExecutionEvent>> {
     return eventCollector.getFlow(executionId)
   }
+
+  fun getExecutionReplay(
+    executionId: ExecutionId,
+    from: Int = 0,
+  ): List<ArchitectEvent<ExecutionEvent>> = eventCollector.getReplayEvents(executionId, from)
 }

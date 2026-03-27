@@ -103,6 +103,25 @@ class ExecutionControllerTest {
     assertEquals("EXECUTION_FAILED", events.last().event?.eventType)
   }
 
+  @Test
+  fun `should replay typed events from offset`() {
+    val executionId = "exec-replay"
+    @Suppress("UNCHECKED_CAST")
+    val replayEvents = listOf(
+      taskCompletedEvent("demo", executionId, "build", message = "build done"),
+      executionCompletedEvent("demo", executionId, message = "all done"),
+    ) as List<ArchitectEvent<ExecutionEvent>>
+    whenever(taskService.getExecutionReplay(executionId, 1)).thenReturn(
+      replayEvents
+    )
+
+    val replay = controller.getExecutionReplay(executionId, from = 1)
+
+    assertEquals(2, replay.size)
+    assertEquals("task.completed", replay[0].id)
+    assertEquals("execution.completed", replay[1].id)
+  }
+
   private fun eventFlow(vararg events: ArchitectEvent<out ExecutionEvent>): Flow<ArchitectEvent<ExecutionEvent>> {
     @Suppress("UNCHECKED_CAST")
     return flowOf(*events) as Flow<ArchitectEvent<ExecutionEvent>>

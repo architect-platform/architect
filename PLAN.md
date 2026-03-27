@@ -317,7 +317,7 @@
   - `PluginLoadedEvent`, `ProjectRegisteredEvent`
   - Replace `Map<String, Any>` with typed events in SSE stream
 
-- [ ] **T-2.4.2** 🟠 `M` — Add event persistence for replay
+- [x] **T-2.4.2** 🟠 `M` — Add event persistence for replay | Finished: 2026-03-27T15:30:00Z | Notes: Added in-memory append-only execution event log to `ExecutionEventCollector` and replay API (`getReplayEvents(executionId, from)`); exposed through `TaskService.getExecutionReplay`; added REST replay endpoint `GET /api/executions/{id}/events?from=0` in `ExecutionController` returning typed events; added/updated tests (`ExecutionEventCollectorTest`, `ExecutionControllerTest`) and validated with focused engine + CLI suites.
   - Store events in append-only log per execution
   - `GET /api/executions/{id}/events?from=0` — replay from beginning
   - Enables: post-mortem debugging, cloud sync, UI replay

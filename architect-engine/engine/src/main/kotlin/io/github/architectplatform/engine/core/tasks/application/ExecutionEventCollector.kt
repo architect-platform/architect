@@ -23,6 +23,7 @@ class ExecutionEventCollector(
 
   private val logger = LoggerFactory.getLogger(this::class.java)
   private val flows = mutableMapOf<ExecutionId, MutableSharedFlow<ArchitectEvent<ExecutionEvent>>>()
+  private val eventLogs = mutableMapOf<ExecutionId, MutableList<ArchitectEvent<ExecutionEvent>>>()
 
   private fun newFlow(): MutableSharedFlow<ArchitectEvent<ExecutionEvent>> =
       MutableSharedFlow(
@@ -36,6 +37,13 @@ class ExecutionEventCollector(
         flows.getOrPut(executionId) { newFlow() }
       }
 
+  fun getReplayEvents(executionId: ExecutionId, from: Int = 0): List<ArchitectEvent<ExecutionEvent>> =
+      synchronized(eventLogs) {
+        val events = eventLogs[executionId]?.toList().orEmpty()
+        val start = from.coerceAtLeast(0).coerceAtMost(events.size)
+        events.drop(start)
+      }
+
   @EventListener
   fun onExecutionEvent(eventWrapper: ArchitectEvent<*>) {
     val event = eventWrapper.event
@@ -43,6 +51,9 @@ class ExecutionEventCollector(
       val flow = flows.getOrPut(event.executionId) { newFlow() }
       @Suppress("UNCHECKED_CAST")
       val typedWrapper = eventWrapper as ArchitectEvent<ExecutionEvent>
+      synchronized(eventLogs) {
+        eventLogs.getOrPut(event.executionId) { mutableListOf() }.add(typedWrapper)
+      }
       val emitted = flow.tryEmit(typedWrapper)
       if (!emitted) {
         logger.warn("Could not emit event for ${event.executionId}")

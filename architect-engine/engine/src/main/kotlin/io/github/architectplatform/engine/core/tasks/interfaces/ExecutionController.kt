@@ -10,6 +10,7 @@ import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Delete
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
+import io.micronaut.http.annotation.QueryValue
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
 import kotlinx.coroutines.flow.Flow
@@ -46,6 +47,16 @@ class ExecutionController(private val taskService: TaskService) {
             event.executionEventType == ExecutionEventType.CANCELLED))
       }
   }
+
+  @Get("/{executionId}/events")
+  fun getExecutionReplay(
+    @PathVariable executionId: ExecutionId,
+    @QueryValue(defaultValue = "0") from: Int,
+  ): List<TypedArchitectEvent> =
+    taskService
+      .getExecutionReplay(executionId, from)
+      .filter { it.event is ExecutionEvent }
+      .map { it.toTypedArchitectEvent() }
 
   @Delete("/{executionId}")
   fun cancelExecution(@PathVariable executionId: ExecutionId): Map<String, Any> {
