@@ -10,7 +10,7 @@
 
 - Overall Progress: 62/128 tasks completed (48%)
 - Current Phase: Phase 4 — Project Intelligence & Conventions
-- Last Updated: 2026-03-27T19:57:19Z
+- Last Updated: 2026-03-27T20:02:42Z
 
 ---
 
@@ -557,7 +557,7 @@
 
 ### 4.2 — Architecture Validation & Rule Enforcement
 
-- [ ] **T-4.2.1** 🔴 `XL` — Upgrade `architecture-architected` to full rule engine
+- [~] **T-4.2.1** 🔴 `XL` — Upgrade `architecture-architected` to full rule engine | Started: 2026-03-27T20:02:42Z | Notes: Decomposed into rule-engine abstraction, import-graph validation, convention validation, built-in rulesets, and graduation/docs slices before implementation.
   - Rule types:
     - **Dependency rules**: "controllers must not import repositories directly"
     - **Naming rules**: "files in `src/api/` must end with `Controller`"
@@ -571,6 +571,12 @@
     - `monorepo-conventions` (shared types, no cross-module private imports)
   - Custom rules via `architect.yml`
   - Output: violations with file:line, severity, suggestion
+  - Implementation slices:
+    - Extract a validator registry/abstraction so rule types are decoupled from the current monolith
+    - Add import graph analysis for circular and cross-module import rules
+    - Add convention validators for KDoc/Javadoc/test-presence checks
+    - Ship built-in rulesets for layered, hexagonal, clean, and monorepo setups
+    - Expand tests/docs and graduate the plugin once coverage and reporting are complete
 
 - [ ] **T-4.2.2** 🟠 `L` — Add file structure validation
   - Define expected directory structure in `architect.yml`:
