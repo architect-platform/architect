@@ -42,7 +42,11 @@ class CliEngineHttpIntegrationTest {
     val executionId = client.execute(projectName, "hello", emptyList())
     val events = withTimeout(10_000) { client.getExecutionFlow(executionId).toList() }
     val eventIds = events.mapNotNull { it["id"] as? String }
-    val eventTypes = events.mapNotNull { (it["event"] as? Map<*, *>)?.get("executionEventType") as? String }
+    val eventTypes = events.mapNotNull {
+      val payload = it["event"] as? Map<*, *> ?: return@mapNotNull null
+      (payload["executionEventType"] as? String)
+        ?: (payload["eventType"] as? String)?.removePrefix("TASK_")?.removePrefix("EXECUTION_")
+    }
 
     assertTrue(eventIds.contains("execution.started"))
     assertTrue(eventIds.contains("task.started"))
@@ -74,7 +78,10 @@ class CliEngineHttpIntegrationTest {
     assertTrue(eventIds.contains("execution.started"))
     assertTrue(eventIds.contains("task.failed"))
     assertEquals("execution.failed", eventIds.last())
-    assertEquals("FAILED", terminalEvent["executionEventType"])
+    val terminalType =
+      (terminalEvent["executionEventType"] as? String)
+        ?: (terminalEvent["eventType"] as? String)?.removePrefix("TASK_")?.removePrefix("EXECUTION_")
+    assertEquals("FAILED", terminalType)
     assertTrue((terminalEvent["message"] as? String).orEmpty().contains("Execution failed"))
   }
 

@@ -132,6 +132,7 @@ class ProjectServiceFactory {
     projectRepository: ProjectRepository,
     configLoader: ConfigLoader,
     pluginLoader: PluginLoader,
+    eventBus: MicronautArchitectEventBus,
     projectReporter: Optional<ProjectRegistrationReporter>,
     configValidator: ConfigValidator,
     @Property(
@@ -153,5 +154,6 @@ class ProjectServiceFactory {
       configValidator = configValidator,
       cacheEnabled = cacheEnabled,
       pluginSecurityStrictMode = pluginSecurityStrictMode,
+      eventBus = eventBus::invoke,
     )
 }

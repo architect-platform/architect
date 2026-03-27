@@ -1,10 +1,11 @@
 package io.github.architectplatform.engine.core.tasks.interfaces
 
 import io.github.architectplatform.engine.core.tasks.application.TaskService
-import io.github.architectplatform.core.domain.events.ArchitectEvent
+import io.github.architectplatform.core.domain.events.toTypedArchitectEvent
 import io.github.architectplatform.core.domain.events.ExecutionEvent
 import io.github.architectplatform.core.domain.events.ExecutionEventType
 import io.github.architectplatform.core.domain.events.ExecutionId
+import io.github.architectplatform.core.domain.events.TypedArchitectEvent
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Delete
 import io.micronaut.http.annotation.Get
@@ -26,7 +27,7 @@ class ExecutionController(private val taskService: TaskService) {
   @Get("/{executionId}")
   fun getExecutionFlow(
       @PathVariable executionId: ExecutionId
-  ): Flow<ArchitectEvent<ExecutionEvent>> {
+  ): Flow<TypedArchitectEvent> {
     val sharedFlow = taskService.getExecutionFlow(executionId)
 
     // Emit events downstream. Stop cleanly when the root execution reaches a terminal state
@@ -35,7 +36,7 @@ class ExecutionController(private val taskService: TaskService) {
     return sharedFlow
       .filter { it.event is ExecutionEvent }
       .transformWhile { eventWrapper ->
-        emit(eventWrapper)
+        emit(eventWrapper.toTypedArchitectEvent())
         val event = eventWrapper.event as ExecutionEvent
         logger.debug("SSE event for execution {}: type={}", executionId, event.executionEventType)
         !(event.parentProject == null &&

@@ -311,7 +311,7 @@
 
 ### 2.4 — Event System Enhancement
 
-- [ ] **T-2.4.1** 🟠 `M` — Add typed event hierarchy
+- [x] **T-2.4.1** 🟠 `M` — Add typed event hierarchy | Finished: 2026-03-27T15:20:00Z | Notes: Added typed execution event model (`TypedExecutionEvent` + concrete task/execution events) and converter from existing `ArchitectEvent<ExecutionEvent>`; wired engine SSE (`ExecutionController`) to emit typed wrappers and stop on terminal root execution events; emitted `project.registered` via ProjectService event bus hook; added serde imports and focused tests (`TypedArchitectEventTest`, controller/integration updates); preserved CLI HTTP compatibility by keeping map stream contract while supporting typed payload keys (`eventType`/`parentProject`) in ConsoleUI.
   - `TaskStartedEvent`, `TaskCompletedEvent`, `TaskFailedEvent`, `TaskOutputEvent`
   - `ExecutionStartedEvent`, `ExecutionCompletedEvent`
   - `PluginLoadedEvent`, `ProjectRegisteredEvent`

@@ -8,7 +8,6 @@ import io.github.architectplatform.core.tasks.domain.events.TaskEvents.taskCompl
 import io.github.architectplatform.core.tasks.domain.events.TaskEvents.taskFailedEvent
 import io.github.architectplatform.core.domain.events.ArchitectEvent
 import io.github.architectplatform.core.domain.events.ExecutionEvent
-import io.github.architectplatform.core.domain.events.ExecutionEventType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
@@ -37,9 +36,9 @@ class ExecutionControllerTest {
     val events = controller.getExecutionFlow(executionId).toList()
 
     assertEquals(3, events.size)
-    assertEquals(ExecutionEventType.STARTED, events[0].event?.executionEventType)
-    assertEquals(ExecutionEventType.TASK_COMPLETED, events[1].event?.executionEventType)
-    assertEquals(ExecutionEventType.COMPLETED, events[2].event?.executionEventType)
+    assertEquals("EXECUTION_STARTED", events[0].event?.eventType)
+    assertEquals("TASK_COMPLETED", events[1].event?.eventType)
+    assertEquals("EXECUTION_COMPLETED", events[2].event?.eventType)
   }
 
   @Test
@@ -74,7 +73,7 @@ class ExecutionControllerTest {
 
     assertEquals(2, events.size)
     assertEquals(listOf("execution.started", "execution.failed"), events.map { it.id })
-    assertEquals(ExecutionEventType.FAILED, events.last().event?.executionEventType)
+    assertEquals("EXECUTION_FAILED", events.last().event?.eventType)
   }
 
   @Test
@@ -101,7 +100,7 @@ class ExecutionControllerTest {
       listOf("execution.started", "task.completed", "task.failed", "execution.failed"),
       events.map { it.id },
     )
-    assertEquals(ExecutionEventType.FAILED, events.last().event?.executionEventType)
+    assertEquals("EXECUTION_FAILED", events.last().event?.eventType)
   }
 
   private fun eventFlow(vararg events: ArchitectEvent<out ExecutionEvent>): Flow<ArchitectEvent<ExecutionEvent>> {

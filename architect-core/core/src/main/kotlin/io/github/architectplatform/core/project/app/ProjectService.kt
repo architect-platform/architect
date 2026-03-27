@@ -6,6 +6,8 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.project.getKey
 import io.github.architectplatform.core.config.EngineConfiguration
+import io.github.architectplatform.core.domain.events.ProjectRegisteredEvent
+import io.github.architectplatform.core.plugin.domain.events.ArchitectEventDTO
 import io.github.architectplatform.core.plugin.app.PluginLoader
 import io.github.architectplatform.core.project.domain.LoadedProjectPlugins
 import io.github.architectplatform.core.project.app.repositories.ProjectRepository
@@ -39,12 +41,13 @@ class ProjectService(
     private val projectRepository: ProjectRepository,
     private val configLoader: ConfigLoader,
     private val pluginLoader: PluginLoader,
-  private val projectReporter: Optional<ProjectRegistrationReporter>,
+    private val projectReporter: Optional<ProjectRegistrationReporter>,
     private val configValidator: ConfigValidator,
     private val cacheEnabled: Boolean = EngineConfiguration.Project.DEFAULT_CACHE_ENABLED,
     private val activeProfile: String = "default",
     private val projectWatchDebounceMs: Long = 250,
     private val pluginSecurityStrictMode: Boolean = EngineConfiguration.PluginSecurity.DEFAULT_STRICT_MODE,
+    private val eventBus: ((io.github.architectplatform.core.domain.events.ArchitectEvent<*>) -> Unit)? = null,
 ) {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
@@ -222,6 +225,12 @@ class ProjectService(
             ?: throw IllegalArgumentException("Failed to load project $name from path $path")
     projectRepository.save(name, newProject)
     startProjectWatcher(name, path)
+    eventBus?.invoke(
+      ArchitectEventDTO(
+        id = "project.registered",
+        event = ProjectRegisteredEvent(projectName = name, projectPath = path),
+      ),
+    )
     
     // Report project if an optional reporter is configured by the host runtime
     projectReporter.ifPresent { reporter ->

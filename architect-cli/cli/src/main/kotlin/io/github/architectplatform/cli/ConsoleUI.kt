@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.architectplatform.cli.client.ExecutionId
+import io.github.architectplatform.core.domain.events.TypedArchitectEvent
+import io.github.architectplatform.core.domain.events.TypedTaskEvent
 
 /**
  * Console user interface for task execution with progress-tree rendering, batch grouping,
@@ -124,12 +126,14 @@ class ConsoleUI(
    */
   fun process(eventMap: Map<String, Any>) {
     val event = objectMapper.convertValue<ArchitectEvent>(eventMap)
-    val executionEventType = event.event["executionEventType"] as? String
+    val executionEventType =
+      (event.event["executionEventType"] as? String)
+        ?: (event.event["eventType"] as? String)?.removePrefix("TASK_")?.removePrefix("EXECUTION_")
     val project = event.event["project"] as? String
     val taskId = event.event["taskId"] as? String
     val message = event.event["message"] as? String
     val errorDetails = event.event["errorDetails"] as? String
-    val subProject = event.event["subProject"] as? String
+    val subProject = (event.event["subProject"] as? String) ?: (event.event["parentProject"] as? String)
 
     // Update project context
     if (subProject != null) {
@@ -260,6 +264,23 @@ class ConsoleUI(
       println(colorize("  ${"─".repeat(76)}", AnsiColors.RED))
       println()
     }
+  }
+
+  fun process(event: TypedArchitectEvent) {
+    val payload = event.event ?: return
+    val eventMap = mutableMapOf<String, Any>(
+      "executionEventType" to payload.eventType.removePrefix("TASK_").removePrefix("EXECUTION_"),
+      "project" to payload.project,
+      "executionId" to payload.executionId,
+      "success" to payload.success,
+    )
+    payload.message?.let { eventMap["message"] = it }
+    payload.errorDetails?.let { eventMap["errorDetails"] = it }
+    payload.parentProject?.let { eventMap["subProject"] = it }
+    if (payload is TypedTaskEvent) {
+      eventMap["taskId"] = payload.taskId
+    }
+    process(eventMap)
   }
 
   /**
