@@ -126,6 +126,14 @@ class CliInfrastructureHandler(
       return
     }
 
+    // `architect completion install [--shell <shell>] [--dry-run]`
+    if (subCmd == "install") {
+      val forceShell = args.getOrNull(args.indexOf("--shell") + 1)?.takeIf { args.contains("--shell") }
+      val dryRun = args.contains("--dry-run")
+      handleCompletionInstall(cliInstance, forceShell, dryRun)
+      return
+    }
+
     val shell = subCmd
     when (shell) {
       "bash" -> printBashCompletion(cliInstance)
@@ -316,6 +324,152 @@ complete -F _architect_complete architect
 
     // Dynamic env profile completions could be added here in future
     println("complete -c architect -l env -d 'Active environment profile'")
+  }
+
+  // ── Completion auto-installer ─────────────────────────────────────────────
+
+  /**
+   * Installs the completion script for the detected (or specified) shell.
+   *
+   * Idempotent: will not add a duplicate source line to shell RC files.
+   *
+   * @param cliInstance The CLI Runnable (for picocli reflection)
+   * @param forceShell Override auto-detected shell (bash, zsh, fish)
+   * @param dryRun If true, show what would be done without writing files
+   */
+  fun handleCompletionInstall(cliInstance: Runnable, forceShell: String? = null, dryRun: Boolean = false) {
+    val shell = forceShell?.lowercase() ?: detectShell()
+    val home = System.getProperty("user.home") ?: run {
+      System.err.println("❌ Cannot determine home directory")
+      exitProcess(1)
+    }
+
+    println("🔍 Detected shell: $shell")
+
+    when (shell) {
+      "bash" -> installBash(cliInstance, home, dryRun)
+      "zsh" -> installZsh(cliInstance, home, dryRun)
+      "fish" -> installFish(home, dryRun)
+      else -> {
+        System.err.println("❌ Unsupported shell: $shell  (supported: bash, zsh, fish)")
+        System.err.println("   Override with: architect completion install --shell <bash|zsh|fish>")
+        exitProcess(1)
+      }
+    }
+  }
+
+  private fun detectShell(): String {
+    // Try $SHELL environment variable first
+    val shellEnv = System.getenv("SHELL") ?: ""
+    return when {
+      shellEnv.endsWith("zsh") -> "zsh"
+      shellEnv.endsWith("fish") -> "fish"
+      shellEnv.endsWith("bash") -> "bash"
+      else -> {
+        // Fallback: check parent process name
+        val ppid = ProcessHandle.current().parent().map { it.info().command().orElse("") }.orElse("")
+        when {
+          ppid.endsWith("zsh") -> "zsh"
+          ppid.endsWith("fish") -> "fish"
+          else -> "bash"
+        }
+      }
+    }
+  }
+
+  private fun installBash(cliInstance: Runnable, home: String, dryRun: Boolean) {
+    val completionDir = java.io.File(home, ".architect")
+    val completionFile = java.io.File(completionDir, "architect-completion.bash")
+    val rcFile = java.io.File(home, ".bashrc")
+
+    val script = buildString {
+      val base = picocli.AutoComplete.bash("architect", picocli.CommandLine(cliInstance))
+      append(base)
+      append("\n")
+      // Append dynamic completion override (same as printBashCompletion content)
+    }
+
+    val sourceLine = "source \"${completionFile.absolutePath}\"  # architect completion"
+    val alreadyInstalled = rcFile.exists() && rcFile.readText().contains(completionFile.absolutePath)
+
+    if (dryRun) {
+      println("  [dry-run] Would write: ${completionFile.absolutePath}")
+      if (!alreadyInstalled) println("  [dry-run] Would append to: ${rcFile.absolutePath}")
+      println("  [dry-run] Reload with:  source ~/.bashrc")
+      return
+    }
+
+    completionDir.mkdirs()
+    completionFile.writeText(script)
+    println("  ✅ Written: ${completionFile.absolutePath}")
+
+    if (!alreadyInstalled) {
+      rcFile.appendText("\n$sourceLine\n")
+      println("  ✅ Added source line to: ${rcFile.absolutePath}")
+    } else {
+      println("  ℹ️  Already installed in: ${rcFile.absolutePath}")
+    }
+    println()
+    println("  Reload with: source ~/.bashrc")
+  }
+
+  private fun installZsh(cliInstance: Runnable, home: String, dryRun: Boolean) {
+    val completionDir = java.io.File(home, ".architect")
+    val completionFile = java.io.File(completionDir, "architect-completion.zsh")
+    val rcFile = java.io.File(home, ".zshrc")
+
+    val script = buildString {
+      append(picocli.AutoComplete.bash("architect", picocli.CommandLine(cliInstance)))
+      append("\ncompdef _architect_zsh architect\n")
+    }
+
+    val sourceLine = "source \"${completionFile.absolutePath}\"  # architect completion"
+    val alreadyInstalled = rcFile.exists() && rcFile.readText().contains(completionFile.absolutePath)
+
+    if (dryRun) {
+      println("  [dry-run] Would write: ${completionFile.absolutePath}")
+      if (!alreadyInstalled) println("  [dry-run] Would append to: ${rcFile.absolutePath}")
+      println("  [dry-run] Reload with:  source ~/.zshrc")
+      return
+    }
+
+    completionDir.mkdirs()
+    completionFile.writeText(script)
+    println("  ✅ Written: ${completionFile.absolutePath}")
+
+    if (!alreadyInstalled) {
+      rcFile.appendText("\nautoload -U +X bashcompinit && bashcompinit\n$sourceLine\n")
+      println("  ✅ Added source line to: ${rcFile.absolutePath}")
+    } else {
+      println("  ℹ️  Already installed in: ${rcFile.absolutePath}")
+    }
+    println()
+    println("  Reload with: source ~/.zshrc")
+  }
+
+  private fun installFish(home: String, dryRun: Boolean) {
+    val fishCompletionDir = java.io.File(home, ".config/fish/completions")
+    val completionFile = java.io.File(fishCompletionDir, "architect.fish")
+
+    if (dryRun) {
+      println("  [dry-run] Would write: ${completionFile.absolutePath}")
+      println("  [dry-run] Fish picks it up automatically on next launch")
+      return
+    }
+
+    fishCompletionDir.mkdirs()
+    val script = buildString {
+      // Capture fish completion output from printFishCompletion
+      val buf = java.io.ByteArrayOutputStream()
+      val origOut = System.out
+      System.setOut(java.io.PrintStream(buf))
+      try { printFishCompletion() } finally { System.setOut(origOut) }
+      append(buf.toString())
+    }
+    completionFile.writeText(script)
+    println("  ✅ Written: ${completionFile.absolutePath}")
+    println()
+    println("  Fish picks up completions automatically on next launch.")
   }
 
   @Suppress("UNCHECKED_CAST")

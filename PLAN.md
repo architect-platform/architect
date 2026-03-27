@@ -194,7 +194,7 @@
   - `architect --affected <TAB>` completes project names
   - `architect history <TAB>` completes from known projects
 
-- [ ] **T-1.3.3** 🟡 `S` — Add `architect completion install` auto-installer
+- [x] **T-1.3.3** 🟡 `S` — Add `architect completion install` auto-installer | Finished: 2026-03-27T13:25:00Z | Notes: `handleCompletionInstall()` detects shell via $SHELL/parent process; bash writes ~/.architect/architect-completion.bash and appends source line to ~/.bashrc; zsh writes ~/.architect/architect-completion.zsh and appends to ~/.zshrc; fish writes ~/.config/fish/completions/architect.fish; all idempotent (checks for existing source lines); --dry-run flag shows what would happen; --shell <s> overrides auto-detection
   - Detect shell (bash/zsh/fish), install completion script to correct location
   - Add to `.bashrc`, `.zshrc`, or `~/.config/fish/completions/`
   - Idempotent — safe to run multiple times
