@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 60/128 tasks completed (47%)
+- Overall Progress: 61/128 tasks completed (48%)
 - Current Phase: Phase 4 — Project Intelligence & Conventions
-- Last Updated: 2026-03-27T19:35:33Z
+- Last Updated: 2026-03-27T19:53:46Z
 
 ---
 
@@ -541,7 +541,7 @@
   - Output: `ProjectProfile { languages, buildTools, testFrameworks, ciSystem, containerization }`
   - Used by `architect init` and `architect doctor`
 
-- [ ] **T-4.1.2** 🔴 `L` — Create default plugin presets based on detected stack
+- [x] **T-4.1.2** 🔴 `L` — Create default plugin presets based on detected stack | Finished: 2026-03-27T19:53:46Z | Notes: Added reusable plugin preset registry/matcher in architect-core for kotlin-gradle, typescript-npm, rust-cargo, python-uv, and fullstack; wired `architect init --preset <id>` plus recommended preset application in auto and interactive flows; updated init help and added core/CLI preset tests.
   - `kotlin-gradle` preset: gradle-architected + git + github + testing + quality
   - `typescript-npm` preset: javascript-architected + git + github + testing + quality
   - `rust-cargo` preset: rust-architected + git + github + testing + security

@@ -1,6 +1,7 @@
 package io.github.architectplatform.cli.command
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -118,6 +119,57 @@ class InitCommandHandlerTest {
     val stack = handler.detectStack(dir)
     val suggestions = handler.suggestPlugins(stack)
     assertTrue(suggestions.isEmpty())
+  }
+
+  @Test
+  fun `suggestPresets recommends kotlin gradle preset`(@TempDir dir: File) {
+    File(dir, "build.gradle.kts").writeText("plugins { kotlin(\"jvm\") version \"1.9.25\" }")
+    File(dir, "src/main/kotlin").mkdirs()
+
+    val presets = handler.suggestPresets(handler.detectStack(dir))
+
+    assertEquals("kotlin-gradle", presets.first().id)
+  }
+
+  @Test
+  fun `suggestPresets recommends fullstack preset for dockerized typescript app`(@TempDir dir: File) {
+    File(dir, "package.json").writeText("""{"devDependencies":{"typescript":"^5.0.0"}}""")
+    File(dir, "tsconfig.json").writeText("{}")
+    File(dir, "Dockerfile").writeText("FROM node:20")
+
+    val presets = handler.suggestPresets(handler.detectStack(dir))
+
+    assertTrue(presets.any { it.id == "fullstack" })
+    assertEquals("typescript-npm", presets.first().id)
+  }
+
+  @Test
+  fun `resolvePreset finds known preset and presetToSuggestions maps repo ids`() {
+    val preset = handler.resolvePreset("kotlin-gradle")
+
+    assertNotNull(preset)
+    val suggestions = handler.presetToSuggestions(preset!!)
+
+    assertEquals(
+      listOf(
+        "gradle-architected",
+        "git-architected",
+        "github-architected",
+        "testing-architected",
+        "quality-architected",
+      ),
+      suggestions.map { it.id },
+    )
+    assertEquals(
+      listOf(
+        "architectplatform/gradle-architected",
+        "architectplatform/git-architected",
+        "architectplatform/github-architected",
+        "architectplatform/testing-architected",
+        "architectplatform/quality-architected",
+      ),
+      suggestions.map { it.repo },
+    )
   }
 
   // ── YAML generation ─────────────────────────────────────────────

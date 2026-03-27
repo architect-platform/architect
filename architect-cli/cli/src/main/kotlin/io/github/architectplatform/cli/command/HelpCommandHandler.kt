@@ -216,11 +216,13 @@ class HelpCommandHandler {
       |
       |OPTIONS
       |  --yes              Accept all defaults (non-interactive)
+      |  --preset <id>      Apply a preset (kotlin-gradle, typescript-npm, rust-cargo, python-uv, fullstack)
       |
       |EXAMPLES
       |  architect init                     Interactive setup
       |  architect init --yes               Auto-detect and generate config
-    """.trimMargin()
+      |  architect init --preset kotlin-gradle
+     """.trimMargin()
 
     private val ENGINE_HELP = """
       |architect engine — Manage the Architect engine daemon
