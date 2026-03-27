@@ -10,6 +10,7 @@ class ArchitectureContextTest {
         val context = ArchitectureContext()
         
         assertTrue(context.enabled)
+        assertTrue(context.presetRulesets.isEmpty())
         assertTrue(context.rulesets.isEmpty())
         assertTrue(context.customRules.isEmpty())
         assertEquals("warn", context.onViolation)
@@ -34,6 +35,7 @@ class ArchitectureContextTest {
         
         val context = ArchitectureContext(
             enabled = true,
+            presetRulesets = listOf("layered-architecture"),
             rulesets = mapOf("test" to ruleset),
             customRules = listOf(rule),
             onViolation = "fail",
@@ -42,6 +44,7 @@ class ArchitectureContextTest {
         )
         
         assertTrue(context.enabled)
+        assertEquals(listOf("layered-architecture"), context.presetRulesets)
         assertEquals(1, context.rulesets.size)
         assertEquals(1, context.customRules.size)
         assertEquals("fail", context.onViolation)
@@ -84,6 +87,11 @@ class ArchitectureContextTest {
             paths = listOf("src/main/**"),
             forbidden = listOf(".*Repository.*"),
             required = listOf(".*Service.*"),
+            convention = "kdoc-required",
+            threshold = 80,
+            allowedCycles = listOf("shared/*"),
+            moduleBoundaries = mapOf("api" to listOf("core")),
+            suggestion = "Use the service layer",
             severity = "error",
             enabled = true
         )
@@ -95,6 +103,11 @@ class ArchitectureContextTest {
         assertEquals(1, rule.paths.size)
         assertEquals(1, rule.forbidden.size)
         assertEquals(1, rule.required.size)
+        assertEquals("kdoc-required", rule.convention)
+        assertEquals(80, rule.threshold)
+        assertEquals(listOf("shared/*"), rule.allowedCycles)
+        assertEquals(mapOf("api" to listOf("core")), rule.moduleBoundaries)
+        assertEquals("Use the service layer", rule.suggestion)
         assertEquals("error", rule.severity)
         assertTrue(rule.enabled)
     }
@@ -111,7 +124,26 @@ class ArchitectureContextTest {
         assertTrue(rule.forbidden.isEmpty())
         assertTrue(rule.required.isEmpty())
         assertNull(rule.validator)
+        assertNull(rule.convention)
+        assertNull(rule.threshold)
+        assertTrue(rule.allowedCycles.isEmpty())
+        assertTrue(rule.moduleBoundaries.isEmpty())
+        assertNull(rule.suggestion)
         assertEquals("error", rule.severity)
         assertTrue(rule.enabled)
+    }
+
+    @Test
+    fun `resolvedRulesets includes preset and built in ruleset aliases`() {
+        val context = ArchitectureContext(
+            presetRulesets = listOf("layered-architecture"),
+            rulesets = mapOf("clean-architecture" to RuleSet(enabled = true))
+        )
+
+        val resolved = context.resolvedRulesets()
+
+        assertTrue(resolved.containsKey("layered-architecture"))
+        assertTrue(resolved.containsKey("clean-architecture"))
+        assertTrue(resolved.getValue("clean-architecture").rules.isNotEmpty())
     }
 }

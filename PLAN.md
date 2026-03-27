@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 62/128 tasks completed (48%)
+- Overall Progress: 63/128 tasks completed (49%)
 - Current Phase: Phase 4 — Project Intelligence & Conventions
-- Last Updated: 2026-03-27T20:02:42Z
+- Last Updated: 2026-03-27T20:57:49Z
 
 ---
 
@@ -496,30 +496,6 @@
           assets: [dist/*.tar.gz]
     ```
 
-- [ ] **T-3.4.5** 🟡 `L` — Create `database-architected` plugin
-  - Tasks: `db-migrate`, `db-rollback`, `db-status`, `db-seed`
-  - Integrations: Flyway, Liquibase, Prisma, Alembic, golang-migrate
-  - Configuration:
-    ```yaml
-    database:
-      tool: flyway
-      url: ${env.DATABASE_URL}
-      locations: db/migrations
-    ```
-
-- [ ] **T-3.4.6** 🟡 `L` — Create `cloud-deploy-architected` plugin
-  - Unified cloud deployment abstraction
-  - Tasks: `deploy`, `rollback`, `status`, `logs`
-  - Providers: AWS (ECS, Lambda, S3), GCP (Cloud Run, GKE), Azure (App Service, AKS)
-  - Configuration:
-    ```yaml
-    deploy:
-      provider: aws
-      service: ecs
-      cluster: production
-      taskDefinition: my-app
-      desiredCount: 2
-    ```
 
 ---
 
@@ -546,7 +522,7 @@
   - `typescript-npm` preset: javascript-architected + git + github + testing + quality
   - `rust-cargo` preset: rust-architected + git + github + testing + security
   - `python-uv` preset: python-architected + git + github + testing + quality
-  - `fullstack` preset: javascript + docker + kubernetes + database + security
+  - `fullstack` preset: javascript + docker + kubernetes + security
   - `architect init --preset kotlin-gradle` applies all at once
 
 - [x] **T-4.1.3** 🟠 `M` — Generate optimized `architect.yml` from detection | Finished: 2026-03-27T19:57:19Z | Notes: Extended `architect init` YAML generation to emit detected plugin config sections with explanatory comments, inferred package-manager/test-framework defaults, and sensible quality/testing/security settings; added `--detect` help text and regression coverage for detected config generation.
@@ -557,7 +533,7 @@
 
 ### 4.2 — Architecture Validation & Rule Enforcement
 
-- [~] **T-4.2.1** 🔴 `XL` — Upgrade `architecture-architected` to full rule engine | Started: 2026-03-27T20:02:42Z | Notes: Decomposed into rule-engine abstraction, import-graph validation, convention validation, built-in rulesets, and graduation/docs slices before implementation.
+- [x] **T-4.2.1** 🔴 `XL` — Upgrade `architecture-architected` to full rule engine | Finished: 2026-03-27T20:57:49Z | Notes: Replaced the monolithic validator with a registry-backed rule engine, added dedicated dependency/naming/structure/import/convention/custom validators plus import graph analysis, shipped built-in layered/hexagonal/clean/monorepo rulesets, enriched violations with line/severity/suggestion output, added config schema coverage, refreshed docs, and expanded plugin tests/build verification.
   - Rule types:
     - **Dependency rules**: "controllers must not import repositories directly"
     - **Naming rules**: "files in `src/api/` must end with `Controller`"

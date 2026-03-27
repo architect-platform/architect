@@ -61,6 +61,114 @@ class ArchitecturePlugin : ArchitectPlugin<ArchitectureContext> {
     override val ctxClass: Class<ArchitectureContext> = ArchitectureContext::class.java
     override var context: ArchitectureContext = ArchitectureContext()
 
+    override fun configSchema(): Map<String, Any> = mapOf(
+        "type" to "object",
+        "additionalProperties" to false,
+        "properties" to mapOf(
+            "enabled" to mapOf("type" to "boolean", "default" to true),
+            "presetRulesets" to mapOf(
+                "type" to "array",
+                "items" to mapOf(
+                    "type" to "string",
+                    "enum" to BuiltInArchitectureRulesets.ids().sorted(),
+                ),
+                "default" to emptyList<String>(),
+            ),
+            "rulesets" to mapOf(
+                "type" to "object",
+                "additionalProperties" to mapOf("\$ref" to "#/\$defs/ruleSet"),
+                "default" to emptyMap<String, Any>(),
+            ),
+            "customRules" to mapOf(
+                "type" to "array",
+                "items" to mapOf("\$ref" to "#/\$defs/rule"),
+                "default" to emptyList<Any>(),
+            ),
+            "onViolation" to mapOf(
+                "type" to "string",
+                "enum" to listOf("warn", "fail"),
+                "default" to "warn",
+            ),
+            "reportFormat" to mapOf(
+                "type" to "string",
+                "enum" to listOf("text", "json"),
+                "default" to "text",
+            ),
+            "strict" to mapOf("type" to "boolean", "default" to false),
+        ),
+        "\$defs" to mapOf(
+            "ruleSet" to mapOf(
+                "type" to "object",
+                "additionalProperties" to false,
+                "properties" to mapOf(
+                    "enabled" to mapOf("type" to "boolean", "default" to true),
+                    "description" to mapOf("type" to "string", "default" to ""),
+                    "rules" to mapOf(
+                        "type" to "array",
+                        "items" to mapOf("\$ref" to "#/\$defs/rule"),
+                        "default" to emptyList<Any>(),
+                    ),
+                ),
+            ),
+            "rule" to mapOf(
+                "type" to "object",
+                "additionalProperties" to false,
+                "required" to listOf("id"),
+                "properties" to mapOf(
+                    "id" to mapOf("type" to "string"),
+                    "description" to mapOf("type" to "string", "default" to ""),
+                    "type" to mapOf(
+                        "type" to "string",
+                        "enum" to listOf("dependency", "naming", "structure", "import", "convention", "custom"),
+                        "default" to "dependency",
+                    ),
+                    "pattern" to mapOf("type" to "string", "default" to ".*"),
+                    "paths" to mapOf(
+                        "type" to "array",
+                        "items" to mapOf("type" to "string"),
+                        "default" to emptyList<String>(),
+                    ),
+                    "forbidden" to mapOf(
+                        "type" to "array",
+                        "items" to mapOf("type" to "string"),
+                        "default" to emptyList<String>(),
+                    ),
+                    "required" to mapOf(
+                        "type" to "array",
+                        "items" to mapOf("type" to "string"),
+                        "default" to emptyList<String>(),
+                    ),
+                    "validator" to mapOf("type" to "string"),
+                    "convention" to mapOf(
+                        "type" to "string",
+                        "enum" to listOf("kdoc-required", "javadoc-required", "test-class-exists"),
+                    ),
+                    "threshold" to mapOf("type" to "integer", "minimum" to 0),
+                    "allowedCycles" to mapOf(
+                        "type" to "array",
+                        "items" to mapOf("type" to "string"),
+                        "default" to emptyList<String>(),
+                    ),
+                    "moduleBoundaries" to mapOf(
+                        "type" to "object",
+                        "additionalProperties" to mapOf(
+                            "type" to "array",
+                            "items" to mapOf("type" to "string"),
+                        ),
+                        "default" to emptyMap<String, Any>(),
+                    ),
+                    "suggestion" to mapOf("type" to "string"),
+                    "severity" to mapOf(
+                        "type" to "string",
+                        "enum" to listOf("error", "warning", "info"),
+                        "default" to "error",
+                    ),
+                    "enabled" to mapOf("type" to "boolean", "default" to true),
+                ),
+            ),
+        ),
+    )
+
     override fun register(registry: TaskRegistry) {
         registry.add(ArchitectureTask(CodeWorkflow.VERIFY, context))
     }

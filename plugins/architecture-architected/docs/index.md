@@ -8,9 +8,10 @@ The Architecture Architected plugin provides tools for defining, managing, and v
 
 ## Features
 
-- Define architectural rules and constraints
-- Validate project structure against rules
-- Enforce best practices and patterns
+- Dependency, naming, structure, import, and convention rule types
+- Built-in rulesets for layered, hexagonal, clean, and monorepo conventions
+- Text and JSON reports with file, line, severity, and suggestion output
+- Custom validator hooks for advanced rules
 - Integration with build workflows
 
 ## Getting Started
@@ -29,10 +30,18 @@ Configure architectural rules in your project:
 
 ```yaml
 architecture:
-  rules:
-    - name: "layer-dependencies"
-      description: "Enforce layered architecture"
-      enabled: true
+  presetRulesets:
+    - layered-architecture
+  customRules:
+    - id: no-cycles
+      type: import
+      severity: error
+    - id: public-kdoc
+      type: convention
+      convention: kdoc-required
+      paths:
+        - "src/main/.*\\.kt"
+      severity: warning
 ```
 
 ## Examples
@@ -41,11 +50,22 @@ architecture:
 
 ```yaml
 architecture:
-  rules:
-    - name: "no-cyclic-dependencies"
+  rulesets:
+    layered-architecture:
       enabled: true
-    - name: "naming-conventions"
+    monorepo-conventions:
       enabled: true
+  customRules:
+    - id: bounded-modules
+      type: import
+      moduleBoundaries:
+        api: [core]
+        engine: [api, core]
+    - id: controllers-need-services
+      type: dependency
+      pattern: ".*Controller.*"
+      required:
+        - ".*Service.*"
 ```
 
 ## API Reference

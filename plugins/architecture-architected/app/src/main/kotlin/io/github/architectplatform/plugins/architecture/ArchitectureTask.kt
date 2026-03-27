@@ -45,7 +45,7 @@ class ArchitectureTask(
         return try {
             val rules = ArchitectureRules(context)
             val result = rules.validate(projectContext.dir)
-            val report = when (context.reportFormat.lowercase()) {
+            val report = when (context.normalizedReportFormat()) {
                 "json" -> rules.formatJsonReport(result)
                 else -> rules.formatTextReport(result)
             }
@@ -55,8 +55,8 @@ class ArchitectureTask(
                 TaskResult.failure(
                     "Architecture validation failed with ${result.violations.size} violation(s)\n$report",
                     listOf(
-                        TaskResult.failure("${result.violations.count { it.rule.severity == "error" }} error(s)"),
-                        TaskResult.failure("${result.violations.count { it.rule.severity == "warning" }} warning(s)")
+                        TaskResult.failure("${result.violations.count { it.severity == "error" }} error(s)"),
+                        TaskResult.failure("${result.violations.count { it.severity == "warning" }} warning(s)")
                     )
                 )
             } else if (result.violations.isEmpty()) {

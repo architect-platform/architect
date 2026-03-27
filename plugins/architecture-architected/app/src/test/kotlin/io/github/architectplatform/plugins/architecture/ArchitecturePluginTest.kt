@@ -13,6 +13,7 @@ class ArchitecturePluginTest {
                 ArchitectPluginContract.Verification(
                     config = mapOf(
                         "enabled" to false,
+                        "presetRulesets" to emptyList<String>(),
                         "rulesets" to emptyMap<String, Any>(),
                         "customRules" to emptyList<Any>(),
                         "onViolation" to "warn",
@@ -54,5 +55,17 @@ class ArchitecturePluginTest {
         
         assertFalse(plugin.context.enabled)
         assertEquals("fail", plugin.context.onViolation)
+    }
+
+    @Test
+    fun `test plugin exposes config schema for preset rulesets and rule types`() {
+        val schema = ArchitecturePlugin().configSchema()
+
+        @Suppress("UNCHECKED_CAST")
+        val properties = schema["properties"] as Map<String, Any>
+        assertTrue(properties.containsKey("presetRulesets"))
+        @Suppress("UNCHECKED_CAST")
+        val defs = schema["\$defs"] as Map<String, Any>
+        assertTrue(defs.containsKey("rule"))
     }
 }

@@ -12,6 +12,7 @@ class ArchitecturePluginContractTest : ArchitectPluginContractTestSuite<Architec
 
     override fun pluginConfig(): Any = mapOf(
         "enabled" to false,
+        "presetRulesets" to emptyList<String>(),
         "rulesets" to emptyMap<String, Any>(),
         "customRules" to emptyList<Any>(),
         "onViolation" to "warn",

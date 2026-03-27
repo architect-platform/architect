@@ -23,22 +23,47 @@ plugins:
 
 architecture:
   enabled: true
+  presetRulesets:
+    - layered-architecture
   onViolation: warn
   reportFormat: text
   strict: false
   rulesets:
-    layered:
+    monorepo-conventions:
       enabled: true
-      description: "Example layered architecture rules"
+    custom:
+      enabled: true
+      description: "Custom architecture rules"
       rules:
-        - id: no-direct-repository-access
-          description: "Controllers should not depend directly on repositories"
-          type: dependency
-          pattern: ".*Controller.*"
-          forbidden:
-            - ".*Repository.*"
+        - id: no-cycles
+          type: import
           severity: error
+        - id: public-kdoc
+          type: convention
+          convention: kdoc-required
+          paths:
+            - "src/main/.*\\.kt"
+          severity: warning
+          suggestion: "Add KDoc to public Kotlin declarations."
 ```
+
+## Built-in rule types
+
+- `dependency` — forbid or require imports for matching declarations
+- `naming` — enforce file naming conventions by path
+- `structure` — assert required files/directories exist
+- `import` — detect circular imports and enforce module boundaries
+- `convention` — validate KDoc/Javadoc and production-to-test coverage
+- `custom` — delegate to a custom `RuleValidator` implementation
+
+## Built-in preset rulesets
+
+- `layered-architecture`
+- `hexagonal-architecture`
+- `clean-architecture`
+- `monorepo-conventions`
+
+Violations now include file, optional line number, severity, and remediation suggestions in both text and JSON reports.
 
 ## Local Build and Test
 

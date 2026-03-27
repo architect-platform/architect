@@ -110,6 +110,34 @@ class ArchitectureRulesTest {
     }
 
     @Test
+    fun `test dependency rule detects forbidden imports with line numbers and suggestion`() {
+        val srcDir = tempDir.resolve("src/main/kotlin")
+        Files.createDirectories(srcDir)
+        Files.writeString(
+            srcDir.resolve("UserController.kt"),
+            """
+                import com.example.UserRepository
+
+                class UserController
+            """.trimIndent()
+        )
+
+        val rule = ArchitectureRule(
+            id = "no-repositories-in-controller",
+            description = "Controllers should use services instead of repositories",
+            type = "dependency",
+            pattern = ".*Controller.*",
+            forbidden = listOf(".*Repository.*"),
+            suggestion = "Inject a service instead of importing a repository directly.",
+        )
+        val result = ArchitectureRules(ArchitectureContext(rulesets = mapOf("layered" to RuleSet(rules = listOf(rule))))).validate(tempDir)
+
+        assertEquals(1, result.violations.size)
+        assertEquals(1, result.violations.first().line)
+        assertEquals("Inject a service instead of importing a repository directly.", result.violations.first().suggestion)
+    }
+
+    @Test
     fun `test structure rule validates required paths`() {
         val rule = ArchitectureRule(
             id = "required-dirs",
@@ -135,6 +163,116 @@ class ArchitectureRulesTest {
         // Both directories don't exist, so 2 violations
         assertEquals(2, result.violations.size)
         assertTrue(result.hasErrors)
+    }
+
+    @Test
+    fun `test import rule detects circular dependencies`() {
+        val srcDir = tempDir.resolve("src/main/kotlin/com/example")
+        Files.createDirectories(srcDir)
+        Files.writeString(
+            srcDir.resolve("A.kt"),
+            """
+                package com.example
+                import com.example.B
+                class A
+            """.trimIndent()
+        )
+        Files.writeString(
+            srcDir.resolve("B.kt"),
+            """
+                package com.example
+                import com.example.A
+                class B
+            """.trimIndent()
+        )
+
+        val rule = ArchitectureRule(
+            id = "no-cycles",
+            type = "import",
+            suggestion = "Extract a shared abstraction.",
+        )
+        val result = ArchitectureRules(ArchitectureContext(customRules = listOf(rule))).validate(tempDir)
+
+        assertEquals(2, result.violations.size)
+        assertTrue(result.violations.all { it.message.contains("Circular import detected") })
+    }
+
+    @Test
+    fun `test import rule enforces module boundaries`() {
+        val apiDir = tempDir.resolve("api/src/main/kotlin/com/example/api")
+        Files.createDirectories(apiDir)
+        Files.writeString(
+            apiDir.resolve("ApiController.kt"),
+            """
+                package com.example.api
+                import com.example.engine.EngineService
+                class ApiController
+            """.trimIndent()
+        )
+        val engineDir = tempDir.resolve("engine/src/main/kotlin/com/example/engine")
+        Files.createDirectories(engineDir)
+        Files.writeString(
+            engineDir.resolve("EngineService.kt"),
+            """
+                package com.example.engine
+                class EngineService
+            """.trimIndent()
+        )
+
+        val rule = ArchitectureRule(
+            id = "module-boundaries",
+            type = "import",
+            moduleBoundaries = mapOf("api" to listOf("core")),
+        )
+        val result = ArchitectureRules(ArchitectureContext(customRules = listOf(rule))).validate(tempDir)
+
+        assertEquals(1, result.violations.size)
+        assertTrue(result.violations.first().message.contains("Cross-module import violation"))
+    }
+
+    @Test
+    fun `test convention rule detects missing kdoc on public declarations`() {
+        val srcDir = tempDir.resolve("src/main/kotlin")
+        Files.createDirectories(srcDir)
+        Files.writeString(
+            srcDir.resolve("Greeter.kt"),
+            """
+                class Greeter {
+                    fun greet(): String = "hello"
+                }
+            """.trimIndent()
+        )
+
+        val rule = ArchitectureRule(
+            id = "public-kdoc",
+            type = "convention",
+            convention = "kdoc-required",
+            paths = listOf("src/main/.*\\.kt"),
+        )
+        val result = ArchitectureRules(ArchitectureContext(customRules = listOf(rule))).validate(tempDir)
+
+        assertEquals(2, result.violations.size)
+        assertTrue(result.violations.all { it.message.contains("missing KDoc") })
+    }
+
+    @Test
+    fun `test convention rule validates matching test class exists`() {
+        val srcDir = tempDir.resolve("src/main/kotlin")
+        val testDir = tempDir.resolve("src/test/kotlin")
+        Files.createDirectories(srcDir)
+        Files.createDirectories(testDir)
+        Files.writeString(srcDir.resolve("OrderService.kt"), "class OrderService")
+        Files.writeString(testDir.resolve("OrderServiceTest.kt"), "class OrderServiceTest")
+
+        val rule = ArchitectureRule(
+            id = "tests-required",
+            type = "convention",
+            convention = "test-class-exists",
+            paths = listOf("src/main/.*\\.kt"),
+        )
+        val result = ArchitectureRules(ArchitectureContext(customRules = listOf(rule))).validate(tempDir)
+
+        assertTrue(result.violations.isEmpty())
     }
 
     @Test
@@ -220,6 +358,30 @@ class ArchitectureRulesTest {
         assertTrue(report.contains("\"rulesChecked\": 5"))
         assertTrue(report.contains("\"filesAnalyzed\": 10"))
         assertTrue(report.contains("\"violationsFound\": 0"))
+    }
+
+    @Test
+    fun `test built in preset rulesets contribute rules`() {
+        val context = ArchitectureContext(presetRulesets = listOf("clean-architecture"))
+        val result = ArchitectureRules(context).validate(tempDir)
+
+        assertTrue(result.totalRulesChecked > 0)
+    }
+
+    @Test
+    fun `test report includes suggestion field`() {
+        val rule = ArchitectureRule(
+            id = "suggested",
+            type = "structure",
+            paths = listOf("src/main"),
+            suggestion = "Create src/main before running validation.",
+        )
+        val result = ArchitectureRules(ArchitectureContext(customRules = listOf(rule))).validate(tempDir)
+        val report = ArchitectureRules(ArchitectureContext()).formatTextReport(result)
+        val json = ArchitectureRules(ArchitectureContext()).formatJsonReport(result)
+
+        assertTrue(report.contains("Suggestion: Create src/main before running validation."))
+        assertTrue(json.contains("\"suggestion\": \"Create src/main before running validation.\""))
     }
 
     @Test
