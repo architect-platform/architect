@@ -2,6 +2,7 @@ package io.github.architectplatform.cli.command
 
 import io.github.architectplatform.cli.dto.HistoryRecordDTO
 import io.github.architectplatform.cli.dto.TaskPlanDTO
+import io.github.architectplatform.cli.dto.TaskStatsDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.cli.graph.ProjectGraphDotRenderer
 import io.github.architectplatform.cli.graph.ProjectGraphHtmlRenderer
@@ -99,6 +100,77 @@ class OutputFormatter(
     result.errors.forEach { println("  ❌ ERROR:   $it") }
     result.warnings.forEach { println("  ⚠️  WARNING: $it") }
     println()
+  }
+
+  fun printStats(statsList: List<TaskStatsDTO>) {
+    if (statsList.isEmpty()) {
+      println("No performance data found.")
+      return
+    }
+    println()
+    println("━".repeat(90))
+    println("📊 Task Performance Statistics")
+    println("━".repeat(90))
+    val fmt = "%-30s  %6s  %8s  %8s  %8s  %8s  %7s  %s"
+    println(fmt.format("TASK", "RUNS", "AVG", "P50", "P95", "P99", "SUCCESS", "TREND"))
+    println("─".repeat(90))
+    statsList.forEach { s ->
+      val trend = when (s.trend) {
+        "IMPROVING" -> "▼ faster"
+        "DEGRADING" -> "▲ slower"
+        else -> "→ stable"
+      }
+      println(
+        fmt.format(
+          s.taskId.take(30),
+          s.sampleCount,
+          fmtMs(s.avgDurationMs),
+          fmtMs(s.p50DurationMs),
+          fmtMs(s.p95DurationMs),
+          fmtMs(s.p99DurationMs),
+          "${(s.successRate * 100).toInt()}%",
+          trend,
+        )
+      )
+    }
+    println()
+  }
+
+  fun printTaskStats(stats: TaskStatsDTO) {
+    val trend = when (stats.trend) {
+      "IMPROVING" -> "▼ getting faster"
+      "DEGRADING" -> "▲ getting slower"
+      else -> "→ stable"
+    }
+    println()
+    println("━".repeat(60))
+    println("📊 Performance Profile: ${stats.taskId}")
+    println("━".repeat(60))
+    println("  Project      : ${stats.project}")
+    println("  Samples      : ${stats.sampleCount}")
+    println("  Success rate : ${(stats.successRate * 100).toInt()}%")
+    println()
+    println("  Latency")
+    println("  ─────────────────────────")
+    println("  Min   : ${fmtMs(stats.minDurationMs)}")
+    println("  Avg   : ${fmtMs(stats.avgDurationMs)}")
+    println("  p50   : ${fmtMs(stats.p50DurationMs)}")
+    println("  p95   : ${fmtMs(stats.p95DurationMs)}")
+    println("  p99   : ${fmtMs(stats.p99DurationMs)}")
+    println("  Max   : ${fmtMs(stats.maxDurationMs)}")
+    println()
+    println("  Trend : $trend")
+    if (stats.sampleCount >= 5) {
+      println("  Recent avg (last 10) : ${fmtMs(stats.recentAvgMs)}")
+      println("  Historical avg       : ${fmtMs(stats.historicalAvgMs)}")
+    }
+    println()
+  }
+
+  private fun fmtMs(ms: Long): String = when {
+    ms < 1000 -> "${ms}ms"
+    ms < 60_000 -> "${"%.1f".format(ms / 1000.0)}s"
+    else -> "${"%.1f".format(ms / 60_000.0)}m"
   }
 
   fun printHistory(records: List<HistoryRecordDTO>) {

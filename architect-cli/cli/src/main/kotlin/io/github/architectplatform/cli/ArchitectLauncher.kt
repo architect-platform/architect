@@ -269,6 +269,7 @@ class ArchitectLauncher(
       "config" -> { configHandler.handle(args); return }
       "retry" -> { handleRetry(); return }
       "history" -> { handleHistory(); return }
+      "stats" -> { handleStats(); return }
       "affected" -> { handleAffectedCommand(); return }
     }
 
@@ -451,6 +452,26 @@ class ArchitectLauncher(
       }
     }
     output.printHistory(records)
+  }
+
+  private fun handleStats() {
+    val project = args.getOrNull(1)
+    val taskId = args.getOrNull(2)
+    if (project == null) {
+      println("Usage: architect stats <project> [<task>]")
+      return
+    }
+    if (taskId != null) {
+      val stats = runCatching { engineCommandClient.getTaskStats(project, taskId) }.getOrNull()
+      if (stats == null) {
+        println("ℹ️  No performance data found for task '$taskId' in project '$project'")
+        return
+      }
+      output.printTaskStats(stats)
+    } else {
+      val statsList = runCatching { engineCommandClient.getAllTaskStats(project) }.getOrElse { emptyList() }
+      output.printStats(statsList)
+    }
   }
 
   private fun handleRetry() {

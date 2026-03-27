@@ -5,6 +5,7 @@ import io.github.architectplatform.cli.dto.ProjectDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.dto.TaskDTO
 import io.github.architectplatform.cli.dto.TaskPlanDTO
+import io.github.architectplatform.cli.dto.TaskStatsDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Delete
@@ -139,4 +140,23 @@ interface EngineCommandClient {
    */
   @Delete("/executions/{executionId}")
   fun cancelExecution(@PathVariable executionId: ExecutionId): Map<String, Any>
+
+  /**
+   * Returns performance statistics for a specific task.
+   *
+   * @param project Project name
+   * @param taskId  Task identifier
+   * @return Statistics or null if no history found
+   */
+  @Get("/projects/{project}/tasks/{taskId}/stats")
+  fun getTaskStats(@PathVariable project: String, @PathVariable taskId: String): TaskStatsDTO?
+
+  /**
+   * Returns performance statistics for every task with history in the project.
+   *
+   * @param project Project name
+   * @return List of per-task statistics
+   */
+  @Get("/projects/{project}/tasks/stats")
+  fun getAllTaskStats(@PathVariable project: String): List<TaskStatsDTO>
 }

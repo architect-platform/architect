@@ -280,7 +280,7 @@
   - Include: user, host, project, task, args, result, duration
   - Configurable retention: `architect.engine.audit.retention-days: 30`
 
-- [ ] **T-2.2.4** 🟡 `M` — Add task performance profiling
+- [x] **T-2.2.4** 🟡 `M` — Add task performance profiling | Finished: 2026-03-27T15:00:00Z | Notes: Created TaskStats+Trend (engine), TaskStatsService (percentile/trend computation from HistoryService), TaskStatsController (GET /api/projects/{project}/tasks/{taskId}/stats, GET .../tasks/stats), TaskStatsDTO (CLI), printStats+printTaskStats in OutputFormatter, handleStats() in ArchitectLauncher, 9 unit tests in TaskStatsServiceTest
   - Track per-task: avg duration, p50/p95/p99, trend (improving/degrading)
   - `GET /api/projects/{name}/tasks/{task}/stats`
   - CLI: `architect stats <task>` shows performance history
