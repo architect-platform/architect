@@ -16,6 +16,11 @@ class ArchitecturePluginTest {
                         "presetRulesets" to emptyList<String>(),
                         "rulesets" to emptyMap<String, Any>(),
                         "customRules" to emptyList<Any>(),
+                        "structure" to mapOf(
+                            "enabled" to true,
+                            "required" to emptyList<String>(),
+                            "forbidden" to emptyList<String>(),
+                        ),
                         "onViolation" to "warn",
                         "reportFormat" to "text",
                         "strict" to false,
@@ -64,8 +69,10 @@ class ArchitecturePluginTest {
         @Suppress("UNCHECKED_CAST")
         val properties = schema["properties"] as Map<String, Any>
         assertTrue(properties.containsKey("presetRulesets"))
+        assertTrue(properties.containsKey("structure"))
         @Suppress("UNCHECKED_CAST")
         val defs = schema["\$defs"] as Map<String, Any>
         assertTrue(defs.containsKey("rule"))
+        assertTrue(defs.containsKey("structure"))
     }
 }

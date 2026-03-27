@@ -352,6 +352,10 @@ class ArchitectLauncher(
         return
       }
       "validate" -> {
+        val validateArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
+        if (validateArgs.contains("--structure")) {
+          executeTask(projectName, "architecture-validate", listOf("--structure"))
+        }
         val validation = engineCommandClient.validateProject(projectName)
         output.printValidation(projectName, validation)
         if (!validation.valid) exitProcess(1)
@@ -570,6 +574,10 @@ class ArchitectLauncher(
         return
       }
       "validate" -> {
+        val validateArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
+        if (validateArgs.contains("--structure")) {
+          executeTaskEmbedded(projectName, projectPath, "architecture-validate", listOf("--structure"))
+        }
         val validation = embeddedTaskExecutor.validate(projectName, projectPath)
         output.printValidation(projectName, validation)
         if (!validation.valid) exitProcess(1)

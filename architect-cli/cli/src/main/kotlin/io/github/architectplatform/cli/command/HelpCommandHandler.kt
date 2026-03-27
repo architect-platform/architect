@@ -369,15 +369,20 @@ class HelpCommandHandler {
       |architect validate — Validate project configuration
       |
       |USAGE
-      |  architect validate
+      |  architect validate [--structure]
       |
       |DESCRIPTION
       |  Validates the architect.yml configuration against the schema,
       |  checks plugin references, and verifies task dependencies.
+      |  With --structure, runs architecture-based file structure validation.
+      |
+      |OPTIONS
+      |  --structure        Run file structure validation via architecture rules
       |
       |EXAMPLES
       |  architect validate                 Validate current project
-    """.trimMargin()
+      |  architect validate --structure     Validate configured file structure rules
+     """.trimMargin()
 
     private val INFO_HELP = """
       |architect info — Show project information

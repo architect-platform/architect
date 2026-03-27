@@ -13,6 +13,9 @@ class ArchitectureContextTest {
         assertTrue(context.presetRulesets.isEmpty())
         assertTrue(context.rulesets.isEmpty())
         assertTrue(context.customRules.isEmpty())
+        assertTrue(context.structure.enabled)
+        assertTrue(context.structure.required.isEmpty())
+        assertTrue(context.structure.forbidden.isEmpty())
         assertEquals("warn", context.onViolation)
         assertEquals("text", context.reportFormat)
         assertFalse(context.strict)
@@ -38,6 +41,7 @@ class ArchitectureContextTest {
             presetRulesets = listOf("layered-architecture"),
             rulesets = mapOf("test" to ruleset),
             customRules = listOf(rule),
+            structure = ArchitectureStructure(required = listOf("src/main"), forbidden = listOf(".env")),
             onViolation = "fail",
             reportFormat = "json",
             strict = true
@@ -47,6 +51,8 @@ class ArchitectureContextTest {
         assertEquals(listOf("layered-architecture"), context.presetRulesets)
         assertEquals(1, context.rulesets.size)
         assertEquals(1, context.customRules.size)
+        assertEquals(listOf("src/main"), context.structure.required)
+        assertEquals(listOf(".env"), context.structure.forbidden)
         assertEquals("fail", context.onViolation)
         assertEquals("json", context.reportFormat)
         assertTrue(context.strict)

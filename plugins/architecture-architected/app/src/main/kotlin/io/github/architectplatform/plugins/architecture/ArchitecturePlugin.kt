@@ -84,6 +84,10 @@ class ArchitecturePlugin : ArchitectPlugin<ArchitectureContext> {
                 "items" to mapOf("\$ref" to "#/\$defs/rule"),
                 "default" to emptyList<Any>(),
             ),
+            "structure" to mapOf(
+                "\$ref" to "#/\$defs/structure",
+                "default" to emptyMap<String, Any>(),
+            ),
             "onViolation" to mapOf(
                 "type" to "string",
                 "enum" to listOf("warn", "fail"),
@@ -164,6 +168,23 @@ class ArchitecturePlugin : ArchitectPlugin<ArchitectureContext> {
                         "default" to "error",
                     ),
                     "enabled" to mapOf("type" to "boolean", "default" to true),
+                ),
+            ),
+            "structure" to mapOf(
+                "type" to "object",
+                "additionalProperties" to false,
+                "properties" to mapOf(
+                    "enabled" to mapOf("type" to "boolean", "default" to true),
+                    "required" to mapOf(
+                        "type" to "array",
+                        "items" to mapOf("type" to "string"),
+                        "default" to emptyList<String>(),
+                    ),
+                    "forbidden" to mapOf(
+                        "type" to "array",
+                        "items" to mapOf("type" to "string"),
+                        "default" to emptyList<String>(),
+                    ),
                 ),
             ),
         ),

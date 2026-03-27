@@ -5,6 +5,7 @@ data class ArchitectureContext(
     val presetRulesets: List<String> = emptyList(),
     val rulesets: Map<String, RuleSet> = emptyMap(),
     val customRules: List<ArchitectureRule> = emptyList(),
+    val structure: ArchitectureStructure = ArchitectureStructure(),
     val onViolation: String = "warn",
     val reportFormat: String = "text",
     val strict: Boolean = false,
@@ -34,6 +35,12 @@ data class ArchitectureContext(
         return resolved
     }
 }
+
+data class ArchitectureStructure(
+    val enabled: Boolean = true,
+    val required: List<String> = emptyList(),
+    val forbidden: List<String> = emptyList(),
+)
 
 data class RuleSet(
     val enabled: Boolean = true,

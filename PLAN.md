@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 63/128 tasks completed (49%)
+- Overall Progress: 64/128 tasks completed (50%)
 - Current Phase: Phase 4 — Project Intelligence & Conventions
-- Last Updated: 2026-03-27T20:57:49Z
+- Last Updated: 2026-03-27T21:04:50Z
 
 ---
 
@@ -554,7 +554,7 @@
     - Ship built-in rulesets for layered, hexagonal, clean, and monorepo setups
     - Expand tests/docs and graduate the plugin once coverage and reporting are complete
 
-- [ ] **T-4.2.2** 🟠 `L` — Add file structure validation
+- [x] **T-4.2.2** 🟠 `L` — Add file structure validation | Finished: 2026-03-27T21:04:50Z | Notes: Added architecture.structure required/forbidden config, glob-aware structure validation, and routed `architect validate --structure` through `architecture-validate` with CLI/plugin/docs/tests updated.
   - Define expected directory structure in `architect.yml`:
     ```yaml
     architecture:

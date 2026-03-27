@@ -31,12 +31,14 @@ class ArchitectureRules(
             hasErrors || (strict && hasWarnings) || (onViolation == "fail" && violations.isNotEmpty())
     }
 
-    fun validate(projectDir: Path): ValidationResult {
+    fun validate(projectDir: Path, includedTypes: Set<String>? = null): ValidationResult {
         if (!context.enabled) {
             return ValidationResult(emptyList(), 0, 0)
         }
 
-        val enabledRules = getAllRules().filter { it.enabled }
+        val enabledRules = getAllRules()
+            .filter { it.enabled }
+            .filter { includedTypes == null || it.normalizedType() in includedTypes }
         if (enabledRules.isEmpty()) {
             return ValidationResult(emptyList(), 0, 0)
         }
@@ -141,8 +143,36 @@ class ArchitectureRules(
     private fun getAllRules(): List<ArchitectureRule> {
         val rules = mutableListOf<ArchitectureRule>()
         context.resolvedRulesets().values.filter { it.enabled }.forEach { rules += it.rules }
+        rules += structureRules()
         rules += context.customRules
         return rules
+    }
+
+    private fun structureRules(): List<ArchitectureRule> {
+        if (!context.structure.enabled) {
+            return emptyList()
+        }
+
+        val derivedRules = mutableListOf<ArchitectureRule>()
+        if (context.structure.required.isNotEmpty()) {
+            derivedRules += ArchitectureRule(
+                id = "configured-structure-required",
+                description = "Required project structure from architecture.structure.required",
+                type = "structure",
+                paths = context.structure.required,
+                suggestion = "Create the missing path or adjust architecture.structure.required.",
+            )
+        }
+        if (context.structure.forbidden.isNotEmpty()) {
+            derivedRules += ArchitectureRule(
+                id = "configured-structure-forbidden",
+                description = "Forbidden project structure from architecture.structure.forbidden",
+                type = "structure",
+                forbidden = context.structure.forbidden,
+                suggestion = "Remove the forbidden path or relax architecture.structure.forbidden.",
+            )
+        }
+        return derivedRules
     }
 
     private fun escape(value: String): String =

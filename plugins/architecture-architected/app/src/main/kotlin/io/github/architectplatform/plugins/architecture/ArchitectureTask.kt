@@ -31,8 +31,16 @@ class ArchitectureTask(
             return TaskResult.success("Architecture plugin is disabled. Skipping validation.")
         }
 
-        val allRules = context.rulesets.values.flatMap { it.rules } + context.customRules
-        if (allRules.isEmpty()) {
+        val requestedTypes = mutableSetOf<String>()
+        if (args.contains("--structure")) {
+            requestedTypes += "structure"
+        }
+
+        val allRules = context.resolvedRulesets().values.flatMap { it.rules } + context.customRules
+        val hasStructureRules =
+            context.structure.enabled &&
+                (context.structure.required.isNotEmpty() || context.structure.forbidden.isNotEmpty())
+        if (allRules.isEmpty() && !hasStructureRules) {
             return TaskResult.success(
                 "No architectural rules configured. Run 'architecture-init' to create a configuration.",
                 listOf(
@@ -44,7 +52,7 @@ class ArchitectureTask(
 
         return try {
             val rules = ArchitectureRules(context)
-            val result = rules.validate(projectContext.dir)
+            val result = rules.validate(projectContext.dir, requestedTypes.takeIf { it.isNotEmpty() })
             val report = when (context.normalizedReportFormat()) {
                 "json" -> rules.formatJsonReport(result)
                 else -> rules.formatTextReport(result)

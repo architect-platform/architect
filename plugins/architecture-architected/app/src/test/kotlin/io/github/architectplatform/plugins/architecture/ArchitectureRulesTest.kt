@@ -166,6 +166,27 @@ class ArchitectureRulesTest {
     }
 
     @Test
+    fun `test structure config validates required and forbidden paths`() {
+        Files.createDirectories(tempDir.resolve("src/main/kotlin"))
+        Files.writeString(tempDir.resolve(".env"), "SECRET=test")
+
+        val context = ArchitectureContext(
+            enabled = true,
+            structure = ArchitectureStructure(
+                required = listOf("src/main/kotlin", "docs"),
+                forbidden = listOf(".env"),
+            ),
+        )
+
+        val result = ArchitectureRules(context).validate(tempDir, setOf("structure"))
+
+        assertEquals(2, result.totalRulesChecked)
+        assertEquals(2, result.violations.size)
+        assertTrue(result.violations.any { it.message.contains("Required path does not exist: docs") })
+        assertTrue(result.violations.any { it.message.contains("Forbidden path detected: .env") })
+    }
+
+    @Test
     fun `test import rule detects circular dependencies`() {
         val srcDir = tempDir.resolve("src/main/kotlin/com/example")
         Files.createDirectories(srcDir)

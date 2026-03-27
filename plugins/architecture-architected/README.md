@@ -25,6 +25,13 @@ architecture:
   enabled: true
   presetRulesets:
     - layered-architecture
+  structure:
+    required:
+      - src/main/kotlin
+      - docs
+    forbidden:
+      - .env
+      - "**/*.tmp"
   onViolation: warn
   reportFormat: text
   strict: false
@@ -64,6 +71,12 @@ architecture:
 - `monorepo-conventions`
 
 Violations now include file, optional line number, severity, and remediation suggestions in both text and JSON reports.
+
+You can also run structure-only checks via:
+
+```bash
+architect validate --structure
+```
 
 ## Local Build and Test
 

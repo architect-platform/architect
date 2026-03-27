@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -151,6 +152,38 @@ class ArchitectLauncherTest {
 
       assertTrue(output.contains("VALID"))
       assertTrue(output.contains("Unknown key: foo"))
+    }
+  }
+
+  @Test
+  fun `validate command with structure routes to architecture validate task`(@TempDir tmpDir: Path) {
+    val client = object : StubEngineCommandClient() {
+      var executedTask: String? = null
+      var executedArgs: List<String> = emptyList()
+      var validateCalled = false
+
+      override fun execute(projectName: String, taskName: String, args: List<String>): ExecutionId {
+        executedTask = taskName
+        executedArgs = args
+        return "test-exec-id"
+      }
+
+      override fun validateProject(projectName: String): ValidationResultDTO {
+        validateCalled = true
+        return super.validateProject(projectName)
+      }
+    }
+
+    val launcher = launcherWithClient(client)
+    setUserDir(tmpDir) {
+      launcher.command = "validate"
+      launcher.args = listOf("validate", "--structure")
+
+      captureStdoutAllowExit { launcher.run() }
+
+      assertEquals("architecture-validate", client.executedTask)
+      assertEquals(listOf("--structure"), client.executedArgs)
+      assertFalse(client.validateCalled)
     }
   }
 

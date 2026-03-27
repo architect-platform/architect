@@ -32,6 +32,13 @@ Configure architectural rules in your project:
 architecture:
   presetRulesets:
     - layered-architecture
+  structure:
+    required:
+      - src/main/kotlin
+      - docs
+    forbidden:
+      - .env
+      - "**/*.tmp"
   customRules:
     - id: no-cycles
       type: import
@@ -71,6 +78,11 @@ architecture:
 ## API Reference
 
 See the plugin source code for detailed API documentation.
+
+## Structure Validation
+
+Use `architect validate --structure` to run only the structure checks derived from
+`architecture.structure.required` and `architecture.structure.forbidden`.
 
 ## Contributing
 
