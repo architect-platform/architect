@@ -239,7 +239,7 @@ class ArchitectLauncher(
 
     // Install Ctrl+C graceful cancellation handler
     Runtime.getRuntime().addShutdownHook(Thread {
-      if (!cancelRequested) {
+      if (!cancelRequested && activeExecutionId != null) {
         cancelRequested = true
         System.err.println("\n⚠️  Cancelling... (press Ctrl+C again to force)")
         activeExecutionId?.let { execId ->
@@ -317,7 +317,19 @@ class ArchitectLauncher(
     engineCommandClient.registerProject(request)
 
     when (command) {
-      null, "tasks" -> { output.printTasks(engineCommandClient.getAllTasks(projectName)); return }
+      "tasks" -> { output.printTasks(engineCommandClient.getAllTasks(projectName)); return }
+      null -> {
+        val tasks = engineCommandClient.getAllTasks(projectName)
+        val selector = InteractiveTaskSelector(plain)
+        val selected = selector.select(tasks)
+        if (selected == null) {
+          // Non-interactive environment or user cancelled — fall back to plain task list
+          output.printTasks(tasks)
+          return
+        }
+        // User chose a task interactively — execute it
+        command = selected
+      }
       "info" -> { output.printInfo(projectName, projectPath, engineCommandClient.getAllTasks(projectName)); return }
       "plan" -> {
         val planOptions = output.parsePlanOptions(args)
@@ -444,27 +456,27 @@ class ArchitectLauncher(
     val records = localHistoryReader.getAll().ifEmpty {
       runCatching { engineCommandClient.getHistory() }.getOrElse { emptyList() }
     }
-    val lastFailed = records.firstOrNull { it.status == "FAILURE" || it.status == "FAILED" }
+    val lastFailed = records.firstOrNull { !it.success }
     if (lastFailed == null) {
       println("ℹ️  No failed executions found in history")
       return
     }
     val fromTask = args.indexOf("--from").let { if (it >= 0) args.getOrNull(it + 1) else null }
-    val taskName = fromTask ?: lastFailed.taskName
+    val taskName = fromTask ?: lastFailed.task
     val projectPath = System.getProperty("user.dir")
-    val projectName = lastFailed.projectName ?: extractProjectName(projectPath)
+    val projectName = lastFailed.project
 
     println("🔄 Retrying: $taskName (project: $projectName)")
     println()
 
     val useEmbedded = embedded || (noDaemon && !engineHealthChecker.isRunning())
     if (useEmbedded) {
-      executeTaskEmbedded(projectName, projectPath, taskName, emptyList())
+      executeTaskEmbedded(projectName, projectPath, taskName, lastFailed.args)
     } else {
       engineHandler.ensureEngineRunning()
       val request = RegisterProjectRequest(name = projectName, path = projectPath)
       engineCommandClient.registerProject(request)
-      executeTask(projectName, taskName, emptyList())
+      executeTask(projectName, taskName, lastFailed.args)
     }
   }
 
@@ -505,7 +517,17 @@ class ArchitectLauncher(
     }
 
     when (command) {
-      null, "tasks" -> { output.printTasks(embeddedTaskExecutor.listTasks(projectName, projectPath)); return }
+      "tasks" -> { output.printTasks(embeddedTaskExecutor.listTasks(projectName, projectPath)); return }
+      null -> {
+        val tasks = embeddedTaskExecutor.listTasks(projectName, projectPath)
+        val selector = InteractiveTaskSelector(plain)
+        val selected = selector.select(tasks)
+        if (selected == null) {
+          output.printTasks(tasks)
+          return
+        }
+        command = selected
+      }
       "info" -> { output.printInfo(projectName, projectPath, embeddedTaskExecutor.listTasks(projectName, projectPath)); return }
       "plan" -> {
         val planOptions = output.parsePlanOptions(args)

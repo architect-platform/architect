@@ -137,7 +137,7 @@
   - `architect help tasks` explains the task system
   - `architect help plugins` explains plugin ecosystem
 
-- [ ] **T-1.1.3** 🟠 `L` — Implement interactive task selector when no task specified
+- [x] **T-1.1.3** 🟠 `L` — Implement interactive task selector when no task specified | Finished: 2026-03-27T12:45:00Z | Notes: Created InteractiveTaskSelector with stty raw-mode, arrow key navigation, fuzzy search (id/desc/phase), phase grouping (INIT→LINT→VERIFY→BUILD→TEST→RUN→RELEASE→PUBLISH→OTHER), alternate screen buffer, CI/plain fallback to printTasks; wired into ArchitectLauncher for both engine and embedded modes; 9 unit tests
   - `architect` with no args shows categorized task list (grouped by phase)
   - Arrow key navigation, fuzzy search, Enter to execute
   - Show task description, phase, dependencies inline
@@ -148,7 +148,7 @@
   - Output: checklist with ✅/❌ per check + remediation hints
   - `architect doctor --fix` attempts auto-remediation (install engine, fix config)
 
-- [ ] **T-1.1.5** 🟡 `M` — Add `architect config` subcommand for config management
+- [x] **T-1.1.5** 🟡 `M` — Add `architect config` subcommand for config management
   - `architect config show` — display resolved configuration (merged profiles)
   - `architect config set <key> <value>` — modify architect.yml programmatically
   - `architect config get <key>` — read specific value
@@ -208,13 +208,13 @@
   - Collapse completed tasks to one line, expand failures
   - Respect terminal width for truncation
 
-- [ ] **T-1.4.2** 🟠 `M` — Add Ctrl+C graceful cancellation with cleanup
+- [x] **T-1.4.2** 🟠 `M` — Add Ctrl+C graceful cancellation with cleanup
   - First Ctrl+C: graceful stop (finish current task, skip remaining)
   - Second Ctrl+C: force kill
   - Display: "Cancelling... (press Ctrl+C again to force)"
   - Engine must support execution cancellation API
 
-- [ ] **T-1.4.3** 🟡 `M` — Add `architect retry` to re-run last failed execution
+- [x] **T-1.4.3** 🟡 `M` — Add `architect retry` to re-run last failed execution
   - Read from history, re-execute same task with same args
   - `architect retry --from <task>` resumes from specific failed task
   - Useful for flaky tests or transient network failures
@@ -274,7 +274,7 @@
   - Returns: `{ status: "UP/DOWN", checks: [...] }`
   - Enable Micronaut management endpoints
 
-- [ ] **T-2.2.3** 🟠 `M` — Add execution audit log
+- [x] **T-2.2.3** 🟠 `M` — Add execution audit log
   - Persist: who ran what, when, with what args, from where
   - `GET /api/audit` — query audit records
   - Include: user, host, project, task, args, result, duration
