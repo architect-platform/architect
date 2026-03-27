@@ -7,6 +7,8 @@ import com.networknt.schema.SpecVersion
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.Config
 import io.github.architectplatform.api.core.project.getKey
+import io.github.architectplatform.core.plugin.app.PluginConfig
+import io.github.architectplatform.core.plugin.app.PluginVersionConflictResolver
 import io.github.architectplatform.core.schema.ArchitectSchemaGenerator
 import jakarta.inject.Singleton
 
@@ -71,6 +73,8 @@ class ConfigValidator {
             errors.addAll(validateAgainstSchema(config))
         }
 
+        warnings.addAll(validatePluginVersionConflicts(config, lineMap))
+
         // Validate each plugin's config section against the plugin's declared schema
         for (plugin in plugins) {
             val pluginSchema = plugin.configSchema() ?: continue
@@ -88,6 +92,26 @@ class ConfigValidator {
             errors = errors,
             warnings = warnings,
         )
+    }
+
+    private fun validatePluginVersionConflicts(
+        config: Config,
+        lineMap: Map<String, Int>,
+    ): List<String> {
+        val rawPlugins = config["plugins"] as? List<*> ?: return emptyList()
+        val plugins = rawPlugins.mapNotNull { runCatching { objectMapper.convertValue(it, PluginConfig::class.java) }.getOrNull() }
+        if (plugins.size <= 1) return emptyList()
+
+        val resolution = PluginVersionConflictResolver.resolve(plugins, ::compareVersions)
+        return resolution.conflicts.map { conflict ->
+            val line = lineMap["plugins"]
+            withLine(
+                line,
+                "Plugin version conflict on '${conflict.dependencyKey}': keeping " +
+                    "${conflict.kept.name}@${conflict.kept.version} and skipping " +
+                    "${conflict.dropped.name}@${conflict.dropped.version} (newest wins)",
+            )
+        }
     }
 
     private fun validateAgainstSchema(config: Config): List<String> {
@@ -117,4 +141,15 @@ class ConfigValidator {
 
     private fun withLine(line: Int?, message: String): String =
         if (line != null) "line $line: $message" else message
+
+    private fun compareVersions(a: String, b: String): Int {
+        val partsA = a.removePrefix("v").split(".")
+        val partsB = b.removePrefix("v").split(".")
+        for (i in 0 until maxOf(partsA.size, partsB.size)) {
+            val nA = partsA.getOrNull(i)?.toIntOrNull() ?: 0
+            val nB = partsB.getOrNull(i)?.toIntOrNull() ?: 0
+            if (nA != nB) return nA - nB
+        }
+        return 0
+    }
 }

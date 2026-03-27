@@ -288,7 +288,7 @@
 
 ### 2.3 — Plugin Loading Hardening
 
-- [ ] **T-2.3.1** 🔴 `M` — Add plugin version conflict resolution
+- [x] **T-2.3.1** 🔴 `M` — Add plugin version conflict resolution | Finished: 2026-03-27T13:31:03Z | Notes: Added PluginVersionConflictResolver with dependency-key grouping and newest-wins selection; ProjectPluginLoader now resolves conflicts before load and logs warnings; ConfigValidator reports conflict warnings during `architect validate`; added tests in ProjectPluginLoaderTest and ConfigValidatorTest.
   - Detect when multiple plugins require different versions of same dependency
   - Strategy: newest wins, with warning
   - `architect validate` reports version conflicts

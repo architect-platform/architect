@@ -50,10 +50,22 @@ class ProjectPluginLoader(
                 }
             }
 
+        val resolution = PluginVersionConflictResolver.resolve(plugins, releaseResolver::compareVersions)
+        resolution.conflicts.forEach { conflict ->
+            logger.warn(
+                "Plugin dependency version conflict for {}: keeping {}@{} and skipping {}@{} (newest wins)",
+                conflict.dependencyKey,
+                conflict.kept.name,
+                conflict.kept.version,
+                conflict.dropped.name,
+                conflict.dropped.version,
+            )
+        }
+
         // Async loading preserves YAML declaration order via mapIndexed + sortedBy.
         val loadedPlugins =
             runBlocking {
-                plugins.mapIndexed { index, plugin ->
+                resolution.selected.mapIndexed { index, plugin ->
                     async(Dispatchers.IO) {
                         index to loadConfiguredPlugin(plugin, context)
                     }

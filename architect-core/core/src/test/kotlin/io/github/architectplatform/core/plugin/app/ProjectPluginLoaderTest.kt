@@ -131,6 +131,46 @@ class ProjectPluginLoaderTest {
     assertTrue(error.message!!.contains("project root"))
   }
 
+  @Test
+  fun `should keep newest plugin version when duplicate dependency is declared`() {
+    val downloader = TrackingDownloader(tempDir)
+    val loader = ProjectPluginLoader(
+      spiLoader = TrackingSpiPluginLoader(),
+      downloader = downloader,
+      signatureVerifier = RecordingSignatureVerifier(),
+      internalPlugins = emptyList(),
+      releaseResolver = GitHubReleaseResolver(NoOpRemoteContentFetcher()),
+      eventBus = { },
+    )
+    val context = ProjectContext(
+      dir = tempDir,
+      config = mapOf(
+        "plugins" to listOf(
+          mapOf(
+            "name" to "shared-plugin",
+            "type" to "github",
+            "repo" to "owner/shared-plugin",
+            "version" to "1.0.0",
+            "asset" to "shared-plugin.jar",
+          ),
+          mapOf(
+            "name" to "shared-plugin",
+            "type" to "github",
+            "repo" to "owner/shared-plugin",
+            "version" to "2.0.0",
+            "asset" to "shared-plugin.jar",
+          ),
+        ),
+      ),
+    )
+
+    val plugins = loader.load(context)
+
+    assertEquals(listOf("shared-plugin"), plugins.map { it.id })
+    assertTrue(downloader.downloadedUrls.any { it.contains("/shared-plugin-2.0.0/shared-plugin.jar") })
+    assertTrue(downloader.downloadedUrls.none { it.contains("/shared-plugin-1.0.0/shared-plugin.jar") })
+  }
+
   private class TrackingDownloader(
     private val tempDir: Path,
   ) : PluginDownloader {

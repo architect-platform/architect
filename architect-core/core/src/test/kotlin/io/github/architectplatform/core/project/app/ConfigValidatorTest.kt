@@ -122,6 +122,33 @@ class ConfigValidatorTest {
   }
 
   @Test
+  fun `plugin version conflicts produce warning with newest wins`() {
+    val config = mapOf(
+      "project" to mapOf("name" to "test"),
+      "plugins" to listOf(
+        mapOf(
+          "name" to "docs-architected",
+          "type" to "github",
+          "repo" to "architect-platform/architect",
+          "asset" to "docs-architected.jar",
+          "version" to "1.0.0",
+        ),
+        mapOf(
+          "name" to "docs-architected",
+          "type" to "github",
+          "repo" to "architect-platform/architect",
+          "asset" to "docs-architected.jar",
+          "version" to "2.0.0",
+        ),
+      ),
+    )
+
+    val result = validator.validate(config)
+    assertTrue(result.valid)
+    assertTrue(result.warnings.any { it.contains("Plugin version conflict") && it.contains("newest wins") })
+  }
+
+  @Test
   fun `schema validation requires command for process plugins`() {
     val config = mapOf(
       "\$schema" to "https://architect.dev/schema/architect.yml.json",
@@ -343,4 +370,5 @@ class ConfigValidatorTest {
     override var context: Any = Any()
     override fun register(registry: TaskRegistry) {}
   }
+
 }
