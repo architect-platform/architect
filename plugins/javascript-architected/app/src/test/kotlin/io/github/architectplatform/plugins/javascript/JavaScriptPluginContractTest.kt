@@ -9,10 +9,15 @@ class JavaScriptPluginContractTest : ArchitectPluginContractTestSuite<JavaScript
 
   override fun expectedTaskIds() = setOf(
     "javascript-install",
+    "javascript-workspace-check",
+    "javascript-lockfile-check",
+    "javascript-audit",
     "javascript-build",
     "javascript-test",
     "javascript-lint",
     "javascript-dev",
+    "javascript-version",
+    "javascript-publish",
   )
 
   override fun services(): Map<Class<*>, Any> = mapOf(

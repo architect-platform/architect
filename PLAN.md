@@ -359,7 +359,7 @@
 
 ### 3.2 — Graduate Incubating Plugins (Language Ecosystems)
 
-- [ ] **T-3.2.1** 🟠 `L` — Graduate `javascript-architected` to Active
+- [x] **T-3.2.1** 🟠 `L` — Graduate `javascript-architected` to Active | Finished: 2026-03-27T15:37:38Z | Notes: Expanded plugin feature set for active maturity: added workspace detection, lockfile validation, dependency audit, version, and publish tasks; added package-manager support matrix updates (npm/yarn classic+berry/pnpm/bun), config schema and enriched context options; strengthened tests (contract + behavior + workspace/lockfile/version/publish coverage); updated plugin README/STATUS and docs reference page for new tasks and configuration.
   - Add: monorepo workspace detection, package publishing, version management
   - Add: lockfile validation, security audit (`npm audit`)
   - Full contract tests, comprehensive README

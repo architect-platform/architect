@@ -1,15 +1,18 @@
 # javascript-architected status
 
-- Status: experimental (incubating tier)
-- Last reviewed: 2026-03-24
+- Status: active
+- Last reviewed: 2026-03-27
 - Owner group: Plugin Ecosystem
 
 Current scope:
-- JavaScript package-manager workflows (npm, yarn, pnpm).
+- JavaScript package-manager workflows (npm, yarn classic + berry, pnpm, bun).
+- Monorepo workspace detection and lockfile validation.
+- Security auditing, version bumping, and package publishing tasks.
 
 Current limitations:
-- Plugin maturity and automated coverage are below the official plugin bar.
+- Publish flows still depend on registry credentials and CI policy outside plugin control.
 
 Graduation criteria:
-- Meet the plugin standard for tests, docs, and contract coverage.
-- Demonstrate stable behavior across supported package managers.
+- ✅ Plugin standard tests and contract coverage in place.
+- ✅ Stable behavior across supported package managers and lockfile validation paths.
+- ✅ Documentation updated with configuration and task guidance.
