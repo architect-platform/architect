@@ -22,6 +22,7 @@ import io.github.architectplatform.core.domain.events.ExecutionId
 import io.github.architectplatform.core.domain.events.generateExecutionId
 import io.github.architectplatform.core.tasks.application.TaskExecutor
 import io.micronaut.context.event.ApplicationEventPublisher
+import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -31,6 +32,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.*
 
 /**
@@ -56,8 +58,14 @@ class TaskService(
     private val metricsService: io.github.architectplatform.engine.core.metrics.MetricsService,
     private val auditService: AuditService,
     private val cloudReporter: Optional<CloudReporterService> = Optional.empty(),
+    @Property(
+        name = io.github.architectplatform.core.config.EngineConfiguration.TaskExecution.EXECUTION_TIMEOUT_SECONDS,
+        defaultValue = "${io.github.architectplatform.core.config.EngineConfiguration.TaskExecution.DEFAULT_EXECUTION_TIMEOUT_SECONDS}"
+    )
+    private val executionTimeoutSeconds: Long = io.github.architectplatform.core.config.EngineConfiguration.TaskExecution.DEFAULT_EXECUTION_TIMEOUT_SECONDS,
 ) {
 
+  private val logger = org.slf4j.LoggerFactory.getLogger(this::class.java)
   private val runningJobs = java.util.concurrent.ConcurrentHashMap<ExecutionId, Job>()
   private val executionProjects = java.util.concurrent.ConcurrentHashMap<ExecutionId, String>()
 
@@ -156,7 +164,23 @@ class TaskService(
                   executionId,
                   message = "Starting execution of task: $taskId in project: $projectName")
           )
-        val result = executeRecursivelyOverSubprojectsFirst(project, taskId, args, executionId = executionId)
+        val result = if (executionTimeoutSeconds > 0) {
+          val timeoutMs = executionTimeoutSeconds * 1000L
+          withTimeoutOrNull(timeoutMs) {
+            executeRecursivelyOverSubprojectsFirst(project, taskId, args, executionId = executionId)
+          } ?: run {
+            logger.warn("Execution $executionId timed out after ${executionTimeoutSeconds}s")
+            eventPublisher.publishEvent(
+              executionCancelledEvent(
+                projectName, executionId,
+                message = "Execution timed out after ${executionTimeoutSeconds}s"
+              )
+            )
+            TaskResult.failure("Execution timed out after ${executionTimeoutSeconds}s")
+          }
+        } else {
+          executeRecursivelyOverSubprojectsFirst(project, taskId, args, executionId = executionId)
+        }
         val durationMs = System.currentTimeMillis() - startTime
         val record = ExecutionRecord(
             id = executionId,

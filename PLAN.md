@@ -249,7 +249,7 @@
   - Semaphore-based concurrency control
   - Reject excess tasks with `429 Too Many Requests`
 
-- [ ] **T-2.1.4** 🟠 `M` — Add execution timeout at the execution level (not just task)
+- [x] **T-2.1.4** 🟠 `M` — Add execution timeout at the execution level (not just task) | Finished: 2026-03-27T14:30:00Z | Notes: Added executionTimeoutSeconds @Property to TaskService; withTimeoutOrNull wraps executeRecursivelyOverSubprojectsFirst; on timeout emits executionCancelledEvent + returns TaskResult.failure; EngineConfiguration.TaskExecution.EXECUTION_TIMEOUT_SECONDS constant (default 0=unlimited)
   - `architect.engine.executor.execution-timeout-seconds: 1800`
   - Cancels entire execution if wall-clock time exceeded
   - Prevents runaway monorepo executions

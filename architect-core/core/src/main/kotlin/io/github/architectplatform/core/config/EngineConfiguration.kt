@@ -76,6 +76,13 @@ object EngineConfiguration {
          */
         const val MAX_CONCURRENT_TASKS = "architect.engine.executor.max-concurrent-tasks"
         const val DEFAULT_MAX_CONCURRENT_TASKS = 0
+
+        /**
+         * Wall-clock timeout for an entire execution in seconds.
+         * 0 means unlimited. When exceeded, the execution is cancelled.
+         */
+        const val EXECUTION_TIMEOUT_SECONDS = "architect.engine.executor.execution-timeout-seconds"
+        const val DEFAULT_EXECUTION_TIMEOUT_SECONDS = 0L
     }
 
     /**
