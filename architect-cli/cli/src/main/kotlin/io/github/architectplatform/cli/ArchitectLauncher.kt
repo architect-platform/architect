@@ -273,6 +273,10 @@ class ArchitectLauncher(
       "affected" -> { handleAffectedCommand(); return }
     }
 
+    if (command == "tasks" || command == null) {
+      pluginHandler.maybeWarnOutdatedPlugins()
+    }
+
     val useEmbeddedExecution = embedded || (noDaemon && !engineHealthChecker.isRunning())
 
     // --output / --tee: redirect stdout to file

@@ -822,6 +822,8 @@ private open class StubEngineCommandClient : EngineCommandClient {
     ValidationResultDTO(valid = true, errors = emptyList(), warnings = emptyList())
   override fun reloadProjectPlugins(projectName: String): ProjectDTO =
     ProjectDTO(name = projectName, path = ".", context = ProjectDTO.ProjectContextDTO(dir = ".", config = emptyMap()))
+  override fun getTaskStats(project: String, taskId: String): io.github.architectplatform.cli.dto.TaskStatsDTO? = null
+  override fun getAllTaskStats(project: String): List<io.github.architectplatform.cli.dto.TaskStatsDTO> = emptyList()
   override fun cancelExecution(executionId: ExecutionId): Map<String, Any> =
     mapOf("executionId" to executionId, "cancelled" to false)
 }
@@ -855,6 +857,8 @@ private class TrackingEngineCommandClient : EngineCommandClient {
     reloadedProject = projectName
     return ProjectDTO(name = projectName, path = registeredPath ?: ".", context = ProjectDTO.ProjectContextDTO(dir = registeredPath ?: ".", config = emptyMap()))
   }
+  override fun getTaskStats(project: String, taskId: String): io.github.architectplatform.cli.dto.TaskStatsDTO? = null
+  override fun getAllTaskStats(project: String): List<io.github.architectplatform.cli.dto.TaskStatsDTO> = emptyList()
   override fun cancelExecution(executionId: ExecutionId): Map<String, Any> =
     mapOf("executionId" to executionId, "cancelled" to false)
 }
@@ -957,6 +961,8 @@ private class GraphEngineCommandClient : EngineCommandClient {
 
   override fun reloadProjectPlugins(projectName: String): ProjectDTO =
     ProjectDTO(name = projectName, path = ".", context = ProjectDTO.ProjectContextDTO(dir = ".", config = emptyMap()))
+  override fun getTaskStats(project: String, taskId: String): io.github.architectplatform.cli.dto.TaskStatsDTO? = null
+  override fun getAllTaskStats(project: String): List<io.github.architectplatform.cli.dto.TaskStatsDTO> = emptyList()
   override fun cancelExecution(executionId: ExecutionId): Map<String, Any> =
     mapOf("executionId" to executionId, "cancelled" to false)
 }

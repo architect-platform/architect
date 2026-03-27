@@ -5,9 +5,15 @@ import io.github.architectplatform.cli.plugin.PluginJarValidator
 import io.github.architectplatform.cli.plugin.PluginScaffolder
 import io.github.architectplatform.cli.plugin.PluginTemplate
 import io.github.architectplatform.api.testing.PluginGraduationChecker
+import io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher
 import io.github.architectplatform.core.plugin.app.IsolatedPluginClassLoader
+import io.github.architectplatform.core.plugin.app.RemoteContentFetcher
 import io.github.architectplatform.core.plugin.app.SpiPluginLoader
+import io.github.architectplatform.core.plugin.infra.PluginRegistry
+import io.github.architectplatform.core.plugin.infra.PluginRegistryEntry
 import java.nio.file.Path
+import org.yaml.snakeyaml.DumperOptions
+import org.yaml.snakeyaml.Yaml
 import kotlin.system.exitProcess
 
 /**
@@ -17,6 +23,7 @@ class PluginCommandHandler(
   private val pluginScaffolder: PluginScaffolder = PluginScaffolder(),
   private val pluginDocumentationGenerator: PluginDocumentationGenerator = PluginDocumentationGenerator(),
   private val pluginJarValidator: PluginJarValidator = PluginJarValidator(),
+  private val remoteContentFetcher: RemoteContentFetcher = JdkRemoteContentFetcher(),
   private val registryUrl: String = DEFAULT_REGISTRY_URL,
 ) {
 
@@ -30,9 +37,11 @@ class PluginCommandHandler(
       "create" -> handleCreate(args)
       "search" -> handleSearch(args)
       "install" -> handleInstall(args)
+      "outdated" -> handleOutdated()
+      "update" -> handleUpdate(args)
       "graduate" -> handleGraduate(args)
       else -> {
-        println("Usage: architect plugin <create|docs|validate|search|install|graduate> [args]")
+        println("Usage: architect plugin <create|docs|validate|search|install|outdated|update|graduate> [args]")
         println()
         println("Commands:")
         println("  docs <path>              Generate PLUGIN_REFERENCE.md from plugin metadata")
@@ -40,6 +49,8 @@ class PluginCommandHandler(
         println("  create <name> [template]  Scaffold a new plugin (kotlin, typescript, go)")
         println("  search <query>       Search the plugin registry")
         println("  install <plugin-id>  Add a plugin to architect.yml")
+        println("  outdated             List plugins with available updates")
+        println("  update [<id>|--all]  Update plugin version pins to latest")
         println("  graduate <jar-path>  Check if plugin meets graduation checklist")
         exitProcess(1)
       }
@@ -149,10 +160,9 @@ class PluginCommandHandler(
       exitProcess(1)
     }
     try {
-      val fetcher = io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()
       val mapper = com.fasterxml.jackson.databind.ObjectMapper()
         .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
-      val registryJson = fetcher.fetchText(registryUrl)
+      val registryJson = remoteContentFetcher.fetchText(registryUrl)
       val registry = mapper.readValue(registryJson, io.github.architectplatform.core.plugin.infra.PluginRegistry::class.java)
       val lowerQuery = query.lowercase()
       val results = registry.plugins.filter {
@@ -206,6 +216,120 @@ class PluginCommandHandler(
     println("✅ Added plugin '$pluginId' to architect.yml")
   }
 
+  fun maybeWarnOutdatedPlugins(projectPath: String = System.getProperty("user.dir")) {
+    runCatching {
+      val outdated = findOutdatedPlugins(projectPath)
+      if (outdated.isNotEmpty()) {
+        println("ℹ️  ${outdated.size} plugin update(s) available. Run: architect plugin outdated")
+      }
+    }
+  }
+
+  private fun handleOutdated() {
+    val outdated = findOutdatedPlugins(System.getProperty("user.dir"))
+    if (outdated.isEmpty()) {
+      println("✅ All configured plugins are up to date")
+      return
+    }
+    if (json) {
+      val mapper = com.fasterxml.jackson.databind.ObjectMapper()
+        .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+      println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(outdated))
+      return
+    }
+    println()
+    println("━".repeat(80))
+    println("⬆️  Plugin Updates Available")
+    println("━".repeat(80))
+    val fmt = "  %-28s  %-12s  %-12s"
+    println(fmt.format("PLUGIN", "CURRENT", "LATEST"))
+    println("  ${"─".repeat(56)}")
+    outdated.forEach { info ->
+      println(fmt.format(info.id.take(28), info.currentVersion.take(12), info.latestVersion.take(12)))
+    }
+    println()
+  }
+
+  private fun handleUpdate(args: List<String>) {
+    val configFile = java.io.File(System.getProperty("user.dir"), "architect.yml")
+    if (!configFile.exists()) {
+      println("No architect.yml found in ${configFile.parent}")
+      exitProcess(1)
+    }
+
+    val updateAll = args.contains("--all")
+    val targetId = args.getOrNull(2)?.takeIf { !it.startsWith("--") }
+    if (!updateAll && targetId == null) {
+      println("Usage: architect plugin update <plugin-id> | --all")
+      exitProcess(1)
+    }
+
+    val yaml = Yaml()
+    val config = (yaml.load<Map<String, Any>>(configFile.inputStream()) ?: emptyMap()).toMutableMap()
+    val pluginEntries = mutablePluginEntries(config)
+    val outdated = findOutdatedPlugins(System.getProperty("user.dir"))
+    val targetOutdated = if (updateAll) outdated else outdated.filter { it.id == targetId }
+
+    if (targetOutdated.isEmpty()) {
+      println("✅ No plugin updates to apply")
+      return
+    }
+
+    var updatedCount = 0
+    targetOutdated.forEach { info ->
+      val entry = pluginEntries.firstOrNull { (it["name"] as? String) == info.id } ?: return@forEach
+      entry["version"] = info.latestVersion
+      updatedCount++
+    }
+
+    val dumpOptions = DumperOptions().apply { defaultFlowStyle = DumperOptions.FlowStyle.BLOCK }
+    configFile.writeText(Yaml(dumpOptions).dump(config))
+    println("✅ Updated $updatedCount plugin(s) in architect.yml")
+  }
+
+  private fun findOutdatedPlugins(projectPath: String): List<PluginUpdateInfo> {
+    val configFile = java.io.File(projectPath, "architect.yml")
+    if (!configFile.exists()) return emptyList()
+
+    val yaml = Yaml()
+    val config = yaml.load<Map<String, Any>>(configFile.inputStream()) ?: emptyMap()
+    val pluginEntries = mutablePluginEntries(config)
+    if (pluginEntries.isEmpty()) return emptyList()
+
+    val mapper = com.fasterxml.jackson.databind.ObjectMapper()
+      .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+    val registryJson = remoteContentFetcher.fetchText(registryUrl)
+    val registry = mapper.readValue(registryJson, PluginRegistry::class.java)
+    val registryById = registry.plugins.associateBy(PluginRegistryEntry::id)
+
+    return pluginEntries.mapNotNull { entry ->
+      val id = entry["name"] as? String ?: return@mapNotNull null
+      val current = (entry["version"] as? String)?.trim().orEmpty().ifBlank { "latest" }
+      if (current == "latest") return@mapNotNull null
+      val latest = registryById[id]?.version ?: return@mapNotNull null
+      if (compareVersions(current, latest) < 0) PluginUpdateInfo(id, current, latest) else null
+    }
+  }
+
+  private fun mutablePluginEntries(config: Map<String, Any>): MutableList<MutableMap<String, Any>> {
+    val raw = config["plugins"] as? List<*> ?: return mutableListOf()
+    return raw.mapNotNull { entry ->
+      @Suppress("UNCHECKED_CAST")
+      entry as? MutableMap<String, Any> ?: (entry as? Map<String, Any>)?.toMutableMap()
+    }.toMutableList()
+  }
+
+  private fun compareVersions(a: String, b: String): Int {
+    val partsA = a.removePrefix("v").split(".")
+    val partsB = b.removePrefix("v").split(".")
+    for (i in 0 until maxOf(partsA.size, partsB.size)) {
+      val nA = partsA.getOrNull(i)?.toIntOrNull() ?: 0
+      val nB = partsB.getOrNull(i)?.toIntOrNull() ?: 0
+      if (nA != nB) return nA - nB
+    }
+    return 0
+  }
+
   private fun resolvePluginTemplate(arguments: List<String>): PluginTemplate? {
     var positionalTemplate: String? = null
     var index = 3
@@ -231,6 +355,12 @@ class PluginCommandHandler(
   companion object {
     private const val DEFAULT_REGISTRY_URL = "https://registry.architect.dev/registry.json"
   }
+
+  data class PluginUpdateInfo(
+    val id: String,
+    val currentVersion: String,
+    val latestVersion: String,
+  )
 
   private fun handleGraduate(args: List<String>) {
     val jarPath = args.getOrNull(2)

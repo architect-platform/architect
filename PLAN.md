@@ -304,7 +304,7 @@
   - Engine validates actual usage against declared permissions
   - Log violations; optionally block in strict mode
 
-- [ ] **T-2.3.4** 🟡 `M` — Add automatic plugin update checking
+- [x] **T-2.3.4** 🟡 `M` — Add automatic plugin update checking | Finished: 2026-03-27T13:40:38Z | Notes: Added `architect plugin outdated` (registry-aware update listing) and `architect plugin update [--all|<id>]` (writes latest version pins to architect.yml); added startup/tasks hint via `maybeWarnOutdatedPlugins`; injected remote fetcher for testability and added CLI tests for outdated/update flows.
   - On `architect tasks` or startup, check plugin versions against registry
   - `architect plugin outdated` lists plugins with available updates
   - `architect plugin update [--all]` updates to latest compatible versions
