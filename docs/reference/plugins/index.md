@@ -19,6 +19,7 @@ Architect ships a suite of official plugins. Each plugin is hosted as an indepen
 | [go-architected](go-architected.md) | incubating | `architect-platform/go-architected` | Go build, test, lint, release |
 | [rust-architected](rust-architected.md) | incubating | `architect-platform/rust-architected` | Cargo build, test, clippy, publish |
 | [python-architected](python-architected.md) | incubating | `architect-platform/python-architected` | pip install, lint, test, build, publish |
+| [testing-architected](testing-architected.md) | incubating | `architect-platform/testing-architected` | Unified unit/integration/e2e/coverage tasks across Gradle, pytest, Jest, Vitest, Go, and Cargo |
 | [nx-architected](nx-architected.md) | incubating | `architect-platform/nx-architected` | Nx affected, run-many, graph |
 | [architecture-architected](architecture-architected.md) | incubating | `architect-platform/architecture-architected` | Arch-unit rules, dependency constraints |
 | [pipelines-architected](pipelines-architected.md) | active | `architect-platform/pipelines-architected` | Composite pipeline definitions |

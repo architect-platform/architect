@@ -79,6 +79,7 @@ nav:
       - go-architected: reference/plugins/go-architected.md
       - rust-architected: reference/plugins/rust-architected.md
       - python-architected: reference/plugins/python-architected.md
+      - testing-architected: reference/plugins/testing-architected.md
       - nx-architected: reference/plugins/nx-architected.md
       - architecture-architected: reference/plugins/architecture-architected.md
       - pipelines-architected: reference/plugins/pipelines-architected.md

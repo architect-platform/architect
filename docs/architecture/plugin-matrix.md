@@ -21,7 +21,7 @@ Gradle (Kotlin DSL).
 | github-architected | 1.0.3 | **active** | ✅ | ✅ | ✅ | ✅ `architect.yml` | GitHub CI/CD and release automation |
 | pipelines-architected | 1.0.0 | **active** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Pipeline orchestration and management |
 
-### Incubating Plugins (10)
+### Incubating Plugins (11)
 
 | Plugin | Version | Support Tier | Tests | Contract Tests | README | Config Schema | Notes |
 |---|---|---|---|---|---|---|---|
@@ -34,6 +34,7 @@ Gradle (Kotlin DSL).
 | nx-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Nx monorepo support |
 | python-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Python tooling (pip, venv, pytest) |
 | rust-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Rust build and test (cargo) |
+| testing-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Unified testing interface with coverage aggregation and threshold enforcement |
 | terraform-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Terraform plan / apply / destroy |
 
 ---
@@ -49,6 +50,7 @@ The following plugins have dedicated CI workflows in `.github/workflows/`:
 | github-architected | `github-architected-pipeline.yml` |
 | gradle-architected | `gradle-architected-pipeline.yml` |
 | javascript-architected | `javascript-architected.yml` |
+| testing-architected | `testing-architected.yml` |
 | pipelines-architected | `pipelines-architected.yml` |
 | scripts-architected | `scripts-architected.yml` |
 | architecture-architected | `architecture-architected.yml` |

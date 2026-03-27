@@ -254,6 +254,7 @@ Local plugin development path:
 | `nx-architected/` | Nx monorepo tasks |
 | `python-architected/` | Python build and test |
 | `rust-architected/` | Rust build and test |
+| `testing-architected/` | Cross-language testing and coverage tasks |
 | `terraform-architected/` | Terraform apply/plan |
 
 These plugins are intentionally listed as incubating so contributors do not

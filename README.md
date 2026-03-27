@@ -28,7 +28,7 @@ architect/
 │   └── agents/                     AI agent integrations                   [incubating]
 ├── architect-vscode/             VS Code extension (reference)             [incubating]
 ├── architect-intellij/           IntelliJ plugin (reference)               [incubating]
-├── plugins/                      Official plugins (16)
+├── plugins/                      Official plugins (17)
 │   ├── docs-architected/           Docs (MkDocs, Docusaurus, VuePress)    [active]
 │   ├── git-architected/            Git integration                        [active]
 │   ├── github-architected/         GitHub CI/CD & releases                [active]
@@ -44,6 +44,7 @@ architect/
 │   ├── nx-architected/             Nx monorepo                            [incubating]
 │   ├── python-architected/         Python tooling                         [incubating]
 │   ├── rust-architected/           Rust tooling                           [incubating]
+│   ├── testing-architected/        Cross-language testing                 [incubating]
 │   └── terraform-architected/      Terraform                              [incubating]
 ├── sdk/                          Language SDKs for plugin authoring
 │   ├── typescript/                                                        [incubating]
@@ -159,7 +160,7 @@ architect engine start
     ┌─────────────┐         ┌─────────────┐
     │  Official   │         │  Language    │
     │  Plugins    │         │  SDKs       │
-    │  (16)       │         │  (3)        │
+    │  (17)       │         │  (3)        │
     └─────────────┘         └─────────────┘
 ```
 
@@ -208,7 +209,7 @@ See [STATUS.md](STATUS.md) for the complete module-by-module support matrix.
 
 **Current state:** The API and Core are active and stable. The CLI and Engine
 are incubating with known compilation issues (see STATUS.md). Six plugins are
-active; ten are incubating at template level. All three language SDKs are
+active; eleven are incubating at varying maturity levels. All three language SDKs are
 incubating.
 
 ## Building

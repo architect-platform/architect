@@ -170,6 +170,7 @@ class HelpCommandHandler {
       |  github-architected       GitHub CI/CD and release automation
       |  gradle-architected       Gradle build integration
       |  javascript-architected   npm/yarn/pnpm integration
+      |  testing-architected      Cross-language testing and coverage orchestration
       |  docs-architected         Documentation (MkDocs, Docusaurus, VuePress)
       |  scripts-architected      Custom shell script execution
       |  pipelines-architected    Pipeline/workflow management
