@@ -112,6 +112,7 @@ class EmbeddedExecutionContext private constructor(
           configValidator = configValidator,
           cacheEnabled = projectCacheEnabled,
           activeProfile = activeProfile,
+          pluginSecurityStrictMode = EngineConfiguration.PluginSecurity.DEFAULT_STRICT_MODE,
         )
 
       val pluginSourceRegistry =

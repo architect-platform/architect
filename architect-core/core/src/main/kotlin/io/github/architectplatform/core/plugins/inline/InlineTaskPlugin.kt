@@ -107,6 +107,16 @@ class InlineTaskPlugin : ArchitectPlugin<HashMap<String, Any>> {
         }
     }
 
+    override fun configSchema(): Map<String, Any> = mapOf(
+        "type" to "object",
+        "x-permissions" to listOf(
+            TaskPermission.FILE_SYSTEM_READ.wireName,
+            TaskPermission.FILE_SYSTEM_WRITE.wireName,
+            TaskPermission.NETWORK_OUTBOUND.wireName,
+            TaskPermission.PROCESS_EXEC.wireName,
+        ),
+    )
+
     private fun resolvePhase(name: String): Phase? {
         val upper = name.uppercase()
         return runCatching { CoreWorkflow.valueOf(upper) }.getOrNull()

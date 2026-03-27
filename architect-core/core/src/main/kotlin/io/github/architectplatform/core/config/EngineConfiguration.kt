@@ -63,6 +63,18 @@ object EngineConfiguration {
     }
 
     /**
+     * Plugin security configuration properties.
+     */
+    object PluginSecurity {
+        /**
+         * When true, plugin permission declaration violations fail project loading/validation.
+         * When false, violations are logged as warnings.
+         */
+        const val STRICT_MODE = "architect.engine.plugins.security.strict-mode"
+        const val DEFAULT_STRICT_MODE = false
+    }
+
+    /**
      * Task execution configuration properties
      */
     object TaskExecution {

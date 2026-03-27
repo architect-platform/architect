@@ -3,6 +3,11 @@ package io.github.architectplatform.core.project.app
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.core.plugin.app.PluginLoader
+import io.github.architectplatform.api.core.tasks.Environment
+import io.github.architectplatform.api.core.tasks.Task
+import io.github.architectplatform.api.core.tasks.TaskPermission
+import io.github.architectplatform.api.core.tasks.TaskRegistry
+import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.core.project.infra.InMemoryProjectRepository
 import io.github.architectplatform.core.project.infra.YamlConfigParser
 import io.github.architectplatform.core.plugins.inline.InlineTaskPlugin
@@ -176,6 +181,34 @@ class ProjectServiceTest {
     assertNotNull(reloaded.taskRegistry.get("test"))
   }
 
+  @Test
+  fun `should reject undeclared plugin task permissions in strict mode`() {
+    val projectDir = tempDir.resolve("strict-plugin-security")
+    projectDir.createDirectories()
+    projectDir.resolve("architect.yml").writeText(
+      """
+      project:
+        name: strict-plugin-security
+      """.trimIndent()
+    )
+
+    val projectService = ProjectService(
+      projectRepository = InMemoryProjectRepository(),
+      configLoader = ConfigLoader(YamlConfigParser()),
+      pluginLoader = UndeclaredPermissionPluginLoader(),
+      projectReporter = Optional.empty(),
+      configValidator = ConfigValidator(),
+      pluginSecurityStrictMode = true,
+    )
+
+    val exception = assertFailsWith<ConfigValidationException> {
+      projectService.registerProject("strict-plugin-security", projectDir.toString())
+      projectService.getProject("strict-plugin-security")?.taskRegistry?.all()
+    }
+
+    assertTrue(exception.message.orEmpty().contains("undeclared permissions"))
+  }
+
   private fun createProjectService(pluginLoader: PluginLoader): ProjectService =
     ProjectService(
       projectRepository = InMemoryProjectRepository(),
@@ -200,6 +233,36 @@ class ProjectServiceTest {
 
   private class EmptyPluginLoader : PluginLoader {
     override fun load(context: ProjectContext): List<ArchitectPlugin<*>> = emptyList()
+  }
+
+  private class UndeclaredPermissionPluginLoader : PluginLoader {
+    override fun load(context: ProjectContext): List<ArchitectPlugin<*>> = listOf(UndeclaredPermissionPlugin())
+  }
+
+  private class UndeclaredPermissionPlugin : ArchitectPlugin<Any> {
+    override val id: String = "security-plugin"
+    override val contextKey: String = "securityPlugin"
+    override val ctxClass: Class<Any> = Any::class.java
+    override var context: Any = Unit
+
+    override fun register(registry: TaskRegistry) {
+      registry.add(
+        object : Task {
+          override val id: String = "security-plugin-task"
+          override fun requiredPermissions(): Set<TaskPermission> = setOf(TaskPermission.PROCESS_EXEC)
+          override fun execute(
+            environment: Environment,
+            projectContext: ProjectContext,
+            args: List<String>,
+          ): TaskResult = TaskResult.success()
+        },
+      )
+    }
+
+    override fun configSchema(): Map<String, Any> = mapOf(
+      "type" to "object",
+      "x-permissions" to listOf(TaskPermission.FILE_SYSTEM_READ.wireName),
+    )
   }
 
   private fun waitForProjectReload(

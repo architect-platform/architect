@@ -299,7 +299,7 @@
   - Engine loads plugins in dependency order
   - Circular plugin dependency detection
 
-- [ ] **T-2.3.3** 🟠 `M` — Add plugin sandboxing (security boundaries)
+- [x] **T-2.3.3** 🟠 `M` — Add plugin sandboxing (security boundaries) | Finished: 2026-03-27T13:40:38Z | Notes: Added plugin permission policy validation (`PluginPermissionPolicyValidator`) that compares task runtime permissions vs plugin-declared `configSchema` `x-permissions`; integrated checks into `ProjectService` with warnings or strict-mode errors (`architect.engine.plugins.security.strict-mode`); wired strict-mode property in engine factory; added focused tests and inline plugin declaration support.
   - Plugins declare required permissions in `configSchema()`
   - Engine validates actual usage against declared permissions
   - Log violations; optionally block in strict mode

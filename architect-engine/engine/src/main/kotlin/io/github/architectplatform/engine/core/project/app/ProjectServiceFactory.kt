@@ -139,6 +139,11 @@ class ProjectServiceFactory {
       defaultValue = "true",
     )
     cacheEnabled: Boolean,
+    @Property(
+      name = EngineConfiguration.PluginSecurity.STRICT_MODE,
+      defaultValue = "false",
+    )
+    pluginSecurityStrictMode: Boolean,
   ): ProjectService =
     ProjectService(
       projectRepository = projectRepository,
@@ -147,5 +152,6 @@ class ProjectServiceFactory {
       projectReporter = projectReporter,
       configValidator = configValidator,
       cacheEnabled = cacheEnabled,
+      pluginSecurityStrictMode = pluginSecurityStrictMode,
     )
 }

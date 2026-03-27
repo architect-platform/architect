@@ -44,6 +44,7 @@ class ProjectService(
     private val cacheEnabled: Boolean = EngineConfiguration.Project.DEFAULT_CACHE_ENABLED,
     private val activeProfile: String = "default",
     private val projectWatchDebounceMs: Long = 250,
+    private val pluginSecurityStrictMode: Boolean = EngineConfiguration.PluginSecurity.DEFAULT_STRICT_MODE,
 ) {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
@@ -115,6 +116,7 @@ class ProjectService(
     logger.debug("Loading plugins for project $projectName on first task access")
     val plugins = pluginLoader.load(projectContext)
     val taskRegistry = InMemoryTaskRegistry()
+    val tasksByPluginId = mutableMapOf<String, MutableSet<String>>()
     plugins.forEach {
       try {
         val rawContext =
@@ -152,7 +154,13 @@ class ProjectService(
               "Initializing plugin ${it.id} for project $projectName with context: $pluginContext")
           it.init(pluginContext)
         }
+        val beforeTaskIds = taskRegistry.all().map { task -> task.id }.toSet()
         it.register(taskRegistry)
+        val afterTaskIds = taskRegistry.all().map { task -> task.id }.toSet()
+        val registeredTaskIds = (afterTaskIds - beforeTaskIds)
+        if (registeredTaskIds.isNotEmpty()) {
+          tasksByPluginId.getOrPut(it.id) { mutableSetOf() }.addAll(registeredTaskIds)
+        }
       } catch (e: Exception) {
         logger.error("Failed to initialize plugin ${it.id} for project $projectName: ${e.message}", e)
       }
@@ -160,11 +168,22 @@ class ProjectService(
 
     val pluginContextKeys = plugins.map { it.contextKey }.toSet()
     val validation = configValidator.validate(projectConfig, pluginContextKeys, plugins, lineMap)
+    val policyValidation =
+      PluginPermissionPolicyValidator.validate(
+        plugins = plugins,
+        taskRegistry = taskRegistry,
+        tasksByPluginId = tasksByPluginId,
+        strictMode = pluginSecurityStrictMode,
+      )
     validation.warnings.forEach { logger.warn("Project $projectName: $it") }
+    policyValidation.warnings.forEach { logger.warn("Project $projectName: $it") }
     validation.errors.forEach { logger.error("Project $projectName: $it") }
-    if (validation.errors.isNotEmpty()) {
+    policyValidation.errors.forEach { logger.error("Project $projectName: $it") }
+
+    val allErrors = validation.errors + policyValidation.errors
+    if (allErrors.isNotEmpty()) {
       throw ConfigValidationException(
-          "Invalid architect.yml for project $projectName:\n${validation.errors.joinToString("\n")}")
+          "Invalid architect.yml for project $projectName:\n${allErrors.joinToString("\n")}")
     }
 
     return LoadedProjectPlugins(
