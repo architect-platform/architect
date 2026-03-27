@@ -68,6 +68,14 @@ interface ArchitectPlugin<C> {
   fun register(registry: TaskRegistry)
 
   /**
+   * Declares plugin dependencies by plugin ID.
+   *
+   * The engine uses this graph to ensure plugins are initialized in dependency order.
+   * Return an empty list (default) when there are no dependencies.
+   */
+  fun dependencies(): List<String> = emptyList()
+
+  /**
    * Returns a JSON Schema (as a nested Map) for this plugin's configuration section.
    *
    * When non-null, the validator will check the plugin's config block in `architect.yml`

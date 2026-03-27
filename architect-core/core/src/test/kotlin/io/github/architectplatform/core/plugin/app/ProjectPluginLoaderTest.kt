@@ -171,6 +171,78 @@ class ProjectPluginLoaderTest {
     assertTrue(downloader.downloadedUrls.none { it.contains("/shared-plugin-1.0.0/shared-plugin.jar") })
   }
 
+  @Test
+  fun `should load plugins in dependency order`() {
+    val loader = ProjectPluginLoader(
+      spiLoader = DependencyAwareSpiPluginLoader(),
+      downloader = TrackingDownloader(tempDir),
+      signatureVerifier = RecordingSignatureVerifier(),
+      internalPlugins = emptyList(),
+      releaseResolver = GitHubReleaseResolver(NoOpRemoteContentFetcher()),
+      eventBus = { },
+    )
+    val context = ProjectContext(
+      dir = tempDir,
+      config = mapOf(
+        "plugins" to listOf(
+          mapOf(
+            "name" to "plugin-app",
+            "type" to "github",
+            "repo" to "owner/plugin-app",
+            "version" to "1.0.0",
+            "asset" to "plugin-app.jar",
+          ),
+          mapOf(
+            "name" to "plugin-core",
+            "type" to "github",
+            "repo" to "owner/plugin-core",
+            "version" to "1.0.0",
+            "asset" to "plugin-core.jar",
+          ),
+        ),
+      ),
+    )
+
+    val plugins = loader.load(context)
+    assertEquals(listOf("plugin-core", "plugin-app"), plugins.map { it.id })
+  }
+
+  @Test
+  fun `should detect circular plugin dependencies`() {
+    val loader = ProjectPluginLoader(
+      spiLoader = CircularDependencySpiPluginLoader(),
+      downloader = TrackingDownloader(tempDir),
+      signatureVerifier = RecordingSignatureVerifier(),
+      internalPlugins = emptyList(),
+      releaseResolver = GitHubReleaseResolver(NoOpRemoteContentFetcher()),
+      eventBus = { },
+    )
+    val context = ProjectContext(
+      dir = tempDir,
+      config = mapOf(
+        "plugins" to listOf(
+          mapOf(
+            "name" to "plugin-a",
+            "type" to "github",
+            "repo" to "owner/plugin-a",
+            "version" to "1.0.0",
+            "asset" to "plugin-a.jar",
+          ),
+          mapOf(
+            "name" to "plugin-b",
+            "type" to "github",
+            "repo" to "owner/plugin-b",
+            "version" to "1.0.0",
+            "asset" to "plugin-b.jar",
+          ),
+        ),
+      ),
+    )
+
+    val error = assertFailsWith<IllegalStateException> { loader.load(context) }
+    assertTrue(error.message!!.contains("Circular plugin dependency"))
+  }
+
   private class TrackingDownloader(
     private val tempDir: Path,
   ) : PluginDownloader {
@@ -214,6 +286,30 @@ class ProjectPluginLoaderTest {
     }
   }
 
+  private class DependencyAwareSpiPluginLoader : SpiPluginLoader() {
+    override fun loadFrom(classLoader: ClassLoader): List<ArchitectPlugin<*>> {
+      val urlLoader = classLoader as URLClassLoader
+      val jarName = urlLoader.urLs.single().path.substringAfterLast('/').substringBeforeLast('.')
+      return when (jarName) {
+        "plugin-app" -> listOf(DependentTestPlugin("plugin-app", listOf("plugin-core")))
+        "plugin-core" -> listOf(DependentTestPlugin("plugin-core", emptyList()))
+        else -> listOf(DependentTestPlugin(jarName, emptyList()))
+      }
+    }
+  }
+
+  private class CircularDependencySpiPluginLoader : SpiPluginLoader() {
+    override fun loadFrom(classLoader: ClassLoader): List<ArchitectPlugin<*>> {
+      val urlLoader = classLoader as URLClassLoader
+      val jarName = urlLoader.urLs.single().path.substringAfterLast('/').substringBeforeLast('.')
+      return when (jarName) {
+        "plugin-a" -> listOf(DependentTestPlugin("plugin-a", listOf("plugin-b")))
+        "plugin-b" -> listOf(DependentTestPlugin("plugin-b", listOf("plugin-a")))
+        else -> listOf(DependentTestPlugin(jarName, emptyList()))
+      }
+    }
+  }
+
   private class TestPlugin(
     override val id: String,
   ) : ArchitectPlugin<HashMap<String, Any>> {
@@ -223,6 +319,20 @@ class ProjectPluginLoaderTest {
 
     override fun register(registry: TaskRegistry) = Unit
   }
+
+  private class DependentTestPlugin(
+    override val id: String,
+    private val deps: List<String>,
+  ) : ArchitectPlugin<HashMap<String, Any>> {
+    override val contextKey: String = id
+    override val ctxClass: Class<HashMap<String, Any>> = HashMap::class.java as Class<HashMap<String, Any>>
+    override var context: HashMap<String, Any> = hashMapOf()
+
+    override fun register(registry: TaskRegistry) = Unit
+
+    override fun dependencies(): List<String> = deps
+  }
+
   private class NoOpRemoteContentFetcher : RemoteContentFetcher {
     override fun fetchText(url: String, headers: Map<String, String>): String = "[]"
 

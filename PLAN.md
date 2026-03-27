@@ -293,7 +293,7 @@
   - Strategy: newest wins, with warning
   - `architect validate` reports version conflicts
 
-- [ ] **T-2.3.2** 🟠 `L` — Add plugin dependency graph
+- [x] **T-2.3.2** 🟠 `L` — Add plugin dependency graph | Finished: 2026-03-27T13:31:03Z | Notes: Added `dependencies(): List<String>` to ArchitectPlugin interface, introduced PluginDependencyResolver with topological sorting and circular/missing dependency detection, integrated resolver into ProjectPluginLoader so plugins initialize in dependency order, and added tests for ordering and cycle errors.
   - Plugins can declare dependencies on other plugins
   - `ArchitectPlugin` interface: `fun dependencies(): List<String>` (plugin IDs)
   - Engine loads plugins in dependency order

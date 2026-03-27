@@ -73,9 +73,11 @@ class ProjectPluginLoader(
             }.sortedBy { it.first }
                 .flatMap { it.second }
 
+        val orderedLoadedPlugins = PluginDependencyResolver.sortByDependencies(loadedPlugins)
+
         return buildList {
             addAll(internalPlugins.map { it.getPlugin() })
-            addAll(loadedPlugins)
+            addAll(orderedLoadedPlugins)
         }
     }
 
