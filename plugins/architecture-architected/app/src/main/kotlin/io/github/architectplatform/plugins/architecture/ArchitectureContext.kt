@@ -6,6 +6,7 @@ data class ArchitectureContext(
     val rulesets: Map<String, RuleSet> = emptyMap(),
     val customRules: List<ArchitectureRule> = emptyList(),
     val structure: ArchitectureStructure = ArchitectureStructure(),
+    val boundaries: Map<String, List<String>> = emptyMap(),
     val onViolation: String = "warn",
     val reportFormat: String = "text",
     val strict: Boolean = false,

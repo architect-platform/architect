@@ -32,6 +32,11 @@ architecture:
     forbidden:
       - .env
       - "**/*.tmp"
+  boundaries:
+    api:
+      - core
+    plugins/*:
+      - api
   onViolation: warn
   reportFormat: text
   strict: false
@@ -71,6 +76,8 @@ architecture:
 - `monorepo-conventions`
 
 Violations now include file, optional line number, severity, and remediation suggestions in both text and JSON reports.
+
+For monorepos, `architecture.boundaries` enforces which modules may import which other modules.
 
 You can also run structure-only checks via:
 

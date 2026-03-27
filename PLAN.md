@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 64/128 tasks completed (50%)
+- Overall Progress: 65/128 tasks completed (51%)
 - Current Phase: Phase 4 — Project Intelligence & Conventions
-- Last Updated: 2026-03-27T21:04:50Z
+- Last Updated: 2026-03-27T21:08:12Z
 
 ---
 
@@ -571,7 +571,7 @@
   - `architect validate --structure` checks compliance
   - CI integration: fail PR if structure violated
 
-- [ ] **T-4.2.3** 🟠 `M` — Add dependency boundary enforcement for monorepos
+- [x] **T-4.2.3** 🟠 `M` — Add dependency boundary enforcement for monorepos | Finished: 2026-03-27T21:08:12Z | Notes: Added top-level `architecture.boundaries` config that derives import-boundary rules for monorepos, updated schema/docs, and expanded plugin tests/build verification.
   - Define which subprojects can depend on which:
     ```yaml
     architecture:

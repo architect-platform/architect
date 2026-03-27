@@ -144,6 +144,7 @@ class ArchitectureRules(
         val rules = mutableListOf<ArchitectureRule>()
         context.resolvedRulesets().values.filter { it.enabled }.forEach { rules += it.rules }
         rules += structureRules()
+        rules += boundaryRules()
         rules += context.customRules
         return rules
     }
@@ -173,6 +174,22 @@ class ArchitectureRules(
             )
         }
         return derivedRules
+    }
+
+    private fun boundaryRules(): List<ArchitectureRule> {
+        if (context.boundaries.isEmpty()) {
+            return emptyList()
+        }
+
+        return listOf(
+            ArchitectureRule(
+                id = "configured-module-boundaries",
+                description = "Monorepo dependency boundaries from architecture.boundaries",
+                type = "import",
+                moduleBoundaries = context.boundaries,
+                suggestion = "Move shared APIs into an allowed module or relax architecture.boundaries.",
+            )
+        )
     }
 
     private fun escape(value: String): String =

@@ -40,7 +40,8 @@ class ArchitectureTask(
         val hasStructureRules =
             context.structure.enabled &&
                 (context.structure.required.isNotEmpty() || context.structure.forbidden.isNotEmpty())
-        if (allRules.isEmpty() && !hasStructureRules) {
+        val hasBoundaryRules = context.boundaries.isNotEmpty()
+        if (allRules.isEmpty() && !hasStructureRules && !hasBoundaryRules) {
             return TaskResult.success(
                 "No architectural rules configured. Run 'architecture-init' to create a configuration.",
                 listOf(

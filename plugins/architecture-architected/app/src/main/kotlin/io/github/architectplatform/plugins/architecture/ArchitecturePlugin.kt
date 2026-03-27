@@ -88,6 +88,14 @@ class ArchitecturePlugin : ArchitectPlugin<ArchitectureContext> {
                 "\$ref" to "#/\$defs/structure",
                 "default" to emptyMap<String, Any>(),
             ),
+            "boundaries" to mapOf(
+                "type" to "object",
+                "additionalProperties" to mapOf(
+                    "type" to "array",
+                    "items" to mapOf("type" to "string"),
+                ),
+                "default" to emptyMap<String, Any>(),
+            ),
             "onViolation" to mapOf(
                 "type" to "string",
                 "enum" to listOf("warn", "fail"),

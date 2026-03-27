@@ -252,6 +252,46 @@ class ArchitectureRulesTest {
     }
 
     @Test
+    fun `test top level boundaries enforce monorepo imports`() {
+        val apiDir = tempDir.resolve("api/src/main/kotlin/com/example/api")
+        Files.createDirectories(apiDir)
+        Files.writeString(
+            apiDir.resolve("ApiController.kt"),
+            """
+                package com.example.api
+                import com.example.engine.EngineService
+                class ApiController
+            """.trimIndent()
+        )
+        val coreDir = tempDir.resolve("core/src/main/kotlin/com/example/core")
+        Files.createDirectories(coreDir)
+        Files.writeString(
+            coreDir.resolve("CoreService.kt"),
+            """
+                package com.example.core
+                class CoreService
+            """.trimIndent()
+        )
+        val engineDir = tempDir.resolve("engine/src/main/kotlin/com/example/engine")
+        Files.createDirectories(engineDir)
+        Files.writeString(
+            engineDir.resolve("EngineService.kt"),
+            """
+                package com.example.engine
+                class EngineService
+            """.trimIndent()
+        )
+
+        val result = ArchitectureRules(
+            ArchitectureContext(boundaries = mapOf("api" to listOf("core")))
+        ).validate(tempDir)
+
+        assertEquals(1, result.violations.size)
+        assertEquals("configured-module-boundaries", result.violations.first().rule.id)
+        assertTrue(result.violations.first().message.contains("api imports engine"))
+    }
+
+    @Test
     fun `test convention rule detects missing kdoc on public declarations`() {
         val srcDir = tempDir.resolve("src/main/kotlin")
         Files.createDirectories(srcDir)

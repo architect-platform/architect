@@ -39,6 +39,12 @@ architecture:
     forbidden:
       - .env
       - "**/*.tmp"
+  boundaries:
+    api:
+      - core
+    engine:
+      - api
+      - core
   customRules:
     - id: no-cycles
       type: import
@@ -83,6 +89,12 @@ See the plugin source code for detailed API documentation.
 
 Use `architect validate --structure` to run only the structure checks derived from
 `architecture.structure.required` and `architecture.structure.forbidden`.
+
+## Monorepo Boundaries
+
+Use `architecture.boundaries` to declare which modules may import other modules.
+These boundaries are enforced through the import-rule engine and show up as
+cross-module violations in architecture validation reports.
 
 ## Contributing
 

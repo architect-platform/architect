@@ -16,6 +16,7 @@ class ArchitectureContextTest {
         assertTrue(context.structure.enabled)
         assertTrue(context.structure.required.isEmpty())
         assertTrue(context.structure.forbidden.isEmpty())
+        assertTrue(context.boundaries.isEmpty())
         assertEquals("warn", context.onViolation)
         assertEquals("text", context.reportFormat)
         assertFalse(context.strict)
@@ -42,6 +43,7 @@ class ArchitectureContextTest {
             rulesets = mapOf("test" to ruleset),
             customRules = listOf(rule),
             structure = ArchitectureStructure(required = listOf("src/main"), forbidden = listOf(".env")),
+            boundaries = mapOf("api" to listOf("core")),
             onViolation = "fail",
             reportFormat = "json",
             strict = true
@@ -53,6 +55,7 @@ class ArchitectureContextTest {
         assertEquals(1, context.customRules.size)
         assertEquals(listOf("src/main"), context.structure.required)
         assertEquals(listOf(".env"), context.structure.forbidden)
+        assertEquals(mapOf("api" to listOf("core")), context.boundaries)
         assertEquals("fail", context.onViolation)
         assertEquals("json", context.reportFormat)
         assertTrue(context.strict)

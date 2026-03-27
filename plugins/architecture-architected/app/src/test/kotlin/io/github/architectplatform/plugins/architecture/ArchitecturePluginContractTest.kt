@@ -15,6 +15,12 @@ class ArchitecturePluginContractTest : ArchitectPluginContractTestSuite<Architec
         "presetRulesets" to emptyList<String>(),
         "rulesets" to emptyMap<String, Any>(),
         "customRules" to emptyList<Any>(),
+        "structure" to mapOf(
+            "enabled" to true,
+            "required" to emptyList<String>(),
+            "forbidden" to emptyList<String>(),
+        ),
+        "boundaries" to emptyMap<String, Any>(),
         "onViolation" to "warn",
         "reportFormat" to "text",
         "strict" to false,
