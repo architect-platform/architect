@@ -190,7 +190,7 @@
   - Complete `architect <TAB>` with actual task names
   - Complete `architect --filter <TAB>` with phase names
 
-- [ ] **T-1.3.2** 🟠 `M` — Add project name completion for multi-project commands
+- [x] **T-1.3.2** 🟠 `M` — Add project name completion for multi-project commands | Finished: 2026-03-27T13:15:00Z | Notes: Extended bash _architect_complete() with --affected/--base and 'history <TAB>' project completions; zsh uses _arguments with project candidates; fish adds separate 'history <project>' completion; all shells use 'architect completion query projects' (engine + project-cache.txt)
   - `architect --affected <TAB>` completes project names
   - `architect history <TAB>` completes from known projects
 

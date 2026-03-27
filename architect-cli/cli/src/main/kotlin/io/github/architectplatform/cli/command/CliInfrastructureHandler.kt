@@ -141,15 +141,17 @@ class CliInfrastructureHandler(
 
   private fun printBashCompletion(cliInstance: Runnable) {
     val base = picocli.AutoComplete.bash("architect", picocli.CommandLine(cliInstance))
-    // Inject dynamic task and phase completion into the picocli-generated script.
-    // The injected function wraps the picocli default to add live task-name candidates.
+    // Inject dynamic task, phase, and project completion.
     val dynamic = """
-# -- Dynamic task/phase completion (Architect) --
+# -- Dynamic task/phase/project completion (Architect) --
 _architect_dynamic_tasks() {
   architect completion query tasks 2>/dev/null
 }
 _architect_dynamic_phases() {
   architect completion query phases 2>/dev/null
+}
+_architect_dynamic_projects() {
+  architect completion query projects 2>/dev/null
 }
 _architect_complete() {
   local cur prev
@@ -162,6 +164,22 @@ _architect_complete() {
     local phases
     phases=${'$'}(_architect_dynamic_phases)
     COMPREPLY=(${'$'}(compgen -W "${'$'}phases" -- "${'$'}cur"))
+    return 0
+  fi
+
+  # --affected / --base project completion
+  if [[ "${'$'}prev" == "--affected" || "${'$'}prev" == "--base" ]]; then
+    local projects
+    projects=${'$'}(_architect_dynamic_projects)
+    COMPREPLY=(${'$'}(compgen -W "${'$'}projects" -- "${'$'}cur"))
+    return 0
+  fi
+
+  # 'architect history <project>' completion
+  if [[ "${'$'}{COMP_WORDS[1]}" == "history" && ${'$'}COMP_CWORD -eq 2 ]]; then
+    local projects
+    projects=${'$'}(_architect_dynamic_projects)
+    COMPREPLY=(${'$'}(compgen -W "${'$'}projects" -- "${'$'}cur"))
     return 0
   fi
 
@@ -194,14 +212,27 @@ complete -F _architect_complete architect
     println("autoload -U +X bashcompinit && bashcompinit")
     println("autoload -U +X compinit && compinit")
     println()
-    println("# Dynamic task/phase completions")
+    println("# Dynamic task/phase/project completions")
     println("_architect_zsh() {")
-    println("  local -a tasks phases")
-    println("  tasks=(\${(f)\"\$(architect completion query tasks 2>/dev/null)\"})")
-    println("  case \"\$words[2]\" in")
-    println("    '') _describe 'task' tasks ;;")
-    println("    *) _describe 'task' tasks ;;")
+    println("  local -a tasks phases projects")
+    println("  local state")
+    println("  _arguments \\")
+    println("    '--filter[Filter by phase]:phase:(\\$(architect completion query phases 2>/dev/null))' \\")
+    println("    '--affected[Only affected projects]:project:(\\$(architect completion query projects 2>/dev/null))' \\")
+    println("    '--base[Base ref]:ref:' \\")
+    println("    '1: :->task'")
+    println("  case \$state in")
+    println("    task)")
+    println("      tasks=(\${(f)\"\$(architect completion query tasks 2>/dev/null)\"})")
+    println("      _describe 'task' tasks")
+    println("      ;;"
+    )
     println("  esac")
+    println("  # history subcommand project argument")
+    println("  if [[ \$words[2] == 'history' ]]; then")
+    println("    projects=(\${(f)\"\$(architect completion query projects 2>/dev/null)\"})")
+    println("    _describe 'project' projects")
+    println("  fi")
     println("}")
     println()
     println(bashScript)
@@ -269,12 +300,18 @@ complete -F _architect_complete architect
     println("complete -c architect -l output -s o -d 'Save output to file'")
     println("complete -c architect -l tee -d 'Output to file and terminal'")
     println("complete -c architect -l affected -d 'Only run for affected projects'")
-    println("complete -c architect -l base -d 'Base ref for affected detection'")
+    println("complete -c architect -l base -x -a '(architect completion query projects 2>/dev/null)' -d 'Base ref for affected detection'")
     println()
 
     // Dynamic phase completion for --filter
     println("# Dynamic phase completion for --filter")
     println("complete -c architect -l filter -x -a '(architect completion query phases 2>/dev/null)' -d 'Filter by phase'")
+    println()
+
+    // Dynamic project completion for history sub-command
+    println("# Dynamic project name completion for 'history <project>'")
+    println("complete -c architect -f -n '__fish_seen_subcommand_from history' " +
+      "-a '(architect completion query projects 2>/dev/null)' -d 'Project'")
     println()
 
     // Dynamic env profile completions could be added here in future
