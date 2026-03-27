@@ -21,11 +21,24 @@ class InitCommandHandlerTest {
   }
 
   @Test
-  fun `detectStack finds node project`(@TempDir dir: File) {
-    File(dir, "package.json").writeText("{}")
+  fun `detectStack finds node project with package manager and test framework`(@TempDir dir: File) {
+    File(dir, "package.json").writeText(
+      """
+        {
+          "packageManager": "pnpm@9.0.0",
+          "devDependencies": {
+            "typescript": "^5.0.0",
+            "vitest": "^2.0.0"
+          }
+        }
+      """.trimIndent()
+    )
+    File(dir, "pnpm-lock.yaml").writeText("lockfileVersion: '9.0'")
+    File(dir, "tsconfig.json").writeText("{}")
     val stack = handler.detectStack(dir)
-    assertTrue(stack.languages.contains("JavaScript/TypeScript"))
-    assertTrue(stack.buildTools.contains("npm/yarn/pnpm"))
+    assertTrue(stack.languages.contains("TypeScript"))
+    assertTrue(stack.buildTools.contains("pnpm"))
+    assertTrue(stack.testFrameworks.contains("Vitest"))
   }
 
   @Test
@@ -45,9 +58,9 @@ class InitCommandHandlerTest {
 
   @Test
   fun `detectStack finds github workflows`(@TempDir dir: File) {
-    File(dir, ".github").mkdir()
+    File(dir, ".github/workflows").mkdirs()
     val stack = handler.detectStack(dir)
-    assertTrue(".github" in stack.markers)
+    assertTrue("GitHub Actions" in stack.ciSystems)
   }
 
   @Test
@@ -148,7 +161,7 @@ class InitCommandHandlerTest {
   fun `full detection to yaml pipeline for kotlin gradle project`(@TempDir dir: File) {
     File(dir, "build.gradle.kts").writeText("")
     File(dir, ".git").mkdir()
-    File(dir, ".github").mkdir()
+    File(dir, ".github/workflows").mkdirs()
     File(dir, "mkdocs.yml").writeText("")
 
     val stack = handler.detectStack(dir)

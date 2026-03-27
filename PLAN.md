@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 59/128 tasks completed (46%)
-- Current Phase: Phase 3 — Plugin Ecosystem Maturation
-- Last Updated: 2026-03-27T18:55:00Z
+- Overall Progress: 60/128 tasks completed (47%)
+- Current Phase: Phase 4 — Project Intelligence & Conventions
+- Last Updated: 2026-03-27T19:35:33Z
 
 ---
 
@@ -528,7 +528,7 @@
 
 ### 4.1 — Project Auto-Detection & Smart Defaults
 
-- [ ] **T-4.1.1** 🔴 `XL` — Implement project stack auto-detection engine
+- [x] **T-4.1.1** 🔴 `XL` — Implement project stack auto-detection engine | Finished: 2026-03-27T19:35:33Z | Notes: Added reusable `ProjectProfile` + `StackDetectionService` in architect-core with marker-based detection for JS/TS, JVM, Python, Rust, Go, Docker, Terraform, and GitHub Actions; wired richer detection output into `architect init` and `architect doctor`; added focused core + CLI tests.
   - Scan project root for markers:
     - `package.json` → JavaScript/TypeScript (detect: npm/yarn/pnpm/bun)
     - `build.gradle.kts` / `pom.xml` → JVM (detect: Kotlin/Java, Gradle/Maven)

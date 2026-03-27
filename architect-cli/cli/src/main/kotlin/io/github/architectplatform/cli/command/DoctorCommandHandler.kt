@@ -1,6 +1,9 @@
 package io.github.architectplatform.cli.command
 
 import io.github.architectplatform.cli.engine.EngineHealthChecker
+import io.github.architectplatform.core.project.app.StackDetectionService
+import io.github.architectplatform.core.project.domain.ProjectProfile
+import java.io.File
 
 /**
  * Handles `architect doctor` — a diagnostic command that checks the health
@@ -20,6 +23,7 @@ import io.github.architectplatform.cli.engine.EngineHealthChecker
  */
 class DoctorCommandHandler(
     private val engineHealthChecker: EngineHealthChecker,
+    private val stackDetectionService: StackDetectionService = StackDetectionService(),
 ) {
 
     data class DiagnosticCheck(
@@ -35,13 +39,15 @@ class DoctorCommandHandler(
         val fix = args.contains("--fix")
         val localPlain = plain || args.contains("--plain")
         val checks = mutableListOf<DiagnosticCheck>()
+        val projectDir = File(System.getProperty("user.dir"))
+        val profile = stackDetectionService.detect(projectDir.toPath())
 
         println()
         println(if (localPlain) "=== Architect Doctor ===" else "🩺 Architect Doctor")
         println()
 
         // Check 1: architect.yml exists
-        val configFile = java.io.File(System.getProperty("user.dir"), "architect.yml")
+        val configFile = File(projectDir, "architect.yml")
         val configExists = configFile.exists()
         checks.add(DiagnosticCheck(
             name = "Configuration file (architect.yml)",
@@ -133,8 +139,9 @@ class DoctorCommandHandler(
         ))
 
         // Check 7: Gradle available (optional)
+        val gradleRequired = "Gradle" in profile.buildTools
         val gradleAvailable = try {
-            val gradleWrapper = java.io.File(System.getProperty("user.dir"), "gradlew")
+            val gradleWrapper = File(projectDir, "gradlew")
             if (gradleWrapper.exists()) {
                 true
             } else {
@@ -145,10 +152,16 @@ class DoctorCommandHandler(
             false
         }
         checks.add(DiagnosticCheck(
-            name = "Gradle (optional)",
-            passed = gradleAvailable,
-            detail = if (gradleAvailable) "Gradle wrapper or system Gradle available" else "Not found (only needed for Gradle projects)",
-            remediation = null, // Optional, no remediation needed
+            name = if (gradleRequired) "Gradle" else "Gradle (optional)",
+            passed = gradleAvailable || !gradleRequired,
+            detail = if (gradleAvailable) {
+                "Gradle wrapper or system Gradle available"
+            } else if (gradleRequired) {
+                "Gradle project detected but no wrapper or system Gradle found"
+            } else {
+                "Not found (only needed for Gradle projects)"
+            },
+            remediation = if (gradleRequired && !gradleAvailable) "Install Gradle or add a Gradle wrapper to the project" else null,
         ))
 
         // Print results
@@ -194,6 +207,29 @@ class DoctorCommandHandler(
                 }
             }
         }
+        printDetectedProfile(profile, localPlain)
         println()
+    }
+
+    private fun printDetectedProfile(profile: ProjectProfile, plainOutput: Boolean) {
+        if (profile.isEmpty()) {
+            return
+        }
+
+        println()
+        println(if (plainOutput) "Detected project profile:" else "🔍 Detected project profile")
+        printProfileSection("Languages", profile.languages)
+        printProfileSection("Build tools", profile.buildTools)
+        printProfileSection("Test frameworks", profile.testFrameworks)
+        printProfileSection("CI systems", profile.ciSystems)
+        printProfileSection("Containerization", profile.containerization)
+    }
+
+    private fun printProfileSection(label: String, values: Set<String>) {
+        if (values.isEmpty()) {
+            return
+        }
+
+        println("  - $label: ${values.joinToString()}")
     }
 }

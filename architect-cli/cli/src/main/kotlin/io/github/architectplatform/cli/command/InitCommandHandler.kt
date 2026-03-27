@@ -1,5 +1,7 @@
 package io.github.architectplatform.cli.command
 
+import io.github.architectplatform.core.project.app.StackDetectionService
+import io.github.architectplatform.core.project.domain.ProjectProfile
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
@@ -8,13 +10,9 @@ import java.io.InputStreamReader
  * Handles `architect init` — interactive project scaffolding that detects the
  * existing stack, suggests plugins, and generates `architect.yml`.
  */
-class InitCommandHandler {
-
-  data class DetectedStack(
-    val languages: List<String>,
-    val buildTools: List<String>,
-    val markers: Map<String, File>,
-  )
+class InitCommandHandler(
+  private val stackDetectionService: StackDetectionService = StackDetectionService(),
+) {
 
   data class PluginSuggestion(
     val id: String,
@@ -45,11 +43,14 @@ class InitCommandHandler {
     println("━".repeat(50))
     println()
 
-    val stack = detectStack(projectDir)
-    if (stack.languages.isNotEmpty() || stack.buildTools.isNotEmpty()) {
-      println("🔍 Detected stack:")
-      stack.languages.forEach { println("   • Language: $it") }
-      stack.buildTools.forEach { println("   • Build tool: $it") }
+    val profile = detectStack(projectDir)
+    if (!profile.isEmpty()) {
+      println("🔍 Detected project profile:")
+      printSection("Languages", profile.languages)
+      printSection("Build tools", profile.buildTools)
+      printSection("Test frameworks", profile.testFrameworks)
+      printSection("CI systems", profile.ciSystems)
+      printSection("Containerization", profile.containerization)
       println()
     }
 
@@ -60,14 +61,14 @@ class InitCommandHandler {
     if (yes) {
       projectName = projectDir.name
       projectDescription = ""
-      selectedPlugins = suggestPlugins(stack)
+      selectedPlugins = suggestPlugins(profile)
       println("📦 Project name: $projectName")
       println("🔌 Auto-selected plugins: ${selectedPlugins.joinToString { it.id }}")
     } else {
       projectName = promptWithDefault("Project name", projectDir.name)
       projectDescription = promptWithDefault("Description", "")
 
-      val suggestions = suggestPlugins(stack)
+      val suggestions = suggestPlugins(profile)
       selectedPlugins = if (suggestions.isNotEmpty()) {
         println()
         println("🔌 Suggested plugins based on detected stack:")
@@ -101,52 +102,9 @@ class InitCommandHandler {
     println("  • Run 'architect <task>' to execute a task")
   }
 
-  internal fun detectStack(dir: File): DetectedStack {
-    val languages = mutableListOf<String>()
-    val buildTools = mutableListOf<String>()
-    val markers = mutableMapOf<String, File>()
+  internal fun detectStack(dir: File): ProjectProfile = stackDetectionService.detect(dir.toPath())
 
-    val checks = listOf(
-      Triple("package.json", "JavaScript/TypeScript", "npm/yarn/pnpm"),
-      Triple("build.gradle.kts", "Kotlin", "Gradle"),
-      Triple("build.gradle", "Java/Groovy", "Gradle"),
-      Triple("pom.xml", "Java", "Maven"),
-      Triple("Cargo.toml", "Rust", "Cargo"),
-      Triple("go.mod", "Go", "Go Modules"),
-      Triple("requirements.txt", "Python", "pip"),
-      Triple("pyproject.toml", "Python", "Poetry/Hatch"),
-      Triple("Gemfile", "Ruby", "Bundler"),
-      Triple("composer.json", "PHP", "Composer"),
-      Triple("Package.swift", "Swift", "SPM"),
-      Triple("CMakeLists.txt", "C/C++", "CMake"),
-      Triple("Makefile", "C/C++", "Make"),
-    )
-
-    for ((file, lang, tool) in checks) {
-      val f = File(dir, file)
-      if (f.exists()) {
-        if (lang !in languages) languages.add(lang)
-        if (tool !in buildTools) buildTools.add(tool)
-        markers[file] = f
-      }
-    }
-
-    // Check for docs frameworks
-    for (docFile in listOf("mkdocs.yml", "docusaurus.config.js", "docs/")) {
-      val f = File(dir, docFile)
-      if (f.exists()) markers[docFile] = f
-    }
-
-    // Check for git
-    if (File(dir, ".git").exists()) markers[".git"] = File(dir, ".git")
-
-    // Check for GitHub workflows
-    if (File(dir, ".github").exists()) markers[".github"] = File(dir, ".github")
-
-    return DetectedStack(languages, buildTools, markers)
-  }
-
-  internal fun suggestPlugins(stack: DetectedStack): List<PluginSuggestion> {
+  internal fun suggestPlugins(stack: ProjectProfile): List<PluginSuggestion> {
     val suggestions = mutableListOf<PluginSuggestion>()
 
     if (".git" in stack.markers) {
@@ -157,7 +115,7 @@ class InitCommandHandler {
       ))
     }
 
-    if (".github" in stack.markers) {
+    if ("GitHub Actions" in stack.ciSystems) {
       suggestions.add(PluginSuggestion(
         "github-architected",
         "architectplatform/github-architected",
@@ -165,7 +123,7 @@ class InitCommandHandler {
       ))
     }
 
-    if (stack.buildTools.contains("Gradle")) {
+    if ("Gradle" in stack.buildTools) {
       suggestions.add(PluginSuggestion(
         "gradle-architected",
         "architectplatform/gradle-architected",
@@ -173,7 +131,7 @@ class InitCommandHandler {
       ))
     }
 
-    if (stack.buildTools.any { it in listOf("npm/yarn/pnpm") }) {
+    if (stack.buildTools.any { it in setOf("npm", "yarn", "pnpm", "bun") }) {
       suggestions.add(PluginSuggestion(
         "javascript-architected",
         "architectplatform/javascript-architected",
@@ -181,7 +139,7 @@ class InitCommandHandler {
       ))
     }
 
-    if (stack.markers.keys.any { it in listOf("mkdocs.yml", "docusaurus.config.js", "docs/") }) {
+    if (stack.markers.any { it in setOf("mkdocs.yml", "docusaurus.config.js", "docs") }) {
       suggestions.add(PluginSuggestion(
         "docs-architected",
         "architectplatform/docs-architected",
@@ -240,5 +198,12 @@ class InitCommandHandler {
       .filter { it in 1..suggestions.size }
       .map { suggestions[it - 1] }
       .ifEmpty { suggestions }
+  }
+
+  private fun printSection(label: String, values: Set<String>) {
+    if (values.isEmpty()) {
+      return
+    }
+    println("   • $label: ${values.joinToString()}")
   }
 }
