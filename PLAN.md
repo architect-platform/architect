@@ -322,7 +322,7 @@
   - `GET /api/executions/{id}/events?from=0` — replay from beginning
   - Enables: post-mortem debugging, cloud sync, UI replay
 
-- [ ] **T-2.4.3** 🟡 `S` — Add event buffer overflow monitoring
+- [x] **T-2.4.3** 🟡 `S` — Add event buffer overflow monitoring | Finished: 2026-03-27T15:40:00Z | Notes: Added configurable overflow strategy `architect.engine.events.overflow-strategy` (`BLOCK`, `DROP_OLDEST`, `EXPAND`) to `EngineConfiguration`; `ExecutionEventCollector` now applies strategy-specific flow overflow behavior, records dropped events via metrics counter `architect.events.dropped`, and logs warnings when effective buffer pressure exceeds 80%; validated through focused engine/core test suites.
   - Current `DROP_OLDEST` strategy silently loses events
   - Add metric: `architect.events.dropped`
   - Log warning when buffer > 80% capacity

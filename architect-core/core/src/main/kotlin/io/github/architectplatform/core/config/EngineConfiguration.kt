@@ -35,6 +35,15 @@ object EngineConfiguration {
         
         const val BUFFER_CAPACITY = "architect.engine.events.buffer-capacity"
         const val DEFAULT_BUFFER_CAPACITY = 64
+
+        /**
+         * Shared-flow overflow handling strategy.
+         * - BLOCK: suspend publishers until consumers catch up
+         * - DROP_OLDEST: drop oldest buffered events
+         * - EXPAND: increase buffer size and fallback to drop-oldest if still exceeded
+         */
+        const val OVERFLOW_STRATEGY = "architect.engine.events.overflow-strategy"
+        const val DEFAULT_OVERFLOW_STRATEGY = "DROP_OLDEST"
     }
     
     /**
