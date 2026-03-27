@@ -40,8 +40,9 @@ class PluginCommandHandler(
       "outdated" -> handleOutdated()
       "update" -> handleUpdate(args)
       "graduate" -> handleGraduate(args)
+      "test" -> handleTest(args)
       else -> {
-        println("Usage: architect plugin <create|docs|validate|search|install|outdated|update|graduate> [args]")
+        println("Usage: architect plugin <create|docs|validate|search|install|outdated|update|graduate|test> [args]")
         println()
         println("Commands:")
         println("  docs <path>              Generate PLUGIN_REFERENCE.md from plugin metadata")
@@ -52,6 +53,7 @@ class PluginCommandHandler(
         println("  outdated             List plugins with available updates")
         println("  update [<id>|--all]  Update plugin version pins to latest")
         println("  graduate <jar-path>  Check if plugin meets graduation checklist")
+        println("  test <jar-path>      Run plugin contract checks against a plugin JAR")
         exitProcess(1)
       }
     }
@@ -413,5 +415,47 @@ class PluginCommandHandler(
     }
 
     if (!allPassed) exitProcess(1)
+  }
+
+  private fun handleTest(args: List<String>) {
+    val jarPath = args.getOrNull(2)
+    if (jarPath == null) {
+      println("Usage: architect plugin test <jar-path>")
+      exitProcess(1)
+    }
+
+    try {
+      val result = pluginJarValidator.test(Path.of(jarPath))
+      if (json) {
+        val mapper = com.fasterxml.jackson.databind.ObjectMapper()
+          .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+        println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(result))
+      } else {
+        val status = if (result.valid) "✅" else "❌"
+        println("$status Plugin test ${if (result.valid) "passed" else "failed"} for ${result.jarPath}")
+        println("SPI providers: ${result.spiImplementations.size}")
+        result.plugins.forEach { plugin ->
+          println("- ${plugin.pluginId} (${plugin.className})")
+          plugin.checks.forEach { check ->
+            val icon = if (check.passed) "✅" else "❌"
+            println("  $icon ${check.name}: ${check.detail}")
+          }
+        }
+        if (result.warnings.isNotEmpty()) {
+          println("Warnings:")
+          result.warnings.forEach { println("- $it") }
+        }
+        if (result.errors.isNotEmpty()) {
+          println("Errors:")
+          result.errors.forEach { println("- $it") }
+        }
+      }
+      if (!result.valid) {
+        exitProcess(1)
+      }
+    } catch (e: Exception) {
+      println("Failed to test plugin JAR: ${e.message}")
+      exitProcess(1)
+    }
   }
 }

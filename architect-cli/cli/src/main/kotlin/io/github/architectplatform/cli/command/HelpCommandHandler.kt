@@ -179,6 +179,7 @@ class HelpCommandHandler {
       |  architect plugin search <query>    Search plugin registry
       |  architect plugin install <name>    Install a plugin
       |  architect plugin validate <path>   Validate a plugin JAR
+      |  architect plugin test <path>       Run plugin contract checks on a JAR
       |  architect plugin create <name>     Scaffold a new plugin
       |  architect plugin docs <path>       Generate plugin documentation
       |
@@ -246,12 +247,14 @@ class HelpCommandHandler {
       |  search <query>     Search the plugin registry
       |  install <name>     Install a plugin
       |  validate <path>    Validate a plugin JAR file
+      |  test <path>        Run contract checks against a plugin JAR
       |  create <name>      Scaffold a new plugin project
       |  docs <path>        Generate plugin documentation
       |
       |EXAMPLES
       |  architect plugin search git        Search for git-related plugins
       |  architect plugin validate ./my-plugin.jar
+      |  architect plugin test ./my-plugin.jar
       |  architect plugin create my-plugin  Scaffold new plugin
     """.trimMargin()
 

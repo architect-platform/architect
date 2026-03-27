@@ -346,7 +346,7 @@
   - CI job validates all plugins against checklist
   - Block merge if active plugin drops below standard
 
-- [ ] **T-3.1.2** 🟠 `M` — Add `architect plugin test` command
+- [x] **T-3.1.2** 🟠 `M` — Add `architect plugin test` command | Finished: 2026-03-27T15:03:05Z | Notes: Added `plugin test` subcommand to `PluginCommandHandler` with JSON/text output and failure exit code; implemented plugin JAR contract checks in `PluginJarValidator.test()` (SPI wiring, `ArchitectPluginContract` verification, schema checks, task registration); updated help docs; added focused tests (`PluginJarTesterTest`, `PluginCommandHandlerTest`) and re-ran targeted CLI suites including `ArchitectLauncherTest`.
   - Runs contract test suite against any plugin JAR
   - Validates SPI wiring, schema, task registration
   - Useful for plugin developers before publishing

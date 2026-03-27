@@ -1,6 +1,10 @@
 package io.github.architectplatform.cli.command
 
 import io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher
+import io.github.architectplatform.cli.plugin.TestPluginContext
+import io.github.architectplatform.cli.plugin.TestPluginWithSchema
+import io.github.architectplatform.cli.plugin.TestPluginTask
+import io.github.architectplatform.cli.plugin.PluginJarValidator
 import java.io.File
 import java.net.URI
 import java.net.http.HttpClient
@@ -8,9 +12,12 @@ import java.net.http.HttpHeaders
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.file.Path
+import java.util.jar.JarEntry
+import java.util.jar.JarOutputStream
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.io.TempDir
+import kotlin.io.path.outputStream
 
 class PluginCommandHandlerTest {
 
@@ -92,6 +99,21 @@ class PluginCommandHandlerTest {
     assertTrue(content.contains("name: git-architected"))
   }
 
+  @Test
+  fun `plugin test validates contract schema and task registration`(@TempDir tmpDir: Path) {
+    val jarPath = createPluginJar(tmpDir.resolve("plugin-test.jar"))
+    val handler = PluginCommandHandler()
+
+    val output = withUserDir(tmpDir) {
+      handler.handle(listOf("plugin", "test", jarPath.toString()))
+    }
+
+    assertTrue(output.contains("Plugin test passed"))
+    assertTrue(output.contains("contract"))
+    assertTrue(output.contains("config-schema"))
+    assertTrue(output.contains("task-registration"))
+  }
+
   private fun registryJson(): String =
     """
     {
@@ -110,6 +132,33 @@ class PluginCommandHandlerTest {
     } finally {
       System.setProperty("user.dir", original)
     }
+  }
+
+  private fun createPluginJar(jarPath: Path): Path {
+    JarOutputStream(jarPath.outputStream().buffered()).use { output ->
+      writeClass(output, TestPluginWithSchema::class.java)
+      writeClass(output, TestPluginContext::class.java)
+      writeClass(output, TestPluginTask::class.java)
+      writeTextEntry(output, PluginJarValidator.SPI_RESOURCE, TestPluginWithSchema::class.java.name + "\n")
+    }
+    return jarPath
+  }
+
+  private fun writeClass(output: JarOutputStream, type: Class<*>) {
+    val resourcePath = type.name.replace('.', '/') + ".class"
+    val bytes = type.classLoader.getResourceAsStream(resourcePath)?.use { it.readBytes() }
+      ?: error("Missing compiled class resource $resourcePath")
+    writeBytesEntry(output, resourcePath, bytes)
+  }
+
+  private fun writeTextEntry(output: JarOutputStream, entryName: String, content: String) {
+    writeBytesEntry(output, entryName, content.toByteArray())
+  }
+
+  private fun writeBytesEntry(output: JarOutputStream, entryName: String, content: ByteArray) {
+    output.putNextEntry(JarEntry(entryName))
+    output.write(content)
+    output.closeEntry()
   }
 
   private fun captureStdout(block: () -> Unit): String {
