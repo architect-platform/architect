@@ -1,5 +1,6 @@
 package io.github.architectplatform.cli.command
 
+import io.github.architectplatform.core.project.domain.ProjectProfile
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -205,6 +206,39 @@ class InitCommandHandlerTest {
   fun `generateYaml includes header comment`() {
     val yaml = handler.generateYaml("test", "", emptyList())
     assertTrue(yaml.contains("# Architect project configuration"))
+  }
+
+  @Test
+  fun `generateYaml includes detected plugin defaults and comments`() {
+    val plugins = listOf(
+      InitCommandHandler.PluginSuggestion("javascript-architected", "architectplatform/javascript-architected", "Preset"),
+      InitCommandHandler.PluginSuggestion("github-architected", "architectplatform/github-architected", "Preset"),
+      InitCommandHandler.PluginSuggestion("testing-architected", "architectplatform/testing-architected", "Preset"),
+      InitCommandHandler.PluginSuggestion("quality-architected", "architectplatform/quality-architected", "Preset"),
+      InitCommandHandler.PluginSuggestion("docker-architected", "architectplatform/docker-architected", "Preset"),
+    )
+    val profile = ProjectProfile(
+      languages = setOf("TypeScript"),
+      buildTools = setOf("pnpm"),
+      testFrameworks = setOf("Vitest"),
+      ciSystems = setOf("GitHub Actions"),
+      containerization = setOf("Docker"),
+      markers = setOf("package.json", "tsconfig.json"),
+    )
+
+    val yaml = handler.generateYaml("web-app", "", plugins, profile, includeDetectedConfig = true)
+
+    assertTrue(yaml.contains("# Generated from the detected project stack"))
+    assertTrue(yaml.contains("# JavaScript/TypeScript settings inferred from package manager and source files."))
+    assertTrue(yaml.contains("javascript:"))
+    assertTrue(yaml.contains("packageManager: pnpm"))
+    assertTrue(yaml.contains("language: typescript"))
+    assertTrue(yaml.contains("github:"))
+    assertTrue(yaml.contains("workflowsDir: .github/workflows"))
+    assertTrue(yaml.contains("testing:"))
+    assertTrue(yaml.contains("threshold: 80"))
+    assertTrue(yaml.contains("quality:"))
+    assertTrue(yaml.contains("docker:"))
   }
 
   // ── Full integration ────────────────────────────────────────────

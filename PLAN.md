@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 61/128 tasks completed (48%)
+- Overall Progress: 62/128 tasks completed (48%)
 - Current Phase: Phase 4 — Project Intelligence & Conventions
-- Last Updated: 2026-03-27T19:53:46Z
+- Last Updated: 2026-03-27T19:57:19Z
 
 ---
 
@@ -549,7 +549,7 @@
   - `fullstack` preset: javascript + docker + kubernetes + database + security
   - `architect init --preset kotlin-gradle` applies all at once
 
-- [ ] **T-4.1.3** 🟠 `M` — Generate optimized `architect.yml` from detection
+- [x] **T-4.1.3** 🟠 `M` — Generate optimized `architect.yml` from detection | Finished: 2026-03-27T19:57:19Z | Notes: Extended `architect init` YAML generation to emit detected plugin config sections with explanatory comments, inferred package-manager/test-framework defaults, and sensible quality/testing/security settings; added `--detect` help text and regression coverage for detected config generation.
   - Pre-fill all plugin configs with detected values
   - Set sensible defaults (test coverage: 80%, lint: enabled, etc.)
   - Comment each section explaining what it does

@@ -28,6 +28,7 @@ class InitCommandHandler(
   fun handle(args: List<String>) {
     val projectDir = File(System.getProperty("user.dir"))
     val yes = args.any { it == "--yes" || it == "-y" }
+    val detectRequested = args.any { it == "--detect" }
     val explicitPresetId = parseOptionValue(args, "--preset")
 
     if (File(projectDir, "architect.yml").exists()) {
@@ -94,7 +95,13 @@ class InitCommandHandler(
     }
 
     println()
-    val yaml = generateYaml(projectName, projectDescription, selectedPlugins)
+    val yaml = generateYaml(
+      name = projectName,
+      description = projectDescription,
+      plugins = selectedPlugins,
+      profile = profile,
+      includeDetectedConfig = detectRequested || !profile.isEmpty(),
+    )
     val targetFile = File(projectDir, "architect.yml")
     targetFile.writeText(yaml)
 
@@ -177,10 +184,15 @@ class InitCommandHandler(
     name: String,
     description: String,
     plugins: List<PluginSuggestion>,
+    profile: ProjectProfile = ProjectProfile(),
+    includeDetectedConfig: Boolean = false,
   ): String {
     val sb = StringBuilder()
     sb.appendLine("# Architect project configuration")
     sb.appendLine("# See: https://github.com/architectplatform/architect")
+    if (includeDetectedConfig && !profile.isEmpty()) {
+      sb.appendLine("# Generated from the detected project stack and selected plugins.")
+    }
     sb.appendLine()
     sb.appendLine("project:")
     sb.appendLine("  name: $name")
@@ -196,6 +208,10 @@ class InitCommandHandler(
         sb.appendLine("    repo: ${plugin.repo}")
       }
       sb.appendLine()
+    }
+
+    if (includeDetectedConfig && !profile.isEmpty()) {
+      appendDetectedConfiguration(sb, profile, plugins)
     }
 
     return sb.toString()
@@ -269,6 +285,117 @@ class InitCommandHandler(
       ?.substringAfter('=')
       ?.takeIf { it.isNotBlank() }
   }
+
+  private fun appendDetectedConfiguration(
+    sb: StringBuilder,
+    profile: ProjectProfile,
+    plugins: List<PluginSuggestion>,
+  ) {
+    val pluginIds = plugins.map { it.id }.toSet()
+    val packageManager = firstMatch(profile.buildTools, listOf("pnpm", "yarn", "bun", "npm"))
+    val pythonTool = firstMatch(profile.buildTools, listOf("uv", "Poetry", "pip"))
+    val testFramework = firstMatch(profile.testFrameworks, listOf("Vitest", "Jest", "JUnit", "pytest", "Go Test", "Cargo Test"))
+
+    if ("javascript-architected" in pluginIds) {
+      sb.appendLine("# JavaScript/TypeScript settings inferred from package manager and source files.")
+      sb.appendLine("javascript:")
+      packageManager?.let { sb.appendLine("  packageManager: ${it.lowercase()}") }
+      sb.appendLine("  packageFile: package.json")
+      if ("TypeScript" in profile.languages) {
+        sb.appendLine("  language: typescript")
+      }
+      sb.appendLine()
+    }
+
+    if ("gradle-architected" in pluginIds) {
+      sb.appendLine("# Gradle defaults inferred from the detected JVM build.")
+      sb.appendLine("gradle:")
+      sb.appendLine("  wrapper: true")
+      sb.appendLine("  command: ./gradlew")
+      sb.appendLine()
+    }
+
+    if ("python-architected" in pluginIds) {
+      sb.appendLine("# Python toolchain defaults inferred from project metadata.")
+      sb.appendLine("python:")
+      pythonTool?.let { sb.appendLine("  packageManager: ${it.lowercase()}") }
+      sb.appendLine("  projectFile: ${if ("pyproject.toml" in profile.markers) "pyproject.toml" else "requirements.txt"}")
+      sb.appendLine()
+    }
+
+    if ("rust-architected" in pluginIds) {
+      sb.appendLine("# Rust settings inferred from Cargo.toml.")
+      sb.appendLine("rust:")
+      sb.appendLine("  manifest: Cargo.toml")
+      sb.appendLine()
+    }
+
+    if ("github-architected" in pluginIds) {
+      sb.appendLine("# GitHub integration defaults inferred from detected workflow files.")
+      sb.appendLine("github:")
+      sb.appendLine("  workflowsDir: .github/workflows")
+      sb.appendLine()
+    }
+
+    if ("docker-architected" in pluginIds) {
+      sb.appendLine("# Docker defaults inferred from the detected container setup.")
+      sb.appendLine("docker:")
+      sb.appendLine("  dockerfile: Dockerfile")
+      sb.appendLine()
+    }
+
+    if ("kubernetes-architected" in pluginIds) {
+      sb.appendLine("# Kubernetes defaults for deploying generated container workloads.")
+      sb.appendLine("kubernetes:")
+      sb.appendLine("  manifestsDir: k8s")
+      sb.appendLine()
+    }
+
+    if ("testing-architected" in pluginIds) {
+      sb.appendLine("# Testing defaults inferred from the detected test framework.")
+      sb.appendLine("testing:")
+      sb.appendLine("  framework: ${testFramework?.lowercase()?.replace(' ', '-') ?: "auto"}")
+      sb.appendLine("  coverage:")
+      sb.appendLine("    enabled: true")
+      sb.appendLine("    threshold: 80")
+      sb.appendLine()
+    }
+
+    if ("quality-architected" in pluginIds) {
+      sb.appendLine("# Quality gate defaults for linting and static analysis.")
+      sb.appendLine("quality:")
+      sb.appendLine("  lint: true")
+      sb.appendLine("  failOnIssues: true")
+      sb.appendLine()
+    }
+
+    if ("security-architected" in pluginIds) {
+      sb.appendLine("# Security scanning defaults for dependencies and container artifacts.")
+      sb.appendLine("security:")
+      sb.appendLine("  scan:")
+      sb.appendLine("    enabled: true")
+      sb.appendLine("    failOn: high")
+      sb.appendLine()
+    }
+
+    if ("docs-architected" in pluginIds) {
+      sb.appendLine("# Documentation defaults inferred from the detected docs framework.")
+      sb.appendLine("docs:")
+      sb.appendLine("  framework: ${detectedDocsFramework(profile)}")
+      sb.appendLine()
+    }
+  }
+
+  private fun detectedDocsFramework(profile: ProjectProfile): String =
+    when {
+      "mkdocs.yml" in profile.markers -> "mkdocs"
+      "docusaurus.config.js" in profile.markers -> "docusaurus"
+      "docs" in profile.markers -> "generic"
+      else -> "generic"
+    }
+
+  private fun firstMatch(values: Set<String>, candidates: List<String>): String? =
+    candidates.firstOrNull { it in values }
 
   private fun printSection(label: String, values: Set<String>) {
     if (values.isEmpty()) {

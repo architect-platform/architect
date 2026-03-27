@@ -216,10 +216,12 @@ class HelpCommandHandler {
       |
       |OPTIONS
       |  --yes              Accept all defaults (non-interactive)
+      |  --detect           Generate config sections from detected project metadata
       |  --preset <id>      Apply a preset (kotlin-gradle, typescript-npm, rust-cargo, python-uv, fullstack)
       |
       |EXAMPLES
       |  architect init                     Interactive setup
+      |  architect init --detect            Generate an optimized config from detection
       |  architect init --yes               Auto-detect and generate config
       |  architect init --preset kotlin-gradle
      """.trimMargin()
