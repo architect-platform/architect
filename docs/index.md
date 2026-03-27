@@ -33,6 +33,7 @@ For the authoritative module support set, see the
 - **[gradle-architected](plugins/gradle-architected/index.md)** - Gradle build automation integration
 - **[javascript-architected](plugins/javascript-architected/index.md)** - JavaScript/Node.js package manager integration
 - **[security-architected](reference/plugins/security-architected.md)** - Security scanning, dependency auditing, and SBOM generation
+- **[quality-architected](reference/plugins/quality-architected.md)** - Unified linting, static analysis, and quality-gate checks
 - **[testing-architected](reference/plugins/testing-architected.md)** - Cross-language unit, integration, e2e, and coverage orchestration
 - **[pipelines-architected](plugins/pipelines-architected/index.md)** - Pipeline workflow management
 - **[scripts-architected](plugins/scripts-architected/index.md)** - Custom shell script execution

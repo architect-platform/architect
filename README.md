@@ -45,6 +45,7 @@ architect/
 │   ├── python-architected/         Python tooling                         [incubating]
 │   ├── rust-architected/           Rust tooling                           [incubating]
 │   ├── security-architected/       Security scanning and SBOMs            [incubating]
+│   ├── quality-architected/        Linting and quality gates              [incubating]
 │   ├── testing-architected/        Cross-language testing                 [incubating]
 │   └── terraform-architected/      Terraform                              [incubating]
 ├── sdk/                          Language SDKs for plugin authoring

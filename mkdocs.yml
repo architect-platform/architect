@@ -80,6 +80,7 @@ nav:
       - rust-architected: reference/plugins/rust-architected.md
       - python-architected: reference/plugins/python-architected.md
       - security-architected: reference/plugins/security-architected.md
+      - quality-architected: reference/plugins/quality-architected.md
       - testing-architected: reference/plugins/testing-architected.md
       - nx-architected: reference/plugins/nx-architected.md
       - architecture-architected: reference/plugins/architecture-architected.md

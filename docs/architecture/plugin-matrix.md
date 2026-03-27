@@ -35,6 +35,7 @@ Gradle (Kotlin DSL).
 | python-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Python tooling (pip, venv, pytest) |
 | rust-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Rust build and test (cargo) |
 | security-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Security scanning, dependency audits, and SBOM generation with severity thresholds |
+| quality-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Unified linting, static analysis, reporting, and quality-gate checks |
 | testing-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Unified testing interface with coverage aggregation and threshold enforcement |
 | terraform-architected | 1.0.0 | **incubating** | ✅ | ✅ | ✅ | ✅ `architect.yml` | Terraform plan / apply / destroy |
 
@@ -52,6 +53,7 @@ The following plugins have dedicated CI workflows in `.github/workflows/`:
 | gradle-architected | `gradle-architected-pipeline.yml` |
 | javascript-architected | `javascript-architected.yml` |
 | security-architected | `security-architected.yml` |
+| quality-architected | `quality-architected.yml` |
 | testing-architected | `testing-architected.yml` |
 | pipelines-architected | `pipelines-architected.yml` |
 | scripts-architected | `scripts-architected.yml` |
