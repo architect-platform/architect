@@ -125,4 +125,27 @@ object TaskEvents {
                 message = output,
                 parentProject = subProject))
   }
+
+  fun taskRetryingEvent(
+      project: String,
+      executionId: ExecutionId,
+      taskId: String,
+      attempt: Int,
+      maxAttempts: Int,
+      delayMs: Long,
+      parentProject: String? = null,
+  ): ArchitectEvent<TaskEventDTO> {
+    val delayInfo = if (delayMs > 0) " (delay ${delayMs}ms)" else ""
+    return ArchitectEventDTO(
+        id = "task.retrying",
+        event =
+            TaskEventDTO(
+                project = project,
+                executionId = executionId,
+                taskId = taskId,
+                success = false,
+                executionEventType = ExecutionEventType.RETRYING,
+                message = "Retrying task $taskId (attempt $attempt/$maxAttempts)$delayInfo",
+                parentProject = parentProject))
+  }
 }

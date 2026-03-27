@@ -14,6 +14,7 @@ import io.github.architectplatform.core.project.domain.Project
 import io.github.architectplatform.core.tasks.domain.TaskDependencyResolver
 import io.github.architectplatform.core.tasks.domain.events.TaskEvents.taskCompletedEvent
 import io.github.architectplatform.core.tasks.domain.events.TaskEvents.taskFailedEvent
+import io.github.architectplatform.core.tasks.domain.events.TaskEvents.taskRetryingEvent
 import io.github.architectplatform.core.tasks.domain.events.TaskEvents.taskSkippedEvent
 import io.github.architectplatform.core.tasks.domain.events.TaskEvents.taskStartedEvent
 import io.github.architectplatform.core.domain.events.ArchitectEvent
@@ -29,6 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 
 /**
@@ -137,7 +139,7 @@ class TaskExecutor(
     }
   }
 
-  private fun executeSingleTask(
+  private suspend fun executeSingleTask(
       currentTask: Task,
       executionId: ExecutionId,
       projectName: String,
@@ -190,13 +192,18 @@ class TaskExecutor(
 
     eventBus(taskStartedEvent(projectName, executionId, currentTask.id, message = "Starting task: ${currentTask.id}", subProject = parentProject))
 
-    val maxAttempts = when (val strategy = currentTask.onFailure()) {
-      is FailureStrategy.RETRY -> strategy.maxAttempts + 1 // initial + retries
-      else -> 1
-    }
+    val retryStrategy = currentTask.onFailure() as? FailureStrategy.RETRY
+    val maxAttempts = if (retryStrategy != null) retryStrategy.maxAttempts + 1 else 1 // initial + retries
 
     var lastResult: TaskResult = TaskResult.failure("Task '${currentTask.id}' did not execute")
     for (attempt in 1..maxAttempts) {
+      // Apply backoff delay before retries (not before the first attempt)
+      if (attempt > 1 && retryStrategy != null) {
+        val delayMs = retryStrategy.computeDelayMs(attempt - 1) // attempt-1 = retry index (1-based)
+        eventBus(taskRetryingEvent(projectName, executionId, currentTask.id, attempt, maxAttempts, delayMs, parentProject))
+        logger.info("Retrying task '${currentTask.id}' (attempt $attempt/$maxAttempts)${if (delayMs > 0) " after ${delayMs}ms backoff" else ""}")
+        if (delayMs > 0) delay(delayMs)
+      }
       lastResult = try {
         val taskTimeout = currentTask.timeout()
         val result = if (taskTimeout != null) {
@@ -252,7 +259,6 @@ class TaskExecutor(
       }
 
       if (lastResult.success || attempt == maxAttempts) break
-      logger.info("Retrying task '${currentTask.id}' (attempt ${attempt + 1}/$maxAttempts)")
     }
 
     logger.debug("Executed task '${currentTask.id}' with result: $lastResult")

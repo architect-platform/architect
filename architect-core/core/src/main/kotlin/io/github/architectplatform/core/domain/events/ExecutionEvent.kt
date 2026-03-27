@@ -23,5 +23,6 @@ enum class ExecutionEventType {
   CANCELLED,
   SKIPPED,
   OUTPUT,
-  TASK_COMPLETED
+  TASK_COMPLETED,
+  RETRYING,
 }

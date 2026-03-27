@@ -4,6 +4,8 @@ import io.github.architectplatform.api.core.project.Config
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.CompositeTask
 import io.github.architectplatform.api.core.tasks.Environment
+import io.github.architectplatform.api.core.tasks.FailureStrategy
+import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskPermission
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.builtin.SimpleTask
@@ -21,6 +23,22 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicInteger
+
+/** Creates an anonymous Task that overrides [onFailure] with [FailureStrategy.RETRY]. */
+private fun retryTask(
+  id: String,
+  maxAttempts: Int,
+  backoffMs: Long = 0L,
+  exponential: Boolean = false,
+  jitter: Boolean = false,
+  block: (Environment, ProjectContext) -> TaskResult,
+): Task = object : Task {
+  override val id = id
+  override fun description() = id
+  override fun execute(environment: Environment, projectContext: ProjectContext, args: List<String>) = block(environment, projectContext)
+  override fun onFailure() = FailureStrategy.RETRY(maxAttempts, backoffMs, exponential, jitter)
+}
 
 /**
  * Tests for [TaskExecutor] — parallel batch execution, sequential fallback,
@@ -233,6 +251,128 @@ class TaskExecutorTest {
       name = "test-project",
       path = dir.toString(),
       context = context,
+      plugins = emptyList(),
+      taskRegistry = registry,
+    )
+  }
+}
+
+// ─── Retry logic tests (separate class for clarity) ──────────────────────────
+
+class TaskExecutorRetryTest {
+
+  @Test
+  fun `task with RETRY strategy retries on failure and succeeds`(@TempDir tmpDir: Path) {
+    val attempts = AtomicInteger(0)
+    val (executor, events) = buildExecutor()
+    val registry = InMemoryTaskRegistry()
+
+    val task = retryTask("flaky", maxAttempts = 3) { _, _ ->
+      if (attempts.incrementAndGet() < 3) TaskResult.failure("not yet") else TaskResult.success("ok")
+    }
+    registry.add(task)
+
+    val project = project(tmpDir, registry)
+    val (_, deferred) = executor.execute(project, task, project.context, emptyList())
+    val result = runBlocking { deferred.await() }
+
+    assertTrue(result.success, "Expected success after retries but got: ${result.message}")
+    assertEquals(3, attempts.get(), "Expected exactly 3 attempts")
+    val retryingEvents = events.filter { it.toString().contains("task.retrying") }
+    assertEquals(2, retryingEvents.size, "Expected 2 retrying events (attempts 2 and 3)")
+  }
+
+  @Test
+  fun `task with RETRY strategy fails after exhausting all attempts`(@TempDir tmpDir: Path) {
+    val attempts = AtomicInteger(0)
+    val (executor, events) = buildExecutor()
+    val registry = InMemoryTaskRegistry()
+
+    val task = retryTask("always-fail", maxAttempts = 2) { _, _ ->
+      attempts.incrementAndGet()
+      TaskResult.failure("always bad")
+    }
+    registry.add(task)
+
+    val project = project(tmpDir, registry)
+    val (_, deferred) = executor.execute(project, task, project.context, emptyList())
+    val result = runBlocking { deferred.await() }
+
+    assertFalse(result.success)
+    assertEquals(3, attempts.get(), "Expected initial + 2 retry attempts = 3 total")
+    val failEvents = events.filter { it.toString().contains("task.failed") }
+    assertTrue(failEvents.isNotEmpty(), "Expected at least one task.failed event")
+  }
+
+  @Test
+  fun `RETRY with no-delay completes quickly`(@TempDir tmpDir: Path) {
+    val (executor, _) = buildExecutor()
+    val registry = InMemoryTaskRegistry()
+    val task = retryTask("quick-retry", maxAttempts = 2, backoffMs = 0L) { _, _ -> TaskResult.failure("x") }
+    registry.add(task)
+    val project = project(tmpDir, registry)
+    val (_, deferred) = executor.execute(project, task, project.context, emptyList())
+    val start = System.currentTimeMillis()
+    val result = runBlocking { deferred.await() }
+    val elapsed = System.currentTimeMillis() - start
+    assertFalse(result.success)
+    assertTrue(elapsed < 500, "No-delay retry should complete quickly, took ${elapsed}ms")
+  }
+
+  @Test
+  fun `FailureStrategy RETRY computeDelayMs returns 0 when backoffMs is 0`() {
+    val strategy = FailureStrategy.RETRY(maxAttempts = 3, backoffMs = 0L)
+    assertEquals(0L, strategy.computeDelayMs(1))
+    assertEquals(0L, strategy.computeDelayMs(2))
+  }
+
+  @Test
+  fun `FailureStrategy RETRY computeDelayMs returns flat delay without exponential`() {
+    val strategy = FailureStrategy.RETRY(maxAttempts = 3, backoffMs = 100L, exponential = false, jitter = false)
+    assertEquals(100L, strategy.computeDelayMs(1))
+    assertEquals(100L, strategy.computeDelayMs(2))
+    assertEquals(100L, strategy.computeDelayMs(3))
+  }
+
+  @Test
+  fun `FailureStrategy RETRY computeDelayMs doubles delay with exponential backoff`() {
+    val strategy = FailureStrategy.RETRY(maxAttempts = 4, backoffMs = 100L, exponential = true, jitter = false)
+    assertEquals(100L, strategy.computeDelayMs(1))  // 100 * 2^0 = 100
+    assertEquals(200L, strategy.computeDelayMs(2))  // 100 * 2^1 = 200
+    assertEquals(400L, strategy.computeDelayMs(3))  // 100 * 2^2 = 400
+    assertEquals(800L, strategy.computeDelayMs(4))  // 100 * 2^3 = 800
+  }
+
+  @Test
+  fun `FailureStrategy RETRY computeDelayMs adds jitter within 25 percent of base`() {
+    val strategy = FailureStrategy.RETRY(maxAttempts = 1, backoffMs = 1000L, exponential = false, jitter = true)
+    repeat(20) {
+      val computed = strategy.computeDelayMs(1)
+      assertTrue(computed in 750L..1250L, "Jittered delay $computed not in [750, 1250]")
+    }
+  }
+
+  // ─── helpers ───────────────────────────────────────────────────────────────
+
+  private fun buildExecutor(): Pair<TaskExecutor, MutableList<ArchitectEvent<*>>> {
+    val events = CopyOnWriteArrayList<ArchitectEvent<*>>()
+    val eventBus = EmbeddedEventBus<ArchitectEvent<*>>()
+    eventBus.subscribe { events.add(it) }
+    val executor = TaskExecutor(
+      environment = ApplicationEnvironment(),
+      taskCache = TaskCache(cacheEnabled = false),
+      eventBus = eventBus::invoke,
+      parallelExecutionEnabled = false,
+    )
+    return executor to events
+  }
+
+  private fun project(dir: Path, registry: InMemoryTaskRegistry): Project {
+    val config: Config = mapOf("project" to mapOf("name" to "test-project"))
+    return Project(
+      name = "test-project",
+      path = dir.toString(),
+      context = ProjectContext(dir = dir, config = config),
       plugins = emptyList(),
       taskRegistry = registry,
     )

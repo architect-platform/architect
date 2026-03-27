@@ -237,7 +237,7 @@
   - Emit `execution.cancelled` event
   - CLI hooks into this via Ctrl+C handler
 
-- [ ] **T-2.1.2** 🔴 `M` — Add task retry logic with configurable policies
+- [x] **T-2.1.2** 🔴 `M` — Add task retry logic with configurable policies | Finished: 2026-03-27T14:10:00Z | Notes: Extended FailureStrategy.RETRY with backoffMs/exponential/jitter; added RETRYING ExecutionEventType; added taskRetryingEvent factory; TaskExecutor.executeSingleTask() made suspend + delay() + retry events; EngineConfiguration.TaskRetry constants; 8 new tests in TaskExecutorRetryTest
   - Respect `Task.onFailure()` strategy from API
   - Configurable: `architect.engine.retry.max-attempts`, `architect.engine.retry.backoff-ms`
   - Exponential backoff with jitter for retries

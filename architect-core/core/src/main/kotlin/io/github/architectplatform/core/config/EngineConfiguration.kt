@@ -70,4 +70,19 @@ object EngineConfiguration {
         const val PARALLEL_ENABLED = "architect.engine.executor.parallel-execution"
         const val DEFAULT_PARALLEL_ENABLED = true
     }
+
+    /**
+     * Task retry configuration properties (used as engine-wide defaults for
+     * FailureStrategy.RETRY when a task does not specify explicit backoff values).
+     */
+    object TaskRetry {
+        const val DEFAULT_BACKOFF_MS = "architect.engine.executor.retry.backoff-ms"
+        const val DEFAULT_BACKOFF_MS_VALUE = 100L
+
+        const val DEFAULT_EXPONENTIAL = "architect.engine.executor.retry.exponential"
+        const val DEFAULT_EXPONENTIAL_VALUE = true
+
+        const val DEFAULT_JITTER = "architect.engine.executor.retry.jitter"
+        const val DEFAULT_JITTER_VALUE = true
+    }
 }
