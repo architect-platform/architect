@@ -44,6 +44,7 @@ architect/
 │   ├── nx-architected/             Nx monorepo                            [incubating]
 │   ├── python-architected/         Python tooling                         [incubating]
 │   ├── rust-architected/           Rust tooling                           [incubating]
+│   ├── security-architected/       Security scanning and SBOMs            [incubating]
 │   ├── testing-architected/        Cross-language testing                 [incubating]
 │   └── terraform-architected/      Terraform                              [incubating]
 ├── sdk/                          Language SDKs for plugin authoring

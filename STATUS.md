@@ -65,6 +65,7 @@ It is the authoritative reference for Phase 0 of the refactor plan (PLAN.md).
 | nx-architected | `plugins/nx-architected` | **incubating** | — | Nx monorepo; template-level |
 | python-architected | `plugins/python-architected` | **incubating** | — | Python tooling; template-level |
 | rust-architected | `plugins/rust-architected` | **incubating** | — | Rust tooling; template-level |
+| security-architected | `plugins/security-architected` | **incubating** | 1.0.0 | Security scanning, dependency audits, and SBOM generation with severity thresholds |
 | testing-architected | `plugins/testing-architected` | **incubating** | 1.0.0 | Unified testing tasks with coverage aggregation and threshold enforcement |
 | terraform-architected | `plugins/terraform-architected` | **incubating** | — | Terraform; template-level |
 

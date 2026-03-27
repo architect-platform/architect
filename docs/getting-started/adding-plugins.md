@@ -83,6 +83,7 @@ github-architected:
 | `go-architected` | build, test, lint, mod tidy, release |
 | `rust-architected` | build, test, clippy, fmt, publish |
 | `python-architected` | install, lint, test, build, publish |
+| `security-architected` | security scanning, dependency audits, and SBOM generation with severity thresholds |
 | `testing-architected` | unit, integration, e2e, and coverage orchestration with threshold enforcement |
 | `nx-architected` | affected, run-many, graph, cache |
 | `architecture-architected` | arch-unit validation, dependency constraints |
