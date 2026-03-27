@@ -31,6 +31,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import org.slf4j.LoggerFactory
 
 /**
@@ -46,12 +48,18 @@ class TaskExecutor(
     private val eventBus: EventBus<ArchitectEvent<*>>,
     private val dependencyResolver: TaskDependencyResolver = TaskDependencyResolver(),
     private val parallelExecutionEnabled: Boolean = EngineConfiguration.TaskExecution.DEFAULT_PARALLEL_ENABLED,
+    private val maxConcurrentTasks: Int = EngineConfiguration.TaskExecution.DEFAULT_MAX_CONCURRENT_TASKS,
     private val outputCache: LocalOutputCache? = null,
     private val outputCacheEnabled: Boolean = false,
     private val remoteOutputCache: RemoteOutputCache? = null,
 ) {
 
   private val logger = LoggerFactory.getLogger(this::class.java)
+
+  // Semaphore to bound the number of tasks executing concurrently across all parallel batches.
+  // A value <= 0 means unlimited (no semaphore created).
+  private val concurrencySemaphore: Semaphore? =
+    if (maxConcurrentTasks > 0) Semaphore(maxConcurrentTasks) else null
 
   fun execute(
       project: Project,
@@ -195,6 +203,11 @@ class TaskExecutor(
     val retryStrategy = currentTask.onFailure() as? FailureStrategy.RETRY
     val maxAttempts = if (retryStrategy != null) retryStrategy.maxAttempts + 1 else 1 // initial + retries
 
+    // Acquire concurrency permit if a semaphore is configured.
+    // This suspends when max concurrent tasks are already running.
+    suspend fun executeWithSemaphore(block: suspend () -> TaskResult): TaskResult =
+      if (concurrencySemaphore != null) concurrencySemaphore.withPermit { block() } else block()
+
     var lastResult: TaskResult = TaskResult.failure("Task '${currentTask.id}' did not execute")
     for (attempt in 1..maxAttempts) {
       // Apply backoff delay before retries (not before the first attempt)
@@ -204,7 +217,8 @@ class TaskExecutor(
         logger.info("Retrying task '${currentTask.id}' (attempt $attempt/$maxAttempts)${if (delayMs > 0) " after ${delayMs}ms backoff" else ""}")
         if (delayMs > 0) delay(delayMs)
       }
-      lastResult = try {
+      lastResult = executeWithSemaphore {
+        try {
         val taskTimeout = currentTask.timeout()
         val result = if (taskTimeout != null) {
           val executor = Executors.newSingleThreadExecutor()
@@ -253,10 +267,10 @@ class TaskExecutor(
         } else result
       } catch (e: Exception) {
         val errMsg = e.message ?: "Unknown error"
-        val stack = e.stackTraceToString()
         logger.error("Exception during execution of task '${currentTask.id}' (attempt $attempt/$maxAttempts)", e)
         TaskResult.failure("Task '${currentTask.id}' failed with exception: $errMsg")
       }
+      } // end executeWithSemaphore
 
       if (lastResult.success || attempt == maxAttempts) break
     }

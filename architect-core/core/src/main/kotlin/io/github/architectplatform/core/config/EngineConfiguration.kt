@@ -69,6 +69,13 @@ object EngineConfiguration {
         /** When true, tasks with no ordering dependency between them execute concurrently. */
         const val PARALLEL_ENABLED = "architect.engine.executor.parallel-execution"
         const val DEFAULT_PARALLEL_ENABLED = true
+
+        /**
+         * Maximum number of tasks that may execute concurrently across all parallel batches.
+         * 0 means unlimited (no semaphore). Applies per-engine-instance (not per-execution).
+         */
+        const val MAX_CONCURRENT_TASKS = "architect.engine.executor.max-concurrent-tasks"
+        const val DEFAULT_MAX_CONCURRENT_TASKS = 0
     }
 
     /**

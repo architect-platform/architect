@@ -67,6 +67,11 @@ class RuntimeServiceFactory {
       defaultValue = "${EngineConfiguration.TaskExecution.DEFAULT_PARALLEL_ENABLED}",
     )
     parallelExecutionEnabled: Boolean,
+    @Property(
+      name = EngineConfiguration.TaskExecution.MAX_CONCURRENT_TASKS,
+      defaultValue = "${EngineConfiguration.TaskExecution.DEFAULT_MAX_CONCURRENT_TASKS}",
+    )
+    maxConcurrentTasks: Int,
     localOutputCache: Optional<LocalOutputCache>,
     remoteOutputCache: Optional<RemoteOutputCache>,
   ): TaskExecutor =
@@ -76,6 +81,7 @@ class RuntimeServiceFactory {
       eventBus = eventBus::invoke,
       dependencyResolver = TaskDependencyResolver(),
       parallelExecutionEnabled = parallelExecutionEnabled,
+      maxConcurrentTasks = maxConcurrentTasks,
       outputCache = localOutputCache.orElse(null),
       outputCacheEnabled = localOutputCache.isPresent,
       remoteOutputCache = remoteOutputCache.orElse(null),

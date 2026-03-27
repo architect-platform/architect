@@ -228,6 +228,43 @@ class TaskExecutorTest {
     assertTrue(result.message!!.contains("process:exec"))
   }
 
+  @Test
+  fun `concurrency semaphore limits simultaneous task execution`(@TempDir tmpDir: Path) {
+    val maxConcurrent = 2
+    val runningCount = java.util.concurrent.atomic.AtomicInteger(0)
+    val peakConcurrent = java.util.concurrent.atomic.AtomicInteger(0)
+    val events = CopyOnWriteArrayList<ArchitectEvent<*>>()
+    val eventBus = EmbeddedEventBus<ArchitectEvent<*>>()
+    eventBus.subscribe { events.add(it) }
+    val executor = TaskExecutor(
+      environment = ApplicationEnvironment(),
+      taskCache = TaskCache(cacheEnabled = false),
+      eventBus = eventBus::invoke,
+      parallelExecutionEnabled = true,
+      maxConcurrentTasks = maxConcurrent,
+    )
+    val registry = InMemoryTaskRegistry()
+    // 4 independent tasks each holding a slot for 50ms — with semaphore(2) only 2 run at once
+    for (i in 1..4) {
+      registry.add(SimpleTask("task-$i", "Task $i") { _, _ ->
+        val current = runningCount.incrementAndGet()
+        peakConcurrent.updateAndGet { max -> maxOf(max, current) }
+        Thread.sleep(50)
+        runningCount.decrementAndGet()
+        TaskResult.success("done-$i")
+      })
+    }
+    // A root task that depends on all 4 (so they run as a batch)
+    registry.add(SimpleTask("root", "Root", customDependencies = (1..4).map { "task-$it" }) { _, _ -> TaskResult.success("root") })
+
+    val project = project(tmpDir, registry)
+    val (_, deferred) = executor.execute(project, registry.get("root")!!, project.context, emptyList())
+    val result = runBlocking { deferred.await() }
+
+    assertTrue(result.success, "Execution should succeed: ${result.message}")
+    assertTrue(peakConcurrent.get() <= maxConcurrent, "Peak concurrent tasks ${peakConcurrent.get()} exceeded limit $maxConcurrent")
+  }
+
   // ─── helpers ──────────────────────────────────────────────────────────────
 
   private fun buildExecutor(parallel: Boolean): Pair<TaskExecutor, MutableList<ArchitectEvent<*>>> {

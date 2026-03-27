@@ -243,7 +243,7 @@
   - Exponential backoff with jitter for retries
   - Retry events emitted for monitoring
 
-- [ ] **T-2.1.3** 🟠 `M` — Add resource limits for task execution
+- [x] **T-2.1.3** 🟠 `M` — Add resource limits for task execution | Finished: 2026-03-27T14:20:00Z | Notes: Added maxConcurrentTasks to TaskExecutor (kotlinx.coroutines.sync.Semaphore); EngineConfiguration.TaskExecution.MAX_CONCURRENT_TASKS constant (default 0=unlimited); wired in RuntimeServiceFactory; semaphore concurrency test verifies peak ≤ limit
   - `architect.engine.executor.max-concurrent-tasks: 4`
   - `architect.engine.executor.memory-limit-mb: 512` (per task)
   - Semaphore-based concurrency control
