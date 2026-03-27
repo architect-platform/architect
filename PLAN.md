@@ -365,52 +365,52 @@
   - Full contract tests, comprehensive README
   - Support: npm, yarn (classic + berry), pnpm, bun
 
-- [ ] **T-3.2.2** 🟠 `L` — Graduate `python-architected` to Active
+- [—] **T-3.2.2** 🟠 `L` — Graduate `python-architected` to Active | Deferred: 2026-03-27T15:38:40Z | Notes: Postponed by user request ("postpone plugins graduation").
   - Add: virtual environment management (auto-create, activate)
   - Add: PyPI publishing with twine/flit
   - Add: requirements.txt / pyproject.toml detection
   - Support: pip, uv, poetry, pipenv, conda
   - Full contract tests
 
-- [ ] **T-3.2.3** 🟡 `L` — Graduate `rust-architected` to Active
+- [—] **T-3.2.3** 🟡 `L` — Graduate `rust-architected` to Active | Deferred: 2026-03-27T15:38:40Z | Notes: Postponed by user request ("postpone plugins graduation").
   - Add: cargo workspace support
   - Add: MSRV checking, cross-compilation targets
   - Add: crates.io publishing
   - Full contract tests
 
-- [ ] **T-3.2.4** 🟡 `L` — Graduate `go-architected` to Active
+- [—] **T-3.2.4** 🟡 `L` — Graduate `go-architected` to Active | Deferred: 2026-03-27T15:38:40Z | Notes: Postponed by user request ("postpone plugins graduation").
   - Add: Go workspace support, cross-compilation matrix
   - Add: GoReleaser integration
   - Full contract tests
 
-- [ ] **T-3.2.5** 🟡 `L` — Graduate `maven-architected` to Active
+- [—] **T-3.2.5** 🟡 `L` — Graduate `maven-architected` to Active | Deferred: 2026-03-27T15:38:40Z | Notes: Postponed by user request ("postpone plugins graduation").
   - Add: multi-module support, custom goal execution
   - Add: Maven Central publishing
   - Full contract tests
 
 ### 3.3 — Graduate Incubating Plugins (Infrastructure)
 
-- [ ] **T-3.3.1** 🟠 `L` — Graduate `docker-architected` to Active
+- [—] **T-3.3.1** 🟠 `L` — Graduate `docker-architected` to Active | Deferred: 2026-03-27T15:38:40Z | Notes: Postponed by user request ("postpone plugins graduation").
   - Add: multi-stage build optimization hints
   - Add: image scanning integration (Trivy/Snyk)
   - Add: Docker layer caching strategies
   - Add: registry authentication management
   - Full contract tests
 
-- [ ] **T-3.3.2** 🟠 `L` — Graduate `kubernetes-architected` to Active
+- [—] **T-3.3.2** 🟠 `L` — Graduate `kubernetes-architected` to Active | Deferred: 2026-03-27T15:38:40Z | Notes: Postponed by user request ("postpone plugins graduation").
   - Add: Helm chart support (install, upgrade, rollback)
   - Add: Kustomize overlays
   - Add: health check waiting (rollout status --watch)
   - Add: namespace creation, RBAC setup
   - Full contract tests
 
-- [ ] **T-3.3.3** 🟡 `L` — Graduate `terraform-architected` to Active
+- [—] **T-3.3.3** 🟡 `L` — Graduate `terraform-architected` to Active | Deferred: 2026-03-27T15:38:40Z | Notes: Postponed by user request ("postpone plugins graduation").
   - Add: state management (lock, unlock, import)
   - Add: module version constraints
   - Add: plan output saving and applying saved plans
   - Full contract tests
 
-- [ ] **T-3.3.4** 🟡 `L` — Graduate `nx-architected` to Active
+- [—] **T-3.3.4** 🟡 `L` — Graduate `nx-architected` to Active | Deferred: 2026-03-27T15:38:40Z | Notes: Postponed by user request ("postpone plugins graduation").
   - Add: Nx Cloud integration
   - Add: custom executor support
   - Add: project graph visualization
