@@ -9,7 +9,7 @@ The Architecture Architected plugin provides tools for defining, managing, and v
 ## Features
 
 - Dependency, naming, structure, import, and convention rule types
-- Built-in rulesets for layered, hexagonal, clean, and monorepo conventions
+- Built-in rulesets for layered, hexagonal, clean, monorepo, Kotlin, and TypeScript conventions
 - Text and JSON reports with file, line, severity, and suggestion output
 - Custom validator hooks for advanced rules
 - Integration with build workflows
@@ -95,6 +95,18 @@ Use `architect validate --structure` to run only the structure checks derived fr
 Use `architecture.boundaries` to declare which modules may import other modules.
 These boundaries are enforced through the import-rule engine and show up as
 cross-module violations in architecture validation reports.
+
+## Convention Presets
+
+Apply opinionated defaults with:
+
+```bash
+architect conventions kotlin
+architect conventions typescript
+```
+
+These presets add `kotlin-conventions` or `typescript-conventions` to
+`architecture.presetRulesets`, covering structure, naming, documentation, and test expectations.
 
 ## Contributing
 

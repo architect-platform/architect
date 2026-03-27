@@ -153,7 +153,7 @@ class ArchitecturePlugin : ArchitectPlugin<ArchitectureContext> {
                     "validator" to mapOf("type" to "string"),
                     "convention" to mapOf(
                         "type" to "string",
-                        "enum" to listOf("kdoc-required", "javadoc-required", "test-class-exists"),
+                        "enum" to listOf("kdoc-required", "javadoc-required", "tsdoc-required", "test-class-exists"),
                     ),
                     "threshold" to mapOf("type" to "integer", "minimum" to 0),
                     "allowedCycles" to mapOf(

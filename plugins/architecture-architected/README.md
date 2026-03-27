@@ -74,10 +74,19 @@ architecture:
 - `hexagonal-architecture`
 - `clean-architecture`
 - `monorepo-conventions`
+- `kotlin-conventions`
+- `typescript-conventions`
 
 Violations now include file, optional line number, severity, and remediation suggestions in both text and JSON reports.
 
 For monorepos, `architecture.boundaries` enforces which modules may import which other modules.
+
+Apply the opinionated language presets with:
+
+```bash
+architect conventions kotlin
+architect conventions typescript
+```
 
 You can also run structure-only checks via:
 

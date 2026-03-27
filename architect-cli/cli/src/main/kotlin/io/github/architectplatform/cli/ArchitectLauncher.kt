@@ -5,6 +5,7 @@ import io.github.architectplatform.cli.command.CacheCommandHandler
 import io.github.architectplatform.cli.command.CheckCommandHandler
 import io.github.architectplatform.cli.command.CliInfrastructureHandler
 import io.github.architectplatform.cli.command.ConfigCommandHandler
+import io.github.architectplatform.cli.command.ConventionsCommandHandler
 import io.github.architectplatform.cli.command.DoctorCommandHandler
 import io.github.architectplatform.cli.command.EngineCommandHandler
 import io.github.architectplatform.cli.command.HelpCommandHandler
@@ -62,6 +63,7 @@ class ArchitectLauncher(
   private val helpHandler = HelpCommandHandler()
   private val initHandler = InitCommandHandler()
   private val configHandler = ConfigCommandHandler()
+  private val conventionsHandler = ConventionsCommandHandler()
   private val doctorHandler = DoctorCommandHandler(engineHealthChecker)
   private val output = OutputFormatter()
 
@@ -267,6 +269,7 @@ class ArchitectLauncher(
       "check" -> { checkHandler.handle(args); return }
       "doctor" -> { doctorHandler.handle(args); return }
       "config" -> { configHandler.handle(args); return }
+      "conventions" -> { conventionsHandler.handle(args); return }
       "retry" -> { handleRetry(); return }
       "history" -> { handleHistory(); return }
       "stats" -> { handleStats(); return }

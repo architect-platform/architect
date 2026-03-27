@@ -22,6 +22,7 @@ class HelpCommandHandler {
       "plugin" -> printCommandHelp("plugin", PLUGIN_HELP)
       "cache" -> printCommandHelp("cache", CACHE_HELP)
       "check" -> printCommandHelp("check", CHECK_HELP)
+      "conventions" -> printCommandHelp("conventions", CONVENTIONS_HELP)
       "plan" -> printCommandHelp("plan", PLAN_HELP)
       "graph" -> printCommandHelp("graph", GRAPH_HELP)
       "history" -> printCommandHelp("history", HISTORY_HELP)
@@ -57,6 +58,7 @@ class HelpCommandHandler {
       |  graph [task]       Generate dependency graph (DOT format)
       |  validate           Validate project configuration
       |  check              Run pre-flight checks
+      |  conventions        Apply language convention presets
       |  history            Show task execution history
       |  affected           List projects affected by recent changes
       |  engine             Manage the Architect engine daemon
@@ -243,7 +245,22 @@ class HelpCommandHandler {
       |  architect engine start             Start the daemon
       |  architect engine status            Check if engine is running
       |  architect engine logs              Stream live engine logs
-    """.trimMargin()
+     """.trimMargin()
+
+    private val CONVENTIONS_HELP = """
+      |architect conventions — Apply opinionated architecture convention presets
+      |
+      |USAGE
+      |  architect conventions <kotlin|typescript>
+      |
+      |DESCRIPTION
+      |  Adds the architecture plugin if needed and appends a built-in convention
+      |  preset to `architecture.presetRulesets` in `architect.yml`.
+      |
+      |EXAMPLES
+      |  architect conventions kotlin        Apply Kotlin convention defaults
+      |  architect conventions typescript    Apply TypeScript convention defaults
+     """.trimMargin()
 
     private val PLUGIN_HELP = """
       |architect plugin — Manage Architect plugins

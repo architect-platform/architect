@@ -337,6 +337,33 @@ class ArchitectureRulesTest {
     }
 
     @Test
+    fun `test convention rule detects missing tsdoc on exported declarations`() {
+        val srcDir = tempDir.resolve("src")
+        Files.createDirectories(srcDir)
+        Files.writeString(
+            srcDir.resolve("user-service.ts"),
+            """
+                export class UserService {
+                  greet(): string {
+                    return "hello"
+                  }
+                }
+            """.trimIndent()
+        )
+
+        val rule = ArchitectureRule(
+            id = "public-tsdoc",
+            type = "convention",
+            convention = "tsdoc-required",
+            paths = listOf("src/.*\\.ts"),
+        )
+        val result = ArchitectureRules(ArchitectureContext(customRules = listOf(rule))).validate(tempDir)
+
+        assertEquals(1, result.violations.size)
+        assertTrue(result.violations.first().message.contains("missing TSDoc"))
+    }
+
+    @Test
     fun `test shouldFail with error violations`() {
         val rule = ArchitectureRule(
             id = "test",

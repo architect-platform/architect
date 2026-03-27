@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 65/128 tasks completed (51%)
+- Overall Progress: 66/128 tasks completed (52%)
 - Current Phase: Phase 4 — Project Intelligence & Conventions
-- Last Updated: 2026-03-27T21:08:12Z
+- Last Updated: 2026-03-27T21:13:23Z
 
 ---
 
@@ -583,7 +583,7 @@
   - Analyze import statements / build dependencies
   - Block violations in CI
 
-- [ ] **T-4.2.4** 🟡 `M` — Add convention presets (opinionated defaults)
+- [x] **T-4.2.4** 🟡 `M` — Add convention presets (opinionated defaults) | Finished: 2026-03-27T21:13:23Z | Notes: Added built-in Kotlin/TypeScript convention presets, introduced `architect conventions <preset>` to apply them into `architect.yml`, expanded convention validation with TSDoc support, and refreshed docs/tests.
   - `architect conventions kotlin` — applies Kotlin best practices
   - `architect conventions typescript` — applies TS best practices
   - Includes: naming, file structure, test patterns, doc requirements

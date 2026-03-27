@@ -12,6 +12,8 @@ class ConventionRuleValidator : RuleValidator {
         when (rule.convention?.trim()?.lowercase() ?: "kdoc-required") {
             "kdoc-required" -> validateDocumentationRule(rule, files, "kt", "KDoc")
             "javadoc-required" -> validateDocumentationRule(rule, files, "java", "Javadoc")
+            "tsdoc-required" -> validateDocumentationRule(rule, files, "ts", "TSDoc") +
+                validateDocumentationRule(rule, files, "tsx", "TSDoc")
             "test-class-exists" -> validateTestClassExists(rule, files)
             else -> listOf(
                 ArchitectureRules.Violation(
@@ -19,7 +21,7 @@ class ConventionRuleValidator : RuleValidator {
                     file = projectDir,
                     severity = "warning",
                     message = "Unsupported convention '${rule.convention}'",
-                    suggestion = "Use one of: kdoc-required, javadoc-required, test-class-exists.",
+                    suggestion = "Use one of: kdoc-required, javadoc-required, tsdoc-required, test-class-exists.",
                 ),
             )
         }
