@@ -9,9 +9,12 @@ import io.github.architectplatform.cli.client.ExecutionId
  * Console user interface for task execution with progress-tree rendering, batch grouping,
  * timing, failure detail capture, and an execution summary table.
  *
+ * In rich mode (not plain, verbosity >= 1) delegates live rendering to
+ * [ParallelProgressView] which shows animated spinners and collapses completed tasks.
+ *
  * Supports two modes:
- * - Interactive: Output with ANSI colors
- * - Plain: Simple text output for CI environments (no colors)
+ * - Interactive: Output with ANSI colors + in-place parallel progress view
+ * - Plain: Simple text output for CI environments (no colors, no in-place updates)
  *
  * @property taskName The name of the task being executed
  * @property plain If true, disables ANSI colors for CI environments
@@ -35,6 +38,21 @@ class ConsoleUI(
     const val BOLD = "\u001B[1m"
     const val DIM = "\u001B[2m"
   }
+
+  // ── Rich parallel progress view ───────────────────────────────────────────
+  // Used when not in plain mode and verbosity >= 1
+  private val parallelView: ParallelProgressView? =
+    if (!plain && verbosity >= 1) ParallelProgressView(plain = false, width = terminalWidth()) else null
+
+  private fun terminalWidth(): Int =
+    runCatching {
+      val proc = ProcessBuilder("stty", "size")
+        .redirectInput(java.io.File("/dev/tty"))
+        .start()
+      val out = proc.inputStream.bufferedReader().readText().trim()
+      proc.waitFor()
+      out.split(" ").getOrNull(1)?.toIntOrNull() ?: 80
+    }.getOrElse { 80 }
 
   // ── Task state tracking ─────────────────────────────────────────
 
@@ -161,7 +179,24 @@ class ConsoleUI(
       }
     }
 
-    // ── Render progress line (verbosity-gated) ──────────────────
+    // ── Render progress line ────────────────────────────────────────────
+    // Route through ParallelProgressView for rich in-place rendering when available,
+    // otherwise fall back to simple line-by-line output.
+    if (parallelView != null && taskId != null) {
+      val state = taskStates[taskId]
+      val durationMs = state?.durationMs ?: 0L
+      when (executionEventType) {
+        "STARTED" -> if (verbosity >= 1) parallelView.taskStarted(taskId, message)
+        "COMPLETED" -> if (verbosity >= 1) parallelView.taskCompleted(taskId, durationMs, message)
+        "FAILED" -> parallelView.taskFailed(taskId, durationMs, errorDetails)
+        "SKIPPED" -> if (verbosity >= 1) parallelView.taskSkipped(taskId, message)
+        "CANCELLED" -> parallelView.taskCancelled(taskId, durationMs)
+        "OUTPUT" -> if (verbosity >= 2) parallelView.output(message ?: "")
+      }
+      return
+    }
+
+    // ── Plain / fallback rendering (verbosity-gated) ──────────────────────
     // Level 0: only failures; Level 1: task names+durations; Level 2: +messages; Level 3: all
     val shouldPrint = when (executionEventType) {
       "FAILED", "CANCELLED" -> true // Always show failures and cancellations
@@ -214,7 +249,7 @@ class ConsoleUI(
       println(parts.joinToString(" ").trimEnd())
     }
 
-    // ── Failure details (always shown inline) ──────────────────
+    // ── Failure details (always shown inline in plain mode) ───────────────
     if (!errorDetails.isNullOrEmpty()) {
       println()
       println(colorize("  FAILURE DETAILS ($taskId):", "${AnsiColors.BOLD}${AnsiColors.RED}"))
@@ -231,6 +266,8 @@ class ConsoleUI(
    * Prints the execution summary table and overall result.
    */
   fun printSummary() {
+    // Finish the live progress view before printing the summary
+    parallelView?.finish()
     if (taskStates.isEmpty()) return
     println()
     println("━".repeat(80))

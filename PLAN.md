@@ -202,7 +202,7 @@
 ### 1.4 — Execution UX Improvements
 > Progress rendering is basic. No cancellation, no retry, no parallel visibility.
 
-- [ ] **T-1.4.1** 🟠 `L` — Implement rich progress rendering with parallel task visualization
+- [x] **T-1.4.1** 🟠 `L` — Implement rich progress rendering with parallel task visualization | Finished: 2026-03-27T13:55:00Z | Notes: Created ParallelProgressView.kt with background spinner thread (80ms), in-place ANSI rendering via cursor-up/clear-to-end, taskStarted/taskCompleted/taskFailed/taskSkipped/taskCancelled/output API, integrated into ConsoleUI.process() and printSummary()
   - Show multiple concurrent tasks with individual progress
   - Spinner per running task, checkmark on complete, X on failure
   - Collapse completed tasks to one line, expand failures
