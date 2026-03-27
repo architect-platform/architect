@@ -185,7 +185,7 @@
 ### 1.3 — Shell Integration & Completions
 > Static completions only. No dynamic task/project name completion.
 
-- [ ] **T-1.3.1** 🟠 `L` — Implement dynamic shell completion for task names
+- [x] **T-1.3.1** 🟠 `L` — Implement dynamic shell completion for task names | Finished: 2026-03-27T13:05:00Z | Notes: Added `architect completion query tasks|phases|projects` sub-command; `CliInfrastructureHandler` queries engine (falls back to task-cache.txt, then static list); bash script injects `_architect_complete()` for task+phase completions; zsh uses `compdef _architect_zsh`; fish uses `(architect completion query tasks)` live query; project name cached to ~/.architect/project-cache.txt after registration
   - Query engine (or parse architect.yml) for available tasks
   - Complete `architect <TAB>` with actual task names
   - Complete `architect --filter <TAB>` with phase names

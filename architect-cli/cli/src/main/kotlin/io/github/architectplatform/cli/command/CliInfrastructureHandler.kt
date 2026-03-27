@@ -1,69 +1,284 @@
 package io.github.architectplatform.cli.command
 
+import io.github.architectplatform.cli.client.EngineCommandClient
 import kotlin.system.exitProcess
 
 /**
  * Handles the `architect completion` and `architect upgrade` commands.
+ *
+ * @param engineCommandClient Optional HTTP client to query the engine for dynamic completions.
+ * @param extractProjectName Function to resolve the current project name from a directory path.
  */
-class CliInfrastructureHandler {
+class CliInfrastructureHandler(
+  private val engineCommandClient: EngineCommandClient? = null,
+  private val extractProjectName: ((String) -> String)? = null,
+) {
+
+  // ── Phase names used for --filter completions ─────────────────────────────
+
+  private val knownPhases = listOf(
+    "INIT", "LINT", "VERIFY", "BUILD", "TEST", "RUN", "RELEASE", "PUBLISH"
+  )
+
+  // ── Dynamic completion query ──────────────────────────────────────────────
+
+  /**
+   * Handles `architect completion query <type>`.
+   *
+   * Outputs one completion candidate per line for shell completion scripts.
+   * Types:
+   *  - `tasks`   — available task IDs for the current project
+   *  - `phases`  — known phase names for --filter completions
+   *  - `projects`— registered project names
+   */
+  fun handleCompletionQuery(type: String) {
+    when (type.lowercase()) {
+      "tasks" -> {
+        val tasks = fetchTasksFromCache()
+        tasks.forEach { println(it) }
+      }
+      "phases" -> knownPhases.forEach { println(it) }
+      "projects" -> {
+        val projects = runCatching {
+          engineCommandClient?.getAllProjects()?.map { it.name } ?: emptyList()
+        }.getOrElse { emptyList() }
+        // Also include any locally cached project names
+        val cached = readProjectCache()
+        (projects + cached).distinct().sorted().forEach { println(it) }
+      }
+      else -> {
+        System.err.println("Unknown completion type: $type  (supported: tasks, phases, projects)")
+        exitProcess(1)
+      }
+    }
+  }
+
+  private fun fetchTasksFromCache(): List<String> {
+    // 1. Try the engine (fastest when running)
+    val fromEngine = runCatching {
+      if (engineCommandClient == null) return@runCatching emptyList()
+      val projectPath = System.getProperty("user.dir")
+      val projectName = extractProjectName?.invoke(projectPath) ?: return@runCatching emptyList()
+      val tasks = engineCommandClient.getAllTasks(projectName).map { it.id }
+      if (tasks.isNotEmpty()) writeTaskCache(tasks)
+      tasks
+    }.getOrElse { emptyList() }
+    if (fromEngine.isNotEmpty()) return fromEngine
+
+    // 2. Fall back to cache file written by a previous run
+    val cached = readTaskCache()
+    if (cached.isNotEmpty()) return cached
+
+    // 3. Last resort: static known sub-commands
+    return listOf(
+      "tasks", "info", "plan", "graph", "validate", "history",
+      "watch", "affected", "cache", "engine", "plugin", "completion",
+      "upgrade", "init", "help", "doctor", "config", "retry", "check"
+    )
+  }
+
+  // ── Cache helpers ─────────────────────────────────────────────────────────
+
+  private val cacheDir get() = java.io.File(System.getProperty("user.home"), ".architect")
+  private val taskCacheFile get() = java.io.File(cacheDir, "task-cache.txt")
+  private val projectCacheFile get() = java.io.File(cacheDir, "project-cache.txt")
+
+  private fun writeTaskCache(tasks: List<String>) {
+    runCatching {
+      cacheDir.mkdirs()
+      taskCacheFile.writeText(tasks.joinToString("\n"))
+    }
+  }
+
+  private fun readTaskCache(): List<String> =
+    runCatching {
+      if (!taskCacheFile.exists()) return emptyList()
+      taskCacheFile.readLines().filter { it.isNotBlank() }
+    }.getOrElse { emptyList() }
+
+  /** Called after successful project registration to persist name for completion. */
+  fun cacheProjectName(name: String) {
+    runCatching {
+      cacheDir.mkdirs()
+      val existing = readProjectCache().toMutableList()
+      if (name !in existing) {
+        existing.add(name)
+        projectCacheFile.writeText(existing.joinToString("\n"))
+      }
+    }
+  }
+
+  private fun readProjectCache(): List<String> =
+    runCatching {
+      if (!projectCacheFile.exists()) return emptyList()
+      projectCacheFile.readLines().filter { it.isNotBlank() }
+    }.getOrElse { emptyList() }
+
+  // ── Shell script generation ───────────────────────────────────────────────
 
   fun handleCompletion(args: List<String>, cliInstance: Runnable) {
-    val shell = args.getOrNull(1)?.lowercase() ?: "bash"
+    val subCmd = args.getOrNull(1)?.lowercase() ?: "bash"
+
+    // Internal sub-command: `architect completion query <type>`
+    if (subCmd == "query") {
+      val type = args.getOrNull(2) ?: "tasks"
+      handleCompletionQuery(type)
+      return
+    }
+
+    val shell = subCmd
     when (shell) {
-      "bash" -> {
-        val script = picocli.AutoComplete.bash("architect", picocli.CommandLine(cliInstance))
-        println(script)
-      }
-      "zsh" -> {
-        val bashScript = picocli.AutoComplete.bash("architect", picocli.CommandLine(cliInstance))
-        println("# Generated zsh completion for architect")
-        println("# Add to ~/.zshrc: eval \"\$(architect completion zsh)\"")
-        println("autoload -U +X bashcompinit && bashcompinit")
-        println("autoload -U +X compinit && compinit")
-        println(bashScript)
-      }
-      "fish" -> {
-        println("# Generated fish completion for architect")
-        println("# Save to: ~/.config/fish/completions/architect.fish")
-        println()
-        val subcommands = listOf(
-          "tasks" to "List available tasks",
-          "info" to "Show project information",
-          "plan" to "Show execution plan for a task",
-          "graph" to "Render task dependency graph",
-          "validate" to "Validate project configuration",
-          "history" to "Show execution history",
-          "run" to "Run a task",
-          "watch" to "Watch and re-run task on changes",
-          "affected" to "List affected projects",
-          "cache" to "Manage task output cache",
-          "engine" to "Manage the Architect Engine",
-          "plugin" to "Manage plugins",
-          "completion" to "Generate shell completion scripts",
-          "upgrade" to "Upgrade architect to the latest release",
-        )
-        subcommands.forEach { (sub, desc) ->
-          println("complete -c architect -f -n '__fish_use_subcommand architect' -a $sub -d '$desc'")
-        }
-        println()
-        println("complete -c architect -l json -d 'Output in JSON format'")
-        println("complete -c architect -l no-color -d 'Disable colored output'")
-        println("complete -c architect -l embedded -d 'Run in embedded mode'")
-        println("complete -c architect -l no-daemon -d 'Skip daemon startup'")
-        println("complete -c architect -l watch -s w -d 'Watch and re-run on changes'")
-        println("complete -c architect -l version -s v -d 'Print version information'")
-        println("complete -c architect -l filter -d 'Filter tasks by phase'")
-        println("complete -c architect -l env -d 'Active environment profile'")
-        println("complete -c architect -l affected -d 'Only run for affected projects'")
-        println("complete -c architect -l base -d 'Base ref for affected detection'")
-        println("complete -c architect -l no-cache -d 'Bypass task output cache'")
-      }
+      "bash" -> printBashCompletion(cliInstance)
+      "zsh" -> printZshCompletion(cliInstance)
+      "fish" -> printFishCompletion()
       else -> {
         println("Unsupported shell: $shell")
         println("Supported: bash, zsh, fish")
         exitProcess(1)
       }
     }
+  }
+
+  private fun printBashCompletion(cliInstance: Runnable) {
+    val base = picocli.AutoComplete.bash("architect", picocli.CommandLine(cliInstance))
+    // Inject dynamic task and phase completion into the picocli-generated script.
+    // The injected function wraps the picocli default to add live task-name candidates.
+    val dynamic = """
+# -- Dynamic task/phase completion (Architect) --
+_architect_dynamic_tasks() {
+  architect completion query tasks 2>/dev/null
+}
+_architect_dynamic_phases() {
+  architect completion query phases 2>/dev/null
+}
+_architect_complete() {
+  local cur prev
+  COMPREPLY=()
+  cur="${'$'}{COMP_WORDS[COMP_CWORD]}"
+  prev="${'$'}{COMP_WORDS[COMP_CWORD-1]}"
+
+  # --filter <phase> completion
+  if [[ "${'$'}prev" == "--filter" || "${'$'}prev" == "--filter=" ]]; then
+    local phases
+    phases=${'$'}(_architect_dynamic_phases)
+    COMPREPLY=(${'$'}(compgen -W "${'$'}phases" -- "${'$'}cur"))
+    return 0
+  fi
+
+  # First positional argument: task name completion
+  local wordnum=0
+  for ((i=1; i<COMP_CWORD; i++)); do
+    if [[ "${'$'}{COMP_WORDS[${'$'}i]}" != -* ]]; then
+      ((wordnum++))
+    fi
+  done
+
+  if [[ ${'$'}wordnum -eq 0 ]]; then
+    local tasks
+    tasks=${'$'}(_architect_dynamic_tasks)
+    COMPREPLY=(${'$'}(compgen -W "${'$'}tasks" -- "${'$'}cur"))
+    return 0
+  fi
+}
+complete -F _architect_complete architect
+""".trimIndent()
+    println(base)
+    println()
+    println(dynamic)
+  }
+
+  private fun printZshCompletion(cliInstance: Runnable) {
+    val bashScript = picocli.AutoComplete.bash("architect", picocli.CommandLine(cliInstance))
+    println("# Generated zsh completion for architect")
+    println("# Add to ~/.zshrc: eval \"\$(architect completion zsh)\"")
+    println("autoload -U +X bashcompinit && bashcompinit")
+    println("autoload -U +X compinit && compinit")
+    println()
+    println("# Dynamic task/phase completions")
+    println("_architect_zsh() {")
+    println("  local -a tasks phases")
+    println("  tasks=(\${(f)\"\$(architect completion query tasks 2>/dev/null)\"})")
+    println("  case \"\$words[2]\" in")
+    println("    '') _describe 'task' tasks ;;")
+    println("    *) _describe 'task' tasks ;;")
+    println("  esac")
+    println("}")
+    println()
+    println(bashScript)
+    println()
+    println("# Override with zsh native function for better UX")
+    println("compdef _architect_zsh architect")
+  }
+
+  private fun printFishCompletion() {
+    println("# Generated fish completion for architect")
+    println("# Save to: ~/.config/fish/completions/architect.fish")
+    println("# Or run: architect completion install")
+    println()
+
+    // Dynamic task completions — call architect to get live task names
+    println("# Dynamic task completions (queries the engine or uses cache)")
+    println("complete -c architect -f -n 'not __fish_seen_subcommand_from " +
+      "tasks info plan graph validate history watch affected cache engine plugin completion upgrade init help doctor config retry check" +
+      "' -a '(architect completion query tasks 2>/dev/null)' -d 'Task'")
+    println()
+
+    // Static sub-commands
+    val subcommands = listOf(
+      "tasks" to "List available tasks",
+      "info" to "Show project information",
+      "plan" to "Show execution plan for a task",
+      "graph" to "Render task dependency graph",
+      "validate" to "Validate project configuration",
+      "history" to "Show execution history",
+      "watch" to "Watch and re-run task on changes",
+      "affected" to "List affected projects",
+      "cache" to "Manage task output cache",
+      "engine" to "Manage the Architect Engine",
+      "plugin" to "Manage plugins",
+      "completion" to "Generate shell completion scripts",
+      "upgrade" to "Upgrade architect to the latest release",
+      "init" to "Scaffold a new project interactively",
+      "help" to "Show help",
+      "doctor" to "Run environment diagnostics",
+      "config" to "Manage configuration",
+      "retry" to "Retry the last failed execution",
+      "check" to "Run precondition checks",
+    )
+    println("# Sub-commands")
+    subcommands.forEach { (sub, desc) ->
+      println("complete -c architect -f -a $sub -d '$desc'")
+    }
+    println()
+
+    // Flags
+    println("# Flags")
+    println("complete -c architect -l json -d 'Output in JSON format'")
+    println("complete -c architect -l no-color -d 'Disable colored output'")
+    println("complete -c architect -l plain -s p -d 'Plain output for CI'")
+    println("complete -c architect -l embedded -d 'Run in embedded mode'")
+    println("complete -c architect -l no-daemon -d 'Skip daemon startup'")
+    println("complete -c architect -l watch -s w -d 'Watch and re-run on changes'")
+    println("complete -c architect -l version -s v -d 'Print version information'")
+    println("complete -c architect -l no-cache -d 'Bypass task output cache'")
+    println("complete -c architect -l dry-run -d 'Show plan without running'")
+    println("complete -c architect -l verbose -d 'Increase verbosity'")
+    println("complete -c architect -l quiet -s q -d 'Quiet mode'")
+    println("complete -c architect -l timing -d 'Show timing breakdown'")
+    println("complete -c architect -l parallel -d 'Control task parallelism'")
+    println("complete -c architect -l output -s o -d 'Save output to file'")
+    println("complete -c architect -l tee -d 'Output to file and terminal'")
+    println("complete -c architect -l affected -d 'Only run for affected projects'")
+    println("complete -c architect -l base -d 'Base ref for affected detection'")
+    println()
+
+    // Dynamic phase completion for --filter
+    println("# Dynamic phase completion for --filter")
+    println("complete -c architect -l filter -x -a '(architect completion query phases 2>/dev/null)' -d 'Filter by phase'")
+    println()
+
+    // Dynamic env profile completions could be added here in future
+    println("complete -c architect -l env -d 'Active environment profile'")
   }
 
   @Suppress("UNCHECKED_CAST")

@@ -58,7 +58,7 @@ class ArchitectLauncher(
   private val pluginHandler = PluginCommandHandler()
   private val cacheHandler = CacheCommandHandler()
   private val checkHandler = CheckCommandHandler(embeddedTaskExecutor, ::extractProjectName)
-  private val cliHandler = CliInfrastructureHandler()
+  private val cliHandler = CliInfrastructureHandler(engineCommandClient, ::extractProjectName)
   private val helpHandler = HelpCommandHandler()
   private val initHandler = InitCommandHandler()
   private val configHandler = ConfigCommandHandler()
@@ -315,6 +315,7 @@ class ArchitectLauncher(
     println("📦 Registering project: $projectName")
     val request = RegisterProjectRequest(name = projectName, path = projectPath)
     engineCommandClient.registerProject(request)
+    cliHandler.cacheProjectName(projectName)
 
     when (command) {
       "tasks" -> { output.printTasks(engineCommandClient.getAllTasks(projectName)); return }
