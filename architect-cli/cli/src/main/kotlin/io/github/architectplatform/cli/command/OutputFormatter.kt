@@ -209,16 +209,26 @@ class OutputFormatter(
   }
 
   fun printTasks(tasks: List<io.github.architectplatform.cli.dto.TaskDTO>) {
-    var filtered = tasks
+    val taskEntries = tasks.filter { it.groupMembers == null }
+    var filteredTasks = taskEntries
     if (filter != null) {
       val f = filter!!.uppercase()
-      filtered = tasks.filter { it.phase?.uppercase() == f }
+      filteredTasks = taskEntries.filter { it.phase?.uppercase() == f }
     }
+
+    val tasksById = filteredTasks.associateBy { it.id }
+    val groupHeaders =
+      tasks.filter { it.groupMembers != null }
+        .mapNotNull { header ->
+          val members = header.groupMembers.orEmpty().filter { tasksById.containsKey(it) }
+          if (members.isEmpty()) null else header.copy(groupMembers = members)
+        }
+    val rendered = if (groupHeaders.isEmpty()) filteredTasks else groupHeaders + filteredTasks
 
     if (json) {
       val mapper = com.fasterxml.jackson.databind.ObjectMapper()
         .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
-      println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(filtered))
+      println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rendered))
       return
     }
 
@@ -229,24 +239,49 @@ class OutputFormatter(
     val fmt = "  %-30s  %-12s  %s"
     println(fmt.format("TASK", "PHASE", "DESCRIPTION"))
     println("  ${"─".repeat(76)}")
-    filtered.forEach { t ->
-      println(fmt.format(t.id.take(30), (t.phase ?: "—").take(12), t.description.take(34)))
+    if (groupHeaders.isEmpty()) {
+      filteredTasks.forEach { t ->
+        println(fmt.format(t.id.take(30), (t.phase ?: "—").take(12), t.description.take(34)))
+      }
+    } else {
+      val groupedMembers = linkedSetOf<String>()
+      groupHeaders.forEach { group ->
+        println(fmt.format(group.id.take(30), "GROUP", group.description.take(34)))
+        group.groupMembers.orEmpty().forEach { memberId ->
+          val member = tasksById[memberId]
+          val label = "↳ $memberId"
+          if (member != null) {
+            println(
+              fmt.format(label.take(30), (member.phase ?: "—").take(12), member.description.take(34)),
+            )
+          } else {
+            println(fmt.format(label.take(30), "—", ""))
+          }
+          groupedMembers += memberId
+        }
+      }
+      filteredTasks
+        .filterNot { it.id in groupedMembers }
+        .forEach { t ->
+          println(fmt.format(t.id.take(30), (t.phase ?: "—").take(12), t.description.take(34)))
+        }
     }
     println()
-    println("  ${filtered.size} task(s) available")
+    println("  ${filteredTasks.size} task(s) available")
     println()
   }
 
   fun printInfo(projectName: String, projectPath: String, tasks: List<io.github.architectplatform.cli.dto.TaskDTO>) {
+    val taskEntries = tasks.filter { it.groupMembers == null }
     if (json) {
       val mapper = com.fasterxml.jackson.databind.ObjectMapper()
         .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
       val info = mapOf(
         "project" to projectName,
         "path" to projectPath,
-        "taskCount" to tasks.size,
+        "taskCount" to taskEntries.size,
         "tasks" to tasks,
-        "phases" to tasks.mapNotNull { it.phase }.distinct().sorted(),
+        "phases" to taskEntries.mapNotNull { it.phase }.distinct().sorted(),
       )
       println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(info))
       return
@@ -258,8 +293,8 @@ class OutputFormatter(
     println("━".repeat(80))
     println("  Name:   $projectName")
     println("  Path:   $projectPath")
-    println("  Tasks:  ${tasks.size}")
-    val phases = tasks.mapNotNull { it.phase }.distinct().sorted()
+    println("  Tasks:  ${taskEntries.size}")
+    val phases = taskEntries.mapNotNull { it.phase }.distinct().sorted()
     if (phases.isNotEmpty()) {
       println("  Phases: ${phases.joinToString(", ")}")
     }

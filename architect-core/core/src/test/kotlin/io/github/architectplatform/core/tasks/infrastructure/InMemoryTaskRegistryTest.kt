@@ -9,16 +9,23 @@ import kotlin.test.assertNull
 
 class InMemoryTaskRegistryTest {
   @Test
-  fun `should resolve aliases and wildcard groups`() {
+  fun `should resolve aliases groups and wildcards to direct tasks`() {
     val registry = InMemoryTaskRegistry()
     registry.add(simpleTask("frontend-build"))
     registry.add(simpleTask("backend-build"))
     registry.addAlias("build:frontend", "frontend-build")
     registry.addAlias("build:backend", "backend-build")
+    registry.addGroup("build", listOf("frontend-build", "backend-build"))
 
-    assertNotNull(registry.get("build:frontend"))
-    val wildcard = requireNotNull(registry.get("build:*"))
-    assertEquals(listOf("backend-build", "frontend-build"), wildcard.depends().sorted())
+    assertEquals(listOf("frontend-build"), registry.resolve("build:frontend").map { it.id })
+    assertEquals(
+      listOf("frontend-build", "backend-build"),
+      registry.resolve("build").map { it.id },
+    )
+    assertEquals(
+      listOf("frontend-build", "backend-build"),
+      registry.resolve("build:*").map { it.id },
+    )
   }
 
   @Test

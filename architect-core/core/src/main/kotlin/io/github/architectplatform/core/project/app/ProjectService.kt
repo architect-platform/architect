@@ -168,7 +168,7 @@ class ProjectService(
         val registeredTaskIds = (afterTaskIds - beforeTaskIds)
         if (registeredTaskIds.isNotEmpty()) {
           tasksByPluginId.getOrPut(it.id) { mutableSetOf() }.addAll(registeredTaskIds)
-          registerPluginNamespaceAliases(taskRegistry, it.id, registeredTaskIds)
+          registerPluginNamespaceAliases(taskRegistry, it.id, it.contextKey, registeredTaskIds)
         }
       } catch (e: Exception) {
         logger.error("Failed to initialize plugin ${it.id} for project $projectName: ${e.message}", e)
@@ -207,9 +207,13 @@ class ProjectService(
   private fun registerPluginNamespaceAliases(
     taskRegistry: InMemoryTaskRegistry,
     pluginId: String,
+    contextKey: String,
     taskIds: Set<String>,
   ) {
-    val namespace = pluginId.removeSuffix("-architected")
+    val namespace =
+      contextKey.trim().takeIf { it.isNotBlank() }
+        ?: pluginId.removeSuffix("-architected").takeIf { it.isNotBlank() }
+        ?: return
     taskIds.sorted().forEach { taskId ->
       val aliasSuffix = namespacedAliasSuffix(taskId, namespace) ?: return@forEach
       taskRegistry.addAlias(

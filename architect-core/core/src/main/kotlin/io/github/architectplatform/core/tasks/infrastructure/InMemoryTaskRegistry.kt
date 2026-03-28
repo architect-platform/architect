@@ -61,7 +61,14 @@ class InMemoryTaskRegistry : TaskRegistry {
 
   override fun all(): List<Task> = tasks.values.toList()
 
-  override fun resolve(reference: String): List<Task> = get(reference)?.let(::listOf) ?: emptyList()
+  fun aliasIds(): Set<String> = aliasTargets.keys.toSet()
+
+  override fun resolve(reference: String): List<Task> {
+    val groupIds = groups.keys
+    val directTaskIds = tasks.keys.filterNot { it in aliasTargets || it in groupIds }
+    val resolvedIds = TaskReferenceResolver.resolve(reference, directTaskIds, aliasTargets, groups)
+    return resolvedIds.mapNotNull { tasks[it] }
+  }
 
   override fun groups(): Map<String, List<String>> = groups.toMap()
 

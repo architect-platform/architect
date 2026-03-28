@@ -329,7 +329,7 @@ class ProjectServiceTest {
   }
 
   private class GitStylePlugin : ArchitectPlugin<Any> {
-    override val id: String = "git-architected"
+    override val id: String = "git-plugin"
     override val contextKey: String = "git"
     override val ctxClass: Class<Any> = Any::class.java
     override var context: Any = Unit

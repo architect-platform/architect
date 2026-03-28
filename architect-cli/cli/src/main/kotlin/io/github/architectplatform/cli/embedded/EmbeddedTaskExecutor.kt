@@ -4,11 +4,15 @@ import io.github.architectplatform.cli.dto.TaskDTO
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.TaskPlanStepDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
+import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskNotFoundException
 import io.github.architectplatform.api.core.tasks.TaskResult
+import io.github.architectplatform.api.core.tasks.TaskRegistry
+import io.github.architectplatform.api.core.tasks.builtin.SimpleTask
 import io.github.architectplatform.core.execution.EmbeddedExecutionContext
 import io.github.architectplatform.core.history.domain.ExecutionRecord
 import io.github.architectplatform.core.tasks.domain.TaskDependencyResolver
+import io.github.architectplatform.core.tasks.infrastructure.InMemoryTaskRegistry
 import io.github.architectplatform.core.domain.events.ArchitectEvent
 import kotlinx.coroutines.runBlocking
 import jakarta.inject.Singleton
@@ -33,9 +37,50 @@ class EmbeddedTaskExecutor(
     context.projectService.registerProject(projectName, projectPath)
     val project = context.projectService.getProject(projectName)
       ?: throw IllegalArgumentException("Project $projectName is not registered")
-    return project.taskRegistry.all()
-        .sortedBy { it.id }
-        .map { TaskDTO(id = it.id, description = it.description(), phase = it.phase()?.id) }
+    val registry = project.taskRegistry
+    val aliasIds = (registry as? InMemoryTaskRegistry)?.aliasIds().orEmpty()
+    val groups = registry.groups()
+    val groupIds = groups.keys
+    val tasks = registry.all()
+      .filterNot { it.id in aliasIds || it.id in groupIds }
+    val taskDtos = tasks.associate { task ->
+      task.id to TaskDTO(id = task.id, description = task.description(), phase = task.phase()?.id)
+    }
+    fun resolveGroupMembers(members: List<String>): List<String> {
+      val resolved = linkedSetOf<String>()
+      members.forEach { memberId ->
+        val resolvedTasks = registry.resolve(memberId)
+        if (resolvedTasks.isEmpty()) {
+          resolved += memberId
+        } else {
+          resolvedTasks.forEach { resolved += it.id }
+        }
+      }
+      return resolved.toList()
+    }
+
+    val groupedMembers = linkedSetOf<String>()
+    val ordered = mutableListOf<TaskDTO>()
+    groups.forEach { (groupId, members) ->
+      val resolvedMembers = resolveGroupMembers(members)
+      val groupTask = registry.get(groupId)
+      ordered += TaskDTO(
+        id = groupId,
+        description = groupTask?.description() ?: "Task group '$groupId'",
+        phase = groupTask?.phase()?.id,
+        groupMembers = resolvedMembers,
+      )
+      resolvedMembers.forEach { memberId ->
+        val member = taskDtos[memberId] ?: return@forEach
+        ordered += member
+        groupedMembers += memberId
+      }
+    }
+    val ungrouped = taskDtos.values
+      .filterNot { it.id in groupedMembers }
+      .sortedBy { it.id }
+    ordered += ungrouped
+    return ordered
   }
 
   fun validate(projectName: String, projectPath: String): ValidationResultDTO {
@@ -50,8 +95,7 @@ class EmbeddedTaskExecutor(
     context.projectService.registerProject(projectName, projectPath)
     val project = context.projectService.getProject(projectName)
       ?: throw IllegalArgumentException("Project $projectName is not registered")
-    val task = project.taskRegistry.get(taskName)
-      ?: throw TaskNotFoundException(taskName, projectName, project.taskRegistry.all().map { it.id })
+    val task = resolveTask(projectName, taskName, project.taskRegistry)
 
     val allTasks = dependencyResolver.resolveAllDependencies(task, project.taskRegistry)
     val executionOrder = dependencyResolver.topologicalSort(allTasks)
@@ -86,8 +130,7 @@ class EmbeddedTaskExecutor(
     context.projectService.registerProject(projectName, projectPath)
     val project = context.projectService.getProject(projectName)
       ?: throw IllegalArgumentException("Project $projectName is not registered")
-    val task = project.taskRegistry.get(taskName)
-      ?: throw TaskNotFoundException(taskName, projectName, project.taskRegistry.all().map { it.id })
+    val task = resolveTask(projectName, taskName, project.taskRegistry)
 
     val unsubscribe = context.eventBus.subscribe(onEvent)
 
@@ -114,5 +157,28 @@ class EmbeddedTaskExecutor(
     } finally {
       unsubscribe()
     }
+  }
+
+  private fun resolveTask(projectName: String, taskName: String, registry: TaskRegistry): Task {
+    val resolved = registry.resolve(taskName)
+    if (resolved.isEmpty()) {
+      throw TaskNotFoundException(taskName, projectName, availableTaskReferences(registry))
+    }
+    return if (resolved.size == 1) {
+      resolved.single()
+    } else {
+      SimpleTask(
+        id = taskName,
+        description = "Resolved task '$taskName' runs ${resolved.joinToString(", ") { it.id }}",
+        customDependencies = resolved.map { it.id },
+        permissions = emptySet(),
+      ) { _, _ ->
+        TaskResult.success("Composite task '$taskName' completed")
+      }
+    }
+  }
+
+  private fun availableTaskReferences(registry: TaskRegistry): List<String> {
+    return (registry.all().map { it.id } + registry.groups().keys).distinct()
   }
 }

@@ -2,6 +2,7 @@ package io.github.architectplatform.cli.embedded
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
@@ -31,10 +32,15 @@ class EmbeddedTaskExecutorTest {
     )
 
     val executor = EmbeddedTaskExecutor(JdkRemoteContentFetcher())
-    val listedTasks = executor.listTasks("grouped-cli-project", projectDir.toString()).map { it.id }
-    assertTrue("build" in listedTasks)
-    assertTrue("build:frontend" in listedTasks)
-    assertTrue("build:backend" in listedTasks)
+    val listedTasks = executor.listTasks("grouped-cli-project", projectDir.toString())
+    val listedIds = listedTasks.map { it.id }
+    val groupHeader = listedTasks.firstOrNull { it.id == "build" }
+    assertNotNull(groupHeader)
+    assertEquals(listOf("frontend-build", "backend-build"), groupHeader!!.groupMembers)
+    assertTrue("frontend-build" in listedIds)
+    assertTrue("backend-build" in listedIds)
+    assertTrue("build:frontend" !in listedIds)
+    assertTrue("build:backend" !in listedIds)
 
     val groupPlan = executor.plan("grouped-cli-project", projectDir.toString(), "build")
     assertEquals(setOf("frontend-build", "backend-build", "build"), groupPlan.steps.map { it.id }.toSet())
