@@ -3,6 +3,8 @@ package io.github.architectplatform.core.project.app
 import io.github.architectplatform.core.project.domain.Project
 import io.github.architectplatform.core.project.domain.ProjectDependencyGraph
 import java.io.File
+import java.nio.file.FileSystems
+import java.nio.file.Paths
 
 /**
  * Resolves which projects are "affected" by changes since a given git base ref.
@@ -20,6 +22,9 @@ class AffectedProjectResolver(
   data class AffectedConfig(
     val alwaysInclude: Set<String> = emptySet(),
     val neverInclude: Set<String> = emptySet(),
+    // Glob patterns for files that should not trigger any project to be marked affected.
+    // Examples: ["**-slash-*.md", "docs/**", "*.txt"]
+    val ignorePatterns: List<String> = emptyList(),
   )
 
   /**
@@ -48,12 +53,13 @@ class AffectedProjectResolver(
     config: AffectedConfig = AffectedConfig(),
   ): Set<String> {
     val changedFiles = gitChangedFiles(root.path, baseRef)
-    if (changedFiles.isEmpty() && config.alwaysInclude.isEmpty()) {
+    val filteredFiles = filterIgnoredFiles(changedFiles, config.ignorePatterns)
+    if (filteredFiles.isEmpty() && config.alwaysInclude.isEmpty()) {
       return emptySet()
     }
 
     val allProjects = flattenProjects(root)
-    val directlyAffected = mapFilesToProjects(changedFiles, allProjects, root.path)
+    val directlyAffected = mapFilesToProjects(filteredFiles, allProjects, root.path)
     val transitivelyAffected = expandTransitiveDependents(directlyAffected, graph)
 
     val result = transitivelyAffected.toMutableSet()
@@ -76,6 +82,22 @@ class AffectedProjectResolver(
       return emptyList()
     }
     return output.lines().filter { it.isNotBlank() }
+  }
+
+  /**
+   * Filters out files that match any of the given glob ignore patterns.
+   * Patterns use standard glob syntax, e.g. double-star-slash-*.md, docs-slash-double-star, *.txt.
+   */
+  internal fun filterIgnoredFiles(files: List<String>, ignorePatterns: List<String>): List<String> {
+    if (ignorePatterns.isEmpty()) return files
+    val fs = FileSystems.getDefault()
+    val matchers = ignorePatterns.map { pattern ->
+      fs.getPathMatcher("glob:$pattern")
+    }
+    return files.filter { file ->
+      val path = Paths.get(file)
+      matchers.none { it.matches(path) }
+    }
   }
 
   /**
@@ -157,7 +179,13 @@ class AffectedProjectResolver(
         ?.filterIsInstance<String>()?.toSet() ?: emptySet()
       val neverInclude = (affected["never-include"] as? List<*>)
         ?.filterIsInstance<String>()?.toSet() ?: emptySet()
-      return AffectedConfig(alwaysInclude = alwaysInclude, neverInclude = neverInclude)
+      val ignorePatterns = (affected["ignore"] as? List<*>)
+        ?.filterIsInstance<String>() ?: emptyList()
+      return AffectedConfig(
+        alwaysInclude = alwaysInclude,
+        neverInclude = neverInclude,
+        ignorePatterns = ignorePatterns,
+      )
     }
   }
 }

@@ -11,6 +11,7 @@ import java.io.File
  * - Explicit declarations from `subprojects` config blocks
  * - Inferred parent-child hierarchy dependencies in discovered monorepos
  * - Inferred shared-build-script dependency (child uses parent's build file)
+ * - Parsed `build.gradle.kts` / `build.gradle` for `project(":...")` dependency declarations
  */
 class ProjectDependencyGraphBuilder {
 
@@ -49,6 +50,7 @@ class ProjectDependencyGraphBuilder {
     val inferred = mutableSetOf<String>()
     inferred += inferParentDependency(project, projectByName)
     inferred += inferSharedBuildDependency(project, projectByName)
+    inferred += inferBuildFileDependencies(project, projectByName)
 
     return (explicitNames + inferred).filter { it != project.name }.toSet()
   }
@@ -128,6 +130,36 @@ class ProjectDependencyGraphBuilder {
         projectDir.parentFile?.canonicalFile == candidateDir.canonicalFile && hasBuildFile(candidateDir)
       }
     return if (parent != null) setOf(parent.name) else emptySet()
+  }
+
+  /**
+   * Parses `build.gradle.kts` and `build.gradle` files in the project directory for
+   * Gradle `project(":name")` or `project(":group:name")` dependency declarations.
+   * The last path segment of the project notation is matched against known project names.
+   *
+   * Example: `implementation(project(":architect-api"))` → dependency on "architect-api"
+   */
+  private fun inferBuildFileDependencies(
+    project: Project,
+    projectByName: Map<String, Project>,
+  ): Set<String> {
+    val projectDir = File(project.path)
+    val buildFile = listOf(
+      File(projectDir, "build.gradle.kts"),
+      File(projectDir, "build.gradle"),
+    ).firstOrNull { it.exists() } ?: return emptySet()
+
+    val content = buildFile.readText()
+    val projectRefPattern = Regex("""project\(\s*["']([^"']+)["']\s*\)""")
+    val referenced = mutableSetOf<String>()
+    for (match in projectRefPattern.findAll(content)) {
+      val notation = match.groupValues[1] // e.g. ":architect-api" or ":group:module"
+      val name = notation.trimStart(':').substringAfterLast(':')
+      if (name.isNotBlank() && name in projectByName && name != project.name) {
+        referenced += name
+      }
+    }
+    return referenced
   }
 
   private fun hasBuildFile(dir: File): Boolean =

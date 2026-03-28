@@ -302,4 +302,95 @@ class AffectedProjectResolverTest {
 
     assertEquals(input, resolver.cacheValidator(input))
   }
+
+  // ── ignore patterns ───────────────────────────────────────────────────
+
+  @Test
+  fun `ignore patterns filter out matching files before project mapping`() {
+    val docs = project(name = "docs", path = "/repo/docs")
+    val root = project(name = "root", path = "/repo", subProjects = listOf(docs))
+    val g = graph(setOf("root", "docs"))
+    // Only a markdown file changed — should be ignored
+    val resolver = resolverWith(listOf("docs/guide.md"))
+
+    val affected = resolver.resolve(
+      root, g,
+      config = AffectedProjectResolver.AffectedConfig(ignorePatterns = listOf("**/*.md")),
+    )
+
+    assertTrue(affected.isEmpty())
+  }
+
+  @Test
+  fun `ignore patterns only filter matched files, leaving others`() {
+    val docs = project(name = "docs", path = "/repo/docs")
+    val src = project(name = "src", path = "/repo/src")
+    val root = project(name = "root", path = "/repo", subProjects = listOf(docs, src))
+    val g = graph(setOf("root", "docs", "src"))
+    // One markdown (ignored) + one Kotlin source (not ignored)
+    val resolver = resolverWith(listOf("docs/guide.md", "src/Main.kt"))
+
+    val affected = resolver.resolve(
+      root, g,
+      config = AffectedProjectResolver.AffectedConfig(ignorePatterns = listOf("**/*.md")),
+    )
+
+    assertTrue("docs" !in affected)
+    assertTrue("src" in affected)
+  }
+
+  @Test
+  fun `ignore patterns with directory prefix filter entire subtree`() {
+    val docs = project(name = "docs", path = "/repo/docs")
+    val root = project(name = "root", path = "/repo", subProjects = listOf(docs))
+    val g = graph(setOf("root", "docs"))
+    val resolver = resolverWith(listOf("docs/guide.md", "docs/reference/api.md"))
+
+    val affected = resolver.resolve(
+      root, g,
+      config = AffectedProjectResolver.AffectedConfig(ignorePatterns = listOf("docs/**")),
+    )
+
+    assertTrue(affected.isEmpty())
+  }
+
+  @Test
+  fun `filterIgnoredFiles returns all files when no patterns given`() {
+    val resolver = resolverWith(emptyList())
+    val files = listOf("README.md", "src/Main.kt", "docs/guide.md")
+
+    assertEquals(files, resolver.filterIgnoredFiles(files, emptyList()))
+  }
+
+  @Test
+  fun `filterIgnoredFiles removes files matching glob pattern`() {
+    val resolver = resolverWith(emptyList())
+    val files = listOf("README.md", "src/Main.kt", "CHANGELOG.md")
+
+    val result = resolver.filterIgnoredFiles(files, listOf("*.md"))
+
+    assertEquals(listOf("src/Main.kt"), result)
+  }
+
+  @Test
+  fun `parseConfig reads ignore patterns`() {
+    val config = AffectedProjectResolver.parseConfig(
+      mapOf(
+        "affected" to mapOf(
+          "ignore" to listOf("**/*.md", "docs/**"),
+        ),
+      ),
+    )
+
+    assertEquals(listOf("**/*.md", "docs/**"), config.ignorePatterns)
+  }
+
+  @Test
+  fun `parseConfig returns empty ignore patterns when not present`() {
+    val config = AffectedProjectResolver.parseConfig(
+      mapOf("affected" to mapOf("always-include" to listOf("infra"))),
+    )
+
+    assertTrue(config.ignorePatterns.isEmpty())
+  }
 }
