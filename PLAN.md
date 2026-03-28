@@ -10,7 +10,7 @@
 
 - Overall Progress: 77/128 tasks completed (60%)
 - Current Phase: Phase 5 — Configuration as Code Excellence
-- Last Updated: 2026-03-28T10:16:46Z
+- Last Updated: 2026-03-28T13:40:14Z
 
 ---
 
@@ -682,9 +682,13 @@
         retryAttempts: 3
     ```
 
-- [ ] **T-5.3.2** 🟠 `M` — Add task grouping and namespacing | sequential | Priority: high | Depends: T-5.3.1 | [REVISED] 2026-03-28T10:16:46Z | Assumptions: do not rename existing task IDs silently; support grouping/namespace expansion through registry + CLI resolution while keeping legacy IDs executable | Acceptance: `architect build` can expand configured groups, `build:*` / `build:frontend` style lookups resolve predictably, plugin tasks gain explicit namespace aliases where applicable, and task listing/help surfaces the grouping model
-  - Expected files: `architect-api/api/src/main/kotlin/io/github/architectplatform/api/core/tasks/TaskRegistry.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/tasks/infrastructure/InMemoryTaskRegistry.kt`, CLI task-resolution code in `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/ArchitectLauncher.kt`, and schema/config parsing for `groups:`
-  - Verification: define `groups:` in fixture `architect.yml`, run grouped task names through CLI resolution, and add tests for wildcard and explicit namespace expansion
+- [ ] **T-5.3.2** 🟠 `M` — Add task grouping and namespacing | sequential | Priority: high | Depends: T-5.3.1 | [REVISED] 2026-03-28T13:40:14Z | Assumptions: do not rename existing task IDs silently; support grouping/namespace expansion through registry + CLI resolution while keeping legacy IDs executable | Acceptance: `architect build` expands configured groups, `build:*` / `build:frontend` lookups resolve predictably, plugin tasks gain explicit namespace aliases where applicable, and task listing/help surfaces the grouping model
+  - Expected files: `architect-api/api/src/main/kotlin/io/github/architectplatform/api/core/tasks/TaskRegistry.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/tasks/infrastructure/InMemoryTaskRegistry.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/tasks/infrastructure/TaskReferenceResolver.kt`, CLI task-resolution code in `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/ArchitectLauncher.kt`, and schema/config parsing for `groups:` in the inline task plugin/config loader
+  - Implementation details:
+    - Add `TaskRegistry.resolve(reference, groups)` signature for `group`, `group:*`, and `group:member` lookups (preserve direct task IDs)
+    - Generate namespaced aliases for plugin tasks (e.g., `git:commit` -> `git-commit`) without changing original IDs
+    - Surface grouping in `architect tasks` output (show group header + member list)
+  - Verification: fixture `architect.yml` with `groups:` list and mixed plugin/inline tasks; unit tests covering group expansion order, wildcard expansion, and error cases (unknown group/member) in registry + CLI resolution
   - Group related tasks: `architect build:frontend`, `architect build:backend`
   - `architect build` runs all tasks in `build:*` group
   - Plugin tasks auto-namespaced: `git:commit`, `docker:build`
@@ -696,9 +700,13 @@
       ci: [build, test, security-scan, deploy]
     ```
 
-- [ ] **T-5.3.3** 🟡 `M` — Add task templates / reusable task definitions | sequential | Priority: medium | Depends: T-5.3.1 | [REVISED] 2026-03-28T10:16:46Z | Assumptions: templates live alongside inline `tasks:` in `architect.yml` and merge into the existing inline task model via explicit `extends` semantics | Acceptance: `templates:` can define reusable defaults, inline tasks can `extends` a template with child override precedence, circular references are rejected clearly, and schema/tests document the behavior
+- [ ] **T-5.3.3** 🟡 `M` — Add task templates / reusable task definitions | sequential | Priority: medium | Depends: T-5.3.1 | [REVISED] 2026-03-28T13:40:14Z | Assumptions: templates live alongside inline `tasks:` in `architect.yml` and merge into the existing inline task model via explicit `extends` semantics | Acceptance: `templates:` can define reusable defaults, inline tasks can `extends` a template with child override precedence, circular references are rejected clearly, and schema/tests document the behavior
   - Expected files: `architect-core/core/src/main/kotlin/io/github/architectplatform/core/plugins/inline/InlineTaskConfig.kt`, `InlineTaskPlugin.kt`, a new template resolver under the same package, and the generated schema inputs for `templates:`
-  - Verification: fixture config with shared template + overriding child task, plus tests for missing-template and circular-reference failures
+  - Implementation details:
+    - Add `templates` map to `InlineTaskConfig` and resolve `extends` before task registration
+    - Merge strategy: child overrides parent keys; nested maps deep-merge; lists replace unless explicitly concatenated via `+`
+    - Detect missing template or circular reference and throw `IllegalArgumentException` with template chain in message
+  - Verification: fixture config with shared template + overriding child task, plus tests for missing-template, circular-reference, and merge precedence
   - Define once, use many times:
     ```yaml
     templates:
@@ -713,64 +721,6 @@
         run: npm run build
         phase: BUILD
     ```
-
----
-
-## PHASE 6 — IDE INTEGRATION & DEVELOPER TOOLING
-> *Meet developers where they are — in their IDE.*
-
-### 6.1 — VS Code Extension
-
-- [ ] **T-6.1.1** 🔴 `XXL` — Build production-ready VS Code extension
-  - Features:
-    - Task explorer sidebar (tree view of all tasks by phase)
-    - Run task from sidebar with click
-    - `architect.yml` auto-completion (via JSON Schema)
-    - `architect.yml` validation (inline errors/warnings)
-    - Task output in VS Code terminal panel
-    - CodeLens on `architect.yml` tasks (▶ Run | 📋 Plan)
-    - Status bar: engine status indicator (running/stopped)
-    - Command palette: `Architect: Run Task`, `Architect: Init`, etc.
-
-- [ ] **T-6.1.2** 🟠 `L` — Add VS Code task provider integration
-  - Register Architect tasks as VS Code tasks
-  - Appears in `Tasks: Run Task` command
-  - Supports problem matchers for build errors
-  - `tasks.json` auto-generated from `architect.yml`
-
-- [ ] **T-6.1.3** 🟡 `M` — Add VS Code debugging integration
-  - Launch configurations for `architect watch`
-  - Breakpoint-aware task execution (for test tasks)
-  - Link build errors to source files
-
-### 6.2 — IntelliJ Extension
-
-- [ ] **T-6.2.1** 🔴 `XXL` — Build production-ready IntelliJ extension
-  - Features:
-    - Tool window: task explorer with run buttons
-    - `architect.yml` language support (completion, validation, navigation)
-    - Run configurations: "Architect Task" type
-    - Gutter icons on `architect.yml` tasks (▶ Run)
-    - Build tool integration (Build menu → Architect tasks)
-    - Engine lifecycle management from IDE
-
-- [ ] **T-6.2.2** 🟠 `L` — Add IntelliJ run configuration integration
-  - "Architect Task" run configuration type
-  - Configurable: task name, args, profile, watch mode
-  - Output in IntelliJ Run tool window
-  - Re-run, stop, debug support
-
-### 6.3 — Language Server Protocol (LSP)
-
-- [ ] **T-6.3.1** 🟠 `XL` — Create Architect Language Server for `architect.yml`
-  - Features:
-    - Auto-completion for all config keys
-    - Validation with diagnostics
-    - Hover documentation for each field
-    - Go-to-definition for task references
-    - Code actions: "Add missing required field", "Fix typo in plugin name"
-  - Reusable across all editors (VS Code, IntelliJ, Neovim, Emacs)
-  - Distribute as standalone binary
 
 ---
 
