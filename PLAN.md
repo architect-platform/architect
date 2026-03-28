@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 70/128 tasks completed (55%)
-- Current Phase: Phase 4 — Project Intelligence & Conventions (complete)
-- Last Updated: 2026-03-28T13:00:00Z
+- Overall Progress: 71/128 tasks completed (55%)
+- Current Phase: Phase 5 — Configuration as Code Excellence
+- Last Updated: 2026-03-28T14:00:00Z
 
 ---
 
@@ -627,7 +627,7 @@
 
 ### 5.1 — Configuration Schema & IDE Support
 
-- [ ] **T-5.1.1** 🔴 `L` — Publish `architect.yml` JSON Schema to SchemaStore
+- [x] **T-5.1.1** 🔴 `L` — Publish `architect.yml` JSON Schema to SchemaStore | Finished: 2026-03-28T14:00:00Z | Notes: Created full JSON Schema at docs/schema/architect-schema.json covering all plugin configs (git, github, gradle, scripts, docs, pipelines, affected + stubs for docker/k8s/terraform/rust/security/quality/testing/python/maven/go/nx/release/architecture); bundled in CLI resources for `architect schema` command; VS Code yaml.schemas mapping added to .vscode/settings.json. SchemaStore PR to be raised separately.
   - Full schema covering all sections and all plugin configs
   - VS Code: auto-completion in `architect.yml` files
   - IntelliJ: auto-completion in `architect.yml` files

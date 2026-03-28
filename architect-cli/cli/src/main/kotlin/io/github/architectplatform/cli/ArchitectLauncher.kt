@@ -284,6 +284,7 @@ class ArchitectLauncher(
       "stats" -> { handleStats(); return }
       "affected" -> { handleAffectedCommand(); return }
       "status" -> { handleStatusCommand(); return }
+      "schema" -> { handleSchemaCommand(); return }
     }
 
     if (command == "tasks" || command == null) {
@@ -594,6 +595,22 @@ class ArchitectLauncher(
 
     val jsonFlag = args.contains("--json")
     output.printHealthDashboard(health, jsonFlag)
+  }
+
+  private fun handleSchemaCommand() {
+    val schemaStream = javaClass.classLoader.getResourceAsStream("architect-schema.json")
+    if (schemaStream != null) {
+      print(schemaStream.bufferedReader().readText())
+      return
+    }
+    // Fallback: look for schema next to jar / in project
+    val schemaFile = java.io.File(System.getProperty("user.dir"), "docs/schema/architect-schema.json")
+    if (schemaFile.exists()) {
+      print(schemaFile.readText())
+      return
+    }
+    System.err.println("❌ Schema file not found. Run from the architect project root or ensure architect-schema.json is bundled.")
+    exitProcess(1)
   }
 
   private fun handleGraphCommand(projectName: String, projectPath: String, engine: Boolean) {

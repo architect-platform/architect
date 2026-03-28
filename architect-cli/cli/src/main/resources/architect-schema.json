@@ -1,0 +1,437 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/architect-platform/architect/main/docs/schema/architect-schema.json",
+  "title": "architect.yml",
+  "description": "Configuration schema for architect.yml — the Architect Platform project configuration file.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project": {
+      "description": "Core project metadata.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique project identifier (lowercase, hyphens allowed).",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable project description."
+        }
+      },
+      "required": ["name"]
+    },
+    "plugins": {
+      "description": "List of Architect plugins to load for this project.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Plugin identifier.",
+            "examples": ["git-architected", "docs-architected", "gradle-architected"]
+          },
+          "type": {
+            "type": "string",
+            "description": "Plugin source type.",
+            "enum": ["github", "local", "maven"],
+            "default": "github"
+          },
+          "repo": {
+            "type": "string",
+            "description": "GitHub repository in owner/repo format.",
+            "examples": ["architect-platform/architect"]
+          },
+          "version": {
+            "type": "string",
+            "description": "Plugin version or 'latest'.",
+            "default": "latest"
+          },
+          "asset": {
+            "type": "string",
+            "description": "JAR asset filename within the GitHub release."
+          },
+          "pattern": {
+            "type": "string",
+            "description": "Version pattern for matching releases (regex)."
+          }
+        }
+      }
+    },
+    "affected": {
+      "description": "Configuration for affected project detection.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "always-include": {
+          "type": "array",
+          "description": "Projects always considered affected regardless of changes.",
+          "items": { "type": "string" }
+        },
+        "never-include": {
+          "type": "array",
+          "description": "Projects never considered affected.",
+          "items": { "type": "string" }
+        },
+        "ignore": {
+          "type": "array",
+          "description": "Glob patterns for files that should not trigger affected detection.",
+          "items": { "type": "string" },
+          "examples": [["**/*.md", "docs/**", "*.txt"]]
+        }
+      }
+    },
+    "git": {
+      "description": "Git plugin configuration (git-architected).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "config": {
+          "type": "object",
+          "description": "Git configuration key-value pairs (passed to git config).",
+          "additionalProperties": { "type": "string" },
+          "examples": [{ "user.name": "Architect Bot", "user.email": "bot@example.com" }]
+        }
+      }
+    },
+    "github": {
+      "description": "GitHub plugin configuration (github-architected).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "release": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable automatic GitHub releases.",
+              "default": true
+            },
+            "message": {
+              "type": "string",
+              "description": "Release commit message template.",
+              "default": "chore(release): ${nextRelease.version} [skip ci]"
+            },
+            "assets": {
+              "type": "array",
+              "description": "Files to attach to the release.",
+              "items": {
+                "type": "object",
+                "required": ["name", "path"],
+                "additionalProperties": false,
+                "properties": {
+                  "name": { "type": "string", "description": "Asset display name." },
+                  "path": { "type": "string", "description": "Relative path to the file." }
+                }
+              }
+            },
+            "git_assets": {
+              "type": "array",
+              "description": "Additional files to commit during release.",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "pipelines": {
+          "type": "array",
+          "description": "CI/CD pipeline definitions to generate.",
+          "items": {
+            "type": "object",
+            "required": ["name", "type"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "description": "Pipeline name." },
+              "type": {
+                "type": "string",
+                "description": "Pipeline template type.",
+                "enum": ["docs", "release", "test", "build", "custom"]
+              },
+              "path": {
+                "type": "string",
+                "description": "File path pattern to trigger on.",
+                "default": "**"
+              },
+              "branch": {
+                "type": "string",
+                "description": "Git branch to trigger on.",
+                "default": "main"
+              }
+            }
+          }
+        },
+        "deps": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "type": { "type": "string", "enum": ["renovate", "dependabot"], "default": "renovate" },
+            "format": { "type": "string", "enum": ["json", "json5"], "default": "json" }
+          }
+        }
+      }
+    },
+    "gradle": {
+      "description": "Gradle plugin configuration (gradle-architected).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "projects": {
+          "type": "array",
+          "description": "Gradle sub-projects to manage.",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "description": "Project identifier." },
+              "path": { "type": "string", "description": "Relative path to the Gradle project.", "default": "." },
+              "githubPackageRelease": {
+                "type": "boolean",
+                "description": "Publish artifacts to GitHub Packages on release.",
+                "default": false
+              },
+              "gradlePath": {
+                "type": "string",
+                "description": "Path to the gradlew wrapper.",
+                "default": "./gradlew"
+              }
+            }
+          }
+        }
+      }
+    },
+    "scripts": {
+      "description": "Scripts plugin configuration (scripts-architected).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable all scripts globally.",
+          "default": true
+        },
+        "sequential": {
+          "type": "boolean",
+          "description": "Run scripts sequentially instead of in dependency order.",
+          "default": false
+        },
+        "scripts": {
+          "type": "object",
+          "description": "Named script definitions.",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["command"],
+            "additionalProperties": false,
+            "properties": {
+              "command": {
+                "type": "string",
+                "description": "Shell command to execute."
+              },
+              "description": {
+                "type": "string",
+                "description": "Human-readable description shown in task list.",
+                "default": "Custom script"
+              },
+              "phase": {
+                "type": "string",
+                "description": "Workflow phase this script belongs to.",
+                "enum": ["INIT", "LINT", "VERIFY", "BUILD", "TEST", "RUN", "RELEASE", "PUBLISH"]
+              },
+              "workingDirectory": {
+                "type": "string",
+                "description": "Working directory for the script (relative to project root).",
+                "default": "."
+              },
+              "environment": {
+                "type": "object",
+                "description": "Environment variables to set.",
+                "additionalProperties": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "docs": {
+      "description": "Documentation plugin configuration (docs-architected).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "build": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "framework": {
+              "type": "string",
+              "enum": ["mkdocs", "docusaurus", "vuepress", "manual"],
+              "default": "mkdocs"
+            },
+            "sourceDir": { "type": "string", "default": "docs" },
+            "outputDir": { "type": "string", "default": "site" },
+            "configFile": { "type": "string", "description": "Custom framework config file path." },
+            "installDeps": { "type": "boolean", "default": true },
+            "mkdocsVersion": { "type": "string", "default": "1.5.3" },
+            "mkdocsMaterialVersion": { "type": "string", "default": "9.5.3" },
+            "mkdocsMonorepoVersion": { "type": "string", "default": "1.0.5" },
+            "siteName": { "type": "string", "description": "Documentation site title." },
+            "siteDescription": { "type": "string" },
+            "siteAuthor": { "type": "string" },
+            "repoUrl": { "type": "string", "format": "uri" },
+            "repoName": { "type": "string", "examples": ["owner/repo"] },
+            "primaryColor": { "type": "string", "default": "indigo" },
+            "accentColor": { "type": "string", "default": "indigo" },
+            "autoDiscoverComponents": { "type": "boolean", "default": true },
+            "componentPaths": {
+              "type": "array",
+              "items": { "type": "string" },
+              "default": [".", "plugins"]
+            },
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "path"],
+                "additionalProperties": false,
+                "properties": {
+                  "name": { "type": "string" },
+                  "path": { "type": "string" },
+                  "docsPath": { "type": "string", "default": "docs" }
+                }
+              }
+            }
+          }
+        },
+        "publish": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "githubPages": { "type": "boolean", "default": true },
+            "branch": { "type": "string", "default": "gh-pages" },
+            "domain": { "type": "string", "description": "Custom domain for GitHub Pages." },
+            "cname": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    },
+    "pipelines": {
+      "description": "Pipelines plugin configuration (pipelines-architected).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "workflows": {
+          "type": "array",
+          "description": "Workflow definitions for multi-step orchestration.",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "description": { "type": "string", "default": "" },
+              "extends": { "type": "string", "description": "Name of a workflow to extend." },
+              "env": {
+                "type": "object",
+                "additionalProperties": { "type": "string" }
+              },
+              "steps": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "task"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": { "type": "string" },
+                    "task": { "type": "string", "description": "Architect task ID to execute." },
+                    "args": { "type": "array", "items": { "type": "string" } },
+                    "dependsOn": { "type": "array", "items": { "type": "string" } },
+                    "continueOnError": { "type": "boolean", "default": false },
+                    "condition": { "type": "string", "description": "Conditional expression (e.g. env.BRANCH == 'main')." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "javascript": {
+      "description": "JavaScript plugin configuration (javascript-architected).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "docker": {
+      "description": "Docker plugin configuration (docker-architected).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "kubernetes": {
+      "description": "Kubernetes plugin configuration (kubernetes-architected).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "terraform": {
+      "description": "Terraform plugin configuration (terraform-architected).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "rust": {
+      "description": "Rust plugin configuration (rust-architected).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "security": {
+      "description": "Security plugin configuration (security-architected).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "quality": {
+      "description": "Quality plugin configuration (quality-architected).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "testing": {
+      "description": "Testing plugin configuration (testing-architected).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "python": {
+      "description": "Python plugin configuration (python-architected).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "maven": {
+      "description": "Maven plugin configuration (maven-architected).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "go": {
+      "description": "Go plugin configuration (go-architected).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "nx": {
+      "description": "Nx plugin configuration (nx-architected).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "release": {
+      "description": "Release plugin configuration (release-architected).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "architecture": {
+      "description": "Architecture validation plugin configuration (architecture-architected).",
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
