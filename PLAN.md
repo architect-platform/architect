@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 80/128 tasks completed (63%)
+- Overall Progress: 80/129 tasks completed (62%)
 - Current Phase: Phase 5 — Configuration as Code Excellence
-- Last Updated: 2026-03-28T17:20:00Z
+- Last Updated: 2026-03-28T17:09:13Z
 
 ---
 
@@ -901,6 +901,14 @@
   - Enable dependency scanning and SBOM generation during release
   - Verification: CI jobs run and upload results to GitHub Security tab
 
+### 9.3 — Build Hygiene
+
+- [ ] **T-9.3.1** 🟡 `S` — Resolve compiler and detekt warnings | parallel | Priority: low | Depends: none | [REVISED] 2026-03-28T17:09:13Z | Assumptions: scope is current warning output from Gradle compile and detekt tasks | Acceptance: `./gradlew build` and detekt (if configured) complete without new warnings, and targeted fixes include tests where applicable
+  - Expected files: warning sources across `architect-core`, `architect-cli`, and plugin modules
+  - Identify warnings from `./gradlew build` and `./gradlew detekt` (or module-specific detekt task)
+  - Fix warnings without changing behavior; add focused tests if logic changes
+  - Verification: re-run affected compile/detekt tasks with clean output
+
 ---
 
 ## PHASE 10 — DOCUMENTATION & DEVELOPER EDUCATION
@@ -992,6 +1000,7 @@
 | T-8.2.2 | T-8.2.1 |
 | T-8.2.3 | T-8.2.1 |
 | T-9.2.2 | T-8.1.1 |
+| T-9.3.1 | (none — can start now) |
 
 ---
 
