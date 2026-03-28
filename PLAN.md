@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 67/128 tasks completed (52%)
+- Overall Progress: 68/128 tasks completed (53%)
 - Current Phase: Phase 4 — Project Intelligence & Conventions
-- Last Updated: 2026-03-28T09:30:00Z
+- Last Updated: 2026-03-28T10:00:00Z
 
 ---
 
@@ -600,7 +600,7 @@
     - `*.md` changes don't affect builds
     - Configurable: `affected.ignore: ["**/*.md", "docs/**"]`
 
-- [ ] **T-4.3.2** 🟠 `M` — Add project dependency graph visualization
+- [x] **T-4.3.2** 🟠 `M` — Add project dependency graph visualization | Finished: 2026-03-28T10:00:00Z | Notes: Replaced Mermaid with vis.js Network: zoom/pan/drag, click-select with neighbour dimming, hover tooltips, circular dep detection (red nodes/edges via DFS), shared dep highlighting (blue), affected project overlay (orange), stats/legend bar, Fit/Re-layout controls. Added --affected flag to graph command. Added 8 graph domain tests.
   - `architect graph --projects` already exists but limited
   - Add: interactive HTML with zoom, click-to-navigate
   - Show: dependency direction, shared dependencies, circular deps
