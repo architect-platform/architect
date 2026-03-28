@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 68/128 tasks completed (53%)
+- Overall Progress: 69/128 tasks completed (54%)
 - Current Phase: Phase 4 — Project Intelligence & Conventions
-- Last Updated: 2026-03-28T10:00:00Z
+- Last Updated: 2026-03-28T12:00:00Z
 
 ---
 
@@ -606,7 +606,7 @@
   - Show: dependency direction, shared dependencies, circular deps
   - Highlight affected projects on hover
 
-- [ ] **T-4.3.3** 🟠 `M` — Add cross-project task orchestration
+- [x] **T-4.3.3** 🟠 `M` — Add cross-project task orchestration | Finished: 2026-03-28T12:00:00Z | Notes: Added topologicalTiers() (Kahn's alg) to ProjectDependencyGraph; created MultiProjectOrchestrator with TaskRunner interface, tier-based parallel execution (up to 8 threads), stopOnFailure support; wired --all and --affected flags in ArchitectLauncher runEmbeddedMode(); added executeTaskAllProjects/executeTaskForProjects/executeProjectOrchestration helpers; 7 tests added using TaskRunner stub approach.
   - Execute tasks across multiple projects with dependency ordering
   - `architect build --all` builds all projects in correct order
   - `architect test --affected` tests only changed + downstream projects

@@ -15,6 +15,7 @@ import io.github.architectplatform.cli.command.PluginCommandHandler
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.history.LocalHistoryReader
 import io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor
+import io.github.architectplatform.cli.embedded.MultiProjectOrchestrator
 import io.github.architectplatform.cli.engine.EngineHealthChecker
 import io.github.architectplatform.core.execution.EmbeddedExecutionContext
 import io.github.architectplatform.core.project.app.AffectedProjectResolver
@@ -66,6 +67,7 @@ class ArchitectLauncher(
   private val conventionsHandler = ConventionsCommandHandler()
   private val doctorHandler = DoctorCommandHandler(engineHealthChecker)
   private val output = OutputFormatter()
+  private val multiProjectOrchestrator = MultiProjectOrchestrator(embeddedTaskExecutor)
 
   // Graceful cancellation state
   @Volatile private var cancelRequested = false
@@ -225,6 +227,13 @@ class ArchitectLauncher(
       defaultValue = "false",
   )
   var tee: Boolean = false
+
+  @CommandLine.Option(
+      names = ["--all"],
+      description = ["Execute the task across all discovered subprojects in dependency order"],
+      defaultValue = "false",
+  )
+  var all: Boolean = false
 
   override fun run() {
     if (noColor || System.getenv("NO_COLOR") != null || System.getenv("CI") != null) {
@@ -593,6 +602,23 @@ class ArchitectLauncher(
 
     val taskArgs = if (args.isNotEmpty()) args.drop(1) else emptyList()
 
+    // --all: execute task across all subprojects in dependency order
+    if (all) {
+      executeTaskAllProjects(projectName, projectPath, command!!, taskArgs)
+      return
+    }
+
+    // --affected: execute task across affected subprojects in dependency order
+    if (affected) {
+      val affectedProjectNames = resolveAffectedProjects(projectName, projectPath)
+      if (affectedProjectNames.isEmpty()) {
+        println("✅ No projects affected — nothing to run.")
+        return
+      }
+      executeTaskForProjects(projectName, projectPath, command!!, taskArgs, affectedProjectNames)
+      return
+    }
+
     val watchTask = if (command == "watch") args.getOrNull(1) else if (watch) command else null
     if (watchTask != null) {
       runWatchMode(projectPath, watchTask) {
@@ -615,6 +641,95 @@ class ArchitectLauncher(
       command!!,
       augmentTaskArgsForExecution(command!!, taskArgs, affectedProjects),
     )
+  }
+
+  private fun executeTaskAllProjects(projectName: String, projectPath: String, taskName: String, taskArgs: List<String>) {
+    val context = io.github.architectplatform.core.execution.EmbeddedExecutionContext.create(
+      remoteContentFetcher = io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher(),
+      activeProfile = embeddedTaskExecutor.activeProfile,
+    )
+    context.projectService.registerProject(projectName, projectPath)
+    val root = context.projectService.getProject(projectName) ?: run {
+      println("❌ Project $projectName not found")
+      exitProcess(1)
+    }
+    val graph = context.projectService.buildDependencyGraph(projectName)
+    val allProjects = graph.projects.associateWith { name ->
+      if (name == projectName) projectPath
+      else root.subProjects.find { it.name == name }?.path ?: projectPath
+    }
+    executeProjectOrchestration(graph, allProjects, taskName, taskArgs, label = "all ${allProjects.size} project(s)")
+  }
+
+  private fun executeTaskForProjects(
+    projectName: String,
+    projectPath: String,
+    taskName: String,
+    taskArgs: List<String>,
+    targetProjectNames: Set<String>,
+  ) {
+    val context = io.github.architectplatform.core.execution.EmbeddedExecutionContext.create(
+      remoteContentFetcher = io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher(),
+      activeProfile = embeddedTaskExecutor.activeProfile,
+    )
+    context.projectService.registerProject(projectName, projectPath)
+    val root = context.projectService.getProject(projectName) ?: run {
+      println("❌ Project $projectName not found")
+      exitProcess(1)
+    }
+    val graph = context.projectService.buildDependencyGraph(projectName)
+    val targetProjects = targetProjectNames.associateWith { name ->
+      if (name == projectName) projectPath
+      else root.subProjects.find { it.name == name }?.path ?: projectPath
+    }
+    if (!plain) {
+      println("🎯 Affected projects: ${targetProjectNames.sorted().joinToString(", ")}")
+    }
+    executeProjectOrchestration(graph, targetProjects, taskName, taskArgs, label = "${targetProjects.size} affected project(s)")
+  }
+
+  private fun executeProjectOrchestration(
+    graph: io.github.architectplatform.core.project.domain.ProjectDependencyGraph,
+    targetProjects: Map<String, String>,
+    taskName: String,
+    taskArgs: List<String>,
+    label: String,
+  ) {
+    println()
+    println("━".repeat(80))
+    println("🏗  Cross-project execution: $taskName ($label)")
+    println("━".repeat(80))
+
+    val result = multiProjectOrchestrator.run(
+      graph = graph,
+      targetProjects = targetProjects,
+      taskName = taskName,
+      taskArgs = taskArgs,
+      stopOnFailure = true,
+      onEvent = { /* events streamed to console by executor */ },
+      onProgress = { projName: String, tier: Int, totalTiers: Int ->
+        println()
+        println("  ▶ [$tier/$totalTiers] $projName")
+        println("  ${"─".repeat(60)}")
+      },
+    )
+
+    println()
+    println("━".repeat(80))
+    println("📊 Cross-project summary: $taskName")
+    println("━".repeat(80))
+    result.results.forEach { pr: MultiProjectOrchestrator.ProjectResult ->
+      val icon = if (pr.result.success) "✅" else "❌"
+      val ms = pr.durationMs
+      println("  $icon ${pr.projectName} — ${pr.result.message} (${ms}ms)")
+    }
+    if (result.skipped.isNotEmpty()) {
+      println("  ⏭  Skipped: ${result.skipped.joinToString(", ")}")
+    }
+    println()
+    if (!result.success) {
+      exitProcess(1)
+    }
   }
 
   /**

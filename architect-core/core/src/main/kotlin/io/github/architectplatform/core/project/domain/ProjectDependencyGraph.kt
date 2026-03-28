@@ -79,4 +79,40 @@ data class ProjectDependencyGraph(
     }
     return dependentCount.filter { it.value > 1 }.keys.toSet()
   }
+
+  /**
+   * Returns an ordered list of execution tiers for parallel task execution.
+   * Each tier contains projects whose dependencies have all been satisfied by prior tiers.
+   * Projects within the same tier can be executed in parallel.
+   *
+   * Uses Kahn's algorithm (dependency-first topological sort).
+   * If a cycle is detected, the remaining cyclic nodes are added as the final tier.
+   */
+  fun topologicalTiers(): List<Set<String>> {
+    // in-degree for each project = number of its unresolved dependencies
+    val inDegree = projects.associateWithTo(mutableMapOf()) { p ->
+      dependencies[p]?.size ?: 0
+    }
+
+    val tiers = mutableListOf<Set<String>>()
+    val remaining = projects.toMutableSet()
+
+    while (remaining.isNotEmpty()) {
+      // Projects with in-degree 0 have all dependencies satisfied → can run now
+      val tier = remaining.filter { (inDegree[it] ?: 0) == 0 }.toSet()
+      if (tier.isEmpty()) {
+        // Cycle detected: add all remaining projects as a final unordered tier
+        tiers += remaining.toSet()
+        break
+      }
+      tiers += tier
+      remaining -= tier
+      // Reduce in-degree: for each remaining project, count how many of its deps are still pending
+      for (project in remaining) {
+        inDegree[project] = dependencies[project].orEmpty().count { it in remaining }
+      }
+    }
+
+    return tiers
+  }
 }

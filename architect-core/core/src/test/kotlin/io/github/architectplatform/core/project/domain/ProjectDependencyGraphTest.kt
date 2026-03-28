@@ -125,4 +125,71 @@ class ProjectDependencyGraphTest {
     val dependents = g.transitiveDependentsOf("lib")
     assertEquals(setOf("api", "app"), dependents)
   }
+
+  // ── topologicalTiers ────────────────────────────────────────────────────
+
+  @Test
+  fun `single project returns one tier`() {
+    val g = graph(setOf("a"))
+
+    val tiers = g.topologicalTiers()
+    assertEquals(1, tiers.size)
+    assertEquals(setOf("a"), tiers[0])
+  }
+
+  @Test
+  fun `independent projects are in the same tier`() {
+    val g = graph(setOf("a", "b", "c"))
+
+    val tiers = g.topologicalTiers()
+    assertEquals(1, tiers.size)
+    assertEquals(setOf("a", "b", "c"), tiers[0])
+  }
+
+  @Test
+  fun `linear chain produces one project per tier`() {
+    // app depends on api depends on lib
+    val g = graph(
+      setOf("lib", "api", "app"),
+      mapOf("api" to setOf("lib"), "app" to setOf("api")),
+    )
+
+    val tiers = g.topologicalTiers()
+    assertEquals(3, tiers.size)
+    assertEquals(setOf("lib"), tiers[0])
+    assertEquals(setOf("api"), tiers[1])
+    assertEquals(setOf("app"), tiers[2])
+  }
+
+  @Test
+  fun `diamond dependency produces correct tiers`() {
+    // shared <- a, b <- app
+    val g = graph(
+      setOf("shared", "a", "b", "app"),
+      mapOf(
+        "a" to setOf("shared"),
+        "b" to setOf("shared"),
+        "app" to setOf("a", "b"),
+      ),
+    )
+
+    val tiers = g.topologicalTiers()
+    assertEquals(3, tiers.size)
+    assertEquals(setOf("shared"), tiers[0])
+    assertEquals(setOf("a", "b"), tiers[1])
+    assertEquals(setOf("app"), tiers[2])
+  }
+
+  @Test
+  fun `cyclic nodes are included in final tier`() {
+    val g = graph(
+      setOf("a", "b"),
+      mapOf("a" to setOf("b"), "b" to setOf("a")),
+    )
+
+    val tiers = g.topologicalTiers()
+    assertTrue(tiers.isNotEmpty())
+    val allInTiers = tiers.flatten().toSet()
+    assertEquals(setOf("a", "b"), allInTiers)
+  }
 }
