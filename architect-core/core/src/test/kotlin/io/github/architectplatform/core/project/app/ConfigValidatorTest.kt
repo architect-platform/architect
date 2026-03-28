@@ -134,6 +134,17 @@ class ConfigValidatorTest {
   }
 
   @Test
+  fun `architect key is recognized`() {
+    val config = mapOf(
+      "project" to mapOf("name" to "test"),
+      "architect" to mapOf("version" to ">=2.0.0 <3.0.0"),
+    )
+    val result = validator.validate(config)
+    assertTrue(result.valid)
+    assertTrue(result.warnings.isEmpty())
+  }
+
+  @Test
   fun `plugins key is recognized`() {
     val config = mapOf(
       "project" to mapOf("name" to "test"),

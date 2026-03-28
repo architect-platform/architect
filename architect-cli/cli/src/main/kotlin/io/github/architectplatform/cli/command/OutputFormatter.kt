@@ -302,7 +302,7 @@ class OutputFormatter(
   }
 
   fun printVersion() {
-    val cliVersion = javaClass.`package`?.implementationVersion ?: "dev"
+    val cliVersion = io.github.architectplatform.cli.CliVersion.current()
     if (json) {
       println("""{"cli":"$cliVersion"}""")
       return

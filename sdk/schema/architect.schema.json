@@ -26,6 +26,17 @@
       "required": ["name"],
       "additionalProperties": true
     },
+    "architect": {
+      "type": "object",
+      "description": "CLI/runtime settings for the Architect toolchain.",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "CLI version constraint (for example \">=2.3.0 <3.0.0\")."
+        }
+      }
+    },
     "plugins": {
       "type": "array",
       "description": "List of Architect plugins to load.",

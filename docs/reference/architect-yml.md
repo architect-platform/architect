@@ -14,6 +14,9 @@ $schema: "https://architect.dev/schema/architect.yml.json"
 project:    # required — project metadata
   ...
 
+architect:  # optional — CLI/runtime settings
+  version: ">=2.3.0 <3.0.0"
+
 plugins:    # optional — list of plugins to load
   - ...
 
@@ -68,6 +71,21 @@ project:
       - shared-libs
     never-include:
       - legacy-module
+```
+
+---
+
+## `architect`
+
+Optional CLI/runtime settings for the Architect toolchain.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `version` | `string` | CLI version constraint (for example `>=2.3.0 <3.0.0`). |
+
+```yaml
+architect:
+  version: ">=2.3.0 <3.0.0"
 ```
 
 ---

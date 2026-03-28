@@ -1,6 +1,9 @@
 package io.github.architectplatform.cli.command
 
+import io.github.architectplatform.cli.ArchitectVersionConstraintReader
+import io.github.architectplatform.cli.CliVersion
 import io.github.architectplatform.cli.client.EngineCommandClient
+import io.github.architectplatform.core.project.app.VersionConstraint
 import kotlin.system.exitProcess
 
 /**
@@ -475,7 +478,7 @@ complete -F _architect_complete architect
   @Suppress("UNCHECKED_CAST")
   fun handleUpgrade(args: List<String>) {
     val checkOnly = args.contains("--check")
-    val currentVersion = javaClass.`package`?.implementationVersion ?: "dev"
+    val currentVersion = CliVersion.current()
 
     println("Checking for updates...")
 
@@ -513,6 +516,29 @@ complete -F _architect_complete architect
           println("✅ Already up to date.")
         }
         return
+      }
+
+      val constraintValue = try {
+        ArchitectVersionConstraintReader.read(
+          projectPath = System.getProperty("user.dir"),
+          profile = null,
+        )
+      } catch (e: Exception) {
+        println("⚠️  Failed to read architect.version constraint: ${e.message}")
+        null
+      }
+      if (constraintValue != null) {
+        val constraint = try {
+          VersionConstraint.parse(constraintValue)
+        } catch (e: IllegalArgumentException) {
+          println("⚠️  Invalid architect.version constraint '$constraintValue': ${e.message}")
+          return
+        }
+        if (constraint != null && !constraint.isSatisfiedBy(latestVersion)) {
+          println("⚠️  Latest version $latestVersion does not satisfy architect.version '$constraintValue'.")
+          println("Skipping upgrade. Update architect.yml or install a matching CLI version.")
+          return
+        }
       }
 
       if (checkOnly) {

@@ -355,6 +355,36 @@ class ArchitectLauncherTest {
     assertTrue(output.contains("\"cli\""), "Expected JSON key 'cli' in version output")
   }
 
+  @Test
+  fun `warns when cli version does not satisfy architect version`(@TempDir tmpDir: Path) {
+    tmpDir.resolve("architect.yml").toFile().writeText(
+      """
+      project:
+        name: version-check
+      architect:
+        version: ">=2.0.0 <3.0.0"
+      """.trimIndent() + "\n"
+    )
+
+    val launcher = launcher()
+    launcher.command = "help"
+    launcher.args = listOf("help")
+
+    val originalVersion = System.getProperty("architect.cli.version")
+    System.setProperty("architect.cli.version", "1.0.0")
+    val output = try {
+      setUserDir(tmpDir) { captureStdout { launcher.run() } }
+    } finally {
+      if (originalVersion == null) {
+        System.clearProperty("architect.cli.version")
+      } else {
+        System.setProperty("architect.cli.version", originalVersion)
+      }
+    }
+
+    assertTrue(output.contains("does not satisfy architect.version"))
+  }
+
   // ─── --plain / color detection ────────────────────────────────────────────
 
   @Test

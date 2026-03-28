@@ -22,6 +22,7 @@ import io.github.architectplatform.cli.embedded.MultiProjectOrchestrator
 import io.github.architectplatform.cli.engine.EngineHealthChecker
 import io.github.architectplatform.core.execution.EmbeddedExecutionContext
 import io.github.architectplatform.core.project.app.AffectedProjectResolver
+import io.github.architectplatform.core.project.app.VersionConstraint
 import io.github.architectplatform.core.tasks.application.LocalOutputCache
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Property
@@ -270,6 +271,10 @@ class ArchitectLauncher(
     if (version) {
       output.printVersion()
       return
+    }
+
+    if (command != "upgrade") {
+      warnIfVersionMismatch(resolvedProfile)
     }
 
     when (command) {
@@ -545,6 +550,30 @@ class ArchitectLauncher(
       }
     }
     output.printHistory(records)
+  }
+
+  private fun warnIfVersionMismatch(profile: String) {
+    val projectPath = System.getProperty("user.dir")
+    val constraintValue = try {
+      ArchitectVersionConstraintReader.read(projectPath, profile)
+    } catch (e: Exception) {
+      println("⚠️  Failed to read architect.version constraint: ${e.message}")
+      return
+    } ?: return
+    val currentVersion = CliVersion.current()
+    if (currentVersion == "dev") return
+    val parsed = try {
+      VersionConstraint.parse(constraintValue)
+    } catch (e: IllegalArgumentException) {
+      println("⚠️  Invalid architect.version constraint '$constraintValue': ${e.message}")
+      return
+    }
+    if (parsed != null && !parsed.isSatisfiedBy(currentVersion)) {
+      println(
+        "⚠️  Architect CLI $currentVersion does not satisfy architect.version '$constraintValue'. " +
+          "Update the CLI or adjust architect.yml.",
+      )
+    }
   }
 
   private fun handleStats() {

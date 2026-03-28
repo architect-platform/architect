@@ -27,6 +27,7 @@ object ArchitectSchemaGenerator {
     val properties = schema.putObject("properties")
     properties.set<ObjectNode>("\$schema", stringProp("JSON Schema URL for editor validation and auto-complete"))
     properties.set<ObjectNode>("project", projectSchema())
+    properties.set<ObjectNode>("architect", architectSchema())
     properties.set<ObjectNode>("plugins", pluginsSchema())
     properties.set<ObjectNode>("tasks", tasksSchema())
     properties.set<ObjectNode>("templates", templatesSchema())
@@ -56,6 +57,16 @@ object ArchitectSchemaGenerator {
     props.set<ObjectNode>("description", stringProp("Human-readable project description"))
     props.set<ObjectNode>("affected", affectedSchema())
     node.putArray("required").add("name")
+    node.put("additionalProperties", false)
+    return node
+  }
+
+  private fun architectSchema(): ObjectNode {
+    val node = mapper.createObjectNode()
+    node.put("type", "object")
+    node.put("description", "CLI/runtime settings for the Architect toolchain.")
+    val props = node.putObject("properties")
+    props.set<ObjectNode>("version", stringProp("CLI version constraint (for example \">=2.3.0 <3.0.0\")"))
     node.put("additionalProperties", false)
     return node
   }
