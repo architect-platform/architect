@@ -270,6 +270,34 @@ class ArchitectLauncherTest {
     }
   }
 
+  @Test
+  fun `tasks command surfaces configured groups`(@TempDir tmpDir: Path) {
+    File(tmpDir.toFile(), "architect.yml").writeText(
+      """
+      project:
+        name: grouped-project
+      groups:
+        pipeline:
+          - build
+          - test
+          - deploy
+      """.trimIndent()
+    )
+    val client = GraphEngineCommandClient()
+    val launcher = launcherWithClient(client)
+    setUserDir(tmpDir) {
+      launcher.command = "tasks"
+      launcher.args = listOf("tasks")
+
+      val output = captureStdout { launcher.run() }
+
+      assertTrue(output.contains("pipeline"))
+      assertTrue(output.contains("GROUP"))
+      assertTrue(output.contains("↳ build"))
+      assertTrue(output.contains("↳ test"))
+    }
+  }
+
   // ─── info command ─────────────────────────────────────────────────────────
 
   @Test
