@@ -524,7 +524,10 @@ class ArchitectLauncher(
     val graphOptions = output.parseGraphOptions(args)
     if (graphOptions.showProjects) {
       val graph = loadProjectDependencyGraph(projectName, projectPath)
-      if (graphOptions.open) output.openProjectGraph(projectName, graph)
+      val affectedProjects = if (graphOptions.showAffected) {
+        resolveAffectedProjects(projectName, projectPath)
+      } else emptySet()
+      if (graphOptions.open) output.openProjectGraph(projectName, graph, affectedProjects)
       else output.printProjectGraph(projectName, graph)
       return
     }

@@ -78,9 +78,20 @@ class OutputFormatter(
     }
   }
 
-  fun openProjectGraph(projectName: String, graph: ProjectDependencyGraph) {
-    val outputPath = projectGraphHtmlRenderer.writeTempFile("$projectName-projects", graph)
+  fun openProjectGraph(
+    projectName: String,
+    graph: ProjectDependencyGraph,
+    affectedProjects: Set<String> = emptySet(),
+  ) {
+    val outputPath = projectGraphHtmlRenderer.writeTempFile("$projectName-projects", graph, affectedProjects)
     println("📈 Project graph page: $outputPath")
+    if (affectedProjects.isNotEmpty()) {
+      println("  🔥 Highlighting ${affectedProjects.size} affected project(s): ${affectedProjects.sorted().joinToString(", ")}")
+    }
+    val cycles = graph.detectCycles()
+    if (cycles.isNotEmpty()) {
+      println("  ⚠  ${cycles.size} circular dependency cycle(s) detected (shown in red)")
+    }
     if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
       Desktop.getDesktop().browse(outputPath.toUri())
     } else {
@@ -287,13 +298,15 @@ class OutputFormatter(
   fun parseGraphOptions(arguments: List<String>): GraphOptions {
     var open = false
     var showProjects = false
+    var showAffected = false
     val positional = mutableListOf<String>()
     arguments.drop(1).forEach { argument ->
       when (argument) {
         "--open" -> open = true
         "--projects" -> showProjects = true
+        "--affected" -> showAffected = true
         else -> if (argument.startsWith("--")) {
-          println("Usage: architect graph [task] [--projects] [--open]")
+          println("Usage: architect graph [task] [--projects] [--affected] [--open]")
           exitProcess(1)
         } else {
           positional += argument
@@ -301,10 +314,10 @@ class OutputFormatter(
       }
     }
     if (positional.size > 1 || (showProjects && positional.isNotEmpty())) {
-      println("Usage: architect graph [task] [--projects] [--open]")
+      println("Usage: architect graph [task] [--projects] [--affected] [--open]")
       exitProcess(1)
     }
-    return GraphOptions(open = open, taskName = positional.singleOrNull(), showProjects = showProjects)
+    return GraphOptions(open = open, taskName = positional.singleOrNull(), showProjects = showProjects, showAffected = showAffected)
   }
 
   fun parsePlanOptions(arguments: List<String>): PlanOptions {
@@ -328,6 +341,7 @@ class OutputFormatter(
     val open: Boolean,
     val taskName: String?,
     val showProjects: Boolean,
+    val showAffected: Boolean = false,
   )
 
   data class PlanOptions(
