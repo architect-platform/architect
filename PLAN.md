@@ -10,7 +10,7 @@
 
 - Overall Progress: 74/128 tasks completed (58%)
 - Current Phase: Phase 5 — Configuration as Code Excellence
-- Last Updated: 2026-03-28T10:06:24Z
+- Last Updated: 2026-03-28T10:16:46Z
 
 ---
 
@@ -646,13 +646,10 @@
 
 ### 5.2 — Environment & Secret Management
 
-- [ ] **T-5.2.1** 🔴 `L` — Implement secret management system
-  - `architect secret set <key> <value>` — store encrypted locally
-  - `architect secret list` — show available secrets (names only)
-  - `architect secret delete <key>` — remove secret
-  - Storage: OS keychain (macOS Keychain, Linux secret-service, Windows Credential Manager)
-  - Fallback: encrypted file at `~/.architect/secrets.enc`
-  - Tasks access via `environment.secret(name)`
+- [ ] **T-5.2.1** 🔴 `L` — Complete secret management system | sequential | Priority: high | Depends: none | [REVISED] 2026-03-28T10:16:46Z | Assumptions: keep the existing AES/GCM `~/.architect/secrets.enc` store as the fallback path and add native keychain support only when the host platform tools are available | Acceptance: `architect secret` is registered in the CLI/help output, `set/list/delete` work end-to-end, native keychain storage is preferred on supported platforms, file fallback still works, and `environment.secret(name)` resolves stored values during task execution
+  - Existing implementation to preserve: `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/command/SecretCommandHandler.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/secrets/SecretStore.kt`, and `architect-core/core/src/main/kotlin/io/github/architectplatform/core/secrets/SecretResolver.kt`
+  - Remaining implementation scope: wire the command through `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/ArchitectLauncher.kt` and `.../HelpCommandHandler.kt`, add platform-specific keychain adapters under `architect-core/core/src/main/kotlin/io/github/architectplatform/core/secrets/`, and update the resolver/store selection so keychain is attempted before file fallback
+  - Verification: `architect secret set TEST_KEY value`, `architect secret list`, `architect secret delete TEST_KEY`, plus module tests for keychain fallback behavior and CLI dispatch/help text
 
 - [x] **T-5.2.2** 🟠 `M` — Add `.env` file support with precedence chain | Finished: 2026-07-10T00:00:00Z | Notes: `EnvFileLoader` + `EnvInterpolator` in `architect-core/env` package; full test coverage with @TempDir; pure stdlib, no external deps
   - Load order: `.env` → `.env.local` → `.env.{profile}` → `.env.{profile}.local` → system env
@@ -660,15 +657,17 @@
   - `architect.yml` can reference: `${env.DATABASE_URL}`
   - `architect config resolve` shows final resolved values
 
-- [ ] **T-5.2.3** 🟡 `M` — Add environment validation
-  - Plugins declare required env vars in config schema
-  - `architect check` validates all required vars are set
-  - `architect check --env ci` validates CI-specific requirements
-  - Generate `.env.example` from all required variables
+- [ ] **T-5.2.3** 🟡 `M` — Finish environment validation coverage | parallel | Priority: medium | Depends: none | [REVISED] 2026-03-28T10:16:46Z | Assumptions: reuse the existing `architect check` implementation rather than introducing a second validation path | Acceptance: required env vars are discoverable from plugin metadata/schema plus `${env.*}` config references, `architect check` fails on missing values, `architect --env ci check` validates the profile-specific dotenv chain, and `.env.example` is kept in sync with discovered variables
+  - Existing implementation to extend: `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/command/CheckCommandHandler.kt` already discovers `${env.*}` references, merges `.env` precedence, and writes `.env.example`
+  - Remaining implementation scope: add a first-class way for plugins/schemas to declare required env vars, backfill the relevant plugin schema metadata under `plugins/*/app/src/main/kotlin/**`, and add targeted CLI tests covering profile-aware validation and `.env.example` generation
+  - Verification: create `.env` / `.env.ci` fixtures, run `architect check` and `architect --env ci check`, and assert missing vars are reported with non-zero exit status
 
 ### 5.3 — Task Definition Enhancements
 
-- [ ] **T-5.3.1** 🟠 `L` — Add inline task definitions in `architect.yml`
+- [ ] **T-5.3.1** 🟠 `L` — Extend inline task definitions in `architect.yml` | sequential | Priority: high | Depends: none | [REVISED] 2026-03-28T10:16:46Z | Assumptions: build on the existing built-in `tasks:` support in `architect-core/core/src/main/kotlin/io/github/architectplatform/core/plugins/inline/InlineTaskPlugin.kt` instead of replacing `scripts:` | Acceptance: inline tasks support `timeout`, `condition`, `onFailure`, and `retryAttempts`, the schema documents those keys, and tests cover success/skip/retry/timeout behavior without regressing existing `phase`, `depends`, `permissions`, or `requires`
+  - Existing implementation to preserve: `architect-core/core/src/main/kotlin/io/github/architectplatform/core/plugins/inline/InlineTaskPlugin.kt` and `InlineTaskConfig.kt` already support `run`, `phase`, `depends`, `permissions`, and `requires`
+  - Remaining implementation scope: extend `architect-core/core/src/main/kotlin/io/github/architectplatform/core/plugins/inline/InlineTaskConfig.kt`, wire execution behavior in the core task execution path, and expand `architect-engine/engine/src/test/kotlin/io/github/architectplatform/engine/plugins/inline/InlineTaskPluginTest.kt` plus any needed task-execution tests
+  - Verification: execute inline tasks that intentionally timeout, skip via condition, and retry on failure; ensure schema/help output includes the new keys
   - Beyond current `scripts:` section — full task features:
     ```yaml
     tasks:
@@ -686,7 +685,9 @@
         retryAttempts: 3
     ```
 
-- [ ] **T-5.3.2** 🟠 `M` — Add task grouping and namespacing
+- [ ] **T-5.3.2** 🟠 `M` — Add task grouping and namespacing | sequential | Priority: high | Depends: T-5.3.1 | [REVISED] 2026-03-28T10:16:46Z | Assumptions: do not rename existing task IDs silently; support grouping/namespace expansion through registry + CLI resolution while keeping legacy IDs executable | Acceptance: `architect build` can expand configured groups, `build:*` / `build:frontend` style lookups resolve predictably, plugin tasks gain explicit namespace aliases where applicable, and task listing/help surfaces the grouping model
+  - Expected files: `architect-api/api/src/main/kotlin/io/github/architectplatform/api/core/tasks/TaskRegistry.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/tasks/infrastructure/InMemoryTaskRegistry.kt`, CLI task-resolution code in `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/ArchitectLauncher.kt`, and schema/config parsing for `groups:`
+  - Verification: define `groups:` in fixture `architect.yml`, run grouped task names through CLI resolution, and add tests for wildcard and explicit namespace expansion
   - Group related tasks: `architect build:frontend`, `architect build:backend`
   - `architect build` runs all tasks in `build:*` group
   - Plugin tasks auto-namespaced: `git:commit`, `docker:build`
@@ -698,7 +699,9 @@
       ci: [build, test, security-scan, deploy]
     ```
 
-- [ ] **T-5.3.3** 🟡 `M` — Add task templates / reusable task definitions
+- [ ] **T-5.3.3** 🟡 `M` — Add task templates / reusable task definitions | sequential | Priority: medium | Depends: T-5.3.1 | [REVISED] 2026-03-28T10:16:46Z | Assumptions: templates live alongside inline `tasks:` in `architect.yml` and merge into the existing inline task model via explicit `extends` semantics | Acceptance: `templates:` can define reusable defaults, inline tasks can `extends` a template with child override precedence, circular references are rejected clearly, and schema/tests document the behavior
+  - Expected files: `architect-core/core/src/main/kotlin/io/github/architectplatform/core/plugins/inline/InlineTaskConfig.kt`, `InlineTaskPlugin.kt`, a new template resolver under the same package, and the generated schema inputs for `templates:`
+  - Verification: fixture config with shared template + overriding child task, plus tests for missing-template and circular-reference failures
   - Define once, use many times:
     ```yaml
     templates:
