@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 77/128 tasks completed (60%)
+- Overall Progress: 79/128 tasks completed (62%)
 - Current Phase: Phase 5 — Configuration as Code Excellence
-- Last Updated: 2026-03-28T16:20:00Z
+- Last Updated: 2026-03-28T16:03:10Z
 
 ---
 
@@ -682,7 +682,7 @@
         retryAttempts: 3
     ```
 
-- [ ] **T-5.3.2** 🟠 `M` — Add task grouping and namespacing | sequential | Priority: high | Depends: T-5.3.1 | [REVISED] 2026-03-28T16:20:00Z | Assumptions: do not rename existing task IDs silently; support grouping/namespace expansion through registry + CLI resolution while keeping legacy IDs executable | Acceptance: `architect build` expands configured groups, `build:*` / `build:frontend` lookups resolve predictably, plugin tasks gain explicit namespace aliases where applicable, and task listing/help surfaces the grouping model
+- [x] **T-5.3.2** 🟠 `M` — Add task grouping and namespacing | sequential | Priority: high | Depends: T-5.3.1 | Finished: 2026-03-28T16:03:10Z | Notes: Implemented group/wildcard/member resolution, in-memory group/alias registration, CLI group-aware task listing + resolution, plugin namespace aliases, and schema/tests covering groups/aliases | [REVISED] 2026-03-28T16:20:00Z | Assumptions: do not rename existing task IDs silently; support grouping/namespace expansion through registry + CLI resolution while keeping legacy IDs executable | Acceptance: `architect build` expands configured groups, `build:*` / `build:frontend` lookups resolve predictably, plugin tasks gain explicit namespace aliases where applicable, and task listing/help surfaces the grouping model
   - Expected files: `architect-api/api/src/main/kotlin/io/github/architectplatform/api/core/tasks/TaskRegistry.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/tasks/infrastructure/InMemoryTaskRegistry.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/tasks/infrastructure/TaskReferenceResolver.kt`, CLI task-resolution code in `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/ArchitectLauncher.kt`, and schema/config parsing for `groups:` in the inline task plugin/config loader
   - Implementation details:
     - Add `TaskRegistry.resolve(reference, groups)` signature for `group`, `group:*`, and `group:member` lookups (preserve direct task IDs)
@@ -703,7 +703,7 @@
       ci: [build, test, security-scan, deploy]
     ```
 
-- [ ] **T-5.3.3** 🟡 `M` — Add task templates / reusable task definitions | sequential | Priority: medium | Depends: T-5.3.1 | [REVISED] 2026-03-28T13:40:14Z | Assumptions: templates live alongside inline `tasks:` in `architect.yml` and merge into the existing inline task model via explicit `extends` semantics | Acceptance: `templates:` can define reusable defaults, inline tasks can `extends` a template with child override precedence, circular references are rejected clearly, and schema/tests document the behavior
+- [x] **T-5.3.3** 🟡 `M` — Add task templates / reusable task definitions | sequential | Priority: medium | Depends: T-5.3.1 | Finished: 2026-03-28T16:03:10Z | Notes: Added template resolver with extends + merge semantics, wired template resolution into inline task registration, and exposed templates schema + tests | [REVISED] 2026-03-28T13:40:14Z | Assumptions: templates live alongside inline `tasks:` in `architect.yml` and merge into the existing inline task model via explicit `extends` semantics | Acceptance: `templates:` can define reusable defaults, inline tasks can `extends` a template with child override precedence, circular references are rejected clearly, and schema/tests document the behavior
   - Expected files: `architect-core/core/src/main/kotlin/io/github/architectplatform/core/plugins/inline/InlineTaskConfig.kt`, `InlineTaskPlugin.kt`, a new template resolver under the same package, and the generated schema inputs for `templates:`
   - Implementation details:
     - Add `templates` map to `InlineTaskConfig` and resolve `extends` before task registration
