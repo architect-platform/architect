@@ -566,7 +566,9 @@ class ArchitectLauncher(
           warnings = emptyList(),
         )
       }
-      val taskCount = try { embeddedTaskExecutor.listTasks(proj.name, proj.path).size } catch (_: Exception) { 0 }
+      val taskCount = try {
+        embeddedTaskExecutor.listTasks(proj.name, proj.path).count { it.groupMembers == null }
+      } catch (_: Exception) { 0 }
       val cacheKey = "project:${proj.name}"
       val cached = cache.get(cacheKey)
       val lastBuildAge: Long? = if (cached != null) {
