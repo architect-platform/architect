@@ -8,7 +8,7 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 71/128 tasks completed (55%)
+- Overall Progress: 72/128 tasks completed (56%)
 - Current Phase: Phase 5 — Configuration as Code Excellence
 - Last Updated: 2026-03-28T14:00:00Z
 
@@ -633,7 +633,7 @@
   - IntelliJ: auto-completion in `architect.yml` files
   - Validate on save in supported editors
 
-- [ ] **T-5.1.2** 🟠 `M` — Generate plugin schemas automatically
+- [x] **T-5.1.2** 🟠 `M` — Generate plugin schemas automatically | Finished: 2026-03-28T15:00:00Z | Notes: Created KotlinDataClassSchemaGenerator using kotlin-reflect to introspect data class primary constructors; SchemaCommandHandler with generate/show/lint subcommands; architect schema generate merges root schema with per-plugin configSchema() (or reflection fallback); architect schema show prints bundled schema.
   - Introspect plugin `ctxClass` fields via reflection
   - Generate JSON Schema from Kotlin data classes
   - Merge all plugin schemas into root schema
