@@ -8,7 +8,7 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 80/129 tasks completed (62%)
+- Overall Progress: 80/131 tasks completed (61%)
 - Current Phase: Phase 5 — Configuration as Code Excellence
 - Last Updated: 2026-03-28T17:09:13Z
 
@@ -903,11 +903,20 @@
 
 ### 9.3 — Build Hygiene
 
-- [ ] **T-9.3.1** 🟡 `S` — Resolve compiler and detekt warnings | parallel | Priority: low | Depends: none | [REVISED] 2026-03-28T17:09:13Z | Assumptions: scope is current warning output from Gradle compile and detekt tasks | Acceptance: `./gradlew build` and detekt (if configured) complete without new warnings, and targeted fixes include tests where applicable
-  - Expected files: warning sources across `architect-core`, `architect-cli`, and plugin modules
-  - Identify warnings from `./gradlew build` and `./gradlew detekt` (or module-specific detekt task)
-  - Fix warnings without changing behavior; add focused tests if logic changes
-  - Verification: re-run affected compile/detekt tasks with clean output
+- [ ] **T-9.3.1** 🟡 `S` — Fix build-blocking ktlint/compile warnings | parallel | Priority: low | Depends: none | [REVISED] 2026-03-28T17:09:13Z | Assumptions: address current `./gradlew build` failures first | Acceptance: root `./gradlew build` passes and build-blocking warnings are resolved
+  - Expected files: `architect-api/api/src/main/kotlin/io/github/architectplatform/api/testing/ArchitectPluginContract.kt` and any other build-failing sources
+  - Fix ktlint indentation/format errors without altering behavior
+  - Verification: `./gradlew build` succeeds
+
+- [ ] **T-9.3.2** 🟡 `M` — Resolve detekt warnings in architect-engine | parallel | Priority: low | Depends: none | [REVISED] 2026-03-28T17:09:13Z | Assumptions: detekt report in engine module is authoritative | Acceptance: `./gradlew :architect-engine:engine:detekt` reports zero warnings
+  - Expected files: `architect-engine/engine/src/main/kotlin/**` and tests flagged by detekt
+  - Fix LongMethod/LongParameterList, MagicNumber, MaxLineLength, wildcard imports, and test-only warnings
+  - Verification: rerun detekt for engine module
+
+- [ ] **T-9.3.3** 🟡 `S` — Resolve detekt warnings in architect-cli | parallel | Priority: low | Depends: none | [REVISED] 2026-03-28T17:09:13Z | Assumptions: CLI detekt runs as part of build | Acceptance: `./gradlew :architect-cli:cli:detekt` reports zero warnings
+  - Expected files: `architect-cli/cli/src/main/kotlin/**`
+  - Fix UseCheckOrError warnings and any detekt findings from CLI build
+  - Verification: rerun detekt for CLI module
 
 ---
 
@@ -1001,6 +1010,8 @@
 | T-8.2.3 | T-8.2.1 |
 | T-9.2.2 | T-8.1.1 |
 | T-9.3.1 | (none — can start now) |
+| T-9.3.2 | (none — can start now) |
+| T-9.3.3 | (none — can start now) |
 
 ---
 
