@@ -10,7 +10,7 @@
 
 - Overall Progress: 77/128 tasks completed (60%)
 - Current Phase: Phase 5 — Configuration as Code Excellence
-- Last Updated: 2026-03-28T13:40:14Z
+- Last Updated: 2026-03-28T14:40:08Z
 
 ---
 
@@ -729,45 +729,44 @@
 
 ### 7.1 — Cloud Dashboard
 
-- [ ] **T-7.1.1** 🟠 `XXL` — Build execution dashboard web UI
-  - Real-time execution monitoring across all team projects
-  - Execution history with search, filter, drill-down
-  - Task performance analytics (duration trends, failure rates)
-  - Project health overview (build status, coverage, violations)
-  - Team activity feed (who ran what, when)
+- [ ] **T-7.1.1** 🟠 `XXL` — Build execution dashboard web UI | sequential | Priority: high | Depends: T-7.1.2 | [REVISED] 2026-03-28T14:40:08Z | Assumptions: architect-cloud is the delivery vehicle; UI lives in `architect-cloud/ui` and consumes `architect-cloud/backend` APIs | Acceptance: dashboard lists executions with filters, shows real-time task progress via SSE, and cloud UI/backend builds and tests pass
+  - Expected files: `architect-cloud/ui/src/**` (routes, components, state), `architect-cloud/backend/src/main/kotlin/**/execution/**` (controllers/services), `architect-cloud/backend/src/main/resources/**` (CORS/SSE config)
+  - Add REST endpoints for execution summaries and detail views, plus an SSE proxy to engine events
+  - UI: executions list, project filter, status badges, timeline view, task detail panel
+  - Verification: cloud UI build/test and backend tests for new endpoints + SSE behavior
 
-- [ ] **T-7.1.2** 🟠 `L` — Add remote execution result storage
-  - Sync execution history to cloud backend
-  - Query cross-machine execution data
-  - Compare: "this build is 30% slower than team average"
+- [ ] **T-7.1.2** 🟠 `L` — Add remote execution result storage | sequential | Priority: high | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: architect-cloud backend persists execution/task results in a relational store; engine can POST summaries on completion | Acceptance: execution/task results are persisted, queryable by project/task/time range, and covered by backend tests
+  - Expected files: `architect-cloud/backend/src/main/kotlin/**/execution/**` (entities, repositories, services), `architect-cloud/backend/src/main/resources/application.yml` (DB config), `architect-engine/engine/src/main/kotlin/**/cloud/**` (result publisher client)
+  - Add POST API for engine to submit execution summaries, plus GET APIs for list/detail queries
+  - Include indexes for project, task, and timestamp queries
+  - Verification: backend integration tests for persistence + engine client tests for submit flow
 
-- [ ] **T-7.1.3** 🟡 `L` — Add team configuration sharing
-  - Shared `architect.yml` templates via cloud
-  - Organization-wide defaults and policies
-  - `architect config pull` — sync team config
-  - Version-controlled config with approval workflow
+- [ ] **T-7.1.3** 🟡 `L` — Add team configuration sharing | sequential | Priority: medium | Depends: T-7.1.2 | [REVISED] 2026-03-28T14:40:08Z | Assumptions: cloud backend stores team config templates and version history; CLI handles pull/push | Acceptance: `architect config pull/push` round-trips team config with versioning and conflict warnings; docs and tests included
+  - Expected files: `architect-cloud/backend/src/main/kotlin/**/config/**`, `architect-cli/cli/src/main/kotlin/**/command/ConfigCommandHandler.kt`, `architect-cli/cli/src/main/kotlin/**/client/**`
+  - Add backend APIs for config templates (list/get/create/update) with version metadata
+  - CLI: `architect config pull` and `architect config push` with diff/confirm flow
+  - Verification: CLI tests for new commands + backend tests for config versioning
 
 
 ### 7.3 — CI/CD Generation
 
-- [ ] **T-7.3.1** 🔴 `L` — Generate CI/CD pipelines from `architect.yml`
-  - `architect ci generate --provider github-actions`
-  - Reads tasks, phases, dependencies from `architect.yml`
-  - Generates optimized workflow YAML
-  - Supports: GitHub Actions, GitLab CI, CircleCI, Jenkins
-  - Smart caching, artifact passing, parallel jobs
+- [ ] **T-7.3.1** 🔴 `L` — Generate CI/CD pipelines from `architect.yml` | sequential | Priority: high | Depends: T-5.3.2, T-5.3.3 | [REVISED] 2026-03-28T14:40:08Z | Assumptions: CI generation is implemented in architect-core with provider templates; CLI owns the command surface | Acceptance: `architect ci generate --provider github-actions` produces valid workflows that mirror task graph ordering and passes tests for fixture configs
+  - Expected files: `architect-core/core/src/main/kotlin/**/ci/**` (pipeline model + generator), `architect-cli/cli/src/main/kotlin/**/command/CiCommandHandler.kt`, `docs/reference/ci/**` (provider docs), `architect-cli/cli/src/test/**` (fixtures)
+  - Implement task graph to job mapping (phases, dependencies, groups/templates)
+  - Provider templates: GitHub Actions first, with stubs for other providers
+  - Verification: fixture-based tests comparing generated YAML to golden files
 
-- [ ] **T-7.3.2** 🟠 `M` — Add CI/CD drift detection
-  - Compare generated pipeline vs actual workflow files
-  - `architect ci diff` shows what would change
-  - `architect ci sync` updates workflow files
-  - Warning on `architect validate` if CI out of sync
+- [ ] **T-7.3.2** 🟠 `M` — Add CI/CD drift detection | sequential | Priority: medium | Depends: T-7.3.1 | [REVISED] 2026-03-28T14:40:08Z | Assumptions: drift is computed by regenerating pipeline outputs and diffing against repo files | Acceptance: `architect ci diff` prints deterministic diffs and `architect ci sync` updates workflow files; validation warns on drift
+  - Expected files: `architect-cli/cli/src/main/kotlin/**/command/CiCommandHandler.kt`, `architect-core/core/src/main/kotlin/**/ci/**`, `.github/workflows/**` (generated outputs)
+  - Add diff renderer for YAML (unified diff) and sync writer
+  - Integrate with `architect validate` warning path
+  - Verification: CLI tests for diff/sync and drift warning in validate
 
-- [ ] **T-7.3.3** 🟡 `M` — Add CI optimization recommendations
-  - Analyze execution history for optimization opportunities
-  - Suggest: "Task X takes 5min but rarely fails — move to post-merge"
-  - Suggest: "Tasks A, B can run in parallel — saving 2min"
-  - `architect ci optimize` generates optimized pipeline
+- [ ] **T-7.3.3** 🟡 `M` — Add CI optimization recommendations | parallel | Priority: medium | Depends: T-7.3.1 | [REVISED] 2026-03-28T14:40:08Z | Assumptions: optimization uses TaskStats/history data already available in engine | Acceptance: `architect ci optimize` outputs recommendations and optional optimized workflow diff; tests cover recommendation rules
+  - Expected files: `architect-core/core/src/main/kotlin/**/ci/**`, `architect-engine/engine/src/main/kotlin/**/history/**`, `architect-cli/cli/src/main/kotlin/**/command/CiCommandHandler.kt`
+  - Implement rule-based recommendations (slow tasks, low failure rate, parallelizable groups)
+  - Optionally emit optimized workflow variant with suggestions annotated
+  - Verification: unit tests for recommendation rules + CLI output formatting
 
 ---
 
@@ -776,24 +775,29 @@
 
 ### 8.1 — Distribution Channels
 
-- [ ] **T-8.1.1** 🔴 `L` — Set up cross-platform binary distribution
-  - Platforms: macOS (arm64, x86_64), Linux (arm64, x86_64), Windows (x86_64)
-  - Distribute via: GitHub Releases, Homebrew, apt, winget, Scoop
-  - GraalVM native-image for instant startup
-  - Signed binaries with SHA-256 checksums
+- [ ] **T-8.1.1** 🔴 `L` — Set up cross-platform binary distribution | sequential | Priority: high | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: release artifacts are produced via GitHub Actions using GraalVM native-image | Acceptance: release workflow publishes signed binaries and checksums for macOS, Linux, Windows and updates Homebrew/apt/winget manifests
+  - Expected files: `.github/workflows/native-image.yml`, `.github/workflows/linux-packages.yml`, `.github/workflows/windows-installer.yml`, `.github/workflows/update-homebrew.yml`, `architect-cli/cli/build.gradle.kts`
+  - Configure native-image builds per OS/arch and upload release artifacts with checksums
+  - Add packaging steps for Homebrew, apt, winget, Scoop
+  - Verification: CI workflow runs on tag and produces expected artifacts
 
-- [ ] **T-8.1.2** 🟠 `M` — Add Docker distribution
-  - Official Docker image: `ghcr.io/architect-platform/architect`
-  - CI-optimized: includes common tools (git, node, python, go, java)
-  - Slim variant: architect CLI only
-  - `docker run architect build` works out of the box
+- [ ] **T-8.1.2** 🟠 `M` — Add Docker distribution | parallel | Priority: medium | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: Docker images are built from the CLI native binary and published to GHCR | Acceptance: `ghcr.io/architect-platform/architect` and `.../architect-slim` images build and run `architect --version`
+  - Expected files: `Dockerfile`, `.github/workflows/docker-image.yml`, `scripts/docker/**` (build helpers)
+  - Add multi-stage Dockerfile with full and slim targets
+  - Publish images on release tags with versioned and latest tags
+  - Verification: CI pipeline builds/pushes images and smoke tests `architect --version`
 
-- [ ] **T-8.1.3** 🟠 `M` — Add `npx` / `pip` / `go install` one-liner installation
-  - `npx @architect-platform/cli init` — bootstrap without global install
-  - `pip install architect-cli` — Python-native installation
-  - Wrapper scripts that download and run the native binary
+- [ ] **T-8.1.3** 🟠 `M` — Add `npx` / `pip` / `go install` one-liner installation | sequential | Priority: medium | Depends: T-8.1.1 | [REVISED] 2026-03-28T14:40:08Z | Assumptions: installers are thin wrappers that download release binaries | Acceptance: `npx @architect-platform/cli`, `pip install architect-cli`, and `go install ...` all run `architect` without manual download
+  - Expected files: `sdk/installers/node/**`, `sdk/installers/python/**`, `sdk/installers/go/**`, `docs/getting-started/**`
+  - Implement wrapper scripts that fetch the correct release asset and invoke it
+  - Publish package metadata for npm, PyPI, and Go module
+  - Verification: smoke tests in CI that run `architect --version` via each installer
 
-- [ ] **T-8.1.4** 🟡 `S` — Add version pinning in `architect.yml`
+- [ ] **T-8.1.4** 🟡 `S` — Add version pinning in `architect.yml` | parallel | Priority: low | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: CLI enforces pinning by warning or erroring on version mismatch | Acceptance: `architect.yml` supports `architect.version` constraints, CLI warns on mismatch, and schema/tests are updated
+  - Expected files: `architect-core/core/src/main/kotlin/**/config/**`, `architect-cli/cli/src/main/kotlin/**/ArchitectLauncher.kt`, `docs/schema/architect-schema.json`
+  - Add semantic version constraint parsing and validation on startup
+  - Update schema + docs for `architect.version`
+  - Verification: unit tests for version constraint parsing and warning output
   - ```yaml
     architect:
       version: ">=2.3.0 <3.0.0"
@@ -803,45 +807,44 @@
 
 ### 8.2 — Plugin Marketplace
 
-- [ ] **T-8.2.1** 🔴 `XL` — Build plugin registry and marketplace
-  - Web UI: browse, search, install plugins
-  - Plugin metadata: description, author, downloads, rating, compatibility
-  - `architect plugin search <query>` — search from CLI
-  - `architect plugin install <plugin-id>` — add to architect.yml + download
-  - Community plugins: submit via PR to registry repo
+- [ ] **T-8.2.1** 🔴 `XL` — Build plugin registry and marketplace | sequential | Priority: high | Depends: T-3.1.1 | [REVISED] 2026-03-28T14:40:08Z | Assumptions: registry is hosted in architect-cloud backend with a public UI in architect-cloud/ui | Acceptance: CLI can search/install from registry, marketplace UI lists plugins with metadata, and backend APIs are covered by tests
+  - Expected files: `architect-cloud/backend/src/main/kotlin/**/registry/**`, `architect-cloud/ui/src/**/marketplace/**`, `architect-cli/cli/src/main/kotlin/**/command/PluginCommandHandler.kt`
+  - Add registry APIs: list/search/get plugin metadata and versions
+  - UI: marketplace browse + plugin detail + install instructions
+  - CLI: `architect plugin search/install` integrates with registry and updates `architect.yml`
+  - Verification: backend tests for registry APIs + CLI tests for search/install
 
-- [ ] **T-8.2.2** 🟠 `L` — Add plugin publishing workflow
-  - `architect plugin publish` — package, sign, upload to registry
-  - Versioning: semver with compatibility matrix
-  - Automated compatibility testing against API versions
-  - Security review process for community plugins
+- [ ] **T-8.2.2** 🟠 `L` — Add plugin publishing workflow | sequential | Priority: medium | Depends: T-8.2.1 | [REVISED] 2026-03-28T14:40:08Z | Assumptions: publishing uses registry APIs with signature verification | Acceptance: `architect plugin publish` packages and uploads a signed plugin with compatibility metadata; backend validates and stores releases
+  - Expected files: `architect-cli/cli/src/main/kotlin/**/command/PluginCommandHandler.kt`, `architect-cloud/backend/src/main/kotlin/**/registry/**`
+  - Add CLI command to package plugin JAR + metadata and upload to registry
+  - Backend: validate signature, API compatibility, store release metadata
+  - Verification: CLI tests for publish flow + backend tests for validation rules
 
-- [ ] **T-8.2.3** 🟡 `M` — Add plugin template gallery
-  - `architect plugin create --template <name>`
-  - Templates: kotlin-plugin, typescript-plugin, go-plugin, python-plugin
-  - Each template: project structure, build config, test setup, CI workflow
-  - Community templates via registry
+- [ ] **T-8.2.3** 🟡 `M` — Add plugin template gallery | parallel | Priority: low | Depends: T-8.2.1 | [REVISED] 2026-03-28T14:40:08Z | Assumptions: templates are stored in registry and downloaded by CLI | Acceptance: `architect plugin create --template <name>` scaffolds a plugin with build/test/CI wiring and docs
+  - Expected files: `architect-cli/cli/src/main/kotlin/**/command/PluginCommandHandler.kt`, `templates/plugins/**`, `docs/guides/plugin-development.md`
+  - Provide templates: kotlin, typescript, go, python with minimal example task/tests
+  - CLI downloads templates from registry or uses bundled fallback templates
+  - Verification: CLI tests for scaffold output and template selection
 
 ### 8.3 — SDK & Multi-Language Plugin Support
 
-- [ ] **T-8.3.1** 🟠 `XL` — Create TypeScript SDK for plugin development
-  - npm package: `@architect-platform/sdk`
-  - TypeScript types for all API contracts
-  - Plugin runner that communicates with engine via gRPC/HTTP
-  - Example plugins in TypeScript
-  - Full test utilities
+- [ ] **T-8.3.1** 🟠 `XL` — Create TypeScript SDK for plugin development | parallel | Priority: medium | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: SDK lives under `sdk/typescript` and publishes to npm | Acceptance: SDK builds/tests pass, example plugin runs against engine, and published package includes typings
+  - Expected files: `sdk/typescript/package.json`, `sdk/typescript/src/**`, `sdk/typescript/test/**`, `examples/typescript-plugin/**`
+  - Implement core types mirroring Kotlin API contracts + HTTP client/runner
+  - Provide example plugin and test utilities (mock engine)
+  - Verification: SDK unit tests + example plugin integration test
 
-- [ ] **T-8.3.2** 🟠 `XL` — Create Go SDK for plugin development
-  - Go module: `github.com/architect-platform/sdk-go`
-  - Go interfaces matching Kotlin API contracts
-  - Plugin runner with gRPC/HTTP bridge
-  - Example plugins in Go
+- [ ] **T-8.3.2** 🟠 `XL` — Create Go SDK for plugin development | parallel | Priority: medium | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: SDK lives under `sdk/go` and publishes a Go module | Acceptance: SDK builds/tests pass, example plugin runs against engine, and module docs are present
+  - Expected files: `sdk/go/go.mod`, `sdk/go/**`, `examples/go-plugin/**`
+  - Implement Go interfaces for task/phase/plugin contracts and HTTP runner
+  - Provide example plugin with a test task
+  - Verification: `go test ./...` in sdk/go and example plugin integration test
 
-- [ ] **T-8.3.3** 🟡 `XL` — Create Python SDK for plugin development
-  - PyPI package: `architect-sdk`
-  - Python classes matching API contracts
-  - Plugin runner with HTTP bridge
-  - Example plugins in Python
+- [ ] **T-8.3.3** 🟡 `XL` — Create Python SDK for plugin development | parallel | Priority: low | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: SDK lives under `sdk/python` and publishes to PyPI | Acceptance: SDK tests pass, example plugin runs against engine, and package includes type hints
+  - Expected files: `sdk/python/pyproject.toml`, `sdk/python/architect_sdk/**`, `examples/python-plugin/**`
+  - Implement Python classes for API contracts and HTTP runner
+  - Provide example plugin with test coverage
+  - Verification: `python -m pytest` in sdk/python and example plugin integration test
 
 ---
 
@@ -850,50 +853,49 @@
 
 ### 9.1 — Test Coverage Expansion
 
-- [ ] **T-9.1.1** 🔴 `L` — Add end-to-end integration test suite
-  - Full pipeline: CLI → Engine → Plugin → Task Execution → Result
-  - Test scenarios:
-    - Fresh project init → configure → build → test → release
-    - Monorepo: multi-project affected detection → parallel execution
-    - Plugin: install → configure → execute → uninstall
-  - Run in CI on every PR
+- [ ] **T-9.1.1** 🔴 `L` — Add end-to-end integration test suite | sequential | Priority: high | Depends: T-0.2.1, T-2.1.1 | [REVISED] 2026-03-28T14:40:08Z | Assumptions: E2E tests run via Gradle in a dedicated module or CLI test suite using embedded engine | Acceptance: CI runs E2E tests that cover init/build/test/release, monorepo affected, and plugin install flows
+  - Expected files: `architect-cli/cli/src/test/kotlin/**/E2E/**` or new `architect-e2e` module, `architect-engine/engine/src/test/kotlin/**`
+  - Implement fixture projects for single repo and monorepo scenarios
+  - Wire tests to start embedded engine, run CLI commands, assert results
+  - Verification: CI job executes E2E suite with deterministic outputs
 
-- [ ] **T-9.1.2** 🟠 `L` — Add engine stress/load tests
-  - 100+ concurrent task executions
-  - Event buffer overflow scenarios
-  - Large monorepo (50+ subprojects)
-  - Measure: throughput, latency, memory usage
-  - Regression detection in CI
+- [ ] **T-9.1.2** 🟠 `L` — Add engine stress/load tests | sequential | Priority: medium | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: stress tests run under `architect-engine/engine` with controlled concurrency | Acceptance: load tests simulate 100+ concurrent tasks, validate event buffer behavior, and produce perf metrics in CI
+  - Expected files: `architect-engine/engine/src/test/kotlin/**/LoadTest.kt`, `architect-engine/engine/src/test/resources/**`
+  - Implement load harness with configurable concurrency and event buffer size
+  - Capture throughput/latency metrics and assert thresholds
+  - Verification: CI runs stress tests on scheduled workflow or nightly job
 
-- [ ] **T-9.1.3** 🟠 `M` — Add CLI snapshot tests
-  - Capture expected output for each command
-  - Detect unintended output changes
-  - Cover: all commands, all output modes (plain, json, interactive)
+- [ ] **T-9.1.3** 🟠 `M` — Add CLI snapshot tests | parallel | Priority: medium | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: snapshots are stored in test resources with a stable renderer | Acceptance: snapshot tests cover key commands and fail on output drift with clear diffs
+  - Expected files: `architect-cli/cli/src/test/kotlin/**/SnapshotTest.kt`, `architect-cli/cli/src/test/resources/snapshots/**`
+  - Add snapshot harness with update flag for regenerating snapshots
+  - Cover plain/json/interactive outputs for core commands
+  - Verification: CI runs snapshot tests and reports diffs on failure
 
-- [ ] **T-9.1.4** 🟡 `M` — Add mutation testing thresholds
-  - PiTest already configured but no enforcement
-  - Set minimum mutation score: 60%
-  - Focus on: task execution logic, dependency resolver, event system
+- [ ] **T-9.1.4** 🟡 `M` — Add mutation testing thresholds | parallel | Priority: low | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: PiTest is already wired in Gradle for API/engine modules | Acceptance: mutation score thresholds enforced in CI and documented
+  - Expected files: `architect-engine/engine/build.gradle.kts`, `architect-api/api/build.gradle.kts`, `.github/workflows/**`
+  - Configure minimum mutation score (60%) and target packages for task execution paths
+  - Add CI job to run mutation tests on schedule or nightly
+  - Verification: build fails when mutation score drops below threshold
 
 ### 9.2 — CI/CD Pipeline Hardening
 
-- [ ] **T-9.2.1** 🔴 `M` — Add cross-module dependency validation in CI
-  - Detect: API breaking changes that affect engine/plugins
-  - Run all downstream tests when API changes
-  - Block merge if API changes break consumers
+- [ ] **T-9.2.1** 🔴 `M` — Add cross-module dependency validation in CI | sequential | Priority: high | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: CI can detect API module changes and trigger dependent module tests | Acceptance: CI blocks merges when API changes break engine/plugins and documents affected modules
+  - Expected files: `.github/workflows/monorepo-validation.yml`, `scripts/ci/**`
+  - Add change detection for `architect-api/api` and run downstream tests conditionally
+  - Surface failures with clear module attribution
+  - Verification: CI job fails on simulated breaking change in API
 
-- [ ] **T-9.2.2** 🟠 `M` — Add automated release pipeline
-  - Trigger: merge to main with conventional commit
-  - Steps: version bump → changelog → build all → test all → publish → release notes
-  - API publishes to GitHub Packages
-  - CLI publishes binaries to GitHub Releases
-  - Engine publishes Docker image
+- [ ] **T-9.2.2** 🟠 `M` — Add automated release pipeline | sequential | Priority: medium | Depends: T-8.1.1 | [REVISED] 2026-03-28T14:40:08Z | Assumptions: release automation uses GitHub Actions and conventional commits | Acceptance: merge to main triggers version bump, changelog, builds/tests, publishes artifacts and release notes
+  - Expected files: `.github/workflows/release-architected.yml`, `.github/workflows/architect-*-pipeline.yml`, `scripts/release/**`
+  - Implement versioning + changelog generation (conventional commits)
+  - Publish API to GitHub Packages, CLI binaries to Releases, engine Docker image to GHCR
+  - Verification: dry-run release workflow on tag and inspect artifacts
 
-- [ ] **T-9.2.3** 🟡 `M` — Add security scanning in CI
-  - CodeQL for Kotlin (SAST)
-  - Dependency vulnerability scanning (Dependabot/Renovate)
-  - SBOM generation on release
-  - Upload SARIF to GitHub Security tab
+- [ ] **T-9.2.3** 🟡 `M` — Add security scanning in CI | parallel | Priority: low | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: CI uses GitHub Advanced Security features where available | Acceptance: CodeQL runs on PRs, dependency scans run on schedule, SBOM generated on release, and SARIF uploads succeed
+  - Expected files: `.github/workflows/dependency-vulnerability-scan.yml`, `.github/workflows/codeql.yml`, `.github/dependabot.yml`
+  - Configure CodeQL for Kotlin/Gradle and upload SARIF
+  - Enable dependency scanning and SBOM generation during release
+  - Verification: CI jobs run and upload results to GitHub Security tab
 
 ---
 
@@ -902,57 +904,50 @@
 
 ### 10.1 — Documentation Overhaul
 
-- [ ] **T-10.1.1** 🔴 `L` — Create comprehensive Getting Started guide
-  - 5-minute quickstart: install → init → build → test
-  - Language-specific guides: Kotlin, TypeScript, Python, Rust, Go
-  - Each guide: real project from zero to CI/CD
-  - Video walkthrough (optional)
+- [ ] **T-10.1.1** 🔴 `L` — Create comprehensive Getting Started guide | sequential | Priority: high | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: docs live under `docs/getting-started` and `docs/guides` | Acceptance: quickstart and language-specific guides are published in MkDocs navigation
+  - Expected files: `docs/getting-started/index.md`, `docs/getting-started/kotlin.md`, `docs/getting-started/typescript.md`, `docs/getting-started/python.md`, `docs/getting-started/rust.md`, `docs/getting-started/go.md`, `mkdocs.yml`
+  - Include copy-pastable commands for install/init/build/test and CI tips
+  - Verification: `mkdocs build` succeeds with new pages
 
-- [ ] **T-10.1.2** 🔴 `L` — Create Architecture Decision Records (ADRs)
-  - Document all major design decisions:
-    - Why Micronaut (not Spring)?
-    - Why daemon architecture?
-    - Why SPI for plugin discovery?
-    - Why YAML configuration?
-  - Template: context, decision, consequences
-  - Living documents: update as decisions evolve
+- [ ] **T-10.1.2** 🔴 `L` — Create Architecture Decision Records (ADRs) | sequential | Priority: high | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: ADRs live under `docs/adr` and are linked in MkDocs nav | Acceptance: ADR template plus initial ADRs for core decisions are published
+  - Expected files: `docs/adr/0000-template.md`, `docs/adr/0001-micronaut.md`, `docs/adr/0002-daemon-architecture.md`, `docs/adr/0003-plugin-spi.md`, `docs/adr/0004-config-yaml.md`, `mkdocs.yml`
+  - Use consistent ADR format (context/decision/consequences)
+  - Verification: `mkdocs build` succeeds and ADRs appear in nav
 
-- [ ] **T-10.1.3** 🟠 `M` — Create Plugin Development Tutorial
-  - Step-by-step: "Build Your First Plugin in 30 Minutes"
-  - Cover: scaffold, implement, test, publish
-  - Include: common patterns, anti-patterns, debugging tips
-  - Companion repo with example plugin
+- [ ] **T-10.1.3** 🟠 `M` — Create Plugin Development Tutorial | parallel | Priority: medium | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: tutorial lives under `docs/guides` and references existing plugin templates | Acceptance: tutorial published with step-by-step scaffold, implementation, testing, and publish flow
+  - Expected files: `docs/guides/plugin-tutorial.md`, `docs/guides/plugin-development.md`, `mkdocs.yml`
+  - Include troubleshooting and common patterns section
+  - Verification: `mkdocs build` succeeds with tutorial in nav
 
-- [ ] **T-10.1.4** 🟠 `M` — Create CLI Command Reference (auto-generated)
-  - `architect docs generate` — extract from PicoCLI annotations
-  - One page per command with: usage, options, examples, related commands
-  - Published to MkDocs site automatically
+- [ ] **T-10.1.4** 🟠 `M` — Create CLI Command Reference (auto-generated) | sequential | Priority: medium | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: CLI can introspect PicoCLI metadata to emit Markdown docs | Acceptance: `architect docs generate` writes command reference pages and MkDocs build includes them
+  - Expected files: `architect-cli/cli/src/main/kotlin/**/command/DocsCommandHandler.kt`, `docs/reference/commands/**`, `mkdocs.yml`
+  - Implement doc generator that renders usage/options/examples per command
+  - Add CI check to ensure generated docs are up to date
+  - Verification: command generates docs and `mkdocs build` succeeds
 
-- [ ] **T-10.1.5** 🟡 `M` — Create Monorepo Best Practices Guide
-  - How to structure a monorepo with Architect
-  - Affected detection setup
-  - Cross-project dependencies
-  - CI optimization strategies
-  - Real-world example: this repo as case study
+- [ ] **T-10.1.5** 🟡 `M` — Create Monorepo Best Practices Guide | parallel | Priority: low | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: guide lives under `docs/guides` | Acceptance: monorepo guide published and linked in MkDocs nav
+  - Expected files: `docs/guides/monorepo-best-practices.md`, `mkdocs.yml`
+  - Include affected detection, dependency boundaries, and CI optimization examples
+  - Verification: `mkdocs build` succeeds with new guide
 
 ### 10.2 — API Documentation
 
-- [ ] **T-10.2.1** 🟠 `L` — Add KDoc to all public API interfaces
-  - Every public class, interface, method, property
-  - Include: description, parameters, return values, examples, since version
-  - Generate Dokka HTML site
-  - Publish alongside MkDocs site
+- [ ] **T-10.2.1** 🟠 `L` — Add KDoc to all public API interfaces | sequential | Priority: medium | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: API docs are generated with Dokka and hosted with MkDocs | Acceptance: all public API surfaces have KDoc, Dokka builds cleanly, and docs are published
+  - Expected files: `architect-api/api/src/main/kotlin/**`, `architect-api/api/build.gradle.kts`, `docs/reference/api/**`
+  - Add KDoc blocks with params/returns/examples and @since where relevant
+  - Configure Dokka output and include in docs site
+  - Verification: `./gradlew dokkaHtml` succeeds with no missing KDoc warnings
 
-- [ ] **T-10.2.2** 🟠 `M` — Create API migration guides
-  - Document breaking changes between versions
-  - Upgrade instructions with before/after code examples
-  - Deprecation notices with replacement guidance
+- [ ] **T-10.2.2** 🟠 `M` — Create API migration guides | parallel | Priority: medium | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: migration guides live under `docs/reference/migrations` | Acceptance: migration docs cover recent breaking changes with before/after examples
+  - Expected files: `docs/reference/migrations/index.md`, `docs/reference/migrations/2.x-to-3.0.md`, `mkdocs.yml`
+  - Include deprecation notices and replacement guidance
+  - Verification: `mkdocs build` succeeds and migrations appear in nav
 
-- [ ] **T-10.2.3** 🟡 `M` — Add REST API documentation (OpenAPI)
-  - Generate OpenAPI spec from Micronaut annotations
-  - Swagger UI at `http://localhost:9292/swagger-ui`
-  - Export: openapi.json, openapi.yaml
-  - Publish to docs site
+- [ ] **T-10.2.3** 🟡 `M` — Add REST API documentation (OpenAPI) | sequential | Priority: low | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: Micronaut OpenAPI plugin is used in engine build | Acceptance: OpenAPI spec is generated, Swagger UI available locally, and docs site includes spec links
+  - Expected files: `architect-engine/engine/build.gradle.kts`, `architect-engine/engine/src/main/resources/application.yml`, `docs/reference/api/openapi.md`
+  - Enable Micronaut OpenAPI generation and Swagger UI
+  - Publish openapi.json/yaml as build artifacts and link in docs
+  - Verification: `./gradlew :architect-engine:engine:openapi` (or equivalent) generates specs
 
 ---
 
@@ -982,9 +977,17 @@
 | T-6.1.1 | T-5.1.1, T-6.3.1 |
 | T-6.2.1 | T-5.1.1, T-6.3.1 |
 | T-7.2.1 | T-0.1.1 |
-| T-7.3.1 | T-5.3.1 |
 | T-8.2.1 | T-3.1.1 |
 | T-9.1.1 | T-0.2.1, T-2.1.1 |
+| T-7.1.1 | T-7.1.2 |
+| T-7.1.3 | T-7.1.2 |
+| T-7.3.1 | T-5.3.2, T-5.3.3 |
+| T-7.3.2 | T-7.3.1 |
+| T-7.3.3 | T-7.3.1 |
+| T-8.1.3 | T-8.1.1 |
+| T-8.2.2 | T-8.2.1 |
+| T-8.2.3 | T-8.2.1 |
+| T-9.2.2 | T-8.1.1 |
 
 ---
 
