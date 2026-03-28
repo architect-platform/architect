@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 80/131 tasks completed (61%)
-- Current Phase: Phase 5 — Configuration as Code Excellence
-- Last Updated: 2026-03-28T17:09:13Z
+- Overall Progress: 81/131 tasks completed (62%)
+- Current Phase: Phase 9 — Testing & Quality Infrastructure
+- Last Updated: 2026-03-28T17:40:00Z
 
 ---
 
@@ -903,7 +903,7 @@
 
 ### 9.3 — Build Hygiene
 
-- [ ] **T-9.3.1** 🟡 `S` — Fix build-blocking ktlint/compile warnings | parallel | Priority: low | Depends: none | [REVISED] 2026-03-28T17:09:13Z | Assumptions: address current `./gradlew build` failures first | Acceptance: root `./gradlew build` passes and build-blocking warnings are resolved
+- [x] **T-9.3.1** 🟡 `S` — Fix build-blocking ktlint/compile warnings | parallel | Finished: 2026-03-28T17:40:00Z | Notes: Added missing assertFalse/assertDoesNotThrow imports in CliEngineIntegrationTest.kt; all modules (api, core, engine, cli) build clean
   - Expected files: `architect-api/api/src/main/kotlin/io/github/architectplatform/api/testing/ArchitectPluginContract.kt` and any other build-failing sources
   - Fix ktlint indentation/format errors without altering behavior
   - Verification: `./gradlew build` succeeds
