@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 79/128 tasks completed (62%)
+- Overall Progress: 80/128 tasks completed (63%)
 - Current Phase: Phase 5 — Configuration as Code Excellence
-- Last Updated: 2026-03-28T16:03:10Z
+- Last Updated: 2026-03-28T17:20:00Z
 
 ---
 
@@ -797,7 +797,7 @@
   - Publish package metadata for npm, PyPI, and Go module
   - Verification: smoke tests in CI that run `architect --version` via each installer
 
-- [ ] **T-8.1.4** 🟡 `S` — Add version pinning in `architect.yml` | parallel | Priority: low | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Assumptions: CLI enforces pinning by warning or erroring on version mismatch | Acceptance: `architect.yml` supports `architect.version` constraints, CLI warns on mismatch, and schema/tests are updated
+- [x] **T-8.1.4** 🟡 `S` — Add version pinning in `architect.yml` | parallel | Priority: low | Depends: none | [REVISED] 2026-03-28T14:40:08Z | Finished: 2026-03-28T17:20:00Z | Notes: Added VersionConstraint parsing, architect.version validation/warnings, upgrade constraint check, schema updates, and docs/tests coverage.
   - Expected files: `architect-core/core/src/main/kotlin/**/config/**`, `architect-cli/cli/src/main/kotlin/**/ArchitectLauncher.kt`, `docs/schema/architect-schema.json`
   - Add semantic version constraint parsing and validation on startup
   - Update schema + docs for `architect.version`
