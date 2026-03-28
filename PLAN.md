@@ -10,7 +10,7 @@
 
 - Overall Progress: 77/128 tasks completed (60%)
 - Current Phase: Phase 5 — Configuration as Code Excellence
-- Last Updated: 2026-03-28T14:40:08Z
+- Last Updated: 2026-03-28T16:20:00Z
 
 ---
 
@@ -682,12 +682,14 @@
         retryAttempts: 3
     ```
 
-- [ ] **T-5.3.2** 🟠 `M` — Add task grouping and namespacing | sequential | Priority: high | Depends: T-5.3.1 | [REVISED] 2026-03-28T13:40:14Z | Assumptions: do not rename existing task IDs silently; support grouping/namespace expansion through registry + CLI resolution while keeping legacy IDs executable | Acceptance: `architect build` expands configured groups, `build:*` / `build:frontend` lookups resolve predictably, plugin tasks gain explicit namespace aliases where applicable, and task listing/help surfaces the grouping model
+- [ ] **T-5.3.2** 🟠 `M` — Add task grouping and namespacing | sequential | Priority: high | Depends: T-5.3.1 | [REVISED] 2026-03-28T16:20:00Z | Assumptions: do not rename existing task IDs silently; support grouping/namespace expansion through registry + CLI resolution while keeping legacy IDs executable | Acceptance: `architect build` expands configured groups, `build:*` / `build:frontend` lookups resolve predictably, plugin tasks gain explicit namespace aliases where applicable, and task listing/help surfaces the grouping model
   - Expected files: `architect-api/api/src/main/kotlin/io/github/architectplatform/api/core/tasks/TaskRegistry.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/tasks/infrastructure/InMemoryTaskRegistry.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/tasks/infrastructure/TaskReferenceResolver.kt`, CLI task-resolution code in `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/ArchitectLauncher.kt`, and schema/config parsing for `groups:` in the inline task plugin/config loader
   - Implementation details:
     - Add `TaskRegistry.resolve(reference, groups)` signature for `group`, `group:*`, and `group:member` lookups (preserve direct task IDs)
     - Generate namespaced aliases for plugin tasks (e.g., `git:commit` -> `git-commit`) without changing original IDs
     - Surface grouping in `architect tasks` output (show group header + member list)
+    - Add `groups:` parsing to inline task config as ordered map (preserve YAML list order for expansion)
+    - Ensure `TaskNotFoundException` suggestions include group names + group members when group resolution fails
   - Verification: fixture `architect.yml` with `groups:` list and mixed plugin/inline tasks; unit tests covering group expansion order, wildcard expansion, and error cases (unknown group/member) in registry + CLI resolution; CLI regression tests for task listing/group rendering and `build:*` lookups
   - Acceptance details: unknown groups/members surface `TaskNotFoundException` with available group/member suggestions; group expansion order matches the `groups:` list order
   - Group related tasks: `architect build:frontend`, `architect build:backend`
