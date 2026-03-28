@@ -5,13 +5,31 @@ import io.github.architectplatform.api.components.execution.ResourceExtractor
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.plugins.github.GithubContext
+import io.github.architectplatform.plugins.github.dto.GithubReleaseContext
 import io.github.architectplatform.plugins.github.dto.PipelineContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 
 class GithubPluginTest {
+  @Test
+  fun `required environment variables include github token when releases are enabled`() {
+    val plugin = GithubPlugin()
+    plugin.init(GithubContext(release = GithubReleaseContext(enabled = true)))
+
+    assertEquals(setOf("GITHUB_TOKEN"), plugin.requiredEnvironmentVariables())
+  }
+
+  @Test
+  fun `required environment variables are empty when releases are disabled`() {
+    val plugin = GithubPlugin()
+    plugin.init(GithubContext(release = GithubReleaseContext(enabled = false)))
+
+    assertTrue(plugin.requiredEnvironmentVariables().isEmpty())
+  }
+
   @Test
   fun `github-init-pipelines rejects unsafe workflow file names`() {
     val repoDir = Files.createTempDirectory("github-plugin-test")

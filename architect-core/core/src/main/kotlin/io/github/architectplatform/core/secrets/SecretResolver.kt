@@ -28,11 +28,13 @@ class CompositeSecretResolver(
       commandRunner: SecretCommandRunner = ProcessSecretCommandRunner(),
       vaultClient: HttpVaultSecretClient = HttpVaultSecretClient(),
       dotEnvLoader: DotEnvLoader = DotEnvLoader(),
+      secretStore: SecretStore = SecretStore(),
     ): CompositeSecretResolver =
       CompositeSecretResolver(
         listOf(
           EnvironmentVariableSecretResolver(env),
           DotEnvSecretResolver(dotEnvLoader),
+          StoredSecretResolver(secretStore),
           VaultSecretResolver(env, vaultClient),
           AwsSecretsManagerSecretResolver(env, commandRunner),
           GcpSecretManagerSecretResolver(env, commandRunner),
@@ -52,6 +54,12 @@ class DotEnvSecretResolver(
 ) : SecretResolver {
   override fun resolve(name: String, projectDir: Path?): String? =
     projectDir?.let(loader::load)?.get(name)
+}
+
+class StoredSecretResolver(
+  private val secretStore: SecretStore = SecretStore(),
+) : SecretResolver {
+  override fun resolve(name: String, projectDir: Path?): String? = secretStore.get(name)
 }
 
 class DotEnvLoader {

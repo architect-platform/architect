@@ -35,6 +35,9 @@ class GithubPlugin : ArchitectPlugin<GithubContext> {
   override val ctxClass = GithubContext::class.java
   override var context: GithubContext = GithubContext()
 
+  override fun requiredEnvironmentVariables(): Set<String> =
+    if (context.release.enabled) setOf("GITHUB_TOKEN") else emptySet()
+
   /**
    * Registers GitHub-related tasks with the task registry.
    *

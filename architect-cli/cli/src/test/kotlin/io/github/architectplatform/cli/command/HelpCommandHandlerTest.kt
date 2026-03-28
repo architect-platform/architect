@@ -17,6 +17,20 @@ class HelpCommandHandlerTest {
     assertTrue(output.contains("architect config lint"))
   }
 
+  @Test
+  fun `overview and secret help document secret management`() {
+    val overview = captureStdout {
+      HelpCommandHandler().handle(listOf("help"))
+    }
+    val secretHelp = captureStdout {
+      HelpCommandHandler().handle(listOf("help", "secret"))
+    }
+
+    assertTrue(overview.contains("secret             Manage locally stored secrets"))
+    assertTrue(secretHelp.contains("architect secret <subcommand>"))
+    assertTrue(secretHelp.contains("environment.secret(name)"))
+  }
+
   private fun captureStdout(block: () -> Unit): String {
     val original = System.out
     val output = ByteArrayOutputStream()

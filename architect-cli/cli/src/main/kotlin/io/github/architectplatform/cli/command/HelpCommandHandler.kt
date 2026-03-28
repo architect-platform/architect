@@ -30,6 +30,7 @@ class HelpCommandHandler {
       "validate" -> printCommandHelp("validate", VALIDATE_HELP)
       "info" -> printCommandHelp("info", INFO_HELP)
       "config" -> printCommandHelp("config", CONFIG_HELP)
+      "secret" -> printCommandHelp("secret", SECRET_HELP)
       "doctor" -> printCommandHelp("doctor", DOCTOR_HELP)
       "completion" -> printCommandHelp("completion", COMPLETION_HELP)
       "upgrade" -> printCommandHelp("upgrade", UPGRADE_HELP)
@@ -64,6 +65,7 @@ class HelpCommandHandler {
       |  engine             Manage the Architect engine daemon
       |  plugin             Manage plugins (validate, create, search, install)
       |  cache              Manage the task output cache
+      |  secret             Manage locally stored secrets
       |  completion         Generate shell completions
       |  upgrade            Upgrade the Architect CLI
       |
@@ -88,6 +90,7 @@ class HelpCommandHandler {
       |  architect plan build --tree        Show build execution plan as tree
       |  architect help tasks               Learn about the task system
       |  architect help plugins             Learn about the plugin ecosystem
+      |  architect secret set API_TOKEN ... Store a secret for local resolution
       |
       |HELP TOPICS
       |  architect help tasks               How the task system works
@@ -434,7 +437,31 @@ class HelpCommandHandler {
       |  architect config get project.name  Read project name
       |  architect config diff              Compare profiles
       |  architect config lint              Lint config and fail on issues
-     """.trimMargin()
+      """.trimMargin()
+
+    private val SECRET_HELP = """
+      |architect secret — Manage locally stored secrets
+      |
+      |USAGE
+      |  architect secret <subcommand> [args...]
+      |
+      |SUBCOMMANDS
+      |  set <name> [value]   Store or update a secret (prompts if value omitted)
+      |  get <name>           Print the plaintext value of a secret
+      |  list                 List stored secret names
+      |  delete <name>        Delete a stored secret
+      |
+      |DESCRIPTION
+      |  Architect prefers the native OS keychain when supported tooling is
+      |  available and falls back to the encrypted ~/.architect/secrets.enc store.
+      |  Stored values can be resolved at runtime via environment.secret(name).
+      |
+      |EXAMPLES
+      |  architect secret set API_TOKEN      Prompt for a value and store it
+      |  architect secret set API_TOKEN abc  Store a value directly
+      |  architect secret list               Show stored secret names
+      |  architect secret delete API_TOKEN   Remove a stored secret
+      """.trimMargin()
 
     private val DOCTOR_HELP = """
       |architect doctor — Diagnose project setup

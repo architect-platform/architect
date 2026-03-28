@@ -195,7 +195,7 @@
       "additionalProperties": {
         "type": "object",
         "properties": {
-          "command": {
+          "run": {
             "type": "string",
             "description": "Shell command to execute."
           },
@@ -211,9 +211,64 @@
             "type": "array",
             "items": { "type": "string" },
             "description": "Task IDs this task depends on."
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "file-system:read",
+                "file-system:write",
+                "network:outbound",
+                "process:exec"
+              ]
+            },
+            "description": "Explicit permissions required by the task."
+          },
+          "requires": {
+            "type": "object",
+            "description": "Runtime prerequisites checked before execution.",
+            "properties": {
+              "tools": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "min-tool-versions": {
+                "type": "object",
+                "additionalProperties": { "type": "string" }
+              },
+              "env": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "platform": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "additionalProperties": false
+          },
+          "condition": {
+            "type": "string",
+            "description": "Runtime condition expression (for example env.BRANCH == 'main')."
+          },
+          "timeout": {
+            "type": "string",
+            "description": "Per-task timeout such as 300s, 5m, or 1h."
+          },
+          "onFailure": {
+            "type": "string",
+            "enum": ["ABORT", "CONTINUE", "RETRY"],
+            "default": "ABORT",
+            "description": "Failure strategy for the task."
+          },
+          "retryAttempts": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of retry attempts when onFailure is RETRY."
           }
         },
-        "additionalProperties": true
+        "additionalProperties": false
       }
     }
   },

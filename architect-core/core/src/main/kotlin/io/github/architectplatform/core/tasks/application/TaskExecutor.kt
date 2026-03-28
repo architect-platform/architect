@@ -116,7 +116,9 @@ class TaskExecutor(
         if (shouldAbort) break
       }
 
-      if (allResults.all { it.success }) {
+      if (allResults.size == 1 && allResults.single().status == TaskResult.Status.SKIPPED) {
+        allResults.single()
+      } else if (allResults.all { it.success }) {
         TaskResult.success("All tasks completed successfully")
       } else {
         val failed = allResults.filter { !it.success }

@@ -25,6 +25,30 @@ class SecretResolverTest {
   }
 
   @Test
+  fun `stored secret resolver reads values from secret store`() {
+    val resolver = StoredSecretResolver(
+      secretStore = SecretStore(
+        backends = listOf(FakeSecretStoreBackend(linkedMapOf("API_TOKEN" to "from-store"))),
+      ),
+    )
+
+    assertEquals("from-store", resolver.resolve("API_TOKEN"))
+  }
+
+  @Test
+  fun `default composite resolver falls back to stored secrets when env and dotenv miss`(@TempDir tempDir: Path) {
+    val resolver = CompositeSecretResolver.default(
+      env = emptyMap(),
+      dotEnvLoader = DotEnvLoader(),
+      secretStore = SecretStore(
+        backends = listOf(FakeSecretStoreBackend(linkedMapOf("API_TOKEN" to "from-store"))),
+      ),
+    )
+
+    assertEquals("from-store", resolver.resolve("API_TOKEN", tempDir))
+  }
+
+  @Test
   fun `vault resolver returns first secret value from response`() {
     val resolver = VaultSecretResolver(
       env = mapOf(
@@ -68,5 +92,23 @@ class SecretResolverTest {
     )
 
     assertEquals("gcp-secret", resolver.resolve("API_TOKEN"))
+  }
+
+  private class FakeSecretStoreBackend(
+    initialValues: MutableMap<String, String> = linkedMapOf(),
+  ) : SecretStoreBackend {
+    private val values = initialValues
+
+    override fun isAvailable(): Boolean = true
+
+    override fun set(name: String, value: String) {
+      values[name] = value
+    }
+
+    override fun get(name: String): String? = values[name]
+
+    override fun delete(name: String): Boolean = values.remove(name) != null
+
+    override fun listKeys(): List<String> = values.keys.toList()
   }
 }

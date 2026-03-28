@@ -19,6 +19,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
  *         docker: "20.0.0"
  *       env: [DOCKER_REGISTRY]
  *       platform: [linux, darwin]
+ *     condition: "env.CI == 'true'"
+ *     timeout: 300s
+ *     onFailure: RETRY
+ *     retryAttempts: 3
  * ```
  */
 data class InlineTaskConfig(
@@ -28,6 +32,10 @@ data class InlineTaskConfig(
     val depends: List<String> = emptyList(),
     val permissions: List<String> = emptyList(),
     val requires: InlineTaskRequirements? = null,
+    val timeout: String? = null,
+    val condition: String? = null,
+    val onFailure: String? = null,
+    val retryAttempts: Int? = null,
 )
 
 /**

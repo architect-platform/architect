@@ -11,10 +11,13 @@ import io.github.architectplatform.cli.dto.TaskDTO
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.TaskPlanStepDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
+import io.github.architectplatform.cli.command.SecretCommandHandler
 import io.github.architectplatform.cli.engine.EngineHealthChecker
 import io.github.architectplatform.cli.plugin.PluginJarValidator
 import io.github.architectplatform.cli.plugin.PluginScaffolder
 import io.github.architectplatform.cli.plugin.PluginTemplate
+import io.github.architectplatform.core.secrets.SecretStore
+import io.github.architectplatform.core.secrets.SecretStoreBackend
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -187,6 +190,33 @@ class ArchitectLauncherTest {
     }
   }
 
+  @Test
+  fun `check command honors env profile dotenv chain`(@TempDir tmpDir: Path) {
+    tmpDir.resolve("architect.yml").toFile().writeText(
+      """
+      project:
+        name: profile-check
+      tasks:
+        profile-check:
+          run: echo ${'$'}{env.CI_ONLY_TOKEN}
+      """.trimIndent() + "\n"
+    )
+    tmpDir.resolve(".env.ci.local").toFile().writeText("CI_ONLY_TOKEN=from-ci-local\n")
+
+    val launcher = launcher()
+    launcher.command = "check"
+    launcher.args = listOf("check")
+    launcher.envProfile = "ci"
+
+    setUserDir(tmpDir) {
+      val output = captureStdout { launcher.run() }
+
+      assertTrue(output.contains("0 blocked"))
+      assertTrue(output.contains("Task Precondition Check"))
+      assertTrue(tmpDir.resolve(".env.example").toFile().readText().contains("CI_ONLY_TOKEN="))
+    }
+  }
+
   // ─── tasks command ────────────────────────────────────────────────────────
 
   @Test
@@ -348,6 +378,20 @@ class ArchitectLauncherTest {
     val output = captureStdout { launcher.run() }
 
     assertTrue(output.contains("Cache cleared"))
+  }
+
+  @Test
+  fun `secret command is reachable from launcher dispatch`() {
+    val backend = InMemorySecretStoreBackend()
+    val launcher = launcher()
+    launcher.secretHandler = SecretCommandHandler(store = SecretStore(backends = listOf(backend)))
+    launcher.command = "secret"
+    launcher.args = listOf("secret", "set", "API_TOKEN", "launcher-secret")
+
+    val output = captureStdout { launcher.run() }
+
+    assertTrue(output.contains("stored successfully"))
+    assertEquals("launcher-secret", backend.values["API_TOKEN"])
   }
 
   // ─── engine subcommands ───────────────────────────────────────────────────
@@ -998,4 +1042,20 @@ private class GraphEngineCommandClient : EngineCommandClient {
   override fun getAllTaskStats(project: String): List<io.github.architectplatform.cli.dto.TaskStatsDTO> = emptyList()
   override fun cancelExecution(executionId: ExecutionId): Map<String, Any> =
     mapOf("executionId" to executionId, "cancelled" to false)
+}
+
+private class InMemorySecretStoreBackend(
+  val values: MutableMap<String, String> = linkedMapOf(),
+) : SecretStoreBackend {
+  override fun isAvailable(): Boolean = true
+
+  override fun set(name: String, value: String) {
+    values[name] = value
+  }
+
+  override fun get(name: String): String? = values[name]
+
+  override fun delete(name: String): Boolean = values.remove(name) != null
+
+  override fun listKeys(): List<String> = values.keys.toList()
 }

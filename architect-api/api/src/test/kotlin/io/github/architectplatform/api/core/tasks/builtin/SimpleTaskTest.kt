@@ -3,11 +3,13 @@ package io.github.architectplatform.api.core.tasks.builtin
 import io.github.architectplatform.api.components.workflows.core.CoreWorkflow
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
+import io.github.architectplatform.api.core.tasks.FailureStrategy
 import io.github.architectplatform.api.core.tasks.TaskPermission
 import io.github.architectplatform.api.core.tasks.TaskResult
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.nio.file.Paths
+import java.time.Duration
 
 /**
  * Tests for SimpleTask implementation.
@@ -167,5 +169,21 @@ class SimpleTaskTest {
       setOf(TaskPermission.FILE_SYSTEM_READ, TaskPermission.PROCESS_EXEC),
       task.requiredPermissions(),
     )
+  }
+
+  @Test
+  fun `SimpleTask exposes runtime condition failure strategy and timeout`() {
+    val task =
+      SimpleTask(
+        id = "test-task",
+        description = "A test task",
+        runtimeCondition = { _, _ -> false },
+        failureStrategy = FailureStrategy.RETRY(maxAttempts = 2),
+        taskTimeout = Duration.ofSeconds(30),
+      ) { _, _ -> TaskResult.success() }
+
+    assertFalse(task.shouldExecute(createMockEnvironment(), createMockProjectContext()))
+    assertEquals(FailureStrategy.RETRY(maxAttempts = 2), task.onFailure())
+    assertEquals(Duration.ofSeconds(30), task.timeout())
   }
 }

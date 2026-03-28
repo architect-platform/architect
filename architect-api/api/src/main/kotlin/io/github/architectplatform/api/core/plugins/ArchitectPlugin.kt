@@ -82,4 +82,16 @@ interface ArchitectPlugin<C> {
    * against this schema. Return `null` (the default) to skip per-plugin schema validation.
    */
   fun configSchema(): Map<String, Any>? = null
+
+  /**
+   * Declares environment variables required by this plugin.
+   *
+   * `architect check` and related tooling use this metadata to validate required variables
+   * and keep generated `.env.example` files aligned even when the project config does not
+   * explicitly reference those variables through `${env.*}` placeholders.
+   *
+   * Implementations may inspect their initialized context and return a profile/config-aware
+   * set of variables.
+   */
+  fun requiredEnvironmentVariables(): Set<String> = emptySet()
 }

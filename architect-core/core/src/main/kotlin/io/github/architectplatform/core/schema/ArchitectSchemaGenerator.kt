@@ -134,6 +134,14 @@ object ArchitectSchemaGenerator {
     props.set<ObjectNode>("phase", phaseEnum())
     props.set<ObjectNode>("depends", stringArrayProp("Task IDs this task depends on"))
     props.set<ObjectNode>("permissions", permissionArrayProp("Permissions required to execute the task"))
+    props.set<ObjectNode>("requires", inlineTaskRequirementsDef())
+    props.set<ObjectNode>("timeout", stringProp("Maximum task duration (for example 300s, 5m, or 1h)"))
+    props.set<ObjectNode>("condition", stringProp("Runtime condition expression (for example env.BRANCH == 'main')"))
+    props.set<ObjectNode>(
+      "onFailure",
+      stringEnumProp("Failure strategy for the task", listOf("ABORT", "CONTINUE", "RETRY"), "ABORT"),
+    )
+    props.set<ObjectNode>("retryAttempts", integerPropWithMinimum("Retry attempts when onFailure is RETRY", 1))
 
     node.put("additionalProperties", false)
     return node
@@ -149,6 +157,9 @@ object ArchitectSchemaGenerator {
 
   private fun booleanPropWithDefault(description: String, default: Boolean): ObjectNode =
     mapper.createObjectNode().put("type", "boolean").put("description", description).put("default", default)
+
+  private fun integerPropWithMinimum(description: String, minimum: Int): ObjectNode =
+    mapper.createObjectNode().put("type", "integer").put("description", description).put("minimum", minimum)
 
   private fun stringArrayProp(description: String): ObjectNode {
     val node = mapper.createObjectNode()
@@ -171,6 +182,22 @@ object ArchitectSchemaGenerator {
       "network:outbound",
       "process:exec",
     ).forEach(values::add)
+    return node
+  }
+
+  private fun inlineTaskRequirementsDef(): ObjectNode {
+    val node = mapper.createObjectNode()
+    node.put("type", "object")
+    node.put("description", "Runtime requirements checked before the task executes")
+    val props = node.putObject("properties")
+    props.set<ObjectNode>("tools", stringArrayProp("Tools that must be available on PATH"))
+    props.set<ObjectNode>("env", stringArrayProp("Environment variables that must be set"))
+    props.set<ObjectNode>("platform", stringArrayProp("Supported platforms for this task"))
+    val minToolVersions = props.putObject("min-tool-versions")
+    minToolVersions.put("type", "object")
+    minToolVersions.put("description", "Minimum versions required for specific tools")
+    minToolVersions.putObject("additionalProperties").put("type", "string")
+    node.put("additionalProperties", false)
     return node
   }
 

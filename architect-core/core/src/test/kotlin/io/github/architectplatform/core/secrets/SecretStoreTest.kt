@@ -72,4 +72,48 @@ class SecretStoreTest {
         val store = storeAt(tempDir)
         assertTrue(store.listKeys().isEmpty())
     }
+
+    @Test
+    fun `preferred backend is used before encrypted file fallback`() {
+        val keychainBackend = FakeSecretStoreBackend(available = true)
+        val fallbackBackend = FakeSecretStoreBackend(available = true)
+        val store = SecretStore(backends = listOf(keychainBackend, fallbackBackend))
+
+        store.set("API_TOKEN", "from-keychain")
+
+        assertEquals("from-keychain", store.get("API_TOKEN"))
+        assertEquals(listOf("API_TOKEN"), store.listKeys())
+        assertEquals(emptyMap(), fallbackBackend.values)
+    }
+
+    @Test
+    fun `encrypted file fallback is used when preferred backend is unavailable`() {
+        val unavailableKeychainBackend = FakeSecretStoreBackend(available = false)
+        val fallbackBackend = FakeSecretStoreBackend(available = true)
+        val store = SecretStore(backends = listOf(unavailableKeychainBackend, fallbackBackend))
+
+        store.set("API_TOKEN", "from-file")
+
+        assertEquals("from-file", store.get("API_TOKEN"))
+        assertEquals("from-file", fallbackBackend.values["API_TOKEN"])
+        assertEquals(listOf("API_TOKEN"), store.listKeys())
+    }
+
+    private class FakeSecretStoreBackend(
+        private val available: Boolean,
+    ) : SecretStoreBackend {
+        val values = linkedMapOf<String, String>()
+
+        override fun isAvailable(): Boolean = available
+
+        override fun set(name: String, value: String) {
+            values[name] = value
+        }
+
+        override fun get(name: String): String? = values[name]
+
+        override fun delete(name: String): Boolean = values.remove(name) != null
+
+        override fun listKeys(): List<String> = values.keys.toList()
+    }
 }

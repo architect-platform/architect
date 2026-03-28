@@ -63,6 +63,27 @@ class TaskExecutorTest {
   }
 
   @Test
+  fun `single skipped task preserves skipped status`(@TempDir tmpDir: Path) {
+    val (executor, _) = buildExecutor(parallel = true)
+    val registry = InMemoryTaskRegistry()
+    val task = SimpleTask(
+      id = "conditional",
+      description = "Conditional task",
+      runtimeCondition = { _, _ -> false },
+    ) { _, _ ->
+      TaskResult.success("should not execute")
+    }
+    registry.add(task)
+
+    val project = project(tmpDir, registry)
+    val (_, deferred) = executor.execute(project, task, project.context, emptyList())
+
+    val result = runBlocking { deferred.await() }
+    assertTrue(result.success)
+    assertEquals(TaskResult.Status.SKIPPED, result.status)
+  }
+
+  @Test
   fun `executes parallel batch with independent tasks`(@TempDir tmpDir: Path) {
     val threadNames = CopyOnWriteArrayList<String>()
     val (executor, _) = buildExecutor(parallel = true)

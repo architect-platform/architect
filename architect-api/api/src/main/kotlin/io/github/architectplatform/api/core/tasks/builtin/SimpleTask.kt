@@ -2,11 +2,13 @@ package io.github.architectplatform.api.core.tasks.builtin
 
 import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.Environment
+import io.github.architectplatform.api.core.tasks.FailureStrategy
 import io.github.architectplatform.api.core.tasks.Task
 import io.github.architectplatform.api.core.tasks.TaskPermission
 import io.github.architectplatform.api.core.tasks.TaskRequirements
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.phase.Phase
+import java.time.Duration
 
 /**
  * A simple task implementation that executes a lambda function without arguments.
@@ -49,6 +51,9 @@ import io.github.architectplatform.api.core.tasks.phase.Phase
  * @param customDependencies Additional dependencies beyond phase dependencies (optional)
  * @param permissions Permissions required to execute the task (defaults to full access)
  * @param requirements Runtime preconditions checked before execution (optional)
+ * @param runtimeCondition Runtime condition checked before execution (optional)
+ * @param failureStrategy Failure handling strategy used by the engine
+ * @param taskTimeout Maximum duration allowed for this task (optional)
  * @param task Lambda function containing the task logic
  */
 class SimpleTask(
@@ -58,6 +63,9 @@ class SimpleTask(
   private val customDependencies: List<String> = emptyList(),
   private val permissions: Set<TaskPermission> = TaskPermission.all(),
   private val requirements: TaskRequirements? = null,
+  private val runtimeCondition: ((Environment, ProjectContext) -> Boolean)? = null,
+  private val failureStrategy: FailureStrategy = FailureStrategy.ABORT,
+  private val taskTimeout: Duration? = null,
   private val task: (Environment, ProjectContext) -> TaskResult,
 ) : Task {
   override fun phase(): Phase? = phase
@@ -67,6 +75,15 @@ class SimpleTask(
   override fun requiredPermissions(): Set<TaskPermission> = permissions
 
   override fun requires(): TaskRequirements? = requirements
+
+  override fun shouldExecute(
+    environment: Environment,
+    projectContext: ProjectContext,
+  ): Boolean = runtimeCondition?.invoke(environment, projectContext) ?: true
+
+  override fun onFailure(): FailureStrategy = failureStrategy
+
+  override fun timeout(): Duration? = taskTimeout
 
   override fun depends(): List<String> {
     // Combine phase dependencies with custom dependencies

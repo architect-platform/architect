@@ -130,6 +130,12 @@ tasks:
 | `run` | `string` | | Shell command to execute. |
 | `phase` | `enum` | | Lifecycle phase. See [phases](#phases) below. |
 | `depends` | `string[]` | | List of task IDs that must complete before this task runs. |
+| `permissions` | `string[]` | | Explicit permissions required by the task (`file-system:read`, `file-system:write`, `network:outbound`, `process:exec`). |
+| `requires` | `object` | | Runtime prerequisites checked before execution (`tools`, `min-tool-versions`, `env`, `platform`). |
+| `condition` | `string` | | Runtime condition for skipping the task, for example `env.BRANCH == 'main'`. |
+| `timeout` | `string` | | Per-task timeout such as `300s`, `5m`, or `1h`. |
+| `onFailure` | `enum` | | Failure strategy: `ABORT`, `CONTINUE`, or `RETRY`. |
+| `retryAttempts` | `integer` | | Number of retry attempts when `onFailure: RETRY`. |
 
 ### Phases
 

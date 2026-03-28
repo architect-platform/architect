@@ -105,7 +105,7 @@ class ArchitectSchemaGeneratorTest {
   }
 
   @Test
-  fun `inline task definition has run and phase properties`() {
+  fun `inline task definition exposes extended task properties`() {
     val schema = ArchitectSchemaGenerator.generate()
     val taskDef = schema.get("definitions").get("inlineTask")
     val props = taskDef.get("properties")
@@ -114,6 +114,31 @@ class ArchitectSchemaGeneratorTest {
     assertNotNull(props.get("depends"))
     assertNotNull(props.get("permissions"))
     assertNotNull(props.get("description"))
+    assertNotNull(props.get("requires"))
+    assertNotNull(props.get("timeout"))
+    assertNotNull(props.get("condition"))
+    assertNotNull(props.get("onFailure"))
+    assertNotNull(props.get("retryAttempts"))
+  }
+
+  @Test
+  fun `inline task onFailure enum includes retry strategies`() {
+    val schema = ArchitectSchemaGenerator.generate()
+    val onFailureEnum = schema.get("definitions").get("inlineTask").get("properties").get("onFailure").get("enum")
+    val values = onFailureEnum.map { it.asText() }
+
+    assertTrue("ABORT" in values)
+    assertTrue("CONTINUE" in values)
+    assertTrue("RETRY" in values)
+  }
+
+  @Test
+  fun `inline task retryAttempts requires positive integer`() {
+    val schema = ArchitectSchemaGenerator.generate()
+    val retryAttempts = schema.get("definitions").get("inlineTask").get("properties").get("retryAttempts")
+
+    assertEquals("integer", retryAttempts.get("type").asText())
+    assertEquals(1, retryAttempts.get("minimum").asInt())
   }
 
   @Test

@@ -8,7 +8,7 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 74/128 tasks completed (58%)
+- Overall Progress: 77/128 tasks completed (60%)
 - Current Phase: Phase 5 — Configuration as Code Excellence
 - Last Updated: 2026-03-28T10:16:46Z
 
@@ -646,10 +646,9 @@
 
 ### 5.2 — Environment & Secret Management
 
-- [ ] **T-5.2.1** 🔴 `L` — Complete secret management system | sequential | Priority: high | Depends: none | [REVISED] 2026-03-28T10:16:46Z | Assumptions: keep the existing AES/GCM `~/.architect/secrets.enc` store as the fallback path and add native keychain support only when the host platform tools are available | Acceptance: `architect secret` is registered in the CLI/help output, `set/list/delete` work end-to-end, native keychain storage is preferred on supported platforms, file fallback still works, and `environment.secret(name)` resolves stored values during task execution
-  - Existing implementation to preserve: `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/command/SecretCommandHandler.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/secrets/SecretStore.kt`, and `architect-core/core/src/main/kotlin/io/github/architectplatform/core/secrets/SecretResolver.kt`
-  - Remaining implementation scope: wire the command through `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/ArchitectLauncher.kt` and `.../HelpCommandHandler.kt`, add platform-specific keychain adapters under `architect-core/core/src/main/kotlin/io/github/architectplatform/core/secrets/`, and update the resolver/store selection so keychain is attempted before file fallback
-  - Verification: `architect secret set TEST_KEY value`, `architect secret list`, `architect secret delete TEST_KEY`, plus module tests for keychain fallback behavior and CLI dispatch/help text
+- [x] **T-5.2.1** 🔴 `L` — Complete secret management system | Finished: 2026-03-28T10:16:46Z | Notes: Wired `architect secret` into CLI dispatch/help, refactored `SecretStore` to prefer native macOS/Linux keychain backends with encrypted file fallback at `~/.architect/secrets.enc`, added `StoredSecretResolver` so `environment.secret(name)` resolves stored secrets, and added launcher/help/store/resolver tests. CLI rerun passed after rebuilding included modules cleanly.
+  - Files: `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/ArchitectLauncher.kt`, `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/command/HelpCommandHandler.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/secrets/SecretStore.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/secrets/SecretResolver.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/secrets/PlatformKeychainSecretStore.kt`
+  - Verification: core secret tests passed; targeted CLI tests passed after rebuilding API/core/CLI sequentially to avoid composite-build artifact races
 
 - [x] **T-5.2.2** 🟠 `M` — Add `.env` file support with precedence chain | Finished: 2026-07-10T00:00:00Z | Notes: `EnvFileLoader` + `EnvInterpolator` in `architect-core/env` package; full test coverage with @TempDir; pure stdlib, no external deps
   - Load order: `.env` → `.env.local` → `.env.{profile}` → `.env.{profile}.local` → system env
@@ -657,17 +656,15 @@
   - `architect.yml` can reference: `${env.DATABASE_URL}`
   - `architect config resolve` shows final resolved values
 
-- [ ] **T-5.2.3** 🟡 `M` — Finish environment validation coverage | parallel | Priority: medium | Depends: none | [REVISED] 2026-03-28T10:16:46Z | Assumptions: reuse the existing `architect check` implementation rather than introducing a second validation path | Acceptance: required env vars are discoverable from plugin metadata/schema plus `${env.*}` config references, `architect check` fails on missing values, `architect --env ci check` validates the profile-specific dotenv chain, and `.env.example` is kept in sync with discovered variables
-  - Existing implementation to extend: `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/command/CheckCommandHandler.kt` already discovers `${env.*}` references, merges `.env` precedence, and writes `.env.example`
-  - Remaining implementation scope: add a first-class way for plugins/schemas to declare required env vars, backfill the relevant plugin schema metadata under `plugins/*/app/src/main/kotlin/**`, and add targeted CLI tests covering profile-aware validation and `.env.example` generation
-  - Verification: create `.env` / `.env.ci` fixtures, run `architect check` and `architect --env ci check`, and assert missing vars are reported with non-zero exit status
+- [x] **T-5.2.3** 🟡 `M` — Finish environment validation coverage | Finished: 2026-03-28T10:16:46Z | Notes: Added `requiredEnvironmentVariables()` plugin metadata hook, extended `architect check` to union env requirements from plugin metadata/schema plus raw `${env.*}` config references, scanned profile-specific config files, reused the existing dotenv precedence loader, kept `.env.example` generation aligned, and added CLI/plugin tests. Preserved pre-existing edits in `CheckCommandHandler.kt`.
+  - Files: `architect-api/api/src/main/kotlin/io/github/architectplatform/api/core/plugins/ArchitectPlugin.kt`, `architect-cli/cli/src/main/kotlin/io/github/architectplatform/cli/command/CheckCommandHandler.kt`, `plugins/github-architected/app/src/main/kotlin/io/github/architectplatform/plugins/github/GithubPlugin.kt`
+  - Verification: `architect-api` tests passed, targeted GitHub plugin tests passed, and targeted CLI `CheckCommandHandlerTest` / `ArchitectLauncherTest` passed with `--no-daemon`
 
 ### 5.3 — Task Definition Enhancements
 
-- [ ] **T-5.3.1** 🟠 `L` — Extend inline task definitions in `architect.yml` | sequential | Priority: high | Depends: none | [REVISED] 2026-03-28T10:16:46Z | Assumptions: build on the existing built-in `tasks:` support in `architect-core/core/src/main/kotlin/io/github/architectplatform/core/plugins/inline/InlineTaskPlugin.kt` instead of replacing `scripts:` | Acceptance: inline tasks support `timeout`, `condition`, `onFailure`, and `retryAttempts`, the schema documents those keys, and tests cover success/skip/retry/timeout behavior without regressing existing `phase`, `depends`, `permissions`, or `requires`
-  - Existing implementation to preserve: `architect-core/core/src/main/kotlin/io/github/architectplatform/core/plugins/inline/InlineTaskPlugin.kt` and `InlineTaskConfig.kt` already support `run`, `phase`, `depends`, `permissions`, and `requires`
-  - Remaining implementation scope: extend `architect-core/core/src/main/kotlin/io/github/architectplatform/core/plugins/inline/InlineTaskConfig.kt`, wire execution behavior in the core task execution path, and expand `architect-engine/engine/src/test/kotlin/io/github/architectplatform/engine/plugins/inline/InlineTaskPluginTest.kt` plus any needed task-execution tests
-  - Verification: execute inline tasks that intentionally timeout, skip via condition, and retry on failure; ensure schema/help output includes the new keys
+- [x] **T-5.3.1** 🟠 `L` — Extend inline task definitions in `architect.yml` | Finished: 2026-03-28T10:16:46Z | Notes: Extended `InlineTaskConfig` / `InlineTaskPlugin` to support `timeout`, `condition`, `onFailure`, and `retryAttempts`; updated `SimpleTask` passthroughs and schema generation; added inline execution tests for success, skip, retry, and timeout; and adjusted `TaskExecutor` aggregation so single skipped tasks preserve `SKIPPED` status.
+  - Files: `architect-api/api/src/main/kotlin/io/github/architectplatform/api/core/tasks/builtin/SimpleTask.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/plugins/inline/InlineTaskConfig.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/plugins/inline/InlineTaskPlugin.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/schema/ArchitectSchemaGenerator.kt`, `architect-core/core/src/main/kotlin/io/github/architectplatform/core/tasks/application/TaskExecutor.kt`
+  - Verification: focused `architect-core` `TaskExecutorTest` / `ArchitectSchemaGeneratorTest` passed, and focused engine `InlineTaskPluginTest` passed
   - Beyond current `scripts:` section — full task features:
     ```yaml
     tasks:
@@ -800,28 +797,6 @@
   - `architect config pull` — sync team config
   - Version-controlled config with approval workflow
 
-### 7.2 — Remote Caching
-
-- [ ] **T-7.2.1** 🔴 `XL` — Implement distributed task output cache
-  - Share build artifacts across team members and CI
-  - Cache backend: S3, GCS, or Architect Cloud
-  - Content-addressable storage (hash of inputs → outputs)
-  - Automatic cache population on CI, consumption on dev machines
-  - Configuration:
-    ```yaml
-    cache:
-      remote:
-        enabled: true
-        backend: s3
-        bucket: my-team-architect-cache
-        region: us-east-1
-    ```
-
-- [ ] **T-7.2.2** 🟠 `M` — Add cache analytics
-  - Cache hit ratio per task, per project, per developer
-  - Time saved by cache hits
-  - Cache size and eviction stats
-  - `architect cache stats` command
 
 ### 7.3 — CI/CD Generation
 

@@ -13,6 +13,7 @@ import io.github.architectplatform.cli.command.InitCommandHandler
 import io.github.architectplatform.cli.command.OutputFormatter
 import io.github.architectplatform.cli.command.PluginCommandHandler
 import io.github.architectplatform.cli.command.SchemaCommandHandler
+import io.github.architectplatform.cli.command.SecretCommandHandler
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.history.LocalHistoryReader
 import io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor
@@ -63,6 +64,7 @@ class ArchitectLauncher(
   private val checkHandler = CheckCommandHandler(embeddedTaskExecutor, ::extractProjectName)
   private val cliHandler = CliInfrastructureHandler(engineCommandClient, ::extractProjectName)
   private val helpHandler = HelpCommandHandler()
+  internal var secretHandler = SecretCommandHandler()
   private val initHandler = InitCommandHandler()
   private val configHandler = ConfigCommandHandler()
   private val conventionsHandler = ConventionsCommandHandler()
@@ -275,6 +277,7 @@ class ArchitectLauncher(
       "engine" -> { engineHandler.handle(args); return }
       "plugin" -> { pluginHandler.handle(args); return }
       "cache" -> { cacheHandler.handle(args); return }
+      "secret" -> { secretHandler.handle(args); return }
       "completion" -> { cliHandler.handleCompletion(args, this); return }
       "upgrade" -> { cliHandler.handleUpgrade(args); return }
       "check" -> { checkHandler.handle(args); return }
