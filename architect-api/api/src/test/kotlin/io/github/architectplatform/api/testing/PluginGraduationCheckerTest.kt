@@ -12,6 +12,9 @@ class PluginGraduationCheckerTest {
   @TempDir
   lateinit var tempDir: Path
 
+  @Suppress("UNCHECKED_CAST")
+  private val mapContextClass = Map::class.java as Class<Map<String, Any>>
+
   private val readmeContent =
     """
     # Test Plugin
@@ -25,7 +28,7 @@ class PluginGraduationCheckerTest {
     object : ArchitectPlugin<Map<String, Any>> {
       override val id = "test-plugin"
       override val contextKey = "test"
-      override val ctxClass = Map::class.java as Class<Map<String, Any>>
+      override val ctxClass = mapContextClass
       override var context: Map<String, Any> = emptyMap()
 
       override fun register(registry: TaskRegistry) {
@@ -85,7 +88,7 @@ class PluginGraduationCheckerTest {
       object : ArchitectPlugin<Map<String, Any>> {
         override val id = "no-schema-plugin"
         override val contextKey = "noschema"
-        override val ctxClass = Map::class.java as Class<Map<String, Any>>
+        override val ctxClass = mapContextClass
         override var context: Map<String, Any> = emptyMap()
 
         override fun register(registry: TaskRegistry) {
@@ -109,7 +112,7 @@ class PluginGraduationCheckerTest {
       object : ArchitectPlugin<Map<String, Any>> {
         override val id = ""
         override val contextKey = "test"
-        override val ctxClass = Map::class.java as Class<Map<String, Any>>
+        override val ctxClass = mapContextClass
         override var context: Map<String, Any> = emptyMap()
 
         override fun register(registry: TaskRegistry) {}

@@ -65,7 +65,7 @@ class ProjectDependencyGraphBuilder {
       val rawSubprojects = owner.context.config["subprojects"]
       if (rawSubprojects !is List<*>) return@forEach
 
-      rawSubprojects.forEach { entry ->
+      rawSubprojects.forEach subprojects@{ entry ->
         when (entry) {
           is String -> {
             // Bare declaration means the subproject depends on its declaring parent.
@@ -79,9 +79,9 @@ class ProjectDependencyGraphBuilder {
             val childName =
               (declared["name"] as? String)
                 ?: (declared["path"] as? String)?.let { File(it).name }
-                ?: return@forEach
+                ?: return@subprojects
 
-            if (childName !in projectByName) return@forEach
+            if (childName !in projectByName) return@subprojects
 
             val dependsOn =
               (declared["dependsOn"] as? List<*>)?.filterIsInstance<String>().orEmpty() +

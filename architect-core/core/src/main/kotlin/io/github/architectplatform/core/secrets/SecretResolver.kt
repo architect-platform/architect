@@ -124,8 +124,9 @@ open class HttpVaultSecretClient(
     }
 
     val body = objectMapper.readTree(response.body())
-    return body.path("data").path("data").path("value").takeIf { !it.isMissingNode && !it.isNull }?.asText()
-      ?: body.path("data").path("data").fields().asSequence().firstOrNull()?.value?.asText()
+    val dataNode = body.path("data").path("data")
+    return dataNode.path("value").takeIf { !it.isMissingNode && !it.isNull }?.asText()
+      ?: dataNode.properties().asSequence().firstOrNull()?.value?.asText()
   }
 }
 

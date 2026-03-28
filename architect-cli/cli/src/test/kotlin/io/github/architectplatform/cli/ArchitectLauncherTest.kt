@@ -330,7 +330,7 @@ class ArchitectLauncherTest {
   // ─── --plain / color detection ────────────────────────────────────────────
 
   @Test
-  fun `--plain suppresses startup UI messages`(@TempDir tmpDir: Path) {
+  fun `--plain suppresses startup UI messages`() {
     val launcher = launcher()
     launcher.plain = true
     launcher.version = true
@@ -437,7 +437,7 @@ class ArchitectLauncherTest {
   // ─── no-daemon + embedded fallback ────────────────────────────────────────
 
   @Test
-  fun `--no-daemon with unreachable engine falls back to embedded mode`(@TempDir tmpDir: Path) {
+  fun `--no-daemon with unreachable engine falls back to embedded mode`() {
     val healthChecker = object : EngineHealthChecker() {
       override fun isRunning() = false
     }

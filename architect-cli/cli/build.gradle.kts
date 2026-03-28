@@ -84,6 +84,14 @@ tasks.test {
   useJUnitPlatform()
 }
 
+tasks.matching { it.name == "kaptTestKotlin" }.configureEach {
+  enabled = false
+}
+
+tasks.matching { it.name == "kaptGenerateStubsTestKotlin" }.configureEach {
+  enabled = false
+}
+
 jacoco { toolVersion = libs.versions.jacoco.get() }
 
 ktlint {

@@ -299,8 +299,7 @@ class ArchitectLauncher(
     val useEmbeddedExecution = embedded || (noDaemon && !engineHealthChecker.isRunning())
 
     // --output / --tee: redirect stdout to file
-    val originalOut = System.out
-    val fileOut = setupOutputRedirection()
+    setupOutputRedirection()
 
     // --dry-run: show execution plan without running
     if (dryRun && command != null && command !in listOf("tasks", "info", "plan", "graph", "validate")) {
@@ -837,9 +836,8 @@ class ArchitectLauncher(
       ?: return emptySet()
 
     val graph = context.projectService.buildDependencyGraph(projectName)
-    val affectedConfig = AffectedProjectResolver.parseConfig(
-      project.context.config["project"] as? Map<String, Any>
-    )
+    val projectConfig = project.context.config["project"] as? Map<*, *>
+    val affectedConfig = AffectedProjectResolver.parseConfig(projectConfig)
     val resolver = AffectedProjectResolver()
 
     if (!noCache) {
@@ -893,7 +891,7 @@ class ArchitectLauncher(
     println("▶  Executing task: $taskName")
     println("📦 Project: $projectName")
     if (verbosity >= 3) {
-      println("🔧 Verbosity: $verbosity | Plain: $plain | No-cache: $noCache | Profile: ${embeddedTaskExecutor.activeProfile ?: "default"}")
+      println("🔧 Verbosity: $verbosity | Plain: $plain | No-cache: $noCache | Profile: ${embeddedTaskExecutor.activeProfile}")
     }
     println("━".repeat(80))
     println()
@@ -939,7 +937,7 @@ class ArchitectLauncher(
     println("▶  Executing task: $taskName")
     println("📦 Project: $projectName")
     if (verbosity >= 3) {
-      println("🔧 Verbosity: $verbosity | Plain: $plain | No-cache: $noCache | Profile: ${embeddedTaskExecutor.activeProfile ?: "default"}")
+      println("🔧 Verbosity: $verbosity | Plain: $plain | No-cache: $noCache | Profile: ${embeddedTaskExecutor.activeProfile}")
       println("📁 Project path: $projectPath")
     }
     println("━".repeat(80))

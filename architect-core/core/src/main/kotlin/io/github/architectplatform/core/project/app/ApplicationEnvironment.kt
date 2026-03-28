@@ -19,9 +19,15 @@ class ApplicationEnvironment(
 
     private val subscribers = mutableMapOf<Class<*>, MutableList<(Any) -> Unit>>()
 
-    override fun <T> service(type: Class<T>): T =
-        (services[type] as? T)
-            ?: throw IllegalArgumentException("Service of type ${type.name} not registered in environment")
+    override fun <T> service(type: Class<T>): T {
+        val service =
+            services[type]
+                ?: throw IllegalArgumentException("Service of type ${type.name} not registered in environment")
+        if (!type.isInstance(service)) {
+            throw IllegalArgumentException("Service of type ${type.name} not registered in environment")
+        }
+        return type.cast(service)
+    }
 
     override fun publish(event: Any) {
         eventBus(event)

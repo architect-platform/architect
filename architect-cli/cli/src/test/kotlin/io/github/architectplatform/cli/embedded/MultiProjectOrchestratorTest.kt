@@ -13,11 +13,6 @@ class MultiProjectOrchestratorTest {
   private fun graph(vararg pairs: Pair<String, Set<String>>): ProjectDependencyGraph =
     ProjectDependencyGraph(projects = pairs.map { it.first }.toSet(), dependencies = pairs.toMap())
 
-  private fun orchestratorWith(results: Map<String, TaskResult>): MultiProjectOrchestrator {
-    val executor = ApplicationContext.run().getBean(EmbeddedTaskExecutor::class.java)
-    return MultiProjectOrchestrator(executor)
-  }
-
   private fun stubRunner(results: Map<String, TaskResult>): MultiProjectOrchestrator.TaskRunner =
     MultiProjectOrchestrator.TaskRunner { name, _, _, _, _ ->
       results[name] ?: TaskResult.failure("unknown project: $name")

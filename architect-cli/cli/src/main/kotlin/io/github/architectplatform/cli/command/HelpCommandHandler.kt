@@ -203,6 +203,7 @@ class HelpCommandHandler {
     )
   }
 
+  @Suppress("UNUSED_PARAMETER")
   private fun printCommandHelp(command: String, help: String) {
     println(help)
   }

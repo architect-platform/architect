@@ -95,7 +95,7 @@ object KotlinDataClassSchemaGenerator {
 
   private fun getDefaultValue(param: KParameter): Any? {
     if (!param.isOptional) return null
-    return when (val classifier = param.type.classifier) {
+    return when (param.type.classifier) {
       Boolean::class -> false
       Int::class -> 0
       Long::class -> 0L

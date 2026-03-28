@@ -1,5 +1,6 @@
 package io.github.architectplatform.core.plugins.inline
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
 class InlineTaskTemplateResolver {
@@ -35,7 +36,10 @@ class InlineTaskTemplateResolver {
         task.extends?.takeIf { it.isNotBlank() }?.let { templateName ->
           resolveTemplate(templateName)
         }
-      InlineTaskMapper.objectMapper.convertValue(merge(base, task), Map::class.java) as Map<String, Any>
+      InlineTaskMapper.objectMapper.convertValue(
+        merge(base, task),
+        object : TypeReference<Map<String, Any>>() {},
+      )
     }
   }
 

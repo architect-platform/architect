@@ -71,7 +71,7 @@ class IsolatedPluginClassLoaderTest {
     )
 
     // META-INF/MANIFEST.MF should be found via parent
-    val resource = loader.getResource("META-INF/MANIFEST.MF")
+    loader.getResource("META-INF/MANIFEST.MF")
     // May or may not exist, but method should not throw
     // Just verify the API works without error
   }

@@ -19,8 +19,13 @@ class EmbeddedConsoleUI(
     get() = delegate.hasFailed
 
   fun process(event: ArchitectEvent<*>) {
-    val executionEvent = event as? ArchitectEvent<ExecutionEvent> ?: return
-    delegate.process(executionEvent.toTypedArchitectEvent())
+    val executionEvent = event.event as? ExecutionEvent ?: return
+    val typedEvent =
+      object : ArchitectEvent<ExecutionEvent> {
+        override val id = event.id
+        override val event = executionEvent
+      }
+    delegate.process(typedEvent.toTypedArchitectEvent())
   }
 
   fun complete(finalMessage: String) = delegate.complete(finalMessage)

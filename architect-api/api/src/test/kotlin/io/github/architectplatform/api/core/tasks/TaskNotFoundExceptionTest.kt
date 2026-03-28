@@ -53,6 +53,6 @@ class TaskNotFoundExceptionTest {
   @Test
   fun `extends IllegalArgumentException`() {
     val ex = TaskNotFoundException("x", "p")
-    assertTrue(ex is IllegalArgumentException)
+    assertEquals(IllegalArgumentException::class.java, ex::class.java.superclass)
   }
 }

@@ -168,15 +168,13 @@ class ProfileMergerTest {
     )
     val result = ProfileMerger.merge(config, "production")
 
-    @Suppress("UNCHECKED_CAST")
-    val scripts = result["scripts"] as Map<String, Any>
-    val deploy = scripts["deploy"] as Map<String, Any>
+    val scripts = result["scripts"] as? Map<*, *> ?: error("scripts should be a map")
+    val deploy = scripts["deploy"] as? Map<*, *> ?: error("deploy should be a map")
     assertEquals("kubectl apply -f k8s/production/", deploy["run"])
     assertEquals(true, deploy["requires-confirmation"])
 
     // Unrelated tasks preserved
-    @Suppress("UNCHECKED_CAST")
-    val test = scripts["test"] as Map<String, Any>
+    val test = scripts["test"] as? Map<*, *> ?: error("test should be a map")
     assertEquals("npm test", test["run"])
   }
 }

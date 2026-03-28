@@ -21,6 +21,9 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.io.TempDir
 
+@Suppress("UNCHECKED_CAST")
+private val hashMapContextClass = HashMap::class.java as Class<HashMap<String, Any>>
+
 class ProjectPluginLoaderTest {
 
   @TempDir
@@ -314,7 +317,7 @@ class ProjectPluginLoaderTest {
     override val id: String,
   ) : ArchitectPlugin<HashMap<String, Any>> {
     override val contextKey: String = id
-    override val ctxClass: Class<HashMap<String, Any>> = HashMap::class.java as Class<HashMap<String, Any>>
+    override val ctxClass: Class<HashMap<String, Any>> = hashMapContextClass
     override var context: HashMap<String, Any> = hashMapOf()
 
     override fun register(registry: TaskRegistry) = Unit
@@ -325,7 +328,7 @@ class ProjectPluginLoaderTest {
     private val deps: List<String>,
   ) : ArchitectPlugin<HashMap<String, Any>> {
     override val contextKey: String = id
-    override val ctxClass: Class<HashMap<String, Any>> = HashMap::class.java as Class<HashMap<String, Any>>
+    override val ctxClass: Class<HashMap<String, Any>> = hashMapContextClass
     override var context: HashMap<String, Any> = hashMapOf()
 
     override fun register(registry: TaskRegistry) = Unit

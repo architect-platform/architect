@@ -166,7 +166,7 @@ class ClassloaderIsolationTest {
 
   private fun createEmptyJar(): File {
     val jar = tempDir.resolve("empty-${System.nanoTime()}.jar").toFile()
-    JarOutputStream(jar.outputStream()).use { jos ->
+    JarOutputStream(jar.outputStream()).use {
       // empty JAR with just manifest
     }
     return jar

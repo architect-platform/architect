@@ -7,6 +7,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class PluginDependencyResolverTest {
+  @Suppress("UNCHECKED_CAST")
+  private val mapContextClass = Map::class.java as Class<Map<String, Any>>
 
   @Test
   fun `sortByDependencies orders dependencies before dependents`() {
@@ -47,7 +49,7 @@ class PluginDependencyResolverTest {
     object : ArchitectPlugin<Map<String, Any>> {
       override val id: String = id
       override val contextKey: String = id
-      override val ctxClass: Class<Map<String, Any>> = Map::class.java as Class<Map<String, Any>>
+      override val ctxClass: Class<Map<String, Any>> = mapContextClass
       override var context: Map<String, Any> = emptyMap()
       override fun register(registry: TaskRegistry) = Unit
       override fun dependencies(): List<String> = deps

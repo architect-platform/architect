@@ -131,3 +131,7 @@ tasks.jacocoTestCoverageVerification {
 tasks.check {
   dependsOn(tasks.jacocoTestCoverageVerification)
 }
+
+tasks.test {
+  jvmArgs("-Xshare:off")
+}

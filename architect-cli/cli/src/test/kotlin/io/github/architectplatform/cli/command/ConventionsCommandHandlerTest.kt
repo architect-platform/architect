@@ -33,12 +33,12 @@ class ConventionsCommandHandlerTest {
       System.setProperty("user.dir", originalUserDir)
     }
 
-    @Suppress("UNCHECKED_CAST")
     val config = Yaml().load<Map<String, Any>>(tempDir.resolve("architect.yml").toFile().inputStream())
-    val plugins = config["plugins"] as List<Map<String, Any>>
-    assertTrue(plugins.any { it["name"] == "architecture-architected" })
+    val plugins = config["plugins"] as? List<*> ?: error("plugins should be a list")
+    val pluginMaps = plugins.filterIsInstance<Map<*, *>>()
+    assertTrue(pluginMaps.any { it["name"] == "architecture-architected" })
 
-    val architecture = config["architecture"] as Map<String, Any>
+    val architecture = config["architecture"] as? Map<*, *> ?: error("architecture should be a map")
     assertEquals(listOf("kotlin-conventions"), architecture["presetRulesets"])
   }
 }

@@ -17,9 +17,8 @@ class InMemoryTaskRegistryTest {
     registry.addAlias("build:backend", "backend-build")
 
     assertNotNull(registry.get("build:frontend"))
-    val wildcard = registry.get("build:*")
-    assertNotNull(wildcard)
-    assertEquals(listOf("backend-build", "frontend-build"), wildcard!!.depends().sorted())
+    val wildcard = requireNotNull(registry.get("build:*"))
+    assertEquals(listOf("backend-build", "frontend-build"), wildcard.depends().sorted())
   }
 
   @Test
@@ -30,9 +29,8 @@ class InMemoryTaskRegistryTest {
 
     registry.addGroup("build", listOf("frontend-build", "backend-build"))
 
-    val group = registry.get("build")
-    assertNotNull(group)
-    assertEquals(listOf("backend-build", "frontend-build"), group!!.depends().sorted())
+    val group = requireNotNull(registry.get("build"))
+    assertEquals(listOf("backend-build", "frontend-build"), group.depends().sorted())
     assertNull(registry.get("deploy"))
   }
 

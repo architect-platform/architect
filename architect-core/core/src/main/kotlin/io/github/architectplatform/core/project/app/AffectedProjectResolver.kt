@@ -172,7 +172,7 @@ class AffectedProjectResolver(
   }
 
   companion object {
-    fun parseConfig(config: Map<String, Any>?): AffectedConfig {
+    fun parseConfig(config: Map<*, *>?): AffectedConfig {
       if (config == null) return AffectedConfig()
       val affected = config["affected"] as? Map<*, *> ?: return AffectedConfig()
       val alwaysInclude = (affected["always-include"] as? List<*>)

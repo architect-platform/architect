@@ -25,8 +25,8 @@ class ArchitectPluginContract<C : Any>(
         plugin.ctxClass == Unit::class.java ||
         initialContext == Unit
     require(contextMatches) {
-      "Plugin ${plugin.id} context must be assignable to ${plugin.ctxClass.name}, " +
-        "but was ${initialContext?.javaClass?.name ?: "null"}"
+        "Plugin ${plugin.id} context must be assignable to ${plugin.ctxClass.name}, " +
+        "but was ${initialContext.javaClass.name}"
     }
 
     val kit =

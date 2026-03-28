@@ -19,9 +19,9 @@ class SchemaCommandHandler(
   fun handle(args: List<String>) {
     val subCommand = args.getOrNull(1) ?: "show"
     when (subCommand) {
-      "generate" -> generateMergedSchema(args)
+      "generate" -> generateMergedSchema()
       "show", "print" -> showBundledSchema()
-      "lint" -> lintConfigCommand(args)
+      "lint" -> lintConfigCommand()
       else -> {
         System.err.println("Unknown schema subcommand: $subCommand")
         System.err.println("Usage: architect schema [generate|show|lint]")
@@ -45,7 +45,7 @@ class SchemaCommandHandler(
     exitProcess(1)
   }
 
-  private fun generateMergedSchema(args: List<String>) {
+  private fun generateMergedSchema() {
     val projectPath = System.getProperty("user.dir")
     val projectName = java.io.File(projectPath).name
 
@@ -57,8 +57,12 @@ class SchemaCommandHandler(
     val project = context.projectService.getProject(projectName)
 
     val rootSchema = loadRootSchema()
-    val properties = (rootSchema["properties"] as? MutableMap<String, Any>)?.toMutableMap()
-      ?: mutableMapOf()
+    val properties = mutableMapOf<String, Any>()
+    (rootSchema["properties"] as? Map<*, *>)?.forEach { (key, value) ->
+      if (key is String && value != null) {
+        properties[key] = value
+      }
+    }
 
     if (project != null) {
       for (plugin in project.plugins) {
@@ -80,7 +84,7 @@ class SchemaCommandHandler(
     println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mergedSchema))
   }
 
-  private fun lintConfigCommand(args: List<String>) {
+  private fun lintConfigCommand() {
     val projectPath = System.getProperty("user.dir")
     val configFile = java.io.File(projectPath, "architect.yml")
     if (!configFile.exists()) {
