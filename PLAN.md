@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 66/128 tasks completed (52%)
+- Overall Progress: 67/128 tasks completed (52%)
 - Current Phase: Phase 4 — Project Intelligence & Conventions
-- Last Updated: 2026-03-27T21:13:23Z
+- Last Updated: 2026-03-28T09:30:00Z
 
 ---
 
@@ -591,7 +591,7 @@
 
 ### 4.3 — Monorepo Intelligence
 
-- [ ] **T-4.3.1** 🔴 `L` — Enhance affected project detection
+- [x] **T-4.3.1** 🔴 `L` — Enhance affected project detection | Finished: 2026-03-28T09:30:00Z | Notes: Added ignorePatterns to AffectedConfig with glob matching via java.nio; updated parseConfig to read affected.ignore list; enhanced ProjectDependencyGraphBuilder to parse build.gradle.kts/build.gradle for project(":name") deps; 10 new tests added.
   - Current: simple `git diff` based
   - Add: dependency-aware affected detection
     - If `core` changed → all modules depending on core are affected
