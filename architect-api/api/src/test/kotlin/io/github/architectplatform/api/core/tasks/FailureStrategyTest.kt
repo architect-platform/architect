@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class FailureStrategyTest {
-
   @Test
   fun `ABORT is a singleton`() {
     assertSame(FailureStrategy.ABORT, FailureStrategy.ABORT)
@@ -44,14 +43,16 @@ class FailureStrategyTest {
 
   @Test
   fun `default Task onFailure is ABORT`() {
-    val task = object : Task {
-      override val id = "test"
-      override fun execute(
-        environment: Environment,
-        projectContext: io.github.architectplatform.api.core.project.ProjectContext,
-        args: List<String>,
-      ) = TaskResult.success()
-    }
+    val task =
+      object : Task {
+        override val id = "test"
+
+        override fun execute(
+          environment: Environment,
+          projectContext: io.github.architectplatform.api.core.project.ProjectContext,
+          args: List<String>,
+        ) = TaskResult.success()
+      }
     assertTrue(task.onFailure() is FailureStrategy.ABORT)
   }
 }

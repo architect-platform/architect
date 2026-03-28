@@ -5,7 +5,6 @@ import io.github.architectplatform.api.core.plugins.ArchitectPlugin
 class ArchitectPluginContract<C : Any>(
   private val pluginFactory: () -> ArchitectPlugin<C>,
 ) {
-
   data class Verification<C : Any>(
     val config: Any? = null,
     val expectedTaskIds: Set<String> = emptySet(),
@@ -30,8 +29,9 @@ class ArchitectPluginContract<C : Any>(
         "but was ${initialContext?.javaClass?.name ?: "null"}"
     }
 
-    val kit = ArchitectPluginTestKit(plugin)
-      .withProjectConfig(verification.projectConfig)
+    val kit =
+      ArchitectPluginTestKit(plugin)
+        .withProjectConfig(verification.projectConfig)
 
     verification.services.forEach { (type, service) ->
       @Suppress("UNCHECKED_CAST")

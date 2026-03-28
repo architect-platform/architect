@@ -16,7 +16,6 @@ package io.github.architectplatform.api.core.progress
  * ```
  */
 interface ProgressReporter {
-
   /**
    * Reports progress of a long-running operation.
    *
@@ -30,8 +29,9 @@ interface ProgressReporter {
     /**
      * A no-op reporter that silently discards all progress updates.
      */
-    val NOOP: ProgressReporter = object : ProgressReporter {
-      override fun report(current: Int, total: Int, message: String) {}
-    }
+    val NOOP: ProgressReporter =
+      object : ProgressReporter {
+        override fun report(current: Int, total: Int, message: String) {}
+      }
   }
 }

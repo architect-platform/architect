@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -183,6 +184,7 @@ class InlineTaskPluginTest {
         val taskProperties = ((schema["additionalProperties"] as Map<String, Any>)["properties"] as Map<String, Any>)
 
         assertTrue(taskProperties.containsKey("run"))
+        assertTrue(taskProperties.containsKey("extends"))
         assertTrue(taskProperties.containsKey("phase"))
         assertTrue(taskProperties.containsKey("depends"))
         assertTrue(taskProperties.containsKey("permissions"))
@@ -191,6 +193,111 @@ class InlineTaskPluginTest {
         assertTrue(taskProperties.containsKey("timeout"))
         assertTrue(taskProperties.containsKey("onFailure"))
         assertTrue(taskProperties.containsKey("retryAttempts"))
+    }
+
+    @Test
+    fun `should apply template defaults before registering tasks`() {
+        val plugin = InlineTaskPlugin()
+        plugin.init(
+            mapOf(
+                "templates" to mapOf(
+                    "npm-script" to mapOf(
+                        "timeout" to "120s",
+                        "requires" to mapOf("tools" to listOf("node", "npm")),
+                        "permissions" to listOf("process:exec"),
+                    ),
+                ),
+                "tasks" to mapOf(
+                    "frontend-build" to mapOf(
+                        "extends" to "npm-script",
+                        "run" to "npm run build",
+                        "phase" to "BUILD",
+                    ),
+                ),
+            ),
+        )
+        val registry = InMemoryTaskRegistry()
+
+        plugin.register(registry)
+
+        val task = registry.get("frontend-build")
+        assertNotNull(task)
+        assertEquals(CoreWorkflow.BUILD, task!!.phase())
+        assertEquals(listOf("node", "npm"), task.requires()!!.tools)
+        assertEquals(setOf(TaskPermission.PROCESS_EXEC), task.requiredPermissions())
+        assertEquals(java.time.Duration.ofSeconds(120), task.timeout())
+    }
+
+    @Test
+    fun `should let task values override template defaults`() {
+        val plugin = InlineTaskPlugin()
+        plugin.init(
+            mapOf(
+                "templates" to mapOf(
+                    "npm-script" to mapOf(
+                        "run" to "npm run lint",
+                        "timeout" to "60s",
+                    ),
+                ),
+                "tasks" to mapOf(
+                    "frontend-build" to mapOf(
+                        "extends" to "npm-script",
+                        "run" to "npm run build",
+                        "timeout" to "180s",
+                    ),
+                ),
+            ),
+        )
+        val registry = InMemoryTaskRegistry()
+
+        plugin.register(registry)
+
+        val task = registry.get("frontend-build")
+        assertNotNull(task)
+        assertEquals(java.time.Duration.ofSeconds(180), task!!.timeout())
+    }
+
+    @Test
+    fun `should fail when task extends unknown template`() {
+        val plugin = InlineTaskPlugin()
+        plugin.init(
+            mapOf(
+                "templates" to emptyMap<String, Any>(),
+                "tasks" to mapOf(
+                    "frontend-build" to mapOf(
+                        "extends" to "missing-template",
+                        "run" to "npm run build",
+                    ),
+                ),
+            ),
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            plugin.register(InMemoryTaskRegistry())
+        }
+    }
+
+    @Test
+    fun `should fail on circular template inheritance`() {
+        val plugin = InlineTaskPlugin()
+        plugin.init(
+            mapOf(
+                "templates" to mapOf(
+                    "base" to mapOf("extends" to "shared"),
+                    "shared" to mapOf("extends" to "base"),
+                ),
+                "tasks" to mapOf(
+                    "frontend-build" to mapOf(
+                        "extends" to "base",
+                        "run" to "npm run build",
+                    ),
+                ),
+            ),
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            plugin.register(InMemoryTaskRegistry())
+        }
     }
 
     @Test

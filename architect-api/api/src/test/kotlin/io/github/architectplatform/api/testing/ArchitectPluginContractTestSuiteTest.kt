@@ -10,7 +10,6 @@ data class ContractTestSuiteContext(
 )
 
 class ArchitectPluginContractTestSuiteTest : ArchitectPluginContractTestSuite<ContractTestSuiteContext>() {
-
   override fun createPlugin(): ArchitectPlugin<ContractTestSuiteContext> = ContractPlugin()
 
   override fun expectedTaskIds(): Set<String> = setOf("contract-task")

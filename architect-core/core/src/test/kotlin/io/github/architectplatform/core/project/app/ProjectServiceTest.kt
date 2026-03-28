@@ -20,6 +20,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.io.TempDir
 
@@ -52,6 +53,64 @@ class ProjectServiceTest {
     assertEquals("inline-project", project.name)
     assertTrue(project.plugins.any { it.id == "inline-tasks" })
     assertNotNull(project.taskRegistry.get("build"))
+  }
+
+  @Test
+  fun `should expose grouped aliases and templates from architect config`() {
+    val projectDir = tempDir.resolve("grouped-project")
+    projectDir.createDirectories()
+    projectDir.resolve("architect.yml").writeText(
+      """
+      project:
+        name: grouped-project
+      templates:
+        npm-script:
+          timeout: 120s
+          requires:
+            tools: [node, npm]
+      tasks:
+        frontend-build:
+          extends: npm-script
+          run: npm run build
+        backend-build:
+          run: ./gradlew build
+      groups:
+        build: [frontend-build, backend-build]
+      """.trimIndent()
+    )
+
+    val projectService = createProjectService(InlineTaskPluginLoader())
+
+    projectService.registerProject("grouped-project", projectDir.toString())
+    val project = projectService.getProject("grouped-project")
+
+    assertNotNull(project)
+    assertNotNull(project.taskRegistry.get("build"))
+    assertNotNull(project.taskRegistry.get("build:frontend"))
+    assertNotNull(project.taskRegistry.get("build:backend"))
+    assertNotNull(project.taskRegistry.get("build:*"))
+    assertEquals(listOf("node", "npm"), project.taskRegistry.get("frontend-build")!!.requires()!!.tools)
+  }
+
+  @Test
+  fun `should create plugin namespace aliases when task ids match plugin prefix`() {
+    val projectDir = tempDir.resolve("plugin-alias-project")
+    projectDir.createDirectories()
+    projectDir.resolve("architect.yml").writeText(
+      """
+      project:
+        name: plugin-alias-project
+      """.trimIndent()
+    )
+
+    val projectService = createProjectService(GitStylePluginLoader())
+
+    projectService.registerProject("plugin-alias-project", projectDir.toString())
+    val project = projectService.getProject("plugin-alias-project")
+
+    assertNotNull(project)
+    assertNotNull(project.taskRegistry.get("git:status"))
+    assertNull(project.taskRegistry.get("git:missing"))
   }
 
   @Test
@@ -235,6 +294,10 @@ class ProjectServiceTest {
     override fun load(context: ProjectContext): List<ArchitectPlugin<*>> = emptyList()
   }
 
+  private class GitStylePluginLoader : PluginLoader {
+    override fun load(context: ProjectContext): List<ArchitectPlugin<*>> = listOf(GitStylePlugin())
+  }
+
   private class UndeclaredPermissionPluginLoader : PluginLoader {
     override fun load(context: ProjectContext): List<ArchitectPlugin<*>> = listOf(UndeclaredPermissionPlugin())
   }
@@ -263,6 +326,26 @@ class ProjectServiceTest {
       "type" to "object",
       "x-permissions" to listOf(TaskPermission.FILE_SYSTEM_READ.wireName),
     )
+  }
+
+  private class GitStylePlugin : ArchitectPlugin<Any> {
+    override val id: String = "git-architected"
+    override val contextKey: String = "git"
+    override val ctxClass: Class<Any> = Any::class.java
+    override var context: Any = Unit
+
+    override fun register(registry: TaskRegistry) {
+      registry.add(
+        object : Task {
+          override val id: String = "git-status"
+          override fun execute(
+            environment: Environment,
+            projectContext: ProjectContext,
+            args: List<String>,
+          ): TaskResult = TaskResult.success("git-status")
+        },
+      )
+    }
   }
 
   private fun waitForProjectReload(

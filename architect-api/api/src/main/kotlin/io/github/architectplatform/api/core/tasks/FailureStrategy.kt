@@ -7,7 +7,6 @@ package io.github.architectplatform.api.core.tasks
  * evaluates it when a task returns [TaskResult] with `success == false`.
  */
 sealed class FailureStrategy {
-
   /**
    * Stop execution immediately. This is the default behaviour.
    */

@@ -24,11 +24,11 @@ class TaskNotFoundException(
   val taskId: String,
   val projectName: String? = null,
 ) : ArchitectException(
-  buildString {
-    append("Task '$taskId' not found")
-    if (projectName != null) append(" in project '$projectName'")
-  },
-)
+    buildString {
+      append("Task '$taskId' not found")
+      if (projectName != null) append(" in project '$projectName'")
+    },
+  )
 
 /**
  * Thrown when a requested project is not registered with the engine.
@@ -87,8 +87,8 @@ class TaskConditionException(
   val taskId: String,
   val issues: List<String>,
 ) : ArchitectException(
-  buildString {
-    appendLine("Task '$taskId' preconditions not satisfied:")
-    issues.forEach { appendLine("  • $it") }
-  }.trimEnd(),
-)
+    buildString {
+      appendLine("Task '$taskId' preconditions not satisfied:")
+      issues.forEach { appendLine("  • $it") }
+    }.trimEnd(),
+  )

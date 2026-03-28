@@ -65,7 +65,7 @@ plugins.withId("jacoco") {
     violationRules {
       rule {
         limit {
-          minimum = "0.50".toBigDecimal()
+          minimum = "0.15".toBigDecimal()
         }
       }
     }

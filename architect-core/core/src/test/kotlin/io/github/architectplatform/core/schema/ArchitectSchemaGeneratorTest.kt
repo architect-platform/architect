@@ -53,6 +53,26 @@ class ArchitectSchemaGeneratorTest {
   }
 
   @Test
+  fun `templates groups and aliases schemas are available`() {
+    val schema = ArchitectSchemaGenerator.generate()
+    val properties = schema.get("properties")
+
+    assertEquals("object", properties.get("templates").get("type").asText())
+    assertEquals("object", properties.get("groups").get("type").asText())
+    assertEquals("object", properties.get("aliases").get("type").asText())
+  }
+
+  @Test
+  fun `templates and groups schemas are exposed at top level`() {
+    val schema = ArchitectSchemaGenerator.generate()
+    val properties = schema.get("properties")
+
+    assertEquals("object", properties.get("templates").get("type").asText())
+    assertEquals("object", properties.get("groups").get("type").asText())
+    assertEquals("array", properties.get("groups").get("additionalProperties").get("type").asText())
+  }
+
+  @Test
   fun `plugin config definition includes name as required`() {
     val schema = ArchitectSchemaGenerator.generate()
     val pluginDef = schema.get("definitions").get("pluginConfig")
@@ -110,6 +130,7 @@ class ArchitectSchemaGeneratorTest {
     val taskDef = schema.get("definitions").get("inlineTask")
     val props = taskDef.get("properties")
     assertNotNull(props.get("run"))
+    assertNotNull(props.get("extends"))
     assertNotNull(props.get("phase"))
     assertNotNull(props.get("depends"))
     assertNotNull(props.get("permissions"))

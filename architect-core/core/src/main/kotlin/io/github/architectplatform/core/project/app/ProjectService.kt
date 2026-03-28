@@ -120,11 +120,16 @@ class ProjectService(
     val plugins = pluginLoader.load(projectContext)
     val taskRegistry = InMemoryTaskRegistry()
     val tasksByPluginId = mutableMapOf<String, MutableSet<String>>()
-    plugins.forEach {
-      try {
-        val rawContext =
+      plugins.forEach {
+        try {
+          val rawContext =
             try {
-              if (projectConfig.containsKey(it.contextKey)) {
+              if (it.id == "inline-tasks") {
+                mapOf(
+                  "tasks" to (projectConfig["tasks"] ?: emptyMap<String, Any>()),
+                  "templates" to (projectConfig["templates"] ?: emptyMap<String, Any>()),
+                )
+              } else if (projectConfig.containsKey(it.contextKey)) {
                 logger.debug(
                     "Project: $projectName, plugin ${it.id} - Context key ${it.contextKey} " +
                         "found in project config: ${projectConfig[it.contextKey]}")
@@ -163,11 +168,14 @@ class ProjectService(
         val registeredTaskIds = (afterTaskIds - beforeTaskIds)
         if (registeredTaskIds.isNotEmpty()) {
           tasksByPluginId.getOrPut(it.id) { mutableSetOf() }.addAll(registeredTaskIds)
+          registerPluginNamespaceAliases(taskRegistry, it.id, registeredTaskIds)
         }
       } catch (e: Exception) {
         logger.error("Failed to initialize plugin ${it.id} for project $projectName: ${e.message}", e)
       }
     }
+
+    registerConfiguredGroups(taskRegistry, projectConfig)
 
     val pluginContextKeys = plugins.map { it.contextKey }.toSet()
     val validation = configValidator.validate(projectConfig, pluginContextKeys, plugins, lineMap)
@@ -194,6 +202,68 @@ class ProjectService(
       taskRegistry = taskRegistry,
       pluginContextKeys = pluginContextKeys,
     )
+  }
+
+  private fun registerPluginNamespaceAliases(
+    taskRegistry: InMemoryTaskRegistry,
+    pluginId: String,
+    taskIds: Set<String>,
+  ) {
+    val namespace = pluginId.removeSuffix("-architected")
+    taskIds.sorted().forEach { taskId ->
+      val aliasSuffix = namespacedAliasSuffix(taskId, namespace) ?: return@forEach
+      taskRegistry.addAlias(
+        aliasId = "$namespace:$aliasSuffix",
+        targetId = taskId,
+        description = "Plugin alias for $taskId",
+      )
+    }
+  }
+
+  private fun registerConfiguredGroups(
+    taskRegistry: InMemoryTaskRegistry,
+    projectConfig: Map<String, Any>,
+  ) {
+    val rawGroups = projectConfig["groups"] as? Map<*, *> ?: return
+    rawGroups.forEach { (rawGroupId, rawMembers) ->
+      val groupId = rawGroupId as? String ?: return@forEach
+      val memberIds = (rawMembers as? List<*>)?.mapNotNull { it as? String }?.distinct().orEmpty()
+      if (memberIds.isEmpty()) return@forEach
+
+      taskRegistry.addGroup(
+        groupId = groupId,
+        memberIds = memberIds,
+        description = "Task group '$groupId' runs ${memberIds.joinToString(", ")}",
+      )
+
+      memberIds.forEach { memberId ->
+        val aliasSuffix = groupAliasSuffix(groupId, memberId)
+        taskRegistry.addAlias(
+          aliasId = "$groupId:$aliasSuffix",
+          targetId = memberId,
+          description = "Group member alias for $memberId",
+        )
+      }
+    }
+  }
+
+  private fun namespacedAliasSuffix(taskId: String, namespace: String): String? {
+    val normalizedNamespace = namespace.trim().takeIf { it.isNotBlank() } ?: return null
+    return when {
+      taskId.contains(":") -> null
+      taskId == normalizedNamespace -> null
+      taskId.startsWith("$normalizedNamespace-") -> taskId.removePrefix("$normalizedNamespace-")
+      taskId.endsWith("-$normalizedNamespace") -> taskId.removeSuffix("-$normalizedNamespace")
+      else -> null
+    }?.takeIf { it.isNotBlank() }
+  }
+
+  private fun groupAliasSuffix(groupId: String, taskId: String): String {
+    return when {
+      taskId.startsWith("$groupId-") -> taskId.removePrefix("$groupId-")
+      taskId.endsWith("-$groupId") -> taskId.removeSuffix("-$groupId")
+      else -> taskId
+    }.ifBlank { taskId }
   }
 
   /**

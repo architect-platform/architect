@@ -22,7 +22,6 @@ import io.github.architectplatform.api.core.plugins.ArchitectPlugin
  * ```
  */
 object PluginGraduationChecker {
-
   data class CheckResult(
     val pluginId: String,
     val checks: List<CheckItem>,
@@ -122,11 +121,12 @@ object PluginGraduationChecker {
       name = "readme",
       description = "README.md must exist with configuration examples (>100 chars)",
       passed = hasContent,
-      detail = when {
-        !exists -> "README.md not found at $pluginDir"
-        !hasContent -> "README.md exists but is too short"
-        else -> null
-      },
+      detail =
+        when {
+          !exists -> "README.md not found at $pluginDir"
+          !hasContent -> "README.md exists but is too short"
+          else -> null
+        },
     )
   }
 

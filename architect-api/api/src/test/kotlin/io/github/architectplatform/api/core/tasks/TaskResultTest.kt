@@ -1,9 +1,9 @@
 package io.github.architectplatform.api.core.tasks
 
-import java.time.Duration
-import java.time.Instant
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.time.Duration
+import java.time.Instant
 
 /**
  * Tests for TaskResult interface and its companion object factory methods.
@@ -96,13 +96,14 @@ class TaskResultTest {
   @Test
   fun `success with metadata creates TaskResult with metadata`() {
     val now = Instant.now()
-    val metadata = TaskMetadata(
-      duration = Duration.ofMillis(1500),
-      exitCode = 0,
-      startedAt = now.minusMillis(1500),
-      finishedAt = now,
-      executorInfo = "BashCommandExecutor",
-    )
+    val metadata =
+      TaskMetadata(
+        duration = Duration.ofMillis(1500),
+        exitCode = 0,
+        startedAt = now.minusMillis(1500),
+        finishedAt = now,
+        executorInfo = "BashCommandExecutor",
+      )
     val result = TaskResult.success("Build completed", metadata = metadata)
 
     assertTrue(result.success)
@@ -117,11 +118,12 @@ class TaskResultTest {
 
   @Test
   fun `failure with metadata creates TaskResult with metadata`() {
-    val metadata = TaskMetadata(
-      duration = Duration.ofMillis(500),
-      exitCode = 1,
-      executorInfo = "BashCommandExecutor",
-    )
+    val metadata =
+      TaskMetadata(
+        duration = Duration.ofMillis(500),
+        exitCode = 1,
+        executorInfo = "BashCommandExecutor",
+      )
     val result = TaskResult.failure("Build failed", metadata = metadata)
 
     assertFalse(result.success)
@@ -209,11 +211,12 @@ class TaskResultTest {
 
   @Test
   fun `data can hold complex nested values`() {
-    val data = mapOf(
-      "outputs" to listOf("file1.jar", "file2.jar") as Any,
-      "count" to 42 as Any,
-      "nested" to mapOf("inner" to "value") as Any,
-    )
+    val data =
+      mapOf(
+        "outputs" to listOf("file1.jar", "file2.jar") as Any,
+        "count" to 42 as Any,
+        "nested" to mapOf("inner" to "value") as Any,
+      )
     val result = TaskResult.success("Done", data = data)
 
     assertEquals(listOf("file1.jar", "file2.jar"), result.data["outputs"])
@@ -261,11 +264,12 @@ class TaskResultTest {
   @Test
   fun `status defaults based on success for backward compatibility`() {
     // Custom implementation that only provides success (no explicit status)
-    val customResult = object : TaskResult {
-      override val success = true
-      override val message = "custom"
-      override val results = emptyList<TaskResult>()
-    }
+    val customResult =
+      object : TaskResult {
+        override val success = true
+        override val message = "custom"
+        override val results = emptyList<TaskResult>()
+      }
     assertEquals(TaskResult.Status.SUCCESS, customResult.status)
   }
 

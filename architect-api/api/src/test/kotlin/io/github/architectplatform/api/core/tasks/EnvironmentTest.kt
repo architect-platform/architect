@@ -7,13 +7,13 @@ import org.junit.jupiter.api.Test
  * Tests for Environment interface default implementations.
  */
 class EnvironmentTest {
+  private val defaultEnv =
+    object : Environment {
+      override fun <T> service(type: Class<T>): T =
+        throw UnsupportedOperationException("Not implemented")
 
-  private val defaultEnv = object : Environment {
-    override fun <T> service(type: Class<T>): T =
-      throw UnsupportedOperationException("Not implemented")
-
-    override fun publish(event: Any) {}
-  }
+      override fun publish(event: Any) {}
+    }
 
   @Test
   fun `variable returns system env var when set`() {

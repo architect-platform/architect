@@ -11,9 +11,10 @@ import java.nio.file.Path
  * Tests for [ProjectContext] — getKey extension, missing key, nested key, wrong type.
  */
 class ProjectContextTest {
-
   @Test
-  fun `context exposes dir and config`(@TempDir tmpDir: Path) {
+  fun `context exposes dir and config`(
+    @TempDir tmpDir: Path
+  ) {
     val config: Config = mapOf("name" to "my-project")
     val ctx = ProjectContext(dir = tmpDir, config = config)
 
@@ -22,22 +23,29 @@ class ProjectContextTest {
   }
 
   @Test
-  fun `getKey returns null for missing key`(@TempDir tmpDir: Path) {
+  fun `getKey returns null for missing key`(
+    @TempDir tmpDir: Path
+  ) {
     val ctx = ProjectContext(dir = tmpDir, config = emptyMap())
 
     assertNull(ctx.config.getKey<String>("nonexistent"))
   }
 
   @Test
-  fun `getKey traverses nested config`(@TempDir tmpDir: Path) {
-    val config: Config = mapOf(
-      "plugins" to mapOf(
-        "git" to mapOf(
-          "enabled" to true,
-          "branch" to "main",
-        ),
-      ),
-    )
+  fun `getKey traverses nested config`(
+    @TempDir tmpDir: Path
+  ) {
+    val config: Config =
+      mapOf(
+        "plugins" to
+          mapOf(
+            "git" to
+              mapOf(
+                "enabled" to true,
+                "branch" to "main",
+              ),
+          ),
+      )
     val ctx = ProjectContext(dir = tmpDir, config = config)
 
     assertEquals(true, ctx.config.getKey<Boolean>("plugins.git.enabled"))
@@ -45,7 +53,9 @@ class ProjectContextTest {
   }
 
   @Test
-  fun `getKey returns null for partially missing nested path`(@TempDir tmpDir: Path) {
+  fun `getKey returns null for partially missing nested path`(
+    @TempDir tmpDir: Path
+  ) {
     val config: Config = mapOf("a" to mapOf("b" to 1))
     val ctx = ProjectContext(dir = tmpDir, config = config)
 
@@ -53,7 +63,9 @@ class ProjectContextTest {
   }
 
   @Test
-  fun `getKey returns value even when generic type differs due to JVM erasure`(@TempDir tmpDir: Path) {
+  fun `getKey returns value even when generic type differs due to JVM erasure`(
+    @TempDir tmpDir: Path
+  ) {
     val config: Config = mapOf("count" to 42)
     val ctx = ProjectContext(dir = tmpDir, config = config)
 
@@ -63,7 +75,9 @@ class ProjectContextTest {
   }
 
   @Test
-  fun `getKey throws when traversing through primitive`(@TempDir tmpDir: Path) {
+  fun `getKey throws when traversing through primitive`(
+    @TempDir tmpDir: Path
+  ) {
     val config: Config = mapOf("name" to "hello")
     val ctx = ProjectContext(dir = tmpDir, config = config)
 
@@ -73,13 +87,17 @@ class ProjectContextTest {
   }
 
   @Test
-  fun `context with list config elements`(@TempDir tmpDir: Path) {
-    val config: Config = mapOf(
-      "tasks" to listOf(
-        mapOf("id" to "build"),
-        mapOf("id" to "test"),
-      ),
-    )
+  fun `context with list config elements`(
+    @TempDir tmpDir: Path
+  ) {
+    val config: Config =
+      mapOf(
+        "tasks" to
+          listOf(
+            mapOf("id" to "build"),
+            mapOf("id" to "test"),
+          ),
+      )
     val ctx = ProjectContext(dir = tmpDir, config = config)
 
     assertEquals("build", ctx.config.getKey<String>("tasks.0.id"))
@@ -87,7 +105,9 @@ class ProjectContextTest {
   }
 
   @Test
-  fun `data class equality`(@TempDir tmpDir: Path) {
+  fun `data class equality`(
+    @TempDir tmpDir: Path
+  ) {
     val config: Config = mapOf("k" to "v")
     val a = ProjectContext(dir = tmpDir, config = config)
     val b = ProjectContext(dir = tmpDir, config = config)
@@ -97,7 +117,9 @@ class ProjectContextTest {
   }
 
   @Test
-  fun `resolvePath keeps paths within project root`(@TempDir tmpDir: Path) {
+  fun `resolvePath keeps paths within project root`(
+    @TempDir tmpDir: Path
+  ) {
     val ctx = ProjectContext(dir = tmpDir, config = emptyMap())
 
     val resolved = ctx.resolvePath("nested/project")
@@ -106,7 +128,9 @@ class ProjectContextTest {
   }
 
   @Test
-  fun `resolvePath rejects absolute paths`(@TempDir tmpDir: Path) {
+  fun `resolvePath rejects absolute paths`(
+    @TempDir tmpDir: Path
+  ) {
     val ctx = ProjectContext(dir = tmpDir, config = emptyMap())
 
     assertThrows(IllegalArgumentException::class.java) {
@@ -115,7 +139,9 @@ class ProjectContextTest {
   }
 
   @Test
-  fun `resolvePath rejects traversal outside project root`(@TempDir tmpDir: Path) {
+  fun `resolvePath rejects traversal outside project root`(
+    @TempDir tmpDir: Path
+  ) {
     val ctx = ProjectContext(dir = tmpDir, config = emptyMap())
 
     assertThrows(IllegalArgumentException::class.java) {

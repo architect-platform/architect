@@ -58,8 +58,9 @@ class ArchitectPluginTestKit<C : Any>(
 
   fun executeTask(id: String, args: List<String> = emptyList()): TaskResult {
     ensureRegistered()
-    val task = taskRegistry.get(id)
-      ?: throw IllegalArgumentException("Task '$id' not found for plugin ${plugin.id}")
+    val task =
+      taskRegistry.get(id)
+        ?: throw IllegalArgumentException("Task '$id' not found for plugin ${plugin.id}")
     return task.execute(
       TestEnvironment(services, secrets, publishedEvents, activeProfile),
       ProjectContext(projectDir, projectConfig.toMap()),
@@ -90,20 +91,22 @@ class ArchitectPluginTestKit<C : Any>(
   }
 
   private fun instantiateFromMap(type: KClass<*>, values: Map<String, Any?>): Any {
-    val constructor = type.primaryConstructor
-      ?: throw IllegalArgumentException("Type ${type.qualifiedName} must have a primary constructor")
+    val constructor =
+      type.primaryConstructor
+        ?: throw IllegalArgumentException("Type ${type.qualifiedName} must have a primary constructor")
 
-    val arguments = constructor.parameters.associateWith { parameter ->
-      if (!values.containsKey(parameter.name)) {
-        if (parameter.isOptional) {
-          null
+    val arguments =
+      constructor.parameters.associateWith { parameter ->
+        if (!values.containsKey(parameter.name)) {
+          if (parameter.isOptional) {
+            null
+          } else {
+            throw IllegalArgumentException("Missing required config key '${parameter.name}' for ${type.simpleName}")
+          }
         } else {
-          throw IllegalArgumentException("Missing required config key '${parameter.name}' for ${type.simpleName}")
+          coerceValue(parameter.type, values[parameter.name])
         }
-      } else {
-        coerceValue(parameter.type, values[parameter.name])
-      }
-    }.filterValues { it != null }
+      }.filterValues { it != null }
 
     return constructor.callBy(arguments)
   }
@@ -116,38 +119,47 @@ class ArchitectPluginTestKit<C : Any>(
 
     return when (classifier) {
       String::class -> value.toString()
-      Int::class -> when (value) {
-        is Number -> value.toInt()
-        is String -> value.toInt()
-        else -> value
-      }
-      Long::class -> when (value) {
-        is Number -> value.toLong()
-        is String -> value.toLong()
-        else -> value
-      }
-      Double::class -> when (value) {
-        is Number -> value.toDouble()
-        is String -> value.toDouble()
-        else -> value
-      }
-      Float::class -> when (value) {
-        is Number -> value.toFloat()
-        is String -> value.toFloat()
-        else -> value
-      }
-      Boolean::class -> when (value) {
-        is Boolean -> value
-        is String -> value.toBooleanStrict()
-        else -> value
-      }
+      Int::class ->
+        when (value) {
+          is Number -> value.toInt()
+          is String -> value.toInt()
+          else -> value
+        }
+      Long::class ->
+        when (value) {
+          is Number -> value.toLong()
+          is String -> value.toLong()
+          else -> value
+        }
+      Double::class ->
+        when (value) {
+          is Number -> value.toDouble()
+          is String -> value.toDouble()
+          else -> value
+        }
+      Float::class ->
+        when (value) {
+          is Number -> value.toFloat()
+          is String -> value.toFloat()
+          else -> value
+        }
+      Boolean::class ->
+        when (value) {
+          is Boolean -> value
+          is String -> value.toBooleanStrict()
+          else -> value
+        }
       else -> {
         when {
-          classifier.java.isEnum && value is String -> classifier.java.enumConstants.first { (it as Enum<*>).name == value }
+          classifier.java.isEnum && value is String -> {
+            val enumConstants = classifier.java.enumConstants
+            enumConstants.first { (it as Enum<*>).name == value }
+          }
           value is Map<*, *> && classifier.primaryConstructor != null -> {
-            val nestedValues = value.entries
-              .filter { it.key is String }
-              .associate { it.key as String to it.value }
+            val nestedValues =
+              value.entries
+                .filter { it.key is String }
+                .associate { it.key as String to it.value }
             instantiateFromMap(classifier, nestedValues)
           }
           List::class.createType().classifier == classifier && value is List<*> -> value
@@ -182,8 +194,9 @@ class ArchitectPluginTestKit<C : Any>(
     private val activeProfile: String,
   ) : Environment {
     override fun <T> service(type: Class<T>): T {
-      val service = services[type]
-        ?: throw IllegalArgumentException("No service registered for ${type.name}")
+      val service =
+        services[type]
+          ?: throw IllegalArgumentException("No service registered for ${type.name}")
       @Suppress("UNCHECKED_CAST")
       return service as T
     }

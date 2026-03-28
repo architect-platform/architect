@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Test
  * ```
  */
 abstract class ArchitectPluginContractTestSuite<C : Any> {
-
   /** Create a fresh plugin instance. Called per test. */
   abstract fun createPlugin(): ArchitectPlugin<C>
 
@@ -148,8 +147,9 @@ abstract class ArchitectPluginContractTestSuite<C : Any> {
   }
 
   private fun createTestKit(): ArchitectPluginTestKit<C> {
-    val kit = ArchitectPluginTestKit(createPlugin())
-      .withProjectConfig(projectConfig())
+    val kit =
+      ArchitectPluginTestKit(createPlugin())
+        .withProjectConfig(projectConfig())
     services().forEach { (type, service) ->
       @Suppress("UNCHECKED_CAST")
       kit.withService(type as Class<Any>, service)

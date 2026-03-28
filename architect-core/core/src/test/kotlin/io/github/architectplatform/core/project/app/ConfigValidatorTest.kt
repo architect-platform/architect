@@ -111,6 +111,29 @@ class ConfigValidatorTest {
   }
 
   @Test
+  fun `templates and groups keys are recognized`() {
+    val config = mapOf(
+      "project" to mapOf("name" to "test"),
+      "templates" to mapOf("npm-script" to mapOf("timeout" to "60s")),
+      "groups" to mapOf("build" to listOf("frontend-build", "backend-build")),
+    )
+    val result = validator.validate(config)
+    assertTrue(result.valid)
+    assertTrue(result.warnings.isEmpty())
+  }
+
+  @Test
+  fun `aliases key is recognized`() {
+    val config = mapOf(
+      "project" to mapOf("name" to "test"),
+      "aliases" to mapOf("b" to "build"),
+    )
+    val result = validator.validate(config)
+    assertTrue(result.valid)
+    assertTrue(result.warnings.isEmpty())
+  }
+
+  @Test
   fun `plugins key is recognized`() {
     val config = mapOf(
       "project" to mapOf("name" to "test"),

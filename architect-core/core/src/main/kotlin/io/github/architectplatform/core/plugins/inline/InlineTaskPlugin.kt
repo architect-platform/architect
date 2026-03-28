@@ -49,19 +49,31 @@ class InlineTaskPlugin : ArchitectPlugin<HashMap<String, Any>> {
     override val contextKey: String = "tasks"
     override val ctxClass: Class<HashMap<String, Any>> = HashMap::class.java as Class<HashMap<String, Any>>
     override var context: HashMap<String, Any> = HashMap()
+    private var templates: Map<String, Any> = emptyMap()
 
     private val objectMapper = ObjectMapper()
         .registerKotlinModule()
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    private val templateResolver = InlineTaskTemplateResolver()
 
     override fun init(context: Any) {
         if (context is Map<*, *>) {
-            this.context = HashMap(context as Map<String, Any>)
+            val mapped = context as Map<String, Any>
+            val tasksSection = mapped["tasks"] as? Map<String, Any>
+            val templatesSection = mapped["templates"] as? Map<String, Any>
+            if (tasksSection != null || templatesSection != null) {
+                this.context = HashMap(tasksSection ?: emptyMap())
+                this.templates = templatesSection ?: emptyMap()
+            } else {
+                this.context = HashMap(mapped)
+                this.templates = emptyMap()
+            }
         }
     }
 
     override fun register(registry: TaskRegistry) {
-        for ((taskId, rawConfig) in context) {
+        val resolvedTasks = templateResolver.resolve(templates, context)
+        for ((taskId, rawConfig) in resolvedTasks) {
             val config = try {
                 objectMapper.convertValue(rawConfig, InlineTaskConfig::class.java)
             } catch (e: Exception) {
@@ -140,6 +152,10 @@ class InlineTaskPlugin : ArchitectPlugin<HashMap<String, Any>> {
                 "run" to mapOf(
                     "type" to "string",
                     "description" to "Shell command to execute for this inline task.",
+                ),
+                "extends" to mapOf(
+                    "type" to "string",
+                    "description" to "Template name that this task extends.",
                 ),
                 "phase" to mapOf(
                     "type" to "string",

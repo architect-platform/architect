@@ -2,8 +2,6 @@ package io.github.architectplatform.api.testing
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin
-import io.github.architectplatform.api.core.project.ProjectContext
-import io.github.architectplatform.api.core.tasks.Environment
 import io.github.architectplatform.api.core.tasks.TaskRegistry
 import io.github.architectplatform.api.core.tasks.TaskResult
 import io.github.architectplatform.api.core.tasks.builtin.SimpleTask
@@ -26,8 +24,9 @@ class ArchitectPluginTestKitTest {
   @Test
   fun `executeTask runs registered plugin task`() {
     val plugin = ExamplePlugin()
-    val kit = ArchitectPluginTestKit(plugin)
-      .configure(mapOf("greeting" to "hello"))
+    val kit =
+      ArchitectPluginTestKit(plugin)
+        .configure(mapOf("greeting" to "hello"))
 
     val result = kit.executeTask("example-task")
 
@@ -39,8 +38,9 @@ class ArchitectPluginTestKitTest {
   fun `withService exposes services to task execution`() {
     val plugin = ServicePlugin()
     val commandExecutor = RecordingCommandExecutor()
-    val kit = ArchitectPluginTestKit(plugin)
-      .withService(CommandExecutor::class.java, commandExecutor)
+    val kit =
+      ArchitectPluginTestKit(plugin)
+        .withService(CommandExecutor::class.java, commandExecutor)
 
     val result = kit.executeTask("service-task")
 
@@ -61,8 +61,9 @@ class ArchitectPluginTestKitTest {
   @Test
   fun `withSecret exposes secrets to task execution`() {
     val plugin = SecretPlugin()
-    val kit = ArchitectPluginTestKit(plugin)
-      .withSecret("API_TOKEN", "super-secret")
+    val kit =
+      ArchitectPluginTestKit(plugin)
+        .withSecret("API_TOKEN", "super-secret")
 
     val result = kit.executeTask("secret-task")
 

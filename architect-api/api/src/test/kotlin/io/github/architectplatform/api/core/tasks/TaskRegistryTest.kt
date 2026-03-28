@@ -1,6 +1,5 @@
 package io.github.architectplatform.api.core.tasks
 
-import io.github.architectplatform.api.core.project.ProjectContext
 import io.github.architectplatform.api.core.tasks.builtin.SimpleTask
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -14,7 +13,6 @@ import org.junit.jupiter.api.Test
  * Tests for the [TaskRegistry] contract using a simple in-memory implementation.
  */
 class TaskRegistryTest {
-
   private lateinit var registry: TaskRegistry
 
   @BeforeEach
@@ -58,9 +56,10 @@ class TaskRegistryTest {
   fun `add throws on duplicate id`() {
     registry.add(simpleTask("dup", "First"))
 
-    val ex = assertThrows(IllegalArgumentException::class.java) {
-      registry.add(simpleTask("dup", "Second"))
-    }
+    val ex =
+      assertThrows(IllegalArgumentException::class.java) {
+        registry.add(simpleTask("dup", "Second"))
+      }
     assertTrue(ex.message!!.contains("dup"))
   }
 

@@ -14,7 +14,6 @@ package io.github.architectplatform.api.core.utils
  * ```
  */
 object ShellArgumentSanitizer {
-
   /**
    * Escapes a single shell argument by wrapping it in single quotes.
    *

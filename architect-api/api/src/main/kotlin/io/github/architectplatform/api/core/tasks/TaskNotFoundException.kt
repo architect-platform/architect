@@ -11,7 +11,6 @@ class TaskNotFoundException(
   val projectName: String,
   availableTaskIds: List<String> = emptyList(),
 ) : IllegalArgumentException(buildMessage(taskId, projectName, availableTaskIds)) {
-
   companion object {
     private fun buildMessage(taskId: String, projectName: String, available: List<String>): String {
       val base = "Task '$taskId' not found in project '$projectName'."
@@ -43,11 +42,12 @@ class TaskNotFoundException(
       for (j in 0..n) dp[0][j] = j
       for (i in 1..m) {
         for (j in 1..n) {
-          dp[i][j] = if (a[i - 1] == b[j - 1]) {
-            dp[i - 1][j - 1]
-          } else {
-            1 + minOf(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
-          }
+          dp[i][j] =
+            if (a[i - 1] == b[j - 1]) {
+              dp[i - 1][j - 1]
+            } else {
+              1 + minOf(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
+            }
         }
       }
       return dp[m][n]

@@ -80,17 +80,23 @@ interface Environment {
    * @param tag A short identifier for the logger (typically the task ID)
    * @return An ArchitectLogger instance for the given tag
    */
-  fun logger(tag: String): ArchitectLogger = object : ArchitectLogger {
-    override val tag: String = tag
-    override fun debug(message: String) {}
-    override fun info(message: String) {}
-    override fun warn(message: String) {}
-    override fun error(message: String) {}
-    override fun error(
-      message: String,
-      throwable: Throwable,
-    ) {}
-  }
+  fun logger(tag: String): ArchitectLogger =
+    object : ArchitectLogger {
+      override val tag: String = tag
+
+      override fun debug(message: String) {}
+
+      override fun info(message: String) {}
+
+      override fun warn(message: String) {}
+
+      override fun error(message: String) {}
+
+      override fun error(
+        message: String,
+        throwable: Throwable,
+      ) {}
+    }
 
   /**
    * Reads an environment variable by name.

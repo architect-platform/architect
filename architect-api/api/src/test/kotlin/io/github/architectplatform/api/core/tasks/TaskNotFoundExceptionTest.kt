@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class TaskNotFoundExceptionTest {
-
   @Test
   fun `includes task and project name in message`() {
     val ex = TaskNotFoundException("build", "my-app")
@@ -41,9 +40,12 @@ class TaskNotFoundExceptionTest {
 
   @Test
   fun `findSimilar returns closest matches`() {
-    val similar = TaskNotFoundException.findSimilar(
-      "buld", listOf("build", "test", "lint", "bundle"), maxSuggestions = 2
-    )
+    val similar =
+      TaskNotFoundException.findSimilar(
+        "buld",
+        listOf("build", "test", "lint", "bundle"),
+        maxSuggestions = 2,
+      )
     assertTrue(similar.contains("build"))
     assertTrue(similar.size <= 2)
   }

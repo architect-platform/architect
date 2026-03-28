@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class ShellArgumentSanitizerTest {
-
   // --- escapeShellArg ---
 
   @Test
@@ -86,7 +85,10 @@ class ShellArgumentSanitizerTest {
 
   @Test
   fun `identifier with hyphen and dot is accepted`() {
-    assertEquals("x86_64-unknown-linux-gnu", ShellArgumentSanitizer.requireSafeIdentifier("x86_64-unknown-linux-gnu", "target"))
+    assertEquals(
+      "x86_64-unknown-linux-gnu",
+      ShellArgumentSanitizer.requireSafeIdentifier("x86_64-unknown-linux-gnu", "target")
+    )
   }
 
   @Test

@@ -45,7 +45,19 @@ internal class LazyTaskRegistry(
     state.get().taskRegistry.add(task)
   }
 
+  override fun addAlias(aliasId: String, targetId: String, description: String) {
+    state.get().taskRegistry.addAlias(aliasId, targetId, description)
+  }
+
+  override fun addGroup(groupId: String, memberIds: List<String>, description: String) {
+    state.get().taskRegistry.addGroup(groupId, memberIds, description)
+  }
+
   override fun get(id: String): Task? = state.get().taskRegistry.get(id)
 
+  override fun resolve(reference: String): List<Task> = state.get().taskRegistry.resolve(reference)
+
   override fun all(): List<Task> = state.get().taskRegistry.all()
+
+  override fun groups(): Map<String, List<String>> = state.get().taskRegistry.groups()
 }

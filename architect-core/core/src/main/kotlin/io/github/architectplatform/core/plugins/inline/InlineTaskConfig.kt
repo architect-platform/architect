@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class InlineTaskConfig(
     val description: String = "",
     val run: String = "",
+    val extends: String? = null,
     val phase: String? = null,
     val depends: List<String> = emptyList(),
     val permissions: List<String> = emptyList(),

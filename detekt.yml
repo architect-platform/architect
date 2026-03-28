@@ -63,7 +63,7 @@ empty-blocks:
   EmptyCatchBlock:
     active: true
     allowedExceptionNameRegex: '_|ignored|expected'
-  EmptyClassBody:
+  EmptyClassBlock:
     active: true
   EmptyFunctionBlock:
     active: true
@@ -136,10 +136,9 @@ style:
   active: true
   ForbiddenComment:
     active: true
-    values:
+    comments:
       - 'FIXME:'
       - 'STOPSHIP:'
-    allowedPatterns: []
   MaxLineLength:
     active: true
     maxLineLength: 120

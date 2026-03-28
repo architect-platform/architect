@@ -29,6 +29,9 @@ object ArchitectSchemaGenerator {
     properties.set<ObjectNode>("project", projectSchema())
     properties.set<ObjectNode>("plugins", pluginsSchema())
     properties.set<ObjectNode>("tasks", tasksSchema())
+    properties.set<ObjectNode>("templates", templatesSchema())
+    properties.set<ObjectNode>("groups", groupsSchema())
+    properties.set<ObjectNode>("aliases", aliasesSchema())
 
     schema.putArray("required").add("project")
     schema.put("additionalProperties", true)
@@ -84,6 +87,32 @@ object ArchitectSchemaGenerator {
     return node
   }
 
+  private fun templatesSchema(): ObjectNode {
+    val node = mapper.createObjectNode()
+    node.put("type", "object")
+    node.put("description", "Reusable inline task templates. Keys are template names.")
+    node.putObject("additionalProperties").put("\$ref", "#/definitions/inlineTask")
+    return node
+  }
+
+  private fun groupsSchema(): ObjectNode {
+    val node = mapper.createObjectNode()
+    node.put("type", "object")
+    node.put("description", "Task groups that expand to multiple task IDs.")
+    val additional = node.putObject("additionalProperties")
+    additional.put("type", "array")
+    additional.putObject("items").put("type", "string")
+    return node
+  }
+
+  private fun aliasesSchema(): ObjectNode {
+    val node = mapper.createObjectNode()
+    node.put("type", "object")
+    node.put("description", "Command aliases that expand before task resolution.")
+    node.putObject("additionalProperties").put("type", "string")
+    return node
+  }
+
   // ── Definitions ───────────────────────────────────────────────────────
 
   private fun pluginConfigDef(): ObjectNode {
@@ -131,6 +160,7 @@ object ArchitectSchemaGenerator {
     val props = node.putObject("properties")
     props.set<ObjectNode>("description", stringProp("Human-readable description of the task"))
     props.set<ObjectNode>("run", stringProp("Shell command to execute"))
+    props.set<ObjectNode>("extends", stringProp("Template name that this task extends"))
     props.set<ObjectNode>("phase", phaseEnum())
     props.set<ObjectNode>("depends", stringArrayProp("Task IDs this task depends on"))
     props.set<ObjectNode>("permissions", permissionArrayProp("Permissions required to execute the task"))

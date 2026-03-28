@@ -21,6 +21,18 @@ tasks:      # optional — inline task definitions
   task-id:
     ...
 
+templates:  # optional — reusable inline task templates
+  template-name:
+    ...
+
+groups:     # optional — named task groups
+  build:
+    - frontend-build
+    - backend-build
+
+aliases:    # optional — CLI command aliases
+  b: build
+
 # Plugin-specific configuration blocks
 # The key matches the plugin `name`
 git-architected:
@@ -128,6 +140,7 @@ tasks:
 |-------|------|----------|-------------|
 | `description` | `string` | | Human-readable task description shown in `architect tasks`. |
 | `run` | `string` | | Shell command to execute. |
+| `extends` | `string` | | Template name to inherit defaults from. |
 | `phase` | `enum` | | Lifecycle phase. See [phases](#phases) below. |
 | `depends` | `string[]` | | List of task IDs that must complete before this task runs. |
 | `permissions` | `string[]` | | Explicit permissions required by the task (`file-system:read`, `file-system:write`, `network:outbound`, `process:exec`). |
@@ -136,6 +149,52 @@ tasks:
 | `timeout` | `string` | | Per-task timeout such as `300s`, `5m`, or `1h`. |
 | `onFailure` | `enum` | | Failure strategy: `ABORT`, `CONTINUE`, or `RETRY`. |
 | `retryAttempts` | `integer` | | Number of retry attempts when `onFailure: RETRY`. |
+
+### `templates`
+
+Templates let multiple inline tasks share defaults. A task can inherit from a template with `extends`, and task-level values win when both define the same field.
+
+```yaml
+templates:
+  npm-script:
+    requires:
+      tools: [node, npm]
+    timeout: 120s
+
+tasks:
+  frontend-build:
+    extends: npm-script
+    run: npm run build
+    phase: BUILD
+```
+
+### `groups`
+
+Groups register a synthetic task for the group name and member aliases under `group-name:*`.
+
+```yaml
+groups:
+  build:
+    - frontend-build
+    - backend-build
+```
+
+With the example above:
+
+- `architect build` runs both `frontend-build` and `backend-build`
+- `architect build:frontend` resolves to `frontend-build`
+- `architect build:*` expands to every `build:<member>` alias
+- plugin tasks keep their legacy IDs and may also gain namespaced aliases such as `git:commit` for `git-commit`
+
+### `aliases`
+
+Aliases expand before task resolution, so they can target individual tasks, groups, or namespaced task references.
+
+```yaml
+aliases:
+  b: build
+  df: docker:build
+```
 
 ### Phases
 

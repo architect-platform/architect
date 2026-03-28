@@ -8,7 +8,6 @@ import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
 class ArchitectPluginContractTest {
-
   @Test
   fun `verify passes for compliant plugin`() {
     ArchitectPluginContract { ContractPlugin() }
@@ -23,19 +22,21 @@ class ArchitectPluginContractTest {
 
   @Test
   fun `verify fails for blank plugin id`() {
-    val error = assertFailsWith<IllegalArgumentException> {
-      ArchitectPluginContract { BlankIdPlugin() }.verify()
-    }
+    val error =
+      assertFailsWith<IllegalArgumentException> {
+        ArchitectPluginContract { BlankIdPlugin() }.verify()
+      }
 
     kotlin.test.assertTrue(error.message.orEmpty().contains("id must not be blank"))
   }
 
   @Test
   fun `verify fails when expected task is missing`() {
-    val error = assertFailsWith<IllegalArgumentException> {
-      ArchitectPluginContract { ContractPlugin() }
-        .verify(ArchitectPluginContract.Verification(expectedTaskIds = setOf("missing-task")))
-    }
+    val error =
+      assertFailsWith<IllegalArgumentException> {
+        ArchitectPluginContract { ContractPlugin() }
+          .verify(ArchitectPluginContract.Verification(expectedTaskIds = setOf("missing-task")))
+      }
 
     kotlin.test.assertTrue(error.message.orEmpty().contains("missing expected tasks"))
   }
