@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 72/128 tasks completed (56%)
+- Overall Progress: 74/128 tasks completed (58%)
 - Current Phase: Phase 5 — Configuration as Code Excellence
-- Last Updated: 2026-03-28T14:00:00Z
+- Last Updated: 2026-03-28T10:06:24Z
 
 ---
 
@@ -639,7 +639,7 @@
   - Merge all plugin schemas into root schema
   - `architect schema generate` outputs combined schema
 
-- [ ] **T-5.1.3** 🟡 `S` — Add `architect config lint` command
+- [x] **T-5.1.3** 🟡 `S` — Add `architect config lint` command | Finished: 2026-03-28T10:06:24Z | Notes: Added ConfigCommandHandler lint subcommand with deprecated key checks, unknown plugin detection, typo suggestions, CI exit code 1 on issues; updated config help text; added unit tests for success/failure and suggestions.
   - Check for: deprecated keys, unknown plugins, invalid values
   - Suggest corrections for common mistakes
   - Exit code 1 if issues found (CI-friendly)
@@ -654,7 +654,7 @@
   - Fallback: encrypted file at `~/.architect/secrets.enc`
   - Tasks access via `environment.secret(name)`
 
-- [ ] **T-5.2.2** 🟠 `M` — Add `.env` file support with precedence chain
+- [x] **T-5.2.2** 🟠 `M` — Add `.env` file support with precedence chain | Finished: 2026-07-10T00:00:00Z | Notes: `EnvFileLoader` + `EnvInterpolator` in `architect-core/env` package; full test coverage with @TempDir; pure stdlib, no external deps
   - Load order: `.env` → `.env.local` → `.env.{profile}` → `.env.{profile}.local` → system env
   - `.env.local` in `.gitignore` by default
   - `architect.yml` can reference: `${env.DATABASE_URL}`

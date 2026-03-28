@@ -427,12 +427,14 @@ class HelpCommandHandler {
       |  set <key> <value>  Set a config value in architect.yml
       |  diff               Show diff between profiles
       |  validate           Validate config against schema
+      |  lint               Lint config for deprecated/unknown entries
       |
       |EXAMPLES
       |  architect config show              Show merged config
       |  architect config get project.name  Read project name
       |  architect config diff              Compare profiles
-    """.trimMargin()
+      |  architect config lint              Lint config and fail on issues
+     """.trimMargin()
 
     private val DOCTOR_HELP = """
       |architect doctor — Diagnose project setup
