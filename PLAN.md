@@ -688,7 +688,8 @@
     - Add `TaskRegistry.resolve(reference, groups)` signature for `group`, `group:*`, and `group:member` lookups (preserve direct task IDs)
     - Generate namespaced aliases for plugin tasks (e.g., `git:commit` -> `git-commit`) without changing original IDs
     - Surface grouping in `architect tasks` output (show group header + member list)
-  - Verification: fixture `architect.yml` with `groups:` list and mixed plugin/inline tasks; unit tests covering group expansion order, wildcard expansion, and error cases (unknown group/member) in registry + CLI resolution
+  - Verification: fixture `architect.yml` with `groups:` list and mixed plugin/inline tasks; unit tests covering group expansion order, wildcard expansion, and error cases (unknown group/member) in registry + CLI resolution; CLI regression tests for task listing/group rendering and `build:*` lookups
+  - Acceptance details: unknown groups/members surface `TaskNotFoundException` with available group/member suggestions; group expansion order matches the `groups:` list order
   - Group related tasks: `architect build:frontend`, `architect build:backend`
   - `architect build` runs all tasks in `build:*` group
   - Plugin tasks auto-namespaced: `git:commit`, `docker:build`
@@ -706,7 +707,8 @@
     - Add `templates` map to `InlineTaskConfig` and resolve `extends` before task registration
     - Merge strategy: child overrides parent keys; nested maps deep-merge; lists replace unless explicitly concatenated via `+`
     - Detect missing template or circular reference and throw `IllegalArgumentException` with template chain in message
-  - Verification: fixture config with shared template + overriding child task, plus tests for missing-template, circular-reference, and merge precedence
+  - Verification: fixture config with shared template + overriding child task, plus tests for missing-template, circular-reference, and merge precedence; schema generation test includes `templates:` alongside `tasks:`
+  - Acceptance details: resolved task configs are fully expanded before registration (no lingering `extends`), and error messages include the full template chain for quick diagnosis
   - Define once, use many times:
     ```yaml
     templates:
