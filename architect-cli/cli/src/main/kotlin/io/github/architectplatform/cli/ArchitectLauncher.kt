@@ -12,6 +12,7 @@ import io.github.architectplatform.cli.command.HelpCommandHandler
 import io.github.architectplatform.cli.command.InitCommandHandler
 import io.github.architectplatform.cli.command.OutputFormatter
 import io.github.architectplatform.cli.command.PluginCommandHandler
+import io.github.architectplatform.cli.command.SchemaCommandHandler
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.history.LocalHistoryReader
 import io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor
@@ -66,6 +67,7 @@ class ArchitectLauncher(
   private val configHandler = ConfigCommandHandler()
   private val conventionsHandler = ConventionsCommandHandler()
   private val doctorHandler = DoctorCommandHandler(engineHealthChecker)
+  private val schemaHandler = SchemaCommandHandler()
   private val output = OutputFormatter()
   private val multiProjectOrchestrator = MultiProjectOrchestrator(embeddedTaskExecutor)
 
@@ -598,19 +600,7 @@ class ArchitectLauncher(
   }
 
   private fun handleSchemaCommand() {
-    val schemaStream = javaClass.classLoader.getResourceAsStream("architect-schema.json")
-    if (schemaStream != null) {
-      print(schemaStream.bufferedReader().readText())
-      return
-    }
-    // Fallback: look for schema next to jar / in project
-    val schemaFile = java.io.File(System.getProperty("user.dir"), "docs/schema/architect-schema.json")
-    if (schemaFile.exists()) {
-      print(schemaFile.readText())
-      return
-    }
-    System.err.println("❌ Schema file not found. Run from the architect project root or ensure architect-schema.json is bundled.")
-    exitProcess(1)
+    schemaHandler.handle(args)
   }
 
   private fun handleGraphCommand(projectName: String, projectPath: String, engine: Boolean) {
