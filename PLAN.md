@@ -8,9 +8,9 @@
 
 ## EXECUTION STATUS
 
-- Overall Progress: 69/128 tasks completed (54%)
-- Current Phase: Phase 4 — Project Intelligence & Conventions
-- Last Updated: 2026-03-28T12:00:00Z
+- Overall Progress: 70/128 tasks completed (55%)
+- Current Phase: Phase 4 — Project Intelligence & Conventions (complete)
+- Last Updated: 2026-03-28T13:00:00Z
 
 ---
 
@@ -612,7 +612,7 @@
   - `architect test --affected` tests only changed + downstream projects
   - Parallel execution within dependency tiers
 
-- [ ] **T-4.3.4** 🟡 `M` — Add monorepo health dashboard
+- [x] **T-4.3.4** 🟡 `M` — Add monorepo health dashboard | Finished: 2026-03-28T13:00:00Z | Notes: Added `architect status` command; created MonorepoHealthDTO/ProjectHealthDTO data classes; HealthDashboard implemented inline in handleStatusCommand() collecting validation, taskCount and LocalOutputCache build status per project; printHealthDashboard() in OutputFormatter with --json support; 6 tests in OutputFormatterHealthTest.
   - `architect status` shows all projects with:
     - Last build status (✅/❌)
     - Test coverage

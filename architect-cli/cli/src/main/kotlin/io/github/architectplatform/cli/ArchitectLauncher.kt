@@ -283,6 +283,7 @@ class ArchitectLauncher(
       "history" -> { handleHistory(); return }
       "stats" -> { handleStats(); return }
       "affected" -> { handleAffectedCommand(); return }
+      "status" -> { handleStatusCommand(); return }
     }
 
     if (command == "tasks" || command == null) {
@@ -527,6 +528,72 @@ class ArchitectLauncher(
     val projectName = extractProjectName(projectPath)
     val affectedProjects = resolveAffectedProjects(projectName, projectPath)
     output.printAffected(affectedProjects, baseRef)
+  }
+
+  private fun handleStatusCommand() {
+    val projectPath = System.getProperty("user.dir")
+    val projectName = extractProjectName(projectPath)
+
+    val context = EmbeddedExecutionContext.create(
+      remoteContentFetcher = io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher(),
+      activeProfile = embeddedTaskExecutor.activeProfile,
+    )
+    context.projectService.registerProject(projectName, projectPath)
+    val root = context.projectService.getProject(projectName)
+
+    val allProjects = if (root != null) {
+      fun flatten(p: io.github.architectplatform.core.project.domain.Project): List<io.github.architectplatform.core.project.domain.Project> =
+        listOf(p) + p.subProjects.flatMap(::flatten)
+      flatten(root)
+    } else {
+      listOf()
+    }
+
+    val cache = LocalOutputCache()
+
+    val projectHealthList = allProjects.map { proj ->
+      val validation = try {
+        embeddedTaskExecutor.validate(proj.name, proj.path)
+      } catch (e: Exception) {
+        io.github.architectplatform.cli.dto.ValidationResultDTO(
+          valid = false,
+          errors = listOf("Failed to validate: ${e.message}"),
+          warnings = emptyList(),
+        )
+      }
+      val taskCount = try { embeddedTaskExecutor.listTasks(proj.name, proj.path).size } catch (_: Exception) { 0 }
+      val cacheKey = "project:${proj.name}"
+      val cached = cache.get(cacheKey)
+      val lastBuildAge: Long? = if (cached != null) {
+        val cacheDir = java.nio.file.Path.of(System.getProperty("user.home"), ".architect", "cache", cacheKey)
+        val resultFile = cacheDir.resolve("result.json").toFile()
+        if (resultFile.exists()) {
+          (System.currentTimeMillis() - resultFile.lastModified()) / 1000
+        } else null
+      } else null
+
+      io.github.architectplatform.cli.dto.ProjectHealthDTO(
+        name = proj.name,
+        path = proj.path,
+        valid = validation.valid,
+        errors = validation.errors,
+        warnings = validation.warnings,
+        taskCount = taskCount,
+        lastBuildSuccess = cached?.success,
+        lastBuildAgeSeconds = lastBuildAge,
+      )
+    }
+
+    val health = io.github.architectplatform.cli.dto.MonorepoHealthDTO(
+      rootProject = projectName,
+      projects = projectHealthList,
+      healthyCount = projectHealthList.count { it.valid },
+      unhealthyCount = projectHealthList.count { !it.valid },
+      timestamp = java.time.Instant.now().toString(),
+    )
+
+    val jsonFlag = args.contains("--json")
+    output.printHealthDashboard(health, jsonFlag)
   }
 
   private fun handleGraphCommand(projectName: String, projectPath: String, engine: Boolean) {

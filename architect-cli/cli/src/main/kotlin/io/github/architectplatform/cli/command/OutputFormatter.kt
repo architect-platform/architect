@@ -1,6 +1,7 @@
 package io.github.architectplatform.cli.command
 
 import io.github.architectplatform.cli.dto.HistoryRecordDTO
+import io.github.architectplatform.cli.dto.MonorepoHealthDTO
 import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.TaskStatsDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
@@ -292,6 +293,47 @@ class OutputFormatter(
     affectedProjects.sorted().forEach { println("  • $it") }
     println()
     println("  ${affectedProjects.size} project(s) affected")
+    println()
+  }
+
+  fun printHealthDashboard(health: MonorepoHealthDTO, jsonOutput: Boolean = false) {
+    if (jsonOutput || json) {
+      val mapper = com.fasterxml.jackson.databind.ObjectMapper()
+        .registerModule(com.fasterxml.jackson.module.kotlin.KotlinModule.Builder().build())
+      println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(health))
+      return
+    }
+
+    val overallIcon = if (health.healthy) "✅" else "❌"
+    println()
+    println("━".repeat(80))
+    println("$overallIcon  Monorepo Health — ${health.rootProject}")
+    println("━".repeat(80))
+    println("  Projects: ${health.totalProjects}  |  Healthy: ${health.healthyCount}  |  Unhealthy: ${health.unhealthyCount}")
+    println()
+
+    health.projects.forEach { proj ->
+      val statusIcon = if (proj.valid) "✅" else "❌"
+      val buildBadge = when (proj.lastBuildSuccess) {
+        true -> " 🏗 built"
+        false -> " 🔴 build failed"
+        null -> ""
+      }
+      val ageBadge = proj.lastBuildAgeSeconds?.let { age ->
+        when {
+          age < 60 -> " (${age}s ago)"
+          age < 3600 -> " (${age / 60}m ago)"
+          age < 86400 -> " (${age / 3600}h ago)"
+          else -> " (${age / 86400}d ago)"
+        }
+      } ?: ""
+      println("  $statusIcon ${proj.name}  — ${proj.taskCount} tasks$buildBadge$ageBadge")
+      proj.errors.forEach { println("     ❌ $it") }
+      proj.warnings.forEach { println("     ⚠️  $it") }
+    }
+
+    println()
+    println("  Timestamp: ${health.timestamp}")
     println()
   }
 
