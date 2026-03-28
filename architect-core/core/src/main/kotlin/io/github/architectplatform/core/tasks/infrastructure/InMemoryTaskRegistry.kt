@@ -13,8 +13,10 @@ class InMemoryTaskRegistry : TaskRegistry {
   private val syntheticGroupIds = linkedSetOf<String>()
 
   override fun add(task: Task) {
+    aliasTargets.remove(task.id)?.let { tasks.remove(task.id) }
     require(task.id !in tasks) { "Task '${task.id}' already registered" }
     tasks[task.id] = task
+    registerNamespaceAlias(task.id)
   }
 
   override fun addAlias(
@@ -35,9 +37,11 @@ class InMemoryTaskRegistry : TaskRegistry {
     val members = memberIds.distinct()
     require(members.isNotEmpty()) { "Task group '$groupId' must include at least one member" }
     groups[groupId] = members
-    if (groupId in tasks) return
-    syntheticGroupIds.add(groupId)
-    tasks[groupId] = dependencyTask(groupId, description, members)
+    if (groupId !in tasks) {
+      syntheticGroupIds.add(groupId)
+      tasks[groupId] = dependencyTask(groupId, description, members)
+    }
+    registerGroupAliases(groupId, members)
   }
 
   override fun get(id: String): Task? {
@@ -65,7 +69,9 @@ class InMemoryTaskRegistry : TaskRegistry {
 
   fun aliasIds(): Set<String> = aliasTargets.keys.toSet()
 
-  override fun resolve(reference: String): List<Task> {
+  override fun resolve(reference: String): List<Task> = resolve(reference, groups)
+
+  override fun resolve(reference: String, groups: Map<String, List<String>>): List<Task> {
     val directTaskIds =
       tasks.keys.filterNot { it in aliasTargets || it in syntheticGroupIds }
     val generatedAliases = TaskReferenceResolver.generatedAliasMap(directTaskIds)
@@ -73,11 +79,38 @@ class InMemoryTaskRegistry : TaskRegistry {
       putAll(generatedAliases)
       putAll(aliasTargets)
     }
-    val resolvedIds = TaskReferenceResolver.resolve(reference, directTaskIds, aliases, groups)
+    val resolvedGroups = if (groups.isEmpty()) this.groups else groups
+    val resolvedIds = TaskReferenceResolver.resolve(reference, directTaskIds, aliases, resolvedGroups)
     return resolvedIds.mapNotNull { tasks[it] }
   }
 
   override fun groups(): Map<String, List<String>> = groups.toMap()
+
+  private fun registerNamespaceAlias(taskId: String) {
+    if (!taskId.contains(":")) return
+    val aliasId = taskId.replace(':', '-')
+    if (aliasId == taskId) return
+    addAlias(aliasId, taskId, "Namespace alias for $taskId")
+  }
+
+  private fun registerGroupAliases(groupId: String, members: List<String>) {
+    members.forEach { memberId ->
+      val aliasSuffix = groupAliasSuffix(groupId, memberId)
+      addAlias(
+        aliasId = "$groupId:$aliasSuffix",
+        targetId = memberId,
+        description = "Group member alias for $memberId",
+      )
+    }
+  }
+
+  private fun groupAliasSuffix(groupId: String, taskId: String): String {
+    return when {
+      taskId.startsWith("$groupId-") -> taskId.removePrefix("$groupId-")
+      taskId.endsWith("-$groupId") -> taskId.removeSuffix("-$groupId")
+      else -> taskId
+    }.ifBlank { taskId }
+  }
 
   private fun dependencyTask(
     id: String,

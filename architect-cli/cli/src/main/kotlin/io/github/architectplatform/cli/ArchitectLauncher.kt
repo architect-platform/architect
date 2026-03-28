@@ -486,12 +486,13 @@ class ArchitectLauncher(
   @Suppress("UNCHECKED_CAST")
   private fun applyConfiguredGroups(tasks: List<TaskDTO>, projectPath: String): List<TaskDTO> {
     if (tasks.any { it.groupMembers != null }) return tasks
+    val aliasFiltered = tasks.filterNot { isAliasTask(it) }
     val configFile = java.io.File(projectPath, "architect.yml")
-    if (!configFile.exists()) return tasks
+    if (!configFile.exists()) return aliasFiltered
     val groups = try {
       val yaml = org.yaml.snakeyaml.Yaml()
-      val config = yaml.load<Map<String, Any>>(configFile.inputStream()) ?: return tasks
-      val rawGroups = config["groups"] as? Map<*, *> ?: return tasks
+      val config = yaml.load<Map<String, Any>>(configFile.inputStream()) ?: return aliasFiltered
+      val rawGroups = config["groups"] as? Map<*, *> ?: return aliasFiltered
       linkedMapOf<String, List<String>>().also { resolved ->
         rawGroups.forEach { (rawGroupId, rawMembers) ->
           val groupId = rawGroupId as? String ?: return@forEach
@@ -503,11 +504,11 @@ class ArchitectLauncher(
         }
       }
     } catch (_: Exception) {
-      return tasks
+      return aliasFiltered
     }
 
-    if (groups.isEmpty()) return tasks
-    val tasksById = tasks.associateBy { it.id }
+    if (groups.isEmpty()) return aliasFiltered
+    val tasksById = aliasFiltered.associateBy { it.id }
     val groupHeaders = mutableListOf<TaskDTO>()
     val aliasIds = mutableSetOf<String>()
     groups.forEach { (groupId, members) ->
@@ -525,7 +526,8 @@ class ArchitectLauncher(
       }
     }
 
-    val filteredTasks = tasks.filterNot { it.id in groups.keys || it.id in aliasIds }
+    val filteredTasks =
+      aliasFiltered.filterNot { it.id in groups.keys || it.id in aliasIds }
     return groupHeaders + filteredTasks
   }
 
@@ -536,6 +538,14 @@ class ArchitectLauncher(
       else -> memberId
     }.ifBlank { memberId }
     return "$groupId:$suffix"
+  }
+
+  private fun isAliasTask(task: TaskDTO): Boolean {
+    val description = task.description.lowercase()
+    return description.startsWith("alias for ") ||
+      description.startsWith("group member alias for ") ||
+      description.startsWith("plugin alias for ") ||
+      description.startsWith("namespace alias for ")
   }
 
   private fun handleHistory() {

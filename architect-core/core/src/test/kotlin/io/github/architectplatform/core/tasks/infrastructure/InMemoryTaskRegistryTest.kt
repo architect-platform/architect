@@ -5,6 +5,8 @@ import io.github.architectplatform.api.core.tasks.builtin.SimpleTask
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.test.assertNull
 
 class InMemoryTaskRegistryTest {
@@ -13,8 +15,6 @@ class InMemoryTaskRegistryTest {
     val registry = InMemoryTaskRegistry()
     registry.add(simpleTask("frontend-build"))
     registry.add(simpleTask("backend-build"))
-    registry.addAlias("build:frontend", "frontend-build")
-    registry.addAlias("build:backend", "backend-build")
     registry.addGroup("build", listOf("frontend-build", "backend-build"))
 
     assertEquals(listOf("frontend-build"), registry.resolve("build:frontend").map { it.id })
@@ -58,9 +58,22 @@ class InMemoryTaskRegistryTest {
     registry.add(simpleTask("git:commit"))
 
     assertEquals(listOf("git:commit"), registry.resolve("git-commit").map { it.id })
+    assertNotNull(registry.get("git-commit"))
+    assertTrue(registry.aliasIds().contains("git-commit"))
 
     registry.add(simpleTask("git-commit"))
     assertEquals(listOf("git-commit"), registry.resolve("git-commit").map { it.id })
+    assertFalse(registry.aliasIds().contains("git-commit"))
+  }
+
+  @Test
+  fun `should surface group member aliases for suggestions`() {
+    val registry = InMemoryTaskRegistry()
+    registry.add(simpleTask("frontend-build"))
+    registry.addGroup("build", listOf("frontend-build"))
+
+    val available = (registry.all().map { it.id } + registry.groups().keys).distinct()
+    assertTrue(available.contains("build:frontend"))
   }
 
   private fun simpleTask(id: String) =

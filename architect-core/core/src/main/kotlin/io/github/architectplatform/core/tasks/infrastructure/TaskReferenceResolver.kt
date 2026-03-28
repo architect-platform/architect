@@ -69,7 +69,12 @@ object TaskReferenceResolver {
       val groupId = ref.substring(0, separator)
       val memberReference = ref.substring(separator + 1)
       val members = groups[groupId] ?: return emptyList()
-      val directReference = members.firstOrNull { it == memberReference || it == ref } ?: return emptyList()
+      val directReference =
+        members.firstOrNull { member ->
+          member == memberReference ||
+            member == ref ||
+            groupAliasSuffix(groupId, member) == memberReference
+        } ?: return emptyList()
       return resolveReference(directReference).ifEmpty {
         throw IllegalArgumentException(
           "Task group '$groupId' member '$memberReference' resolves to no tasks",
@@ -125,5 +130,13 @@ object TaskReferenceResolver {
     }
 
     return resolveReference(reference)
+  }
+
+  private fun groupAliasSuffix(groupId: String, taskId: String): String {
+    return when {
+      taskId.startsWith("$groupId-") -> taskId.removePrefix("$groupId-")
+      taskId.endsWith("-$groupId") -> taskId.removeSuffix("-$groupId")
+      else -> taskId
+    }.ifBlank { taskId }
   }
 }

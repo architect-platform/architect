@@ -298,6 +298,26 @@ class ArchitectLauncherTest {
     }
   }
 
+  @Test
+  fun `tasks command hides namespace alias entries`(@TempDir tmpDir: Path) {
+    val client = object : StubEngineCommandClient() {
+      override fun getAllTasks(projectName: String): List<TaskDTO> = listOf(
+        TaskDTO(id = "git:commit", description = "Commit code", phase = "BUILD"),
+        TaskDTO(id = "git-commit", description = "Namespace alias for git:commit", phase = "BUILD"),
+      )
+    }
+    val launcher = launcherWithClient(client)
+    setUserDir(tmpDir) {
+      launcher.command = "tasks"
+      launcher.args = listOf("tasks")
+
+      val output = captureStdout { launcher.run() }
+
+      assertTrue(output.contains("git:commit"))
+      assertFalse(output.contains("git-commit"))
+    }
+  }
+
   // ─── info command ─────────────────────────────────────────────────────────
 
   @Test
