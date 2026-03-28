@@ -71,6 +71,7 @@ interface TaskRegistry {
   /**
    * Resolves a task reference into one or more tasks.
    *
+   * Implementations may expand task groups (`group`, `group:*`, `group:member`) and aliases.
    * The default implementation preserves legacy behaviour by falling back to a direct ID lookup.
    */
   fun resolve(reference: String): List<Task> = get(reference)?.let(::listOf) ?: emptyList()

@@ -7,10 +7,16 @@ import java.util.LinkedHashSet
  */
 object TaskReferenceResolver {
   fun generatedAliases(taskId: String): List<String> {
-    if (":" in taskId) return emptyList()
+    val aliases = mutableListOf<String>()
+    if (":" in taskId) {
+      val hyphenAlias = taskId.replace(':', '-')
+      if (hyphenAlias != taskId) aliases += hyphenAlias
+      return aliases
+    }
     val separatorIndex = taskId.indexOf('-')
     if (separatorIndex <= 0 || separatorIndex == taskId.lastIndex) return emptyList()
-    return listOf(taskId.substring(0, separatorIndex) + ":" + taskId.substring(separatorIndex + 1))
+    aliases += taskId.substring(0, separatorIndex) + ":" + taskId.substring(separatorIndex + 1)
+    return aliases
   }
 
   fun generatedAliasMap(taskIds: List<String>): Map<String, String> {

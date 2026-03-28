@@ -14,6 +14,7 @@ import io.github.architectplatform.cli.command.OutputFormatter
 import io.github.architectplatform.cli.command.PluginCommandHandler
 import io.github.architectplatform.cli.command.SchemaCommandHandler
 import io.github.architectplatform.cli.command.SecretCommandHandler
+import io.github.architectplatform.cli.dto.TaskDTO
 import io.github.architectplatform.cli.dto.RegisterProjectRequest
 import io.github.architectplatform.cli.history.LocalHistoryReader
 import io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor
@@ -341,9 +342,12 @@ class ArchitectLauncher(
     cliHandler.cacheProjectName(projectName)
 
     when (command) {
-      "tasks" -> { output.printTasks(engineCommandClient.getAllTasks(projectName)); return }
+      "tasks" -> {
+        output.printTasks(listEngineTasks(projectName, projectPath))
+        return
+      }
       null -> {
-        val tasks = engineCommandClient.getAllTasks(projectName)
+        val tasks = listEngineTasks(projectName, projectPath)
         val selector = InteractiveTaskSelector(plain)
         val selected = selector.select(tasks)
         if (selected == null) {
@@ -354,7 +358,10 @@ class ArchitectLauncher(
         // User chose a task interactively — execute it
         command = selected
       }
-      "info" -> { output.printInfo(projectName, projectPath, engineCommandClient.getAllTasks(projectName)); return }
+      "info" -> {
+        output.printInfo(projectName, projectPath, listEngineTasks(projectName, projectPath))
+        return
+      }
       "plan" -> {
         val planOptions = output.parsePlanOptions(args)
         if (planOptions.taskName == null) {
@@ -464,6 +471,66 @@ class ArchitectLauncher(
     } catch (_: Exception) {
       cmd
     }
+  }
+
+  private fun listEngineTasks(projectName: String, projectPath: String): List<TaskDTO> {
+    val tasks = engineCommandClient.getAllTasks(projectName)
+    return applyConfiguredGroups(tasks, projectPath)
+  }
+
+  @Suppress("UNCHECKED_CAST")
+  private fun applyConfiguredGroups(tasks: List<TaskDTO>, projectPath: String): List<TaskDTO> {
+    if (tasks.any { it.groupMembers != null }) return tasks
+    val configFile = java.io.File(projectPath, "architect.yml")
+    if (!configFile.exists()) return tasks
+    val groups = try {
+      val yaml = org.yaml.snakeyaml.Yaml()
+      val config = yaml.load<Map<String, Any>>(configFile.inputStream()) ?: return tasks
+      val rawGroups = config["groups"] as? Map<*, *> ?: return tasks
+      linkedMapOf<String, List<String>>().also { resolved ->
+        rawGroups.forEach { (rawGroupId, rawMembers) ->
+          val groupId = rawGroupId as? String ?: return@forEach
+          val memberIds =
+            (rawMembers as? List<*>)?.mapNotNull { it as? String }?.distinct().orEmpty()
+          if (memberIds.isNotEmpty()) {
+            resolved[groupId] = memberIds
+          }
+        }
+      }
+    } catch (_: Exception) {
+      return tasks
+    }
+
+    if (groups.isEmpty()) return tasks
+    val tasksById = tasks.associateBy { it.id }
+    val groupHeaders = mutableListOf<TaskDTO>()
+    val aliasIds = mutableSetOf<String>()
+    groups.forEach { (groupId, members) ->
+      val groupTask = tasksById[groupId]
+      groupHeaders += TaskDTO(
+        id = groupId,
+        description = groupTask?.description ?: "Task group '$groupId'",
+        phase = groupTask?.phase,
+        groupMembers = members,
+      )
+      members.forEach { memberId ->
+        if (tasksById.containsKey(memberId)) {
+          aliasIds += groupAliasId(groupId, memberId)
+        }
+      }
+    }
+
+    val filteredTasks = tasks.filterNot { it.id in groups.keys || it.id in aliasIds }
+    return groupHeaders + filteredTasks
+  }
+
+  private fun groupAliasId(groupId: String, memberId: String): String {
+    val suffix = when {
+      memberId.startsWith("$groupId-") -> memberId.removePrefix("$groupId-")
+      memberId.endsWith("-$groupId") -> memberId.removeSuffix("-$groupId")
+      else -> memberId
+    }.ifBlank { memberId }
+    return "$groupId:$suffix"
   }
 
   private fun handleHistory() {

@@ -41,6 +41,28 @@ class InMemoryTaskRegistryTest {
     assertNull(registry.get("deploy"))
   }
 
+  @Test
+  fun `should preserve direct task IDs when group ID matches`() {
+    val registry = InMemoryTaskRegistry()
+    registry.add(simpleTask("build"))
+    registry.add(simpleTask("frontend-build"))
+    registry.addGroup("build", listOf("frontend-build"))
+
+    assertEquals(listOf("build"), registry.resolve("build").map { it.id })
+    assertEquals(listOf("frontend-build"), registry.resolve("build:*").map { it.id })
+  }
+
+  @Test
+  fun `should resolve hyphen alias for namespaced tasks without overriding direct ids`() {
+    val registry = InMemoryTaskRegistry()
+    registry.add(simpleTask("git:commit"))
+
+    assertEquals(listOf("git:commit"), registry.resolve("git-commit").map { it.id })
+
+    registry.add(simpleTask("git-commit"))
+    assertEquals(listOf("git-commit"), registry.resolve("git-commit").map { it.id })
+  }
+
   private fun simpleTask(id: String) =
     SimpleTask(id = id, description = id) { _, _ -> TaskResult.success(id) }
 }

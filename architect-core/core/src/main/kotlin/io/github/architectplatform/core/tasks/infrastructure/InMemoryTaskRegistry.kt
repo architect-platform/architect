@@ -10,6 +10,7 @@ class InMemoryTaskRegistry : TaskRegistry {
   private val tasks = linkedMapOf<String, Task>()
   private val aliasTargets = linkedMapOf<String, String>()
   private val groups = linkedMapOf<String, List<String>>()
+  private val syntheticGroupIds = linkedSetOf<String>()
 
   override fun add(task: Task) {
     require(task.id !in tasks) { "Task '${task.id}' already registered" }
@@ -35,6 +36,7 @@ class InMemoryTaskRegistry : TaskRegistry {
     require(members.isNotEmpty()) { "Task group '$groupId' must include at least one member" }
     groups[groupId] = members
     if (groupId in tasks) return
+    syntheticGroupIds.add(groupId)
     tasks[groupId] = dependencyTask(groupId, description, members)
   }
 
@@ -64,9 +66,14 @@ class InMemoryTaskRegistry : TaskRegistry {
   fun aliasIds(): Set<String> = aliasTargets.keys.toSet()
 
   override fun resolve(reference: String): List<Task> {
-    val groupIds = groups.keys
-    val directTaskIds = tasks.keys.filterNot { it in aliasTargets || it in groupIds }
-    val resolvedIds = TaskReferenceResolver.resolve(reference, directTaskIds, aliasTargets, groups)
+    val directTaskIds =
+      tasks.keys.filterNot { it in aliasTargets || it in syntheticGroupIds }
+    val generatedAliases = TaskReferenceResolver.generatedAliasMap(directTaskIds)
+    val aliases = linkedMapOf<String, String>().apply {
+      putAll(generatedAliases)
+      putAll(aliasTargets)
+    }
+    val resolvedIds = TaskReferenceResolver.resolve(reference, directTaskIds, aliases, groups)
     return resolvedIds.mapNotNull { tasks[it] }
   }
 
