@@ -20,7 +20,13 @@ class MultiProjectOrchestrator(
 ) {
 
   fun interface TaskRunner {
-    fun execute(projectName: String, projectPath: String, taskName: String, taskArgs: List<String>, onEvent: (ArchitectEvent<*>) -> Unit): TaskResult
+    fun execute(
+      projectName: String,
+      projectPath: String,
+      taskName: String,
+      taskArgs: List<String>,
+      onEvent: (ArchitectEvent<*>) -> Unit,
+    ): TaskResult
   }
 
   data class ProjectResult(

@@ -1,3 +1,4 @@
+@file:Suppress("MaxLineLength")
 package io.github.architectplatform.engine.integration
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
@@ -258,7 +259,7 @@ class MonorepoExecutionIntegrationTest {
       try {
         Thread.sleep(150)
         if (projectName in failingProjects) {
-          throw IllegalStateException("Synthetic failure for $projectName")
+          error("Synthetic failure for $projectName")
         }
       } finally {
         activeExecutions.decrementAndGet()

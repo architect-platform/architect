@@ -30,15 +30,15 @@ class TaskStatsService(private val historyService: HistoryService) {
 
     val avg = durations.average().toLong()
     // "Recent" = last 10 executions (chronological, newest-first in records so .take(10))
-    val recentDurations = records.take(10).map { it.durationMs }
+    val recentDurations = records.take(RECENT_WINDOW).map { it.durationMs }
     val recentAvg = recentDurations.average().toLong()
-    val historicalDurations = records.drop(10).map { it.durationMs }
+    val historicalDurations = records.drop(RECENT_WINDOW).map { it.durationMs }
     val historicalAvg = if (historicalDurations.isNotEmpty()) historicalDurations.average().toLong() else avg
 
     val trend = when {
-      records.size < 5 -> Trend.STABLE
-      recentAvg < (historicalAvg * 0.90).toLong() -> Trend.IMPROVING
-      recentAvg > (historicalAvg * 1.10).toLong() -> Trend.DEGRADING
+      records.size < MIN_RECORDS_FOR_TREND -> Trend.STABLE
+      recentAvg < (historicalAvg * IMPROVING_THRESHOLD).toLong() -> Trend.IMPROVING
+      recentAvg > (historicalAvg * DEGRADING_THRESHOLD).toLong() -> Trend.DEGRADING
       else -> Trend.STABLE
     }
 
@@ -50,9 +50,9 @@ class TaskStatsService(private val historyService: HistoryService) {
       avgDurationMs = avg,
       minDurationMs = durations.first(),
       maxDurationMs = durations.last(),
-      p50DurationMs = percentile(durations, 50),
-      p95DurationMs = percentile(durations, 95),
-      p99DurationMs = percentile(durations, 99),
+      p50DurationMs = percentile(durations, P50),
+      p95DurationMs = percentile(durations, P95),
+      p99DurationMs = percentile(durations, P99),
       recentAvgMs = recentAvg,
       historicalAvgMs = historicalAvg,
       trend = trend,
@@ -63,7 +63,7 @@ class TaskStatsService(private val historyService: HistoryService) {
    * Returns statistics for every task that appears in the project's history.
    * Tasks with no successful-duration records are omitted.
    */
-  fun getAllTaskStats(project: String, limit: Int = 200): List<TaskStats> =
+  fun getAllTaskStats(project: String, limit: Int = DEFAULT_LIMIT): List<TaskStats> =
     historyService.getByProject(project, limit)
       .groupBy { it.task }
       .mapNotNull { (taskId, _) -> getStats(project, taskId, limit) }

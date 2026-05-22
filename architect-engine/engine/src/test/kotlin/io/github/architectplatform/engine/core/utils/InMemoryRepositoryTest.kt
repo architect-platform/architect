@@ -1,3 +1,4 @@
+@file:Suppress("WildcardImport")
 package io.github.architectplatform.engine.core.utils
 
 import io.github.architectplatform.core.utils.InMemoryRepository

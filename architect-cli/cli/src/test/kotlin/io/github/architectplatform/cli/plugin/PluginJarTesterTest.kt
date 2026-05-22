@@ -29,7 +29,11 @@ class PluginJarTesterTest {
 
     val result = validator.test(jarPath)
 
-    assertTrue(result.valid, "Expected valid result but got errors=${result.errors}, warnings=${result.warnings}, checks=${result.plugins.firstOrNull()?.checks}")
+    assertTrue(
+      result.valid,
+      "Expected valid result but got errors=${result.errors}, " +
+        "warnings=${result.warnings}, checks=${result.plugins.firstOrNull()?.checks}",
+    )
     val plugin = result.plugins.first { it.pluginId == "test-plugin-with-schema" }
     assertTrue(plugin.checks.any { it.name == "contract" && it.passed })
     assertTrue(plugin.checks.any { it.name == "config-schema" && it.passed })

@@ -59,7 +59,10 @@ class MultiProjectOrchestratorTest {
     val g = graph("lib" to emptySet(), "app" to setOf("lib"))
     val (orchestrator, runner) = orchestratorWithRunner(mapOf("lib" to TaskResult.failure("compile error")))
 
-    val result = orchestrator.run(g, mapOf("lib" to "/lib", "app" to "/app"), "build", stopOnFailure = true, runner = runner)
+    val result = orchestrator.run(
+      g, mapOf("lib" to "/lib", "app" to "/app"), "build",
+      stopOnFailure = true, runner = runner,
+    )
 
     assertFalse(result.success)
     assertEquals(1, result.results.size)
@@ -74,7 +77,10 @@ class MultiProjectOrchestratorTest {
       mapOf("lib" to TaskResult.failure("error"), "app" to TaskResult.success("OK")),
     )
 
-    val result = orchestrator.run(g, mapOf("lib" to "/lib", "app" to "/app"), "build", stopOnFailure = false, runner = runner)
+    val result = orchestrator.run(
+      g, mapOf("lib" to "/lib", "app" to "/app"), "build",
+      stopOnFailure = false, runner = runner,
+    )
 
     assertFalse(result.success)
     assertEquals(2, result.results.size)
@@ -103,7 +109,10 @@ class MultiProjectOrchestratorTest {
     val g = graph("a" to emptySet(), "b" to setOf("a"), "c" to setOf("b"))
     val (orchestrator, runner) = orchestratorWithRunner(mapOf("a" to TaskResult.failure("fail")))
 
-    val result = orchestrator.run(g, mapOf("a" to "/a", "b" to "/b", "c" to "/c"), "test", stopOnFailure = true, runner = runner)
+    val result = orchestrator.run(
+      g, mapOf("a" to "/a", "b" to "/b", "c" to "/c"), "test",
+      stopOnFailure = true, runner = runner,
+    )
 
     assertEquals(3, result.totalProjects)
     assertEquals(1, result.results.size)

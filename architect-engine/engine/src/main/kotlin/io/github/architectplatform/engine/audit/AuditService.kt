@@ -27,7 +27,7 @@ class AuditService {
     )
 
     private val entries = ConcurrentLinkedDeque<AuditEntry>()
-    private val maxEntries = 10_000
+    private val maxEntries = MAX_AUDIT_ENTRIES
 
     fun record(entry: AuditEntry) {
         entries.addFirst(entry)
@@ -79,4 +79,8 @@ class AuditService {
     }
 
     fun count(): Int = entries.size
+
+    companion object {
+        private const val MAX_AUDIT_ENTRIES = 10_000
+    }
 }

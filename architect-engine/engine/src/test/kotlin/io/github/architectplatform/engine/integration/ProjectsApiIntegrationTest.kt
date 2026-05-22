@@ -1,3 +1,4 @@
+@file:Suppress("WildcardImport")
 package io.github.architectplatform.engine.integration
 
 import io.github.architectplatform.engine.core.project.dto.RegisterProjectRequest

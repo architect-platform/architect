@@ -1,3 +1,4 @@
+@file:Suppress("MaxLineLength")
 package io.github.architectplatform.engine.core.metrics
 
 import io.github.architectplatform.core.history.app.HistoryService

@@ -3,6 +3,7 @@ package io.github.architectplatform.cli
 import io.github.architectplatform.cli.client.EngineCommandClient
 import io.github.architectplatform.cli.command.CacheCommandHandler
 import io.github.architectplatform.cli.command.CheckCommandHandler
+import io.github.architectplatform.cli.command.CiCommandHandler
 import io.github.architectplatform.cli.command.CliInfrastructureHandler
 import io.github.architectplatform.cli.command.ConfigCommandHandler
 import io.github.architectplatform.cli.command.ConventionsCommandHandler
@@ -64,6 +65,7 @@ class ArchitectLauncher(
   private val pluginHandler = PluginCommandHandler()
   private val cacheHandler = CacheCommandHandler()
   private val checkHandler = CheckCommandHandler(embeddedTaskExecutor, ::extractProjectName)
+  private val ciHandler = CiCommandHandler(embeddedTaskExecutor, ::extractProjectName)
   private val cliHandler = CliInfrastructureHandler(engineCommandClient, ::extractProjectName)
   private val helpHandler = HelpCommandHandler()
   internal var secretHandler = SecretCommandHandler()
@@ -287,6 +289,7 @@ class ArchitectLauncher(
       "completion" -> { cliHandler.handleCompletion(args, this); return }
       "upgrade" -> { cliHandler.handleUpgrade(args); return }
       "check" -> { checkHandler.handle(args); return }
+      "ci" -> { ciHandler.handle(args); return }
       "doctor" -> { doctorHandler.handle(args); return }
       "config" -> { configHandler.handle(args); return }
       "conventions" -> { conventionsHandler.handle(args); return }

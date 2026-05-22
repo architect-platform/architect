@@ -16,7 +16,9 @@ class PluginJarValidatorTest {
 
   @Test
   fun `validates plugin jar with spi implementation and config deserialization`(@TempDir tempDir: Path) {
-    val jarPath = createPluginJar(tempDir.resolve("valid-plugin.jar"), ValidPlugin::class.java, ValidContext::class.java)
+    val jarPath = createPluginJar(
+      tempDir.resolve("valid-plugin.jar"), ValidPlugin::class.java, ValidContext::class.java,
+    )
 
     val result = validator.validate(jarPath)
 
@@ -41,7 +43,9 @@ class PluginJarValidatorTest {
 
   @Test
   fun `fails validation when plugin context cannot deserialize from config`(@TempDir tempDir: Path) {
-    val jarPath = createPluginJar(tempDir.resolve("invalid-config.jar"), InvalidConfigPlugin::class.java, InvalidConfigContext::class.java)
+    val jarPath = createPluginJar(
+      tempDir.resolve("invalid-config.jar"), InvalidConfigPlugin::class.java, InvalidConfigContext::class.java,
+    )
 
     val result = validator.validate(jarPath)
 

@@ -12,7 +12,10 @@ import io.github.architectplatform.cli.dto.TaskPlanDTO
 import io.github.architectplatform.cli.dto.TaskPlanStepDTO
 import io.github.architectplatform.cli.dto.ValidationResultDTO
 import io.github.architectplatform.cli.command.SecretCommandHandler
+import io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor
+import io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher
 import io.github.architectplatform.cli.engine.EngineHealthChecker
+import io.github.architectplatform.cli.history.LocalHistoryReader
 import io.github.architectplatform.cli.plugin.PluginJarValidator
 import io.github.architectplatform.cli.plugin.PluginScaffolder
 import io.github.architectplatform.cli.plugin.PluginTemplate
@@ -62,7 +65,9 @@ class ArchitectLauncherTest {
   fun `history command reads local history files`(@TempDir tmpDir: Path) {
     val historyDir = tmpDir.resolve(".architect/history").toFile()
     historyDir.mkdirs()
-    val record = """{"id":"e1","project":"myproj","task":"build","timestamp":1711100000000,"success":true,"durationMs":1200,"message":"ok"}"""
+    val record =
+      """{"id":"e1","project":"myproj","task":"build","timestamp":1711100000000,""" +
+        """"success":true,"durationMs":1200,"message":"ok"}"""
     File(historyDir, "1711100000000-e1.json").writeText(record)
 
     val launcher = launcher()
@@ -82,10 +87,12 @@ class ArchitectLauncherTest {
     val historyDir = tmpDir.resolve(".architect/history").toFile()
     historyDir.mkdirs()
     File(historyDir, "1711100000000-e1.json").writeText(
-      """{"id":"e1","project":"web","task":"build","timestamp":1711100000000,"success":true,"durationMs":500,"message":null}"""
+      """{"id":"e1","project":"web","task":"build","timestamp":1711100000000,""" +
+        """"success":true,"durationMs":500,"message":null}"""
     )
     File(historyDir, "1711100001000-e2.json").writeText(
-      """{"id":"e2","project":"api","task":"test","timestamp":1711100001000,"success":false,"durationMs":800,"message":"fail"}"""
+      """{"id":"e2","project":"api","task":"test","timestamp":1711100001000,""" +
+        """"success":false,"durationMs":800,"message":"fail"}"""
     )
 
     val launcher = launcher()
@@ -617,8 +624,8 @@ class ArchitectLauncherTest {
     val launcher = ArchitectLauncher(
       client,
       stubHealthChecker(running = true),
-      io.github.architectplatform.cli.history.LocalHistoryReader(),
-      io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor(io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()),
+      LocalHistoryReader(),
+      EmbeddedTaskExecutor(JdkRemoteContentFetcher()),
     )
     val originalUserDir = System.getProperty("user.dir")
     System.setProperty("user.dir", tmpDir.toString())
@@ -686,8 +693,8 @@ class ArchitectLauncherTest {
     val launcher = ArchitectLauncher(
       client,
       stubHealthChecker(running = true),
-      io.github.architectplatform.cli.history.LocalHistoryReader(),
-      io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor(io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()),
+      LocalHistoryReader(),
+      EmbeddedTaskExecutor(JdkRemoteContentFetcher()),
     )
     val originalUserDir = System.getProperty("user.dir")
     System.setProperty("user.dir", tmpDir.toString())
@@ -720,8 +727,8 @@ class ArchitectLauncherTest {
     val launcher = ArchitectLauncher(
       client,
       stubHealthChecker(running = true),
-      io.github.architectplatform.cli.history.LocalHistoryReader(),
-      io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor(io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()),
+      LocalHistoryReader(),
+      EmbeddedTaskExecutor(JdkRemoteContentFetcher()),
     )
     val originalUserDir = System.getProperty("user.dir")
     System.setProperty("user.dir", tmpDir.toString())
@@ -752,8 +759,8 @@ class ArchitectLauncherTest {
     val launcher = ArchitectLauncher(
       client,
       stubHealthChecker(running = true),
-      io.github.architectplatform.cli.history.LocalHistoryReader(),
-      io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor(io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()),
+      LocalHistoryReader(),
+      EmbeddedTaskExecutor(JdkRemoteContentFetcher()),
     )
     val originalUserDir = System.getProperty("user.dir")
     System.setProperty("user.dir", tmpDir.toString())
@@ -896,8 +903,8 @@ class ArchitectLauncherTest {
     return ArchitectLauncher(
       client,
       healthChecker,
-      io.github.architectplatform.cli.history.LocalHistoryReader(),
-      io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor(io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()),
+      LocalHistoryReader(),
+      EmbeddedTaskExecutor(JdkRemoteContentFetcher()),
     )
   }
 
@@ -928,7 +935,10 @@ class ArchitectLauncherTest {
   }
 
   private fun launcher(healthChecker: EngineHealthChecker = stubHealthChecker(running = true)): ArchitectLauncher {
-    return ArchitectLauncher(StubEngineCommandClient(), healthChecker, io.github.architectplatform.cli.history.LocalHistoryReader(), io.github.architectplatform.cli.embedded.EmbeddedTaskExecutor(io.github.architectplatform.cli.embedded.JdkRemoteContentFetcher()))
+    return ArchitectLauncher(
+      StubEngineCommandClient(), healthChecker,
+      LocalHistoryReader(), EmbeddedTaskExecutor(JdkRemoteContentFetcher()),
+    )
   }
 
   private fun stubHealthChecker(running: Boolean) = object : EngineHealthChecker() {
@@ -963,7 +973,10 @@ class LauncherValidPlugin : ArchitectPlugin<LauncherValidContext> {
 private open class StubEngineCommandClient : EngineCommandClient {
   override fun getAllProjects(): List<ProjectDTO> = emptyList()
   override fun registerProject(request: RegisterProjectRequest): ProjectDTO =
-    ProjectDTO(name = request.name, path = request.path, context = ProjectDTO.ProjectContextDTO(dir = request.path, config = emptyMap()))
+    ProjectDTO(
+      name = request.name, path = request.path,
+      context = ProjectDTO.ProjectContextDTO(dir = request.path, config = emptyMap()),
+    )
   override fun getProject(name: String): ProjectDTO? = null
   override fun getAllTasks(projectName: String): List<TaskDTO> = emptyList()
   override fun getTask(projectName: String, taskName: String): TaskDTO? = null
@@ -993,7 +1006,10 @@ private class TrackingEngineCommandClient : EngineCommandClient {
   override fun registerProject(request: RegisterProjectRequest): ProjectDTO {
     registeredName = request.name
     registeredPath = request.path
-    return ProjectDTO(name = request.name, path = request.path, context = ProjectDTO.ProjectContextDTO(dir = request.path, config = emptyMap()))
+    return ProjectDTO(
+      name = request.name, path = request.path,
+      context = ProjectDTO.ProjectContextDTO(dir = request.path, config = emptyMap()),
+    )
   }
 
   override fun getProject(name: String): ProjectDTO? = null
@@ -1010,7 +1026,10 @@ private class TrackingEngineCommandClient : EngineCommandClient {
 
   override fun reloadProjectPlugins(projectName: String): ProjectDTO {
     reloadedProject = projectName
-    return ProjectDTO(name = projectName, path = registeredPath ?: ".", context = ProjectDTO.ProjectContextDTO(dir = registeredPath ?: ".", config = emptyMap()))
+    return ProjectDTO(
+      name = projectName, path = registeredPath ?: ".",
+      context = ProjectDTO.ProjectContextDTO(dir = registeredPath ?: ".", config = emptyMap()),
+    )
   }
   override fun getTaskStats(project: String, taskId: String): io.github.architectplatform.cli.dto.TaskStatsDTO? = null
   override fun getAllTaskStats(project: String): List<io.github.architectplatform.cli.dto.TaskStatsDTO> = emptyList()
@@ -1022,7 +1041,10 @@ private class GraphEngineCommandClient : EngineCommandClient {
   override fun getAllProjects(): List<ProjectDTO> = emptyList()
 
   override fun registerProject(request: RegisterProjectRequest): ProjectDTO =
-    ProjectDTO(name = request.name, path = request.path, context = ProjectDTO.ProjectContextDTO(dir = request.path, config = emptyMap()))
+    ProjectDTO(
+      name = request.name, path = request.path,
+      context = ProjectDTO.ProjectContextDTO(dir = request.path, config = emptyMap()),
+    )
 
   override fun getProject(name: String): ProjectDTO? = null
 

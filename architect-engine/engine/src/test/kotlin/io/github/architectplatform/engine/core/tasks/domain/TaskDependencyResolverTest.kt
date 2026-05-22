@@ -1,3 +1,4 @@
+@file:Suppress("WildcardImport")
 package io.github.architectplatform.engine.core.tasks.domain
 
 import io.github.architectplatform.api.core.project.ProjectContext

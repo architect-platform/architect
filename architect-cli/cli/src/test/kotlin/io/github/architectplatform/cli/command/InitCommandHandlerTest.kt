@@ -193,7 +193,9 @@ class InitCommandHandlerTest {
   fun `generateYaml includes plugins`() {
     val plugins = listOf(
       InitCommandHandler.PluginSuggestion("git-architected", "architectplatform/git-architected", "Git detected"),
-      InitCommandHandler.PluginSuggestion("gradle-architected", "architectplatform/gradle-architected", "Gradle detected"),
+      InitCommandHandler.PluginSuggestion(
+        "gradle-architected", "architectplatform/gradle-architected", "Gradle detected",
+      ),
     )
     val yaml = handler.generateYaml("my-project", "", plugins)
     assertTrue(yaml.contains("plugins:"))
@@ -211,7 +213,9 @@ class InitCommandHandlerTest {
   @Test
   fun `generateYaml includes detected plugin defaults and comments`() {
     val plugins = listOf(
-      InitCommandHandler.PluginSuggestion("javascript-architected", "architectplatform/javascript-architected", "Preset"),
+      InitCommandHandler.PluginSuggestion(
+        "javascript-architected", "architectplatform/javascript-architected", "Preset",
+      ),
       InitCommandHandler.PluginSuggestion("github-architected", "architectplatform/github-architected", "Preset"),
       InitCommandHandler.PluginSuggestion("testing-architected", "architectplatform/testing-architected", "Preset"),
       InitCommandHandler.PluginSuggestion("quality-architected", "architectplatform/quality-architected", "Preset"),

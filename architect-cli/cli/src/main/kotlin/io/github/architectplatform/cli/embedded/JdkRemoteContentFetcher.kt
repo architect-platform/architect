@@ -15,8 +15,8 @@ class JdkRemoteContentFetcher(
     val reqBuilder = HttpRequest.newBuilder().uri(URI.create(url)).GET()
     headers.forEach { (key, value) -> reqBuilder.header(key, value) }
     val response = httpClient.send(reqBuilder.build(), HttpResponse.BodyHandlers.ofString())
-    if (response.statusCode() !in 200..299) {
-      throw IllegalStateException("Failed fetching $url (status: ${response.statusCode()})")
+    check(response.statusCode() in HTTP_SUCCESS_RANGE) {
+      "Failed fetching $url (status: ${response.statusCode()})"
     }
     return response.body()
   }
@@ -25,9 +25,13 @@ class JdkRemoteContentFetcher(
     val reqBuilder = HttpRequest.newBuilder().uri(URI.create(url)).GET()
     headers.forEach { (key, value) -> reqBuilder.header(key, value) }
     val response = httpClient.send(reqBuilder.build(), HttpResponse.BodyHandlers.ofByteArray())
-    if (response.statusCode() !in 200..299) {
-      throw IllegalStateException("Failed fetching $url (status: ${response.statusCode()})")
+    check(response.statusCode() in HTTP_SUCCESS_RANGE) {
+      "Failed fetching $url (status: ${response.statusCode()})"
     }
     return response.body()
+  }
+
+  companion object {
+    private val HTTP_SUCCESS_RANGE = 200..299
   }
 }

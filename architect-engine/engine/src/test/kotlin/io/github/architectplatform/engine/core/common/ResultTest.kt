@@ -1,3 +1,4 @@
+@file:Suppress("WildcardImport")
 package io.github.architectplatform.engine.core.common
 
 import io.github.architectplatform.core.common.Result

@@ -69,10 +69,10 @@ class HealthController(
 
         // Check 3: JVM memory
         val runtime = Runtime.getRuntime()
-        val usedMemoryMb = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
-        val maxMemoryMb = runtime.maxMemory() / (1024 * 1024)
-        val memoryUsagePercent = if (maxMemoryMb > 0) (usedMemoryMb * 100) / maxMemoryMb else 0
-        val memoryOk = memoryUsagePercent < 95
+        val usedMemoryMb = (runtime.totalMemory() - runtime.freeMemory()) / BYTES_PER_MB
+        val maxMemoryMb = runtime.maxMemory() / BYTES_PER_MB
+        val memoryUsagePercent = if (maxMemoryMb > 0) (usedMemoryMb * PERCENT) / maxMemoryMb else 0
+        val memoryOk = memoryUsagePercent < MEMORY_WARNING_THRESHOLD_PERCENT
         checks.add(
             HealthCheck(
                 name = "jvm-memory",
@@ -83,7 +83,7 @@ class HealthController(
 
         // Check 4: Thread pool
         val threadCount = Thread.activeCount()
-        val threadOk = threadCount < 500
+        val threadOk = threadCount < MAX_ACTIVE_THREADS
         checks.add(
             HealthCheck(
                 name = "thread-pool",
@@ -105,15 +105,26 @@ class HealthController(
     }
 
     private fun formatUptime(ms: Long): String {
-        val seconds = ms / 1000
-        val minutes = seconds / 60
-        val hours = minutes / 60
-        val days = hours / 24
+        val seconds = ms / MILLIS_PER_SECOND
+        val minutes = seconds / SECONDS_PER_MINUTE
+        val hours = minutes / MINUTES_PER_HOUR
+        val days = hours / HOURS_PER_DAY
         return when {
-            days > 0 -> "${days}d ${hours % 24}h ${minutes % 60}m"
-            hours > 0 -> "${hours}h ${minutes % 60}m ${seconds % 60}s"
-            minutes > 0 -> "${minutes}m ${seconds % 60}s"
+            days > 0 -> "${days}d ${hours % HOURS_PER_DAY}h ${minutes % MINUTES_PER_HOUR}m"
+            hours > 0 -> "${hours}h ${minutes % MINUTES_PER_HOUR}m ${seconds % SECONDS_PER_MINUTE}s"
+            minutes > 0 -> "${minutes}m ${seconds % SECONDS_PER_MINUTE}s"
             else -> "${seconds}s"
         }
+    }
+
+    companion object {
+        private const val BYTES_PER_MB = 1024L * 1024L
+        private const val PERCENT = 100L
+        private const val MEMORY_WARNING_THRESHOLD_PERCENT = 95L
+        private const val MAX_ACTIVE_THREADS = 500
+        private const val MILLIS_PER_SECOND = 1000L
+        private const val SECONDS_PER_MINUTE = 60L
+        private const val MINUTES_PER_HOUR = 60L
+        private const val HOURS_PER_DAY = 24L
     }
 }

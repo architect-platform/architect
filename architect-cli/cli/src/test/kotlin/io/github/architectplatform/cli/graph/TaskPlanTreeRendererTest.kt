@@ -18,9 +18,15 @@ class TaskPlanTreeRendererTest {
       totalSteps = 3,
       parallelBatches = 3,
       steps = listOf(
-        TaskPlanStepDTO(id = "build", description = "Compile sources", phase = "BUILD", depends = emptyList(), batch = 0),
+        TaskPlanStepDTO(
+          id = "build", description = "Compile sources",
+          phase = "BUILD", depends = emptyList(), batch = 0,
+        ),
         TaskPlanStepDTO(id = "test", description = "Run tests", phase = "TEST", depends = listOf("build"), batch = 1),
-        TaskPlanStepDTO(id = "deploy", description = "Ship release", phase = "PUBLISH", depends = listOf("test"), batch = 2),
+        TaskPlanStepDTO(
+          id = "deploy", description = "Ship release",
+          phase = "PUBLISH", depends = listOf("test"), batch = 2,
+        ),
       ),
     )
 
@@ -45,7 +51,10 @@ class TaskPlanTreeRendererTest {
       totalSteps = 1,
       parallelBatches = 1,
       steps = listOf(
-        TaskPlanStepDTO(id = "lint", description = "Check code style", phase = "LINT", depends = emptyList(), batch = 0),
+        TaskPlanStepDTO(
+          id = "lint", description = "Check code style",
+          phase = "LINT", depends = emptyList(), batch = 0,
+        ),
       ),
     )
 
@@ -64,9 +73,15 @@ class TaskPlanTreeRendererTest {
       parallelBatches = 3,
       steps = listOf(
         TaskPlanStepDTO(id = "init", description = "Initialize", phase = null, depends = emptyList(), batch = 0),
-        TaskPlanStepDTO(id = "compile", description = "Compile code", phase = "BUILD", depends = listOf("init"), batch = 1),
+        TaskPlanStepDTO(
+          id = "compile", description = "Compile code",
+          phase = "BUILD", depends = listOf("init"), batch = 1,
+        ),
         TaskPlanStepDTO(id = "lint", description = "Lint code", phase = "LINT", depends = listOf("init"), batch = 1),
-        TaskPlanStepDTO(id = "package", description = "Package artifact", phase = "PUBLISH", depends = listOf("compile", "lint"), batch = 2),
+        TaskPlanStepDTO(
+          id = "package", description = "Package artifact",
+          phase = "PUBLISH", depends = listOf("compile", "lint"), batch = 2,
+        ),
       ),
     )
 

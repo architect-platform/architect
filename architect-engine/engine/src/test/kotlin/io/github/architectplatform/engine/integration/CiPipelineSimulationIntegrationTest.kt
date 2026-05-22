@@ -1,3 +1,4 @@
+@file:Suppress("MaxLineLength")
 package io.github.architectplatform.engine.integration
 
 import io.github.architectplatform.api.components.execution.CommandExecutor

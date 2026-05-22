@@ -1,3 +1,4 @@
+@file:Suppress("MaxLineLength")
 package io.github.architectplatform.core.plugins.inline
 
 import io.github.architectplatform.api.components.execution.CommandExecutor
@@ -442,7 +443,7 @@ class InlineTaskPluginTest {
         override fun execute(command: String, workingDir: String?) {
             super.execute(command, workingDir)
             if (attempts.getAndIncrement() < failuresBeforeSuccess) {
-                throw IllegalStateException("boom")
+                error("boom")
             }
         }
     }

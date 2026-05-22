@@ -1,3 +1,4 @@
+@file:Suppress("WildcardImport", "MaxLineLength")
 package io.github.architectplatform.engine.core.project.app
 
 import io.github.architectplatform.api.core.plugins.ArchitectPlugin

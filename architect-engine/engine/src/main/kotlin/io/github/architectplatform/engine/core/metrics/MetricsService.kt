@@ -36,9 +36,9 @@ class MetricsService {
       min = sorted.first(),
       max = sorted.last(),
       mean = sorted.average(),
-      p50 = percentile(sorted, 0.50),
-      p90 = percentile(sorted, 0.90),
-      p99 = percentile(sorted, 0.99),
+      p50 = percentile(sorted, P50),
+      p90 = percentile(sorted, P90),
+      p99 = percentile(sorted, P99),
       sum = sorted.sum(),
     )
   }
@@ -63,10 +63,10 @@ class MetricsService {
       val promName = name.replace(".", "_")
       sb.appendLine("# TYPE ${promName}_seconds summary")
       sb.appendLine("${promName}_seconds_count ${stats.count}")
-      sb.appendLine("${promName}_seconds_sum ${"%.3f".format(stats.sum / 1000.0)}")
-      sb.appendLine("${promName}_seconds{quantile=\"0.5\"} ${"%.3f".format(stats.p50 / 1000.0)}")
-      sb.appendLine("${promName}_seconds{quantile=\"0.9\"} ${"%.3f".format(stats.p90 / 1000.0)}")
-      sb.appendLine("${promName}_seconds{quantile=\"0.99\"} ${"%.3f".format(stats.p99 / 1000.0)}")
+      sb.appendLine("${promName}_seconds_sum ${"%.3f".format(stats.sum / MILLIS_PER_SECOND)}")
+      sb.appendLine("${promName}_seconds{quantile=\"0.5\"} ${"%.3f".format(stats.p50 / MILLIS_PER_SECOND)}")
+      sb.appendLine("${promName}_seconds{quantile=\"0.9\"} ${"%.3f".format(stats.p90 / MILLIS_PER_SECOND)}")
+      sb.appendLine("${promName}_seconds{quantile=\"0.99\"} ${"%.3f".format(stats.p99 / MILLIS_PER_SECOND)}")
     }
 
     return sb.toString()
@@ -105,5 +105,12 @@ class MetricsService {
     companion object {
       val EMPTY = DurationStats(0, 0, 0, 0.0, 0, 0, 0, 0)
     }
+  }
+
+  companion object {
+    private const val MILLIS_PER_SECOND = 1000.0
+    private const val P50 = 0.50
+    private const val P90 = 0.90
+    private const val P99 = 0.99
   }
 }

@@ -2,7 +2,6 @@ package io.github.architectplatform.engine.cloud
 
 import io.github.architectplatform.core.history.domain.ExecutionRecord
 import io.github.architectplatform.engine.core.startup.StartupProfileRecorder
-import io.github.architectplatform.core.domain.events.*
 import io.micronaut.context.annotation.Property
 import io.micronaut.context.annotation.Requires
 import io.micronaut.context.event.ApplicationEventListener
@@ -81,7 +80,7 @@ class CloudReporterService(
         scope.launch {
             while (true) {
                 try {
-                    kotlinx.coroutines.delay(30_000) // 30 seconds
+                    kotlinx.coroutines.delay(HEARTBEAT_INTERVAL_MS)
                     cloudClient.heartbeat(HeartbeatRequest(engineId))
                     logger.debug("Heartbeat sent to cloud")
                 } catch (e: Exception) {
@@ -111,7 +110,14 @@ class CloudReporterService(
         }
     }
     
-    fun reportExecution(executionId: String, projectName: String, taskId: String, status: String, message: String? = null, errorDetails: String? = null) {
+    fun reportExecution(
+        executionId: String,
+        projectName: String,
+        taskId: String,
+        status: String,
+        message: String? = null,
+        errorDetails: String? = null,
+    ) {
         scope.launch {
             try {
                 val projectId = generateProjectId(projectName, "")
@@ -160,7 +166,14 @@ class CloudReporterService(
         }
     }
     
-    fun reportEvent(executionId: String, eventType: String, taskId: String? = null, message: String? = null, output: String? = null, success: Boolean = true) {
+    fun reportEvent(
+        executionId: String,
+        eventType: String,
+        taskId: String? = null,
+        message: String? = null,
+        output: String? = null,
+        success: Boolean = true,
+    ) {
         scope.launch {
             try {
                 cloudClient.reportEvent(
@@ -183,5 +196,9 @@ class CloudReporterService(
     
     private fun generateProjectId(projectName: String, @Suppress("UNUSED_PARAMETER") projectPath: String): String {
         return "$engineId-$projectName".replace(" ", "-").lowercase()
+    }
+
+    companion object {
+        private const val HEARTBEAT_INTERVAL_MS = 30_000L
     }
 }
