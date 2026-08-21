@@ -1,4 +1,4 @@
-plugins { kotlin("jvm") version "1.9.25" }
+plugins { kotlin("jvm") version "2.4.10" }
 
 group = "io.github.architectplatform.plugins"
 
@@ -33,8 +33,8 @@ dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:6.1.3")
 }
 
 tasks.test {
