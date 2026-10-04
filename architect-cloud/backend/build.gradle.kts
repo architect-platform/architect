@@ -1,10 +1,10 @@
 plugins {
-  id("org.jetbrains.kotlin.jvm") version "1.9.25"
-  id("org.jetbrains.kotlin.plugin.allopen") version "1.9.25"
-  id("com.google.devtools.ksp") version "1.9.25-1.0.20"
-  id("com.gradleup.shadow") version "8.3.5"
-  id("io.micronaut.application") version "4.6.1"
-  id("io.micronaut.aot") version "4.6.1"
+  id("org.jetbrains.kotlin.jvm") version "2.4.20"
+  id("org.jetbrains.kotlin.plugin.allopen") version "2.4.20"
+  id("com.google.devtools.ksp") version "2.3.12"
+  id("com.gradleup.shadow") version "9.6.1"
+  id("io.micronaut.application") version "5.0.2"
+  id("io.micronaut.aot") version "5.0.2"
 }
 
 version = "1.0.0"
@@ -56,7 +56,7 @@ dependencies {
   runtimeOnly("com.h2database:h2")
   runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
   testImplementation("io.micronaut:micronaut-http-client")
-  testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:6.4.0")
   testImplementation("org.mockito:mockito-core:5.7.0")
   testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 }
